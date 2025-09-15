@@ -31,6 +31,10 @@ For each annotation you will create or update the `review` section of the `exist
 
 Only edit the `review` section. For any statement, back it up with a citation used in the overall document. You should quote exact passages of text in `supporting_text`.
 
+Note that there should be an entry under `existing_annotations` for every line in the GOA tsv. You don't need to add new ones, just comment on existing ones
+
+The exception is if you think there are key annotations missing. In this case you should add entries, completing the `term` portion yourself, with `action: NEW`. Only do this for annotations not covered or with `proposed_replacement_terms` in existing annotations.
+
 2. **Critical Evaluation**: You must not accept existing annotations as gospel, regardless of whether they are marked as experimental (EXP, IDA, IPI, etc.) or computational (IEA, ISS, etc.). Many GO terms represent over-annotations that need correction.
 
 However, in general IBA annotations have undergone extensive review as well as making phylogenetic sense, they often frequently represent the

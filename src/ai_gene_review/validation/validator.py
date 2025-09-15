@@ -359,7 +359,7 @@ def check_best_practices_rules(
                         term = annotation.get("term", {})
                         term_label = term.get("label", "unknown") if isinstance(term, dict) else "unknown"
                         pending_examples.append(f"{term_label}")
-        
+
         if pending_count > 0:
             examples_text = ", ".join(pending_examples)
             if pending_count > 3:
@@ -370,6 +370,60 @@ def check_best_practices_rules(
                 path="existing_annotations",
                 suggestion="Complete the review by resolving PENDING annotations",
             )
+
+    # Check for review-term-consistency: all annotations to the same term should have the same action
+    if "existing_annotations" in data and data["existing_annotations"]:
+        # Build a map from term ID to list of (index, action, evidence_code) tuples
+        term_actions: Dict[str, List[Tuple[int, str, str]]] = {}
+
+        for i, annotation in enumerate(data["existing_annotations"]):
+            if isinstance(annotation, dict):
+                term = annotation.get("term", {})
+                if isinstance(term, dict) and "id" in term:
+                    term_id = term["id"]
+                    term_label = term.get("label", term_id)
+
+                    review = annotation.get("review", {})
+                    if isinstance(review, dict) and "action" in review:
+                        action = review["action"]
+                        # Skip PENDING actions in consistency check
+                        if action == "PENDING":
+                            continue
+                        evidence_code = annotation.get("evidence_type", "unknown")
+
+                        if term_id not in term_actions:
+                            term_actions[term_id] = []
+                        term_actions[term_id].append((i, action, evidence_code))
+
+        # Check for inconsistencies
+        for term_id, actions_list in term_actions.items():
+            if len(actions_list) > 1:
+                # Get unique actions for this term (excluding PENDING which are already filtered out)
+                unique_actions = set(action for _, action, _ in actions_list)
+
+                # If there are different actions for the same term, report a warning
+                if len(unique_actions) > 1:
+                    # Get the term label for better error messages
+                    term_label = None
+                    for annotation in data["existing_annotations"]:
+                        if isinstance(annotation, dict):
+                            term = annotation.get("term", {})
+                            if isinstance(term, dict) and term.get("id") == term_id:
+                                term_label = term.get("label", term_id)
+                                break
+
+                    # Build a summary of the conflicting actions
+                    action_summary = []
+                    for action in sorted(unique_actions):
+                        evidence_codes = [ec for _, a, ec in actions_list if a == action]
+                        action_summary.append(f"{action} ({', '.join(evidence_codes)})")
+
+                    report.add_issue(
+                        ValidationSeverity.WARNING,
+                        f"Inconsistent review actions for term {term_id} ({term_label or 'unknown'}): {'; '.join(action_summary)}",
+                        path="existing_annotations",
+                        suggestion="All annotations to the same term should have consistent review actions, regardless of evidence type",
+                    )
     
     # Check for missing core functions
     if "core_functions" not in data or not data["core_functions"]:

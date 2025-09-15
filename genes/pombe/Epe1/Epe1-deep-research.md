@@ -89,7 +89,53 @@ By contrast, the **histone demethylase model** of Epe1, while once an appealing 
 
 In summary, Epe1 emerges as a vital *anti-silencing hub* in fission yeast: it sits at the interface of heterochromatin and euchromatin, reading the state of histone modifications and orchestrating appropriate responses. Whether by recruiting histone acetylases (SAGA)[*\[33\]*](https://pmc.ncbi.nlm.nih.gov/articles/PMC6317313/#:~:text=,acetylation%2C%20transcription%20of%20repeats%2C), bromodomain readers (Bdf2)[*\[34\]*](https://genesdev.cshlp.org/content/27/17/1886.full.html#:~:text=Bdf2%20is%20enriched%20at%20IRCs,H4%20tails%20and%20antagonize), or simply by physically barring silencers (Clr3 HDAC) from their docking sites[*\[36\]*](https://elifesciences.org/articles/53155#:~:text=epe1%CE%94%20cells,10X%20tetO%20ade6), Epe1 ensures that heterochromatin formation is kept in check and can be reversed when needed. This safeguards the plasticity of epigenetic states. While the histone demethylase model spurred much initial research, it is the **alternative models of Epe1 as a chromatin boundary factor and anti-silencing protein** that are most strongly supported by the current body of evidence. Future studies (e.g. higher-resolution structural analysis of Epe1’s domains, or reconstitution of Epe1’s activity on nucleosomes) will further clarify whether Epe1 retains any latent enzymatic function or if it is an archetypal example of a **“reader-like” regulator evolved from an enzyme family***[\[29\]*](https://elifesciences.org/articles/53155#:~:text=paradigm%20where%20a%20putative%20histone,regulate%20the%20assembly%20of%20epigenetic)*[\[22\]](https://jia.biology.columbia.edu/sites/jia.biology.columbia.edu/files/content/publicatons/2019_EpiInsights_Bao.pdf#:~:text=Concluding%20Remarks%20In%20summary%2C%20our,modifying%20enzymes%20contributes%20to%20disease)*.
 
-**Sources:** Recent peer-reviewed studies and reviews were cited throughout (e.g., Sorida *et al.*, 2019[*\[7\]*](https://journals.plos.org/plosgenetics/article?id=10.1371/journal.pgen.1008129#:~:text=epigenetically%20diversified%20population%20of%20epe1,functions%3A%20the%20protection%20of%20euchromatic)*[\[8\]](https://journals.plos.org/plosgenetics/article?id=10.1371/journal.pgen.1008129#:~:text=regions%20from%20stochastic%20de%20novo,specific%20H3K9me%20landscapes)*; Bao *et al.*, 2019[*\[33\]*](https://pmc.ncbi.nlm.nih.gov/articles/PMC6317313/#:~:text=,acetylation%2C%20transcription%20of%20repeats%2C)*[\[6\]](https://www.researchgate.net/figure/Epe1-associates-with-SAGA-A-Mass-spectrometry-analyses-of-purified-protein-complexes_fig1_329820574#:~:text=,of%20bistable%20heterochromatic%20regions%3F)*; Raiymbek *et al.*, 2020[*\[5\]*](https://elifesciences.org/articles/53155#:~:text=Epe1%20in%20the%20presence%20and,activate%20its%20putative%20enzymatic%20functions)*[\[36\]](https://elifesciences.org/articles/53155#:~:text=epe1%CE%94%20cells,10X%20tetO%20ade6)*; Wang *et al.*, 2013[*\[34\]*](https://genesdev.cshlp.org/content/27/17/1886.full.html#:~:text=Bdf2%20is%20enriched%20at%20IRCs,H4%20tails%20and%20antagonize); Zofall & Grewal, 2006[*\[42\]*](https://www.researchgate.net/figure/Epe1-associates-with-SAGA-A-Mass-spectrometry-analyses-of-purified-protein-complexes_fig1_329820574#:~:text=,); Trewick *et al.*, 2007[*\[18\]*](https://ouci.dntb.gov.ua/en/works/9Q2YaKn7/#:~:text=Interaction%20of%20Epe1%20With%20the,that%20Swi6%20recruits%20Epe1)). These and additional references provide detailed experimental evidence for the statements above.
+**Sources:** Recent peer-reviewed studies and reviews were cited throughout (e.g., Sorida *et al.*, 2019[*\[7\]*](https://journals.plos.org/plosgenetics/article?id=10.1371/journal.pgen.1008129#:~:text=epigenetically%20diversified%20population%20of%20epe1,functions%3A%20the%20protection%20of%20euchromatic)*[\[8\]](https://journals.plos.org/plosgenetics/article?id=10.1371/journal.pgen.1008129#:~:text=regions%20from%20stochastic%20de%20novo,specific%20H3K9me%20landscapes)*; Bao *et al.*, 2019[*\[33\]*](https://pmc.ncbi.nlm.nih.gov/articles/PMC6317313/#:~:text=,acetylation%2C%20transcription%20of%20repeats%2C)*[\[6\]](https://www.researchgate.net/figure/Epe1-associates-with-SAGA-A-Mass-spectrometry-analyses-of-purified-protein-complexes_fig1_329820574#:~:text=,of%20bistable%20heterochromatic%20regions%3F)* and 2022[*\[52\]*](https://journals.plos.org/plosgenetics/article?id=10.1371/journal.pgen.1010049); Raiymbek *et al.*, 2020[*\[5\]*](https://elifesciences.org/articles/53155#:~:text=Epe1%20in%20the%20presence%20and,activate%20its%20putative%20enzymatic%20functions)*[\[36\]](https://elifesciences.org/articles/53155#:~:text=epe1%CE%94%20cells,10X%20tetO%20ade6)*; Wang *et al.*, 2013[*\[34\]*](https://genesdev.cshlp.org/content/27/17/1886.full.html#:~:text=Bdf2%20is%20enriched%20at%20IRCs,H4%20tails%20and%20antagonize); Zofall & Grewal, 2006[*\[42\]*](https://www.researchgate.net/figure/Epe1-associates-with-SAGA-A-Mass-spectrometry-analyses-of-purified-protein-complexes_fig1_329820574#:~:text=,); Trewick *et al.*, 2007[*\[18\]*](https://ouci.dntb.gov.ua/en/works/9Q2YaKn7/#:~:text=Interaction%20of%20Epe1%20With%20the,that%20Swi6%20recruits%20Epe1); and recent work through 2024[*\[54\]*](https://journals.plos.org/plosgenetics/article?id=10.1371/journal.pgen.1011107)*[\[55\]](https://academic.oup.com/genetics/article/224/4/iyad108/7190671)*[\[56\]](https://www.sciencedirect.com/science/article/abs/pii/S1534580724004441)*). These and additional references provide detailed experimental evidence for the statements above.
+
+**Summary of Current Understanding:** The most recent research (2022-2024) has significantly expanded our understanding of Epe1 regulation and function. **Epe1 is now known to be subject to multiple layers of control**: post-translational regulation through stress-responsive truncation, translational regulation via cAMP signaling, and complex interactions with RNA-processing machinery. This sophisticated regulatory network underscores Epe1's central role as a **chromatin homeostasis factor** that integrates environmental and nutritional signals to maintain appropriate heterochromatin landscapes. The current consensus favors a **predominantly non-enzymatic model** for Epe1 function, with its JmjC domain serving as a scaffolding module rather than a conventional demethylase, though recent findings suggest the regulation of Epe1 itself may be as important as its molecular mechanism of action.
+
+## Recent Advances (2022-2024)
+
+### cAMP Signaling Regulation of Epe1 (2022)
+
+Recent research has revealed that **Epe1 protein levels are regulated by the cAMP signaling pathway**[*\[52\]*](https://journals.plos.org/plosgenetics/article?id=10.1371/journal.pgen.1010049). Bao et al. (2022) demonstrated that:
+
+* **Active cAMP signaling ensures efficient translation of epe1+ mRNA** and maintains high Epe1 protein levels[*\[52\]*](https://journals.plos.org/plosgenetics/article?id=10.1371/journal.pgen.1010049)
+* **Pka1 activation** (the downstream effector of cAMP signaling) is required for efficient epe1+ mRNA translation[*\[52\]*](https://journals.plos.org/plosgenetics/article?id=10.1371/journal.pgen.1010049)
+* **Glucose deprivation**, which inactivates cAMP signaling, leads to reduction of endogenous Epe1 and corresponding heterochromatin changes[*\[52\]*](https://journals.plos.org/plosgenetics/article?id=10.1371/journal.pgen.1010049)
+* This reveals a **direct mechanistic link between nutrient sensing and heterochromatin regulation** through translational control of Epe1[*\[52\]*](https://journals.plos.org/plosgenetics/article?id=10.1371/journal.pgen.1010049)
+
+### Stress-Responsive Epe1 Truncation (2022)
+
+Environmental stress triggers a novel regulatory mechanism where **Epe1 undergoes proteasome-dependent N-terminal truncation**[*\[53\]*](https://pmc.ncbi.nlm.nih.gov/articles/PMC7613290/). This process:
+
+* **Removes the first 150 amino acids** of Epe1 in response to external stress (including antifungal compounds)[*\[53\]*](https://pmc.ncbi.nlm.nih.gov/articles/PMC7613290/)
+* **Results in cytoplasmic accumulation** of truncated Epe1, reducing its nuclear heterochromatin-regulatory function[*\[53\]*](https://pmc.ncbi.nlm.nih.gov/articles/PMC7613290/)
+* **Leads to increased H3K9 methylation and heterochromatin formation**, providing resistance to environmental insults[*\[53\]*](https://pmc.ncbi.nlm.nih.gov/articles/PMC7613290/)
+* Represents an **adaptive epigenetic response** that allows population-level resistance through heterochromatin reprogramming[*\[53\]*](https://pmc.ncbi.nlm.nih.gov/articles/PMC7613290/)
+
+### Cross-Regulation with Other Histone Modifiers (2024)
+
+Recent work has elucidated the **cross-regulation between Epe1, Clr4, and other chromatin modifiers**[*\[54\]*](https://journals.plos.org/plosgenetics/article?id=10.1371/journal.pgen.1011107):
+
+* **Set1 (H3K4 methyltransferase) and Clr4 (H3K9 methyltransferase) have opposing effects** on Lsd1/2 demethylase protein levels[*\[54\]*](https://journals.plos.org/plosgenetics/article?id=10.1371/journal.pgen.1011107)
+* **Clr4 reduces Lsd1/2 levels while Set1 promotes their stability**, creating a regulatory network that balances activating and silencing histone marks[*\[54\]*](https://journals.plos.org/plosgenetics/article?id=10.1371/journal.pgen.1011107)
+* This regulatory network provides **additional layers of control** beyond direct Epe1-mediated H3K9 demethylation[*\[54\]*](https://journals.plos.org/plosgenetics/article?id=10.1371/journal.pgen.1011107)
+
+### Ccr4-Not Complex Cooperation (2023)
+
+The **Ccr4-Not deadenylase complex cooperates with Epe1** in heterochromatin regulation[*\[55\]*](https://academic.oup.com/genetics/article/224/4/iyad108/7190671):
+
+* **Loss of Ccr4-Not subunits Caf1 and Mot2** leads to silencing defects that are **completely suppressed by epe1 deletion**[*\[55\]*](https://academic.oup.com/genetics/article/224/4/iyad108/7190671)
+* This suppression **requires H3K9me for Epe1 recruitment**, confirming Epe1's dependence on heterochromatic marks for its localization[*\[55\]*](https://academic.oup.com/genetics/article/224/4/iyad108/7190671)
+* The cooperation demonstrates **multiple RNA-processing pathways** contribute to heterochromatin maintenance alongside Epe1[*\[55\]*](https://academic.oup.com/genetics/article/224/4/iyad108/7190671)
+
+### Heterochromatin Islands and Adaptive Responses (2024)
+
+Genome-wide analysis has revealed that **Epe1 prevents formation of ectopic heterochromatin islands**[*\[56\]*](https://www.sciencedirect.com/science/article/abs/pii/S1534580724004441):
+
+* **Twenty-one small H3K9me peaks (heterochromatin islands)** exist in euchromatic regions, with Epe1 repressing their expansion[*\[56\]*](https://www.sciencedirect.com/science/article/abs/pii/S1534580724004441)
+* **Combined loss of Epe1 and histone acetyltransferase Mst2** induces strong ectopic heterochromatin on many euchromatic loci[*\[56\]*](https://www.sciencedirect.com/science/article/abs/pii/S1534580724004441)
+* This leads to **adaptive epigenetic responses** where cells silence the H3K9 methyltransferase Clr4 to counteract heterochromatin misregulation[*\[56\]*](https://www.sciencedirect.com/science/article/abs/pii/S1534580724004441)
 
 ---
 
@@ -132,4 +178,24 @@ In summary, Epe1 emerges as a vital *anti-silencing hub* in fission yeast: it si
 [*\[34\]*](https://genesdev.cshlp.org/content/27/17/1886.full.html#:~:text=Bdf2%20is%20enriched%20at%20IRCs,H4%20tails%20and%20antagonize) Epe1 recruits BET family bromodomain protein Bdf2 to establish ...
 
 [*https://genesdev.cshlp.org/content/27/17/1886.full.html*](https://genesdev.cshlp.org/content/27/17/1886.full.html)
+
+[*\[52\]*](https://journals.plos.org/plosgenetics/article?id=10.1371/journal.pgen.1010049) The cAMP signaling pathway regulates Epe1 protein levels and heterochromatin assembly | PLOS Genetics
+
+[*https://journals.plos.org/plosgenetics/article?id=10.1371/journal.pgen.1010049*](https://journals.plos.org/plosgenetics/article?id=10.1371/journal.pgen.1010049)
+
+[*\[53\]*](https://pmc.ncbi.nlm.nih.gov/articles/PMC7613290/) Proteasome-dependent truncation of the negative heterochromatin regulator Epe1 mediates antifungal resistance
+
+[*https://pmc.ncbi.nlm.nih.gov/articles/PMC7613290/*](https://pmc.ncbi.nlm.nih.gov/articles/PMC7613290/)
+
+[*\[54\]*](https://journals.plos.org/plosgenetics/article?id=10.1371/journal.pgen.1011107) The Cross-Regulation Between Set1, Clr4, and Lsd1/2 in Schizosaccharomyces pombe | PLOS Genetics
+
+[*https://journals.plos.org/plosgenetics/article?id=10.1371/journal.pgen.1011107*](https://journals.plos.org/plosgenetics/article?id=10.1371/journal.pgen.1011107)
+
+[*\[55\]*](https://academic.oup.com/genetics/article/224/4/iyad108/7190671) Dual, catalytic role for the fission yeast Ccr4-Not complex in gene silencing and heterochromatin spreading | Genetics
+
+[*https://academic.oup.com/genetics/article/224/4/iyad108/7190671*](https://academic.oup.com/genetics/article/224/4/iyad108/7190671)
+
+[*\[56\]*](https://www.sciencedirect.com/science/article/abs/pii/S1534580724004441) Mapping the dynamics of epigenetic adaptation in S. pombe during heterochromatin misregulation | Developmental Cell
+
+[*https://www.sciencedirect.com/science/article/abs/pii/S1534580724004441*](https://www.sciencedirect.com/science/article/abs/pii/S1534580724004441)
 
