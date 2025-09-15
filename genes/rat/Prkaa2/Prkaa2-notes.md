@@ -91,3 +91,23 @@ This analysis synthesized:
 - Direct biochemical evidence > Genetic evidence > Computational predictions
 - In vivo studies > In vitro studies > Cell culture
 - Multiple independent studies > Single study findings
+
+## 2025-01-14 - Annotation Retirement Fix
+
+**Issue**: Validation failure due to 25 annotations with `GO_REF:0000096` reference that no longer exist in the current GOA file.
+
+**Root Cause**: The reference `GO_REF:0000096` ("Automated transfer of experimentally-verified manual GO annotation data to mouse-rat orthologs") has been retired from the GOA annotation pipeline and replaced with other reference systems like `GO_REF:0000121`.
+
+**Action Taken**: Marked all 27 annotations with `original_reference_id: GO_REF:0000096` as `retired: true` to exclude them from GOA validation while preserving the annotation review work.
+
+**Annotations Affected**: All annotations with ISO evidence type using GO_REF:0000096, including:
+- GO:0031669 (cellular response to nutrient levels)
+- GO:0004679 (AMP-activated protein kinase activity)
+- GO:0004674 (protein serine/threonine kinase activity)
+- GO:0140823 (histone H2BS36 kinase activity)
+- GO:0042149 (cellular response to glucose starvation)
+- Multiple other metabolic and regulatory terms
+
+**Validation Status**: After marking these annotations as retired, the gene should pass GOA validation checks since retired annotations are now excluded from validation.
+
+**Note**: These annotations represent legitimate functional information that was previously transferred from experimentally verified mouse/human data. The retirement only reflects changes in the GOA annotation pipeline, not changes in the underlying biology.

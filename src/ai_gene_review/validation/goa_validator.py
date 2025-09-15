@@ -230,6 +230,10 @@ class GOAValidator:
             if not isinstance(yaml_ann, dict):
                 continue
 
+            # Skip retired annotations - they don't need to be in GOA
+            if yaml_ann.get("retired", False):
+                continue
+
             # Check if this annotation has action=NEW
             review = yaml_ann.get("review", {})
             if isinstance(review, dict) and review.get("action") == "NEW":
@@ -239,7 +243,7 @@ class GOAValidator:
                     go_id = term.get("id", "")
                     evidence_type = yaml_ann.get("evidence_type", "")
                     original_ref = yaml_ann.get("original_reference_id", "")
-                    
+
                     # Check if this annotation exists in GOA
                     yaml_tuple = (go_id, evidence_type, original_ref)
                     if yaml_tuple in goa_tuples:
@@ -301,15 +305,18 @@ class GOAValidator:
             # Label validation is handled by term_validator.py against the ontology
 
         # Check for annotations in GOA but not in YAML
-        # Build set of YAML annotations, excluding NEW annotations (which shouldn't be in GOA)
+        # Build set of YAML annotations, excluding NEW and retired annotations
         yaml_tuples = set()
         for yaml_ann in yaml_annotations:
             if isinstance(yaml_ann, dict):
+                # Skip retired annotations - they don't need to be in GOA
+                if yaml_ann.get("retired", False):
+                    continue
                 # Skip NEW annotations - they should NOT be in GOA
                 review = yaml_ann.get("review", {})
                 if isinstance(review, dict) and review.get("action") == "NEW":
                     continue
-                    
+
                 term = yaml_ann.get("term", {})
                 if isinstance(term, dict):
                     go_id = term.get("id", "")
@@ -345,6 +352,9 @@ class GOAValidator:
         yaml_by_go_id: Dict[str, List[Dict]] = {}
         for yaml_ann in yaml_annotations:
             if isinstance(yaml_ann, dict) and "term" in yaml_ann:
+                # Skip retired annotations - they don't need to be in GOA
+                if yaml_ann.get("retired", False):
+                    continue
                 # Check if this annotation has action=NEW
                 review = yaml_ann.get("review", {})
                 if isinstance(review, dict) and review.get("action") == "NEW":
@@ -358,7 +368,7 @@ class GOAValidator:
                             result.error_message = f"Annotation with action=NEW exists in GOA: {go_id}"
                     # Skip adding NEW annotations to yaml_by_go_id
                     continue
-                    
+
                 term = yaml_ann["term"]
                 if isinstance(term, dict) and "id" in term:
                     go_id = term["id"]

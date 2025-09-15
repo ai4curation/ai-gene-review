@@ -324,6 +324,10 @@ class ManuscriptSection(str, Enum):
     """
     Supplementary material
     """
+    DATABASE_ENTRY = "DATABASE_ENTRY"
+    """
+    Database entry
+    """
     OTHER = "OTHER"
     """
     Other main text section
@@ -435,7 +439,11 @@ class Review(ConfiguredBaseModel):
     """
     A review of an existing annotation.
     """
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://w3id.org/ai4curation/gene_review'})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://w3id.org/ai4curation/gene_review',
+         'rules': [{'postconditions': {'slot_conditions': {'proposed_replacement_terms': {'name': 'proposed_replacement_terms',
+                                                                                          'required': True}}},
+                    'preconditions': {'slot_conditions': {'action': {'equals_string': 'MODIFY',
+                                                                     'name': 'action'}}}}]})
 
     summary: Optional[str] = Field(default=None, description="""Summary of the review""", json_schema_extra = { "linkml_meta": {'alias': 'summary', 'domain_of': ['Review']} })
     action: Optional[ActionEnum] = Field(default=None, description="""Action to be taken""", json_schema_extra = { "linkml_meta": {'alias': 'action', 'domain_of': ['Review']} })
@@ -456,7 +464,7 @@ class CoreFunction(ConfiguredBaseModel):
          'domain_of': ['GeneReview', 'Term', 'CoreFunction', 'Experiment']} })
     supported_by: Optional[list[SupportingTextInReference]] = Field(default=None, json_schema_extra = { "linkml_meta": {'alias': 'supported_by',
          'domain_of': ['Review', 'CoreFunction', 'ProposedOntologyTerm']} })
-    molecular_function: Optional[Term] = Field(default=None, json_schema_extra = { "linkml_meta": {'alias': 'molecular_function',
+    molecular_function: Term = Field(default=..., json_schema_extra = { "linkml_meta": {'alias': 'molecular_function',
          'bindings': [{'binds_value_of': 'id',
                        'obligation_level': 'REQUIRED',
                        'range': 'GOMolecularActivityEnum'}],

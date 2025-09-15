@@ -21,6 +21,27 @@ import requests
 import yaml
 
 
+def _compare_file_content(file_path: Path, new_content: str) -> bool:
+    """Compare file content with new content.
+
+    Args:
+        file_path: Path to existing file
+        new_content: New content to compare against
+
+    Returns:
+        True if contents differ, False if they are the same
+    """
+    if not file_path.exists():
+        return True  # File doesn't exist, so it's different
+
+    try:
+        existing_content = file_path.read_text(encoding='utf-8')
+        return existing_content != new_content
+    except Exception:
+        # If we can't read the file, consider it different
+        return True
+
+
 def fetch_gene_data(
     gene_info: Tuple[str, str],
     uniprot_id: Optional[str] = None,
@@ -28,6 +49,7 @@ def fetch_gene_data(
     seed_annotations: bool = True,
     fetch_titles: bool = True,
     alias: Optional[str] = None,
+    force: bool = False,
 ) -> Dict[str, Any]:
     """Fetch gene data from UniProt and GOA APIs and save to files.
 
@@ -41,6 +63,7 @@ def fetch_gene_data(
         seed_annotations: If True, creates/seeds ai-review.yaml with GOA annotations.
         fetch_titles: If True, fetch actual titles from PubMed when seeding (default: True).
         alias: Optional alias to use for directory name and file prefixes instead of gene_name.
+        force: If True, overwrite existing UniProt and GOA files. If False, report differences.
 
     Returns:
         Dictionary with status information:
@@ -48,6 +71,10 @@ def fetch_gene_data(
             - yaml_existed: bool - True if ai-review.yaml already existed
             - annotations_added: int - Number of annotations added
             - references_added: int - Number of references added
+            - uniprot_updated: bool - True if UniProt file was updated
+            - goa_updated: bool - True if GOA file was updated
+            - uniprot_differences: bool - True if UniProt content differs from existing
+            - goa_differences: bool - True if GOA content differs from existing
 
     Raises:
         ValueError: If UniProt ID cannot be resolved or data cannot be fetched.
@@ -77,15 +104,17 @@ def fetch_gene_data(
     if uniprot_id is None:
         uniprot_id = resolve_gene_to_uniprot(gene_name, organism)
 
-    # Fetch and save UniProt data
-    uniprot_data = fetch_uniprot_data(uniprot_id)
+    # Determine file paths
     uniprot_file = gene_dir / f"{file_prefix}-uniprot.txt"
-    uniprot_file.write_text(uniprot_data)
-
-    # Fetch and save GOA data
-    goa_data = fetch_goa_data(uniprot_id)
     goa_file = gene_dir / f"{file_prefix}-goa.tsv"
-    goa_file.write_text(goa_data)
+
+    # Fetch UniProt and GOA data
+    uniprot_data = fetch_uniprot_data(uniprot_id)
+    goa_data = fetch_goa_data(uniprot_id)
+
+    # Check for differences
+    uniprot_differs = _compare_file_content(uniprot_file, uniprot_data)
+    goa_differs = _compare_file_content(goa_file, goa_data)
 
     # Initialize result status
     result = {
@@ -93,7 +122,41 @@ def fetch_gene_data(
         "yaml_existed": False,
         "annotations_added": 0,
         "references_added": 0,
+        "uniprot_updated": False,
+        "goa_updated": False,
+        "uniprot_differences": uniprot_differs,
+        "goa_differences": goa_differs,
     }
+
+    # Handle UniProt file
+    if uniprot_differs:
+        if force or not uniprot_file.exists():
+            file_existed = uniprot_file.exists()
+            uniprot_file.write_text(uniprot_data)
+            result["uniprot_updated"] = True
+            if not file_existed:
+                print(f"  ✓ Created {file_prefix}-uniprot.txt")
+            elif force:
+                print(f"  ✓ Updated {file_prefix}-uniprot.txt (forced)")
+        else:
+            print(f"  ⚠ UniProt data differs from existing {file_prefix}-uniprot.txt (use --force to overwrite)")
+    else:
+        print(f"  - {file_prefix}-uniprot.txt is up to date")
+
+    # Handle GOA file
+    if goa_differs:
+        if force or not goa_file.exists():
+            file_existed = goa_file.exists()
+            goa_file.write_text(goa_data)
+            result["goa_updated"] = True
+            if not file_existed:
+                print(f"  ✓ Created {file_prefix}-goa.tsv")
+            elif force:
+                print(f"  ✓ Updated {file_prefix}-goa.tsv (forced)")
+        else:
+            print(f"  ⚠ GOA data differs from existing {file_prefix}-goa.tsv (use --force to overwrite)")
+    else:
+        print(f"  - {file_prefix}-goa.tsv is up to date")
 
     # Seed ai-review.yaml with GOA annotations if requested
     if seed_annotations:
@@ -499,6 +562,8 @@ def fetch_uniprot_data(uniprot_id: str) -> str:
 def fetch_goa_data(uniprot_id: str) -> str:
     """Fetch Gene Ontology Annotation (GOA) data from QuickGO API.
 
+    Fetches ALL annotations using pagination if necessary.
+
     Args:
         uniprot_id: UniProt accession ID
 
@@ -511,91 +576,131 @@ def fetch_goa_data(uniprot_id: str) -> str:
     # Use QuickGO search endpoint with JSON format
     url = "https://www.ebi.ac.uk/QuickGO/services/annotation/search"
 
-    # Build URL with properly formatted parameters
-    # QuickGO expects multiple includeFields parameters, not an array
-    params = [
-        ("geneProductId", uniprot_id),
-        ("includeFields", "goName"),
-        ("includeFields", "taxonName"),
-        ("includeFields", "name"),
-        ("limit", "100"),  # API limit
-    ]
+    all_results = []
+    page = 1
+    limit = 200  # QuickGO's actual max limit per page (not 400!)
 
-    # Request JSON format
-    headers = {"Accept": "application/json"}
-
-    try:
-        response = requests.get(url, params=params, headers=headers, timeout=30)
-        response.raise_for_status()
-
-        # Parse JSON response
-        data = response.json()
-        results = data.get("results", [])
-
-        if not results:
-            # Return header only if no data
-            return "GENE PRODUCT DB\tGENE PRODUCT ID\tSYMBOL\tQUALIFIER\tGO TERM\tGO NAME\tGO ASPECT\tECO ID\tGO EVIDENCE CODE\tREFERENCE\tWITH/FROM\tTAXON ID\tTAXON NAME\tASSIGNED BY\tGENE NAME\tDATE\n"
-
-        # Sort results: IBA first, then by most recent date (descending), then by GO ID
-        sorted_results = sorted(
-            results,
-            key=lambda x: (
-                0 if x.get("goEvidence", "") == "IBA" else 1,  # IBA annotations first
-                -(
-                    int(x.get("date", "0")) if x.get("date", "").isdigit() else 0
-                ),  # Negative for descending date
-                x.get("goId", ""),  # Then by GO ID
-            ),
-        )
-
-        # Convert JSON to TSV format
-        tsv_lines = [
-            "GENE PRODUCT DB\tGENE PRODUCT ID\tSYMBOL\tQUALIFIER\tGO TERM\tGO NAME\tGO ASPECT\tECO ID\tGO EVIDENCE CODE\tREFERENCE\tWITH/FROM\tTAXON ID\tTAXON NAME\tASSIGNED BY\tGENE NAME\tDATE"
+    while True:
+        # Build URL with properly formatted parameters
+        # QuickGO expects multiple includeFields parameters, not an array
+        params = [
+            ("geneProductId", uniprot_id),
+            ("includeFields", "goName"),
+            ("includeFields", "taxonName"),
+            ("includeFields", "name"),
+            ("limit", str(limit)),
         ]
 
-        for result in sorted_results:
-            # Extract database and ID from geneProductId
-            gene_product_id = result.get("geneProductId", "")
-            if ":" in gene_product_id:
-                db, prod_id = gene_product_id.split(":", 1)
+        # Only add page parameter if page > 1 (API doesn't like page=1)
+        if page > 1:
+            params.append(("page", str(page)))
+
+        # Request JSON format
+        headers = {"Accept": "application/json"}
+
+        try:
+            response = requests.get(url, params=params, headers=headers, timeout=30)
+            response.raise_for_status()
+
+            # Parse JSON response
+            data = response.json()
+            results = data.get("results", [])
+
+            if not results:
+                # No more results, stop pagination
+                break
+
+            all_results.extend(results)
+
+            # Check if we've fetched all results
+            # Note: pageInfo.total is unreliable, use numberOfHits instead
+            total_annotations = data.get("numberOfHits", 0)
+
+            # Debug output
+            print(f"  Page {page}: fetched {len(results)} annotations (total so far: {len(all_results)})")
+
+            # Stop if:
+            # 1. We got fewer results than requested (last page)
+            # 2. We have fetched all known annotations
+            if len(results) < limit or len(all_results) >= total_annotations:
+                # We have all results
+                print(f"  Total annotations fetched: {len(all_results)} out of {total_annotations}")
+                break
+
+            page += 1
+
+        except requests.exceptions.RequestException as e:
+            if page == 1:
+                # First page failed, return empty result
+                return "GENE PRODUCT DB\tGENE PRODUCT ID\tSYMBOL\tQUALIFIER\tGO TERM\tGO NAME\tGO ASPECT\tECO ID\tGO EVIDENCE CODE\tREFERENCE\tWITH/FROM\tTAXON ID\tTAXON NAME\tASSIGNED BY\tGENE NAME\tDATE\n"
             else:
-                db, prod_id = "", gene_product_id
+                # Subsequent page failed, use what we have
+                print(f"Warning: Pagination stopped at page {page} due to error: {e}")
+                break
 
-            # Extract WITH/FROM information
-            with_from_list = []
-            with_from_data = result.get("withFrom")
-            if with_from_data:
-                for wf in with_from_data:
-                    for xref in wf.get("connectedXrefs", []):
-                        with_from_list.append(
-                            f"{xref.get('db', '')}:{xref.get('id', '')}"
-                        )
-            with_from = "|".join(with_from_list) if with_from_list else ""
+    # Process all collected results
+    results = all_results
 
-            # Build TSV row
-            row = [
-                db,  # GENE PRODUCT DB
-                prod_id,  # GENE PRODUCT ID
-                result.get("symbol", ""),  # SYMBOL
-                result.get("qualifier", ""),  # QUALIFIER
-                result.get("goId", ""),  # GO TERM
-                result.get("goName", ""),  # GO NAME
-                result.get("goAspect", ""),  # GO ASPECT
-                result.get("evidenceCode", ""),  # ECO ID
-                result.get("goEvidence", ""),  # GO EVIDENCE CODE
-                result.get("reference", ""),  # REFERENCE
-                with_from,  # WITH/FROM
-                str(result.get("taxonId", "")),  # TAXON ID
-                result.get("taxonName", ""),  # TAXON NAME
-                result.get("assignedBy", ""),  # ASSIGNED BY
-                result.get("name", ""),  # GENE NAME
-                result.get("date", ""),  # DATE
-            ]
-
-            tsv_lines.append("\t".join(row))
-
-        return "\n".join(tsv_lines) + "\n"
-
-    except requests.exceptions.RequestException:
-        # Return header only if request fails
+    if not results:
+        # Return header only if no data
         return "GENE PRODUCT DB\tGENE PRODUCT ID\tSYMBOL\tQUALIFIER\tGO TERM\tGO NAME\tGO ASPECT\tECO ID\tGO EVIDENCE CODE\tREFERENCE\tWITH/FROM\tTAXON ID\tTAXON NAME\tASSIGNED BY\tGENE NAME\tDATE\n"
+
+    # Sort results: IBA first, then by most recent date (descending), then by GO ID
+    sorted_results = sorted(
+        results,
+        key=lambda x: (
+            0 if x.get("goEvidence", "") == "IBA" else 1,  # IBA annotations first
+            -(
+                int(x.get("date", "0")) if x.get("date", "").isdigit() else 0
+            ),  # Negative for descending date
+            x.get("goId", ""),  # Then by GO ID
+        ),
+    )
+
+    # Convert JSON to TSV format
+    tsv_lines = [
+        "GENE PRODUCT DB\tGENE PRODUCT ID\tSYMBOL\tQUALIFIER\tGO TERM\tGO NAME\tGO ASPECT\tECO ID\tGO EVIDENCE CODE\tREFERENCE\tWITH/FROM\tTAXON ID\tTAXON NAME\tASSIGNED BY\tGENE NAME\tDATE"
+    ]
+
+    for result in sorted_results:
+        # Extract database and ID from geneProductId
+        gene_product_id = result.get("geneProductId", "")
+        if ":" in gene_product_id:
+            db, prod_id = gene_product_id.split(":", 1)
+        else:
+            db, prod_id = "", gene_product_id
+
+        # Extract WITH/FROM information
+        with_from_list = []
+        with_from_data = result.get("withFrom")
+        if with_from_data:
+            for wf in with_from_data:
+                for xref in wf.get("connectedXrefs", []):
+                    with_from_list.append(
+                        f"{xref.get('db', '')}:{xref.get('id', '')}"
+                    )
+        with_from = "|".join(with_from_list) if with_from_list else ""
+
+        # Build TSV row
+        row = [
+            db,  # GENE PRODUCT DB
+            prod_id,  # GENE PRODUCT ID
+            result.get("symbol", ""),  # SYMBOL
+            result.get("qualifier", ""),  # QUALIFIER
+            result.get("goId", ""),  # GO TERM
+            result.get("goName", ""),  # GO NAME
+            result.get("goAspect", ""),  # GO ASPECT
+            result.get("evidenceCode", ""),  # ECO ID
+            result.get("goEvidence", ""),  # GO EVIDENCE CODE
+            result.get("reference", ""),  # REFERENCE
+            with_from,  # WITH/FROM
+            str(result.get("taxonId", "")),  # TAXON ID
+            result.get("taxonName", ""),  # TAXON NAME
+            result.get("assignedBy", ""),  # ASSIGNED BY
+            result.get("name", ""),  # GENE NAME
+            result.get("date", ""),  # DATE
+        ]
+
+        tsv_lines.append("\t".join(row))
+
+    return "\n".join(tsv_lines) + "\n"
