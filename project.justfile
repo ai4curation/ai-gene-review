@@ -4,7 +4,9 @@ all: validate-all test
 
 # Fetch gene data from UniProt and GOA
 # Use --alias to specify a custom directory name and file prefix
+# Use --force to overwrite existing UniProt and GOA files
 # Example: just fetch-gene 9BACT F0JBF1 --alias HgcB
+# Example: just fetch-gene human TP53 --force
 fetch-gene organism gene *args="":
     uv run ai-gene-review fetch-gene {{organism}} {{gene}} --output-dir . {{args}}
 
@@ -24,17 +26,47 @@ fetch-gene-pmids organism gene output_dir="publications":
 fetch-pmids-from-file file output_dir="publications":
     uv run ai-gene-review fetch-pmids-from-file {{file}} --output-dir {{output_dir}}
 
+# Refresh PMID titles in gene review YAML files (replaces TODO placeholders with actual titles)
+refresh-pmid-titles organism="" gene="":
+    #!/usr/bin/env bash
+    if [ -n "{{organism}}" ] && [ -n "{{gene}}" ]; then
+        echo "Refreshing PMID titles for {{organism}}/{{gene}}..."
+        uv run python src/ai_gene_review/cli/refresh_pmid_titles.py genes/{{organism}}/{{gene}}/{{gene}}-ai-review.yaml
+    elif [ -n "{{organism}}" ]; then
+        echo "Refreshing PMID titles for all {{organism}} genes..."
+        for yaml in genes/{{organism}}/*/*-ai-review.yaml; do
+            if [ -f "$yaml" ]; then
+                uv run python src/ai_gene_review/cli/refresh_pmid_titles.py "$yaml"
+            fi
+        done
+    else
+        echo "Refreshing PMID titles for all genes..."
+        uv run python src/ai_gene_review/cli/refresh_pmid_titles.py --all-genes
+    fi
+
+# Refresh PMID titles for all genes (alias)
+refresh-all-pmid-titles:
+    uv run python src/ai_gene_review/cli/refresh_pmid_titles.py --all-genes
+
 # Validate gene review YAML files against LinkML schema (for multiple files or patterns)
 validate-files files:
     uv run ai-gene-review validate {{files}}
 
-# Validate a specific gene's review file (short alias)
+# Validate a specific gene's review file AND check PMID references (short alias)
 validate organism gene:
+    @echo "Validating {{organism}}/{{gene}} review file..."
     uv run ai-gene-review validate --verbose genes/{{organism}}/{{gene}}/{{gene}}-ai-review.yaml
+    @echo ""
+    @echo "Checking PMID references in markdown files..."
+    uv run python src/ai_gene_review/tools/validate_pmid_references.py genes/{{organism}}/{{gene}}/
 
-# Validate a specific gene's review file (long name for clarity)
+# Validate a specific gene's review file AND check PMID references (long name for clarity)
 validate-gene organism gene:
+    @echo "Validating {{organism}}/{{gene}} review file..."
     uv run ai-gene-review validate genes/{{organism}}/{{gene}}/{{gene}}-ai-review.yaml
+    @echo ""
+    @echo "Checking PMID references in markdown files..."
+    @uv run python src/ai_gene_review/tools/validate_pmid_references.py genes/{{organism}}/{{gene}}/ || (echo "❌ PMID validation failed" && exit 1)
 
 # Validate with verbose output
 validate-gene-verbose organism gene:
@@ -55,6 +87,24 @@ validate-all-summary:
 # Validate all gene review files (strict mode - warnings become errors)
 validate-all-strict:
     uv run ai-gene-review validate --verbose --strict "genes/*/*/*-ai-review.yaml"
+
+# Comprehensive validation: YAML schema + PMID references + mermaid syntax
+validate-comprehensive:
+    @echo "==================== COMPREHENSIVE VALIDATION ===================="
+    @echo ""
+    @echo "Step 1/3: Validating YAML files against schema..."
+    @echo "=================================================================="
+    uv run ai-gene-review validate --verbose "genes/*/*/*-ai-review.yaml"
+    @echo ""
+    @echo "Step 2/3: Checking PMID references in markdown files..."
+    @echo "=================================================================="
+    uv run python src/ai_gene_review/tools/validate_pmid_references.py genes/
+    @echo ""
+    @echo "Step 3/3: Validating mermaid diagrams..."
+    @echo "=================================================================="
+    uv run python src/ai_gene_review/tools/validate_mermaid.py genes/
+    @echo ""
+    @echo "==================== VALIDATION COMPLETE ===================="
 
 # Seed missing GOA annotations in a gene's review file
 seed-goa organism gene:
@@ -290,6 +340,56 @@ update-browser-data: export-annotations-json
         --force
     @cp src/ai_gene_review/browser/index.html app/
     @echo "Data updated in app/"
+
+# ============== Markdown and Documentation Tools ==============
+
+# Validate mermaid diagrams in a markdown file or directory
+validate-mermaid path="genes/":
+    @echo "Validating mermaid diagrams in {{path}}..."
+    uv run python src/ai_gene_review/tools/validate_mermaid_mmdc.py {{path}}
+
+# Convert markdown file with mermaid to HTML
+convert-to-html md_file:
+    @echo "Converting {{md_file}} to HTML..."
+    uv run python src/ai_gene_review/tools/markdown_to_html.py {{md_file}}
+
+# Convert gene pathway markdown to HTML
+gene-pathway-html organism gene:
+    @echo "Converting {{organism}}/{{gene}} pathway to HTML..."
+    uv run python src/ai_gene_review/tools/markdown_to_html.py \
+        genes/{{organism}}/{{gene}}/{{gene}}-pathway.md \
+        genes/{{organism}}/{{gene}}/{{gene}}-pathway.html
+
+# Validate all mermaid diagrams in gene files
+validate-all-mermaid:
+    @echo "Validating all mermaid diagrams in gene files..."
+    uv run python src/ai_gene_review/tools/validate_mermaid.py genes/
+
+# Validate PMID references in markdown against review YAML
+validate-pmids path:
+    @echo "Validating PMID references in {{path}}..."
+    uv run python src/ai_gene_review/tools/validate_pmid_references.py {{path}}
+
+# Validate all PMID references in gene markdown files
+validate-all-pmids:
+    @echo "Validating all PMID references in gene files..."
+    uv run python src/ai_gene_review/tools/validate_pmid_references.py genes/
+
+# Validate PMIDs for a specific gene
+validate-gene-pmids organism gene:
+    @echo "Validating PMID references for {{organism}}/{{gene}}..."
+    uv run python src/ai_gene_review/tools/validate_pmid_references.py genes/{{organism}}/{{gene}}/
+
+# Convert all pathway markdown files to HTML
+convert-all-pathways:
+    #!/usr/bin/env bash
+    count=0
+    for pathway in $(find genes -name "*-pathway.md" -type f); do
+        echo "Converting $pathway..."
+        uv run python src/ai_gene_review/tools/markdown_to_html.py "$pathway"
+        count=$((count + 1))
+    done
+    echo "All $count pathway files converted!"
 
 # ============== Publications Cache Management ==============
 

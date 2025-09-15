@@ -540,11 +540,31 @@ class SupportingTextValidator:
             # For very short texts, require exact match
             return (False, 0.0, None)
 
-        # Split publication into sentences for better matching
-        sentences = self.split_into_sentences(publication_content)
-
+        # NEW: Try sliding window on the full normalized text BEFORE sentence splitting
+        # This handles cases where text spans multiple lines/sentences
+        pub_words = pub_clean.split()
         best_score = 0.0
         best_match = None
+
+        # Slide a window of the same size as the text
+        for i in range(len(pub_words) - text_length + 1):
+            window = ' '.join(pub_words[i:i + text_length])
+            similarity = SequenceMatcher(None, text_clean, window).ratio()
+
+            if similarity > best_score:
+                best_score = similarity
+                best_match = window
+
+            # If we find an excellent match, we can stop early
+            if similarity >= 0.95:
+                return (True, similarity, best_match)
+
+        # If we found a good match with sliding window, return it
+        if best_score >= self.similarity_threshold:
+            return (True, best_score, best_match)
+
+        # Split publication into sentences for better matching
+        sentences = self.split_into_sentences(publication_content)
 
         for sentence in sentences:
             sentence_clean = self.normalize_text(sentence)
@@ -589,12 +609,17 @@ class SupportingTextValidator:
             'this is a test string!'
             >>> validator.normalize_text("JAK1-mediated (STAT) activation")
             'jak1-mediated stat activation'
+            >>> validator.normalize_text("65% (P < 0.001).")
+            '65% p 0 001'
         """
-        # Remove extra whitespace
+        # First, normalize all whitespace (including newlines) to single spaces
         text = re.sub(r"\s+", " ", text)
-        # Remove special characters but keep basic punctuation
-        text = re.sub(r"[^\w\s.,;:!?-]", "", text)
-        # Convert to lowercase
+        # Remove most punctuation but keep hyphens and exclamation marks
+        # Remove parentheses, periods, commas, semicolons, colons, quotes, etc.
+        text = re.sub(r"[().,;:\"'<>=]+", " ", text)
+        # Normalize whitespace again after removing some punctuation
+        text = re.sub(r"\s+", " ", text)
+        # Convert to lowercase and strip
         text = text.lower().strip()
         return text
 
@@ -618,15 +643,17 @@ class SupportingTextValidator:
             >>> len(sentences)  # Only the long sentence
             1
         """
-        # Simple sentence splitting (can be improved)
+        # First normalize whitespace to join lines that are part of the same sentence
+        # Replace single newlines with spaces, preserve double newlines as paragraph breaks
+        text = re.sub(r"(?<!\n)\n(?!\n)", " ", text)
+        # Normalize multiple spaces to single spaces
+        text = re.sub(r"\s+", " ", text)
+
+        # Simple sentence splitting on punctuation followed by whitespace
         sentences = re.split(r"[.!?]\s+", text)
-        # Also split on newlines for markdown format
-        all_sentences: List[str] = []
-        for sent in sentences:
-            all_sentences.extend(sent.split("\n"))
 
         # Filter out empty sentences and clean up
-        return [s.strip() for s in all_sentences if s.strip() and len(s.strip()) > 20]
+        return [s.strip() for s in sentences if s.strip() and len(s.strip()) > 20]
 
     def validate_supporting_text_against_reference(
         self,
@@ -949,7 +976,7 @@ class SupportingTextValidator:
             >>> print(f"Valid: {report2.is_valid}")
             Valid: False
             >>> print(report2.results[0].error_message)
-            Reference PMID:12345678 has finding without supporting_text - findings from publications/UniProt must be supported with quotes
+            Reference PMID:12345678 has finding without supporting_text - findings from publications/UniProt/Reactome must be supported with quotes
         """
         report = SupportingTextValidationReport()
 

@@ -111,6 +111,10 @@ class JSONExporter:
         row["taxon_id"] = gene_review.taxon.id if gene_review.taxon else None
         row["taxon_label"] = gene_review.taxon.label if gene_review.taxon else None
 
+        # Add link fields
+        row["uniprot_link"] = f"https://www.uniprot.org/uniprotkb/{gene_review.id}" if gene_review.id else None
+        row["pathway_link"] = self._generate_pathway_link(gene_review)
+
         # Term information
         if annotation.term:
             row["term_id"] = annotation.term.id
@@ -223,6 +227,76 @@ class JSONExporter:
         for ref in gene_review.references:
             if ref.id == ref_id:
                 return ref.title
+
+        return None
+
+    def _generate_pathway_link(self, gene_review: GeneReview) -> Optional[str]:
+        """
+        Generate a relative pathway link for the gene review.
+
+        Args:
+            gene_review: The GeneReview object
+
+        Returns:
+            Relative pathway link if pathway file exists, None otherwise
+        """
+        if not gene_review.gene_symbol:
+            return None
+
+        # We need to determine the organism/species directory from the taxon
+        # This is a heuristic mapping - we'll use common patterns
+        organism_mapping = {
+            "NCBITaxon:9606": "human",
+            "NCBITaxon:10090": "mouse",
+            "NCBITaxon:559292": "yeast",
+            "NCBITaxon:4896": "pombe",
+            "NCBITaxon:7227": "fly",
+            "NCBITaxon:6239": "worm",
+            "NCBITaxon:8355": "rat",  # Xenopus tropicalis -> rat directory used
+        }
+
+        # Try to map taxon to organism directory
+        organism_dir = None
+        if gene_review.taxon and gene_review.taxon.id:
+            organism_dir = organism_mapping.get(gene_review.taxon.id)
+
+        # If no mapping found, try to infer from common patterns
+        if not organism_dir:
+            # Look for pathway file in multiple possible locations
+            possible_paths = [
+                f"../genes/human/{gene_review.gene_symbol}/{gene_review.gene_symbol}-pathway.html",
+                f"../genes/mouse/{gene_review.gene_symbol}/{gene_review.gene_symbol}-pathway.html",
+                f"../genes/yeast/{gene_review.gene_symbol}/{gene_review.gene_symbol}-pathway.html",
+                f"../genes/pombe/{gene_review.gene_symbol}/{gene_review.gene_symbol}-pathway.html",
+                f"../genes/fly/{gene_review.gene_symbol}/{gene_review.gene_symbol}-pathway.html",
+                f"../genes/worm/{gene_review.gene_symbol}/{gene_review.gene_symbol}-pathway.html",
+            ]
+
+            # Check if any of these files exist
+            for path in possible_paths:
+                # Convert relative path to absolute to check existence
+                abs_path = Path("genes") / path.replace("../genes/", "")
+                if abs_path.exists():
+                    return path
+
+            # If none found, try organism codes (BPZF4, ARATH, etc.)
+            # This is for bacterial/other organism codes
+            gene_symbol = gene_review.gene_symbol
+            for org_path in Path("genes").iterdir():
+                if org_path.is_dir() and org_path.name not in ["human", "mouse", "yeast", "pombe", "fly", "worm", "rat"]:
+                    possible_file = org_path / gene_symbol / f"{gene_symbol}-pathway.html"
+                    if possible_file.exists():
+                        return f"../genes/{org_path.name}/{gene_symbol}/{gene_symbol}-pathway.html"
+
+            return None
+
+        # Use mapped organism directory
+        pathway_path = f"../genes/{organism_dir}/{gene_review.gene_symbol}/{gene_review.gene_symbol}-pathway.html"
+
+        # Check if the file exists
+        abs_path = Path("genes") / organism_dir / gene_review.gene_symbol / f"{gene_review.gene_symbol}-pathway.html"
+        if abs_path.exists():
+            return pathway_path
 
         return None
 
