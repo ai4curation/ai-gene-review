@@ -70,6 +70,11 @@ window.searchSchema = {
       "type": "string"
     },
     {
+      "field": "uniprot_link",
+      "label": "Uniprot",
+      "type": "url"
+    },
+    {
       "field": "protein_id",
       "label": "Protein",
       "type": "string"
@@ -90,9 +95,9 @@ window.searchSchema = {
       "type": "string"
     },
     {
-      "field": "original_reference_title",
-      "label": "Title",
-      "type": "string"
+      "field": "pathway_link",
+      "label": "Pathway",
+      "type": "url"
     },
     {
       "field": "review.summary",

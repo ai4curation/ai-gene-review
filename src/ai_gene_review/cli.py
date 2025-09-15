@@ -70,6 +70,14 @@ def fetch_gene(
             help="Alias to use for directory name and file prefixes instead of gene symbol",
         ),
     ] = None,
+    force: Annotated[
+        bool,
+        typer.Option(
+            "--force",
+            "-f",
+            help="Force overwrite existing UniProt and GOA files even if they exist",
+        ),
+    ] = False,
 ):
     """Fetch gene data from UniProt and GOA databases.
 
@@ -96,6 +104,7 @@ def fetch_gene(
             seed_annotations=not no_seed,
             fetch_titles=fetch_titles,
             alias=alias,
+            force=force,
         )
 
         # Show where files were created
@@ -104,10 +113,23 @@ def fetch_gene(
         file_prefix = alias if alias else gene
         gene_dir = base_path / "genes" / organism / dir_name
 
-        typer.echo("✓ Successfully fetched gene data!")
-        typer.echo(f"Files created in: {gene_dir}")
-        typer.echo(f"  - {file_prefix}-uniprot.txt")
-        typer.echo(f"  - {file_prefix}-goa.tsv")
+        typer.echo("✓ Gene data fetch completed!")
+        typer.echo(f"Location: {gene_dir}")
+
+        # Report any differences found that weren't updated
+        differences_not_updated = []
+        if not force:
+            if result.get("uniprot_differences") and not result.get("uniprot_updated"):
+                differences_not_updated.append(f"{file_prefix}-uniprot.txt differs from remote")
+            if result.get("goa_differences") and not result.get("goa_updated"):
+                differences_not_updated.append(f"{file_prefix}-goa.tsv differs from remote")
+
+        if differences_not_updated:
+            typer.echo("")
+            typer.echo("⚠ Some files have differences but were not updated:")
+            for diff in differences_not_updated:
+                typer.echo(f"  - {diff}")
+            typer.echo("Use --force to overwrite existing files")
 
         # Display appropriate message for ai-review.yaml
         if not no_seed:

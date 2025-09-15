@@ -116,6 +116,7 @@ def test_integration_with_main_validator():
         "core_functions": [
             {
                 "description": "Test function",
+                "molecular_function": {"id": "GO:0003824", "label": "catalytic activity"},
                 "substrates": [
                     {"id": "MADEUP:complex_123", "label": "Made-up complex"}
                 ],

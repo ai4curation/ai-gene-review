@@ -11,7 +11,159 @@ import click
 import httpx
 from openai import OpenAI
 
-from ai_gene_review.etl.gene import expand_organism_name
+from ai_gene_review.etl.gene import expand_organism_name, fetch_uniprot_data
+
+
+def parse_uniprot_metadata(uniprot_text: str, uniprot_id: str) -> str:
+    """Parse key metadata from UniProt text format.
+
+    Extracts the most important fields for gene identification and research.
+
+    Args:
+        uniprot_text: Raw UniProt entry in text format
+        uniprot_id: UniProt accession ID
+
+    Returns:
+        Formatted string with key metadata
+    """
+    lines = uniprot_text.split('\n')
+    metadata = {}
+
+    # Parse key fields
+    current_section = None
+    for line in lines:
+        # Check for new sections
+        if line.startswith('CC   -!-'):
+            current_section = None  # Reset section tracker
+
+        if line.startswith('ID   '):
+            # Extract entry name
+            parts = line.split()
+            if len(parts) > 1:
+                metadata['entry_name'] = parts[1]
+
+        elif line.startswith('AC   '):
+            # Primary accession
+            metadata['uniprot_id'] = line[5:].split(';')[0].strip()
+
+        elif line.startswith('DE   RecName:'):
+            # Protein name
+            if 'Full=' in line:
+                name_part = line.split('Full=')[1]
+                name = name_part.split('{')[0].strip().rstrip(';')
+                metadata['protein_name'] = name
+
+        elif line.startswith('DE            EC='):
+            # EC number
+            ec_part = line.split('EC=')[1]
+            ec = ec_part.split(' ')[0].rstrip(';')
+            metadata['ec_number'] = ec
+
+        elif line.startswith('GN   Name='):
+            # Gene name
+            name_part = line.split('Name=')[1]
+            gene = name_part.split(' ')[0].split(';')[0].split('{')[0]
+            metadata['gene_name'] = gene
+
+        elif line.startswith('GN   OrderedLocusNames='):
+            # Locus tag
+            locus_part = line.split('OrderedLocusNames=')[1]
+            locus = locus_part.split(';')[0]
+            metadata['locus_tag'] = locus
+
+        elif line.startswith('GN   Synonyms='):
+            # Gene synonyms
+            syn_part = line.split('Synonyms=')[1]
+            synonyms = syn_part.split(';')[0]
+            metadata['synonyms'] = synonyms
+
+        elif line.startswith('OS   '):
+            # Organism
+            if 'organism' not in metadata:
+                metadata['organism'] = line[5:].rstrip('.')
+            else:
+                metadata['organism'] += ' ' + line[5:].rstrip('.')
+
+        elif line.startswith('OX   NCBI_TaxID='):
+            # Taxonomy ID
+            tax_id = line.split('NCBI_TaxID=')[1].rstrip(';')
+            metadata['ncbi_taxid'] = tax_id
+
+        elif line.startswith('CC   -!- FUNCTION:'):
+            # Function description
+            current_section = 'function'
+            func = line.split('FUNCTION:')[1].strip()
+            metadata['function'] = func
+        elif line.startswith('CC       ') and current_section == 'function':
+            # Continue function description
+            continuation = line[9:].strip()
+            metadata['function'] += ' ' + continuation
+
+        elif line.startswith('CC   -!- SUBCELLULAR LOCATION:'):
+            # Subcellular location
+            current_section = 'location'
+            loc = line.split('SUBCELLULAR LOCATION:')[1].strip()
+            metadata['subcellular_location'] = loc
+        elif line.startswith('CC       ') and current_section == 'location':
+            # Continue location description
+            continuation = line[9:].strip()
+            metadata['subcellular_location'] += ' ' + continuation
+
+        elif line.startswith('CC   -!- SUBUNIT:'):
+            # Subunit information
+            current_section = 'subunit'
+            subunit = line.split('SUBUNIT:')[1].strip()
+            metadata['subunit'] = subunit
+        elif line.startswith('CC       ') and current_section == 'subunit':
+            # Continue subunit description
+            continuation = line[9:].strip()
+            metadata['subunit'] += ' ' + continuation
+
+    # Clean up all fields to remove evidence codes at the end
+    for key in ['function', 'subcellular_location', 'subunit']:
+        if key in metadata:
+            text = metadata[key]
+            if '{ECO:' in text:
+                text = text.split('{ECO:')[0].strip()
+            metadata[key] = text
+
+    # Format metadata for prompt
+    result = []
+    result.append("=== UNIPROT METADATA ===")
+    result.append(f"UniProt ID: {metadata.get('uniprot_id', uniprot_id)}")
+    result.append(f"Entry Name: {metadata.get('entry_name', 'N/A')}")
+
+    if 'gene_name' in metadata:
+        result.append(f"Gene Name: {metadata['gene_name']}")
+    if 'locus_tag' in metadata:
+        result.append(f"Locus Tag: {metadata['locus_tag']}")
+    if 'synonyms' in metadata:
+        result.append(f"Gene Synonyms: {metadata['synonyms']}")
+
+    if 'protein_name' in metadata:
+        result.append(f"Protein Name: {metadata['protein_name']}")
+    if 'ec_number' in metadata:
+        result.append(f"EC Number: {metadata['ec_number']}")
+
+    if 'organism' in metadata:
+        result.append(f"Organism: {metadata['organism']}")
+    if 'ncbi_taxid' in metadata:
+        result.append(f"NCBI Taxonomy ID: {metadata['ncbi_taxid']}")
+
+    if 'function' in metadata:
+        # Clean up function text
+        func_text = metadata['function'].replace('{ECO:', ' {ECO:')
+        result.append(f"Function: {func_text}")
+
+    if 'subcellular_location' in metadata:
+        result.append(f"Subcellular Location: {metadata['subcellular_location']}")
+
+    if 'subunit' in metadata:
+        result.append(f"Subunit: {metadata['subunit']}")
+
+    result.append("======================")
+
+    return '\n'.join(result)
 
 
 @click.command()
@@ -53,6 +205,11 @@ from ai_gene_review.etl.gene import expand_organism_name
     default=3,
     help="Maximum number of retries on timeout (default: 3)",
 )
+@click.option(
+    "--uniprot-id",
+    type=str,
+    help="UniProt ID for the gene (optional, but highly recommended for accuracy)",
+)
 def research_gene(
     gene_symbol: str,
     organism: str,
@@ -63,6 +220,7 @@ def research_gene(
     system_prompt_file: Optional[str],
     timeout: int,
     max_retries: int,
+    uniprot_id: Optional[str],
 ):
     """Research a gene using OpenAI's Deep Research API.
 
@@ -73,6 +231,7 @@ def research_gene(
     Examples:
         deep-research CFAP300
         deep-research TP53 --organism human --output-dir custom/path
+        deep-research rhlB --organism PSEAE --uniprot-id Q9HXE5
     """
     if not api_key:
         click.echo(
@@ -122,9 +281,35 @@ Format as a comprehensive research report with citations suitable for Gene Ontol
     # Expand organism name for better research results
     organism_full = expand_organism_name(organism)
 
-    user_query = f"""Research the {organism_full} gene {gene_symbol}. Provide a comprehensive report covering function, localization, processes, domains, disease associations, expression, conservation, and relevant GO terms."""
+    # Parse UniProt metadata if available
+    uniprot_metadata = ""
+    if uniprot_id:
+        try:
+            uniprot_text = fetch_uniprot_data(uniprot_id)
+            uniprot_metadata = parse_uniprot_metadata(uniprot_text, uniprot_id)
+            click.echo(f"✅ Loaded UniProt metadata for {uniprot_id}")
+        except Exception as e:
+            click.echo(f"⚠️  Could not fetch UniProt data for {uniprot_id}: {e}", err=True)
+            uniprot_metadata = f"UniProt ID: {uniprot_id}\n"
+
+    if not uniprot_metadata:
+        click.echo(f"⚠️  Could not fetch UniProt data for {uniprot_id}", err=True)
+        sys.exit(1)
+
+    # Build enhanced user query with metadata
+    user_query = f"""Research the {organism_full} gene {gene_symbol}.
+
+{uniprot_metadata}
+
+Provide a comprehensive report covering function, localization, processes, domains, disease associations, expression, conservation, and relevant GO terms.
+
+IMPORTANT: Focus specifically on the gene identified by the metadata above, particularly the UniProt ID, locus tag, and protein description if provided.
+
+Sometimes different genes in the same organism have the same name. In this case, the gene being reviewed is the one identified by the metadata above.
+"""
 
     click.echo(f"Starting deep research on {gene_symbol} ({organism_full})...")
+    click.echo(f"Metadata: {uniprot_metadata}")
     click.echo(f"Output will be saved to: {output_path}")
     click.echo(f"Timeout set to: {timeout} seconds")
     click.echo(f"Max retries: {max_retries}")
