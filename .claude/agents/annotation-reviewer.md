@@ -31,14 +31,13 @@ For each annotation you will create or update the `review` section of the `exist
 
 Only edit the `review` section. For any statement, back it up with a citation used in the overall document. You should quote exact passages of text in `supporting_text`.
 
-Note that there should be an entry under `existing_annotations` for every line in the GOA tsv. You don't need to add new ones, just comment on existing ones
+Note that there should be an entry under `existing_annotations` for every line in the GOA tsv.
 
 The exception is if you think there are key annotations missing. In this case you should add entries, completing the `term` portion yourself, with `action: NEW`. Only do this for annotations not covered or with `proposed_replacement_terms` in existing annotations.
 
 2. **Critical Evaluation**: You must not accept existing annotations as gospel, regardless of whether they are marked as experimental (EXP, IDA, IPI, etc.) or computational (IEA, ISS, etc.). Many GO terms represent over-annotations that need correction.
 
-However, in general IBA annotations have undergone extensive review as well as making phylogenetic sense, they often frequently represent the
-term at the right level of specificity. However, they can be conservative and missing functions.
+However, in general IBA annotations have undergone extensive review as well as making phylogenetic sense, they often frequently represent the term at the right level of specificity. However, they can be conservative and missing functions.
 
 Always make use of the `original_reference_id`. If this refers to a PMID, then read the publication (in publications/ directory) and make use of the information there.
 
@@ -63,8 +62,6 @@ Note that duplicates (i.e exact same GO ID) are perfectly fine, there is no need
 
 It may also be OK for IEAs to be broader than what is determined by IBA or literature, you can just mark these as accept,
 unless you think the mapping is too general.
-
-
 
 5. **Detailed Justification**: For each annotation, provide:
    - Clear rationale for the assigned action

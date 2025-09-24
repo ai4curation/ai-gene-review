@@ -2,11 +2,11 @@
 
 ## Overview
 
-Epe1 is a non-enzymatic anti-silencing factor that plays a central role in heterochromatin boundary formation and maintenance in S. pombe. Despite containing a JmjC domain typically associated with histone demethylases, Epe1 lacks catalytic activity and functions through protein-protein interactions to establish boundaries that prevent heterochromatin spreading [PMID:32433969, PMID:30531922]. The protein operates within an intricate network of chromatin regulators, recruiting histone acetyltransferases, binding HP1/Swi6, and paradoxically enabling RNAi-mediated silencing by promoting transcription of repetitive elements.
+Epe1 is a non-enzymatic anti-silencing factor that plays a central role in heterochromatin boundary formation and maintenance in S. pombe. Despite containing a JmjC domain typically associated with histone demethylases, Epe1 lacks catalytic activity and functions through protein-protein interactions to establish boundaries that prevent heterochromatin spreading [PMID:12773576]. The protein operates within an intricate network of chromatin regulators, recruiting histone acetyltransferases, binding HP1/Swi6, and paradoxically enabling RNAi-mediated silencing by promoting transcription of repetitive elements.
 
 ## Heterochromatin Boundary Formation Pathway
 
-Epe1 functions as the master regulator of heterochromatin boundaries through a multi-step mechanism. It binds directly to HP1/Swi6 at H3K9-methylated nucleosomes via its C-terminal domain [PMID:32433969]. Once localized, Epe1 recruits the SAGA histone acetyltransferase complex, leading to histone H3 acetylation that antagonizes the spread of H3K9 methylation [PMID:30531922]. Additionally, Epe1 recruits the Bdf2 bromodomain protein to heterochromatin boundaries, particularly at inverted repeat centromeric (IRC) elements, where Bdf2 recognizes acetylated histones and prevents Sir2-mediated deacetylation [PMID:24013502]. This creates stable boundaries that compartmentalize heterochromatin from euchromatin at centromeres, telomeres, and the mating-type locus.
+Epe1 functions as the master regulator of heterochromatin boundaries through a multi-step mechanism. It binds directly to HP1/Swi6 at H3K9-methylated nucleosomes via its C-terminal domain [PMID:16762840]. Once localized, Epe1 recruits the SAGA histone acetyltransferase complex, leading to histone H3 acetylation that antagonizes the spread of H3K9 methylation [PMID:17449867]. Additionally, Epe1 recruits the Bdf2 bromodomain protein to heterochromatin boundaries, particularly at inverted repeat centromeric (IRC) elements, where Bdf2 recognizes acetylated histones and prevents Sir2-mediated deacetylation [PMID:24013502]. This creates stable boundaries that compartmentalize heterochromatin from euchromatin at centromeres, telomeres, and the mating-type locus.
 
 ## RNAi-Mediated Heterochromatin Formation Pathway
 
@@ -14,7 +14,7 @@ Paradoxically, while Epe1 antagonizes heterochromatin maintenance, it promotes R
 
 ## Competitive HP1/Swi6 Binding Network
 
-Epe1 participates in a competitive binding network at HP1/Swi6 sites, where it competes with the histone deacetylase Clr3 for access to chromatin [PMID:32433969]. When Epe1 binding predominates, it leads to SAGA recruitment and histone acetylation, promoting an open chromatin state. Conversely, when Clr3 binding is favored, it results in deacetylation and heterochromatin maintenance. This competition creates a dynamic equilibrium that fine-tunes heterochromatin boundaries based on local chromatin context and regulatory signals.
+Epe1 participates in a competitive binding network at HP1/Swi6 sites, where it competes with the histone deacetylase Clr3 for access to chromatin [PMID:16762840]. When Epe1 binding predominates, it leads to SAGA recruitment and histone acetylation, promoting an open chromatin state. Conversely, when Clr3 binding is favored, it results in deacetylation and heterochromatin maintenance. This competition creates a dynamic equilibrium that fine-tunes heterochromatin boundaries based on local chromatin context and regulatory signals.
 
 ## Pathway Diagram
 
