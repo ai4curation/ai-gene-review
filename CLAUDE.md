@@ -25,12 +25,14 @@ genes/
       CFAP300-bioinformatics/ <-- the folder for any bioinformatics analyses (create this if necessary)
     <other genes>/
       ...
-  worms/
+  worm/
     lrx-1/
+  SCHPO/  <-- other orgs use uniprot species codes
       ...
 publications/
-  PMID_123456.md <-- cached publication text (this should be available for you)
-
+  PMID_123456.md <-- cached publication text (this should be available for you, DO NOT EDIT)
+reactome/
+  R-HSA-NNNNNN.md <- cached reactome entry
 
 You can regenerate the derived files by running commands like:
 
@@ -38,9 +40,9 @@ You can regenerate the derived files by running commands like:
 just fetch-gene human CFAP300 
 ```
 
-This makes the uniprot, goa, and citations files. It will also create a stub for the gene review if it doesn't exist.
+This makes the uniprot, goa, and publications files. It will also create a stub for the ai-review.yaml if it doesn't exist.
 
-After making edits to the yaml file, you can validate the file by running:
+After making edits to the ai-review.yaml file, you can validate the file by running:
 
 ```
 just validate human CFAP300
@@ -75,10 +77,15 @@ existing_annotations:
   <review of existing annotations, using the GO guidelines; should include all annotations from goa.csv>
 core_functions:
   <your own summary of the core functions of the gene>
+proposed_new_terms:
+  <suggestions for new GO terms>
+suggested_questions:
+  <suggested questions for experts>
+suggested_experiments:
+  <suggested experiments to elucidate gene function>
 ```
 
-See the schema and existing files for more details (there are only a few files to look at for now, so all count as exemplars, we will
-annotate exemplars more later on)
+See the schema and existing files for more details.
 
 When creating a new review, always make sure files are in place:
 
@@ -86,16 +93,13 @@ When creating a new review, always make sure files are in place:
 
 This creates the uniprot, goa files, and a stub for the gene review.
 
-The next thing is for you to do deep research on that gene and make a GENE-notes.md file, with citations inline (e.g [PMID:12345 title, "<supporting text>"]).
+The next thing is for you to do deep research on that gene and make a GENE-notes.md file, with citations inline (e.g [PMID:12345 title, "<supporting text>"]). In some cases this will have been done ahead of time for you.
 
 ## Reviewing existing annotations
 
-You should start with the ai-review.yaml file, where stubs are created for you (from `just fetch-gene <organism> <gene>`). Any PMID cited should
-be in the publications folder, e.g. `publications/PMID_123456.md`. Review these.
+You should start with the ai-review.yaml file, where stubs are created for you (from `just fetch-gene <organism> <gene>`). Any PMID cited should be in the publications folder, e.g. `publications/PMID_123456.md`. Review these.
 
-A deep research file should already be present in the gene folder, e.g. `genes/SPECIES/GENE/GENE-deep-research.md`. This should contain a summary of the
-literature, and any other information you found useful for the review. There may be irrelevant information in the citations, that is OK. If this is
-not present, make your own and keep notes in `genes/SPECIES/GENE/GENE-notes.md`.
+A deep research file should already be present in the gene folder, e.g. `genes/SPECIES/GENE/GENE-deep-research.md`. This should contain a summary of the literature, and any other information you found useful for the review. There may be irrelevant information in the citations, that is OK. If this is not present, make your own and keep notes in `genes/SPECIES/GENE/GENE-notes.md`.
 
 Be aware that many GO terms are over-annotations. You should also not take existing annotations as gospel, whether experimental or bioinformatic.
 always use a holistic synthesized picture of the gene function that you have obtained from your research.
@@ -119,6 +123,8 @@ ActionEnum:
       UNDECIDED:
         description: The annotation is not clear, and the reviewer is not sure what to do with it. ALWAYS USE THIS IF YOU ARE UNABLE TO ACCESS
           RELEVANT PUBLICATIONS
+      NEW:
+        
 ```      
 
 ## Tools
@@ -151,8 +157,6 @@ as e.g `file:<SPECIES>/<GENE>/bioinformatics/RESULTS.md`.
 
 * NEVER guess identifiers for terms, genes, publications. Always use the relevant tools or MCPS, or look them up in derived files.
 * For files `<GENE>-notes.md`, use literature deep search, and always record provenance for assertions, e.g `[PMID:12345 "<supporting text>"]`
-
-
 
 ## Support code
 

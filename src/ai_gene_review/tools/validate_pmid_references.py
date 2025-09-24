@@ -136,49 +136,54 @@ def validate_pmid_references(markdown_path: Path) -> Tuple[bool, List[str], List
     
     return is_valid, list(missing_pmids), list(invalid_md_pmids), info
 
-def validate_file(file_path: Path) -> bool:
+def validate_file(file_path: Path, verbose: bool = True) -> bool:
     """Validate a single markdown file."""
-    print(f"\nValidating {file_path}:")
-    
+    if verbose:
+        print(f"\nValidating {file_path}:")
+
     is_valid, missing_pmids, invalid_pmids, info = validate_pmid_references(file_path)
-    
-    for msg in info:
-        print(f"  {msg}")
-    
+
+    if verbose:
+        for msg in info:
+            print(f"  {msg}")
+
     if is_valid:
-        print(f"  ✅ All PMID citations are valid and present in the review file")
+        if verbose:
+            print(f"  ✅ All PMID citations are valid and present in the review file")
         return True
     else:
         error_found = False
-        
+
         if invalid_pmids:
             error_found = True
-            print(f"  ❌ Invalid PMID format(s) found:")
-            for pmid in sorted(invalid_pmids):
-                print(f"    - {pmid} (PMIDs must contain only digits)")
-            print(f"  Please fix the PMID format - PMIDs should only contain numbers.")
-        
+            if verbose:
+                print(f"  ❌ Invalid PMID format(s) found:")
+                for pmid in sorted(invalid_pmids):
+                    print(f"    - {pmid} (PMIDs must contain only digits)")
+                print(f"  Please fix the PMID format - PMIDs should only contain numbers.")
+
         if missing_pmids:
             error_found = True
-            print(f"  ❌ Missing PMIDs in review file:")
-            for pmid in sorted(missing_pmids):
-                print(f"    - {pmid}")
-            print(f"  These PMIDs are cited in the markdown but not found in the references section of the review YAML.")
-            print(f"  Please add them to the review file or remove the citations.")
-        
+            if verbose:
+                print(f"  ❌ Missing PMIDs in review file:")
+                for pmid in sorted(missing_pmids):
+                    print(f"    - {pmid}")
+                print(f"  These PMIDs are cited in the markdown but not found in the references section of the review YAML.")
+                print(f"  Please add them to the review file or remove the citations.")
+
         return False
 
 def validate_directory(dir_path: Path) -> bool:
     """Validate all pathway markdown files in a directory."""
     # Only validate *-pathway.md files
     md_files = list(dir_path.rglob("*-pathway.md"))
-    
+
     if not md_files:
         print(f"No pathway markdown files found in {dir_path}")
         return True
-    
+
     print(f"Checking {len(md_files)} pathway markdown files for PMID references...")
-    
+
     # Filter to only files that contain PMID references
     files_with_pmids = []
     for md_file in md_files:
@@ -193,28 +198,33 @@ def validate_directory(dir_path: Path) -> bool:
                 continue
         if 'PMID:' in content:
             files_with_pmids.append(md_file)
-    
+
     if not files_with_pmids:
-        print("No files with PMID references found")
+        print("No pathway files with PMID references found")
         return True
-    
-    print(f"Found {len(files_with_pmids)} files with PMID references")
-    
+
+    print(f"Validating {len(files_with_pmids)} pathway files with PMID references...")
+
     all_valid = True
-    invalid_count = 0
-    
+    invalid_files = []
+
     for md_file in files_with_pmids:
-        if not validate_file(md_file):
+        # Use quiet mode for files that pass
+        if not validate_file(md_file, verbose=False):
             all_valid = False
-            invalid_count += 1
-    
-    print(f"\n{'='*60}")
+            invalid_files.append(md_file)
+
     if all_valid:
-        print(f"✅ All {len(files_with_pmids)} files have valid PMID references!")
+        print(f"✅ All {len(files_with_pmids)} pathway files have valid PMID references")
     else:
-        print(f"❌ {invalid_count} file(s) have missing PMID references in their review files")
+        print(f"\n❌ {len(invalid_files)} pathway file(s) have PMID issues:")
+        # Now show details only for the invalid files
+        for md_file in invalid_files:
+            validate_file(md_file, verbose=True)
+        print(f"\n{'='*60}")
+        print(f"❌ {len(invalid_files)} file(s) have missing PMID references in their review files")
         print(f"   Please update the review YAML files to include all cited PMIDs")
-    
+
     return all_valid
 
 def main():
