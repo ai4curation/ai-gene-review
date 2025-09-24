@@ -438,21 +438,28 @@ def check_best_practices_rules(
         # Build set of accepted GO terms from existing_annotations
         accepted_terms = set()
         proposed_replacement_terms = set()
-        
-        # First pass: collect all ACCEPTED terms and proposed replacements
+        new_annotation_terms = set()  # Terms from NEW action annotations
+
+        # First pass: collect all ACCEPTED terms, NEW terms, and proposed replacements
         if "existing_annotations" in data and data["existing_annotations"]:
             for annotation in data["existing_annotations"]:
                 if isinstance(annotation, dict):
                     review = annotation.get("review", {})
                     if isinstance(review, dict):
                         action = review.get("action")
-                        
+
                         # Collect ACCEPTED terms
                         if action == "ACCEPT":
                             term = annotation.get("term", {})
                             if isinstance(term, dict) and "id" in term:
                                 accepted_terms.add(term["id"])
-                        
+
+                        # Collect NEW terms (these are proposed new annotations)
+                        if action == "NEW":
+                            term = annotation.get("term", {})
+                            if isinstance(term, dict) and "id" in term:
+                                new_annotation_terms.add(term["id"])
+
                         # Collect proposed replacement terms from MODIFY actions
                         if action == "MODIFY":
                             replacements = review.get("proposed_replacement_terms", [])
@@ -484,6 +491,9 @@ def check_best_practices_rules(
                                     term_id not in proposed_replacement_terms):
                                     modified_terms.add(term_id)
         
+        # Collect all GO terms used in core_functions for cross-checking
+        core_function_terms = set()
+
         # Now check each core function
         for i, core_func in enumerate(data["core_functions"]):
             if isinstance(core_func, dict):
@@ -492,14 +502,17 @@ def check_best_practices_rules(
                 if isinstance(mol_func, dict) and "id" in mol_func:
                     term_id = mol_func["id"]
                     term_label = mol_func.get("label", term_id)
-                    
-                    # Check if this term is from accepted annotations or proposed replacements
-                    is_from_accepted = term_id in accepted_terms or term_id in proposed_replacement_terms
-                    
+                    core_function_terms.add(term_id)
+
+                    # Check if this term is from accepted annotations, NEW annotations, or proposed replacements
+                    is_from_annotations = (term_id in accepted_terms or
+                                         term_id in new_annotation_terms or
+                                         term_id in proposed_replacement_terms)
+
                     # Check if it has supported_by references
                     supported_by = core_func.get("supported_by", [])
                     has_support = bool(supported_by)
-                    
+
                     # Validate file references in supported_by
                     for j, sb in enumerate(supported_by):
                         if isinstance(sb, dict) and "reference_id" in sb:
@@ -507,14 +520,23 @@ def check_best_practices_rules(
                                 sb["reference_id"],
                                 f"core_functions[{i}].supported_by[{j}].reference_id"
                             )
-                    
+
                     # If neither condition is met, it's an error
-                    if not is_from_accepted and not has_support:
+                    if not is_from_annotations and not has_support:
                         report.add_issue(
                             ValidationSeverity.ERROR,
-                            f"Core function term {term_id} ({term_label}) is not from an ACCEPTED annotation and lacks supported_by references",
+                            f"Core function term {term_id} ({term_label}) is not from an ACCEPTED/NEW annotation and lacks supported_by references",
                             path=f"core_functions[{i}].molecular_function",
-                            suggestion="Either use a term from ACCEPTED existing annotations/proposed replacements, or add supported_by references",
+                            suggestion="Either use a term from ACCEPTED/NEW existing annotations/proposed replacements, or add supported_by references",
+                        )
+
+                    # WARNING if term is not in existing_annotations at all
+                    if not is_from_annotations and has_support:
+                        report.add_issue(
+                            ValidationSeverity.WARNING,
+                            f"Core function term {term_id} ({term_label}) is not reflected in existing_annotations block",
+                            path=f"core_functions[{i}].molecular_function",
+                            suggestion="Consider adding this term to existing_annotations with action: NEW if it's a novel annotation",
                         )
                 
                 # Check locations field (should be CC terms)
@@ -523,7 +545,8 @@ def check_best_practices_rules(
                     if isinstance(location, dict) and "id" in location:
                         loc_id = location["id"]
                         loc_label = location.get("label", loc_id)
-                        
+                        core_function_terms.add(loc_id)
+
                         # First check if this is a term marked for modification
                         if loc_id in modified_terms:
                             report.add_issue(
@@ -533,22 +556,33 @@ def check_best_practices_rules(
                                 suggestion="Use the proposed replacement term instead of the original term marked for modification",
                             )
                             continue
-                        
-                        # Check if this term is from accepted annotations or proposed replacements
-                        is_from_accepted = loc_id in accepted_terms or loc_id in proposed_replacement_terms
-                        
+
+                        # Check if this term is from accepted annotations, NEW annotations, or proposed replacements
+                        is_from_annotations = (loc_id in accepted_terms or
+                                             loc_id in new_annotation_terms or
+                                             loc_id in proposed_replacement_terms)
+
                         # Locations don't have their own supported_by, they rely on the core function's supported_by
                         # So check if the core function has supported_by
                         supported_by = core_func.get("supported_by", [])
                         has_support = bool(supported_by)
-                        
+
                         # If neither condition is met, it's an error
-                        if not is_from_accepted and not has_support:
+                        if not is_from_annotations and not has_support:
                             report.add_issue(
                                 ValidationSeverity.ERROR,
-                                f"Location term {loc_id} ({loc_label}) is not from an ACCEPTED annotation and the core function lacks supported_by references",
+                                f"Location term {loc_id} ({loc_label}) is not from an ACCEPTED/NEW annotation and the core function lacks supported_by references",
                                 path=f"core_functions[{i}].locations[{j}]",
-                                suggestion="Either use a location from ACCEPTED existing annotations/proposed replacements, or add supported_by references to the core function",
+                                suggestion="Either use a location from ACCEPTED/NEW existing annotations/proposed replacements, or add supported_by references to the core function",
+                            )
+
+                        # WARNING if term is not in existing_annotations at all
+                        if not is_from_annotations and has_support:
+                            report.add_issue(
+                                ValidationSeverity.WARNING,
+                                f"Location term {loc_id} ({loc_label}) is not reflected in existing_annotations block",
+                                path=f"core_functions[{i}].locations[{j}]",
+                                suggestion="Consider adding this term to existing_annotations with action: NEW if it's a novel annotation",
                             )
                 
                 # Check directly_involved_in field (should be BP terms)
@@ -557,43 +591,67 @@ def check_best_practices_rules(
                     if isinstance(process, dict) and "id" in process:
                         proc_id = process["id"]
                         proc_label = process.get("label", proc_id)
-                        
-                        # Check if this term is from accepted annotations or proposed replacements
-                        is_from_accepted = proc_id in accepted_terms or proc_id in proposed_replacement_terms
-                        
+                        core_function_terms.add(proc_id)
+
+                        # Check if this term is from accepted annotations, NEW annotations, or proposed replacements
+                        is_from_annotations = (proc_id in accepted_terms or
+                                             proc_id in new_annotation_terms or
+                                             proc_id in proposed_replacement_terms)
+
                         # Check if the core function has supported_by
                         supported_by = core_func.get("supported_by", [])
                         has_support = bool(supported_by)
-                        
+
                         # If neither condition is met, it's an error
-                        if not is_from_accepted and not has_support:
+                        if not is_from_annotations and not has_support:
                             report.add_issue(
                                 ValidationSeverity.ERROR,
-                                f"Process term {proc_id} ({proc_label}) is not from an ACCEPTED annotation and the core function lacks supported_by references",
+                                f"Process term {proc_id} ({proc_label}) is not from an ACCEPTED/NEW annotation and the core function lacks supported_by references",
                                 path=f"core_functions[{i}].directly_involved_in[{j}]",
-                                suggestion="Either use a process from ACCEPTED existing annotations/proposed replacements, or add supported_by references to the core function",
+                                suggestion="Either use a process from ACCEPTED/NEW existing annotations/proposed replacements, or add supported_by references to the core function",
                             )
-                
+
+                        # WARNING if term is not in existing_annotations at all
+                        if not is_from_annotations and has_support:
+                            report.add_issue(
+                                ValidationSeverity.WARNING,
+                                f"Process term {proc_id} ({proc_label}) is not reflected in existing_annotations block",
+                                path=f"core_functions[{i}].directly_involved_in[{j}]",
+                                suggestion="Consider adding this term to existing_annotations with action: NEW if it's a novel annotation",
+                            )
+
                 # Check in_complex field
                 in_complex = core_func.get("in_complex")
                 if isinstance(in_complex, dict) and "id" in in_complex:
                     complex_id = in_complex["id"]
                     complex_label = in_complex.get("label", complex_id)
-                    
-                    # Check if this term is from accepted annotations or proposed replacements
-                    is_from_accepted = complex_id in accepted_terms or complex_id in proposed_replacement_terms
-                    
+                    core_function_terms.add(complex_id)
+
+                    # Check if this term is from accepted annotations, NEW annotations, or proposed replacements
+                    is_from_annotations = (complex_id in accepted_terms or
+                                         complex_id in new_annotation_terms or
+                                         complex_id in proposed_replacement_terms)
+
                     # Check if the core function has supported_by
                     supported_by = core_func.get("supported_by", [])
                     has_support = bool(supported_by)
-                    
+
                     # If neither condition is met, it's an error
-                    if not is_from_accepted and not has_support:
+                    if not is_from_annotations and not has_support:
                         report.add_issue(
                             ValidationSeverity.ERROR,
-                            f"Complex term {complex_id} ({complex_label}) is not from an ACCEPTED annotation and the core function lacks supported_by references",
+                            f"Complex term {complex_id} ({complex_label}) is not from an ACCEPTED/NEW annotation and the core function lacks supported_by references",
                             path=f"core_functions[{i}].in_complex",
-                            suggestion="Either use a complex from ACCEPTED existing annotations/proposed replacements, or add supported_by references to the core function",
+                            suggestion="Either use a complex from ACCEPTED/NEW existing annotations/proposed replacements, or add supported_by references to the core function",
+                        )
+
+                    # WARNING if term is not in existing_annotations at all
+                    if not is_from_annotations and has_support:
+                        report.add_issue(
+                            ValidationSeverity.WARNING,
+                            f"Complex term {complex_id} ({complex_label}) is not reflected in existing_annotations block",
+                            path=f"core_functions[{i}].in_complex",
+                            suggestion="Consider adding this term to existing_annotations with action: NEW if it's a novel annotation",
                         )
 
     # Check for file references in existing_annotations.review.supported_by

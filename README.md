@@ -73,6 +73,7 @@ just stats-open           # Generate and open in browser
 - **Documentation Website**: [https://monarch-initiative.github.io/ai-gene-review](https://monarch-initiative.github.io/ai-gene-review)
 - **Interactive Web App**: [https://ai4curation.github.io/ai-gene-review/app/index.html](https://ai4curation.github.io/ai-gene-review/app/index.html) - Browse and explore gene annotation reviews
 - **Statistics Dashboard**: [https://ai4curation.github.io/ai-gene-review/docs/stats_report.html](https://ai4curation.github.io/ai-gene-review/docs/stats_report.html) - Summary Stats
+- **Slide Overview**: [https://docs.google.com/presentation/d/1xBFIQE0jt7K6kFg4zFzUwLDHtnDWat2ZVDarhcpA3_4/edit?slide=id.p#slide=id.p](slides)
 
 ## Gene Review Structure
 
