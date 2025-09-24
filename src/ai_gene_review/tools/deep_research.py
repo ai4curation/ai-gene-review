@@ -167,8 +167,13 @@ def parse_uniprot_metadata(uniprot_text: str, uniprot_id: str) -> str:
 
 
 @click.command()
-@click.argument("gene_symbol", type=str)
-@click.option("--organism", default="human", help="Organism (default: human)")
+@click.argument("organism", type=str)
+@click.argument("gene_or_uniprot", type=str)
+@click.option(
+    "--alias",
+    type=str,
+    help="Alias to use for directory name and file prefixes instead of gene symbol",
+)
 @click.option(
     "--model", default="o3-deep-research-2025-06-26", help="Deep research model to use"
 )
@@ -205,14 +210,10 @@ def parse_uniprot_metadata(uniprot_text: str, uniprot_id: str) -> str:
     default=3,
     help="Maximum number of retries on timeout (default: 3)",
 )
-@click.option(
-    "--uniprot-id",
-    type=str,
-    help="UniProt ID for the gene (optional, but highly recommended for accuracy)",
-)
 def research_gene(
-    gene_symbol: str,
     organism: str,
+    gene_or_uniprot: str,
+    alias: Optional[str],
     model: str,
     output_dir: Optional[str],
     api_key: Optional[str],
@@ -220,18 +221,21 @@ def research_gene(
     system_prompt_file: Optional[str],
     timeout: int,
     max_retries: int,
-    uniprot_id: Optional[str],
 ):
     """Research a gene using OpenAI's Deep Research API.
 
-    This tool performs comprehensive research on a given gene symbol,
+    This tool performs comprehensive research on a given gene,
     gathering information about its function, structure, disease associations,
     and relevant literature.
 
+    The second argument can be either a gene symbol or a UniProt ID.
+    When using a UniProt ID, specify the actual gene name with --alias.
+
     Examples:
-        deep-research CFAP300
-        deep-research TP53 --organism human --output-dir custom/path
-        deep-research rhlB --organism PSEAE --uniprot-id Q9HXE5
+        deep-research human CFAP300
+        deep-research human TP53 --output-dir custom/path
+        deep-research PSEAE Q9HXE5 --alias rhlB
+        deep-research ACEPA A0A1Y0Y121 --alias xdhB
     """
     if not api_key:
         click.echo(
@@ -239,6 +243,23 @@ def research_gene(
             err=True,
         )
         sys.exit(1)
+
+    # Determine if gene_or_uniprot is a UniProt ID or gene symbol
+    # UniProt IDs typically match pattern: [A-Z0-9]{6,10} or [A-Z][0-9]{5}
+    import re
+    uniprot_pattern = re.compile(r'^[A-Z][0-9][A-Z0-9]{3}[0-9]$|^[A-Z0-9]{6,10}$')
+
+    if uniprot_pattern.match(gene_or_uniprot):
+        # Likely a UniProt ID
+        uniprot_id = gene_or_uniprot
+        gene_symbol = alias if alias else gene_or_uniprot
+    else:
+        # Likely a gene symbol
+        gene_symbol = gene_or_uniprot
+        uniprot_id = None
+
+    # Use alias for directory and file names if provided
+    dir_name = alias if alias else gene_symbol
 
     # Initialize OpenAI client with custom timeout
     http_client = httpx.Client(
@@ -255,7 +276,7 @@ def research_gene(
     if output_dir:
         output_path = Path(output_dir)
     else:
-        output_path = Path("genes") / organism / gene_symbol
+        output_path = Path("genes") / organism / dir_name
 
     output_path.mkdir(parents=True, exist_ok=True)
 
@@ -281,19 +302,37 @@ Format as a comprehensive research report with citations suitable for Gene Ontol
     # Expand organism name for better research results
     organism_full = expand_organism_name(organism)
 
-    # Parse UniProt metadata if available
+    # Parse UniProt metadata - required
     uniprot_metadata = ""
     if uniprot_id:
         try:
             uniprot_text = fetch_uniprot_data(uniprot_id)
             uniprot_metadata = parse_uniprot_metadata(uniprot_text, uniprot_id)
             click.echo(f"✅ Loaded UniProt metadata for {uniprot_id}")
+            # Extract actual gene name from metadata if available and we used UniProt ID
+            if alias and 'gene_name' in uniprot_metadata:
+                # Update gene_symbol to be the actual gene name from UniProt for the query
+                gene_info = parse_uniprot_metadata(uniprot_text, uniprot_id)
+                if 'Gene Name:' in gene_info:
+                    for line in gene_info.split('\n'):
+                        if line.startswith('Gene Name:'):
+                            actual_gene = line.split('Gene Name:')[1].strip()
+                            if actual_gene:
+                                gene_symbol = actual_gene
+                                break
         except Exception as e:
-            click.echo(f"⚠️  Could not fetch UniProt data for {uniprot_id}: {e}", err=True)
-            uniprot_metadata = f"UniProt ID: {uniprot_id}\n"
+            click.echo(f"❌ Error: Could not fetch UniProt data for {uniprot_id}: {e}", err=True)
+            click.echo("Deep research requires UniProt metadata to ensure accuracy.", err=True)
+            sys.exit(1)
+    else:
+        click.echo(f"❌ Error: UniProt ID required for deep research.", err=True)
+        click.echo(f"If '{gene_or_uniprot}' is a gene symbol, first run:", err=True)
+        click.echo(f"  just fetch-gene {organism} {gene_or_uniprot}", err=True)
+        click.echo(f"Then check the UniProt ID in genes/{organism}/{gene_or_uniprot}/{gene_or_uniprot}-uniprot.txt", err=True)
+        sys.exit(1)
 
     if not uniprot_metadata:
-        click.echo(f"⚠️  Could not fetch UniProt data for {uniprot_id}", err=True)
+        click.echo(f"❌ Error: Could not fetch UniProt data for {uniprot_id}", err=True)
         sys.exit(1)
 
     # Build enhanced user query with metadata
@@ -309,7 +348,9 @@ Sometimes different genes in the same organism have the same name. In this case,
 """
 
     click.echo(f"Starting deep research on {gene_symbol} ({organism_full})...")
-    click.echo(f"Metadata: {uniprot_metadata}")
+    if alias:
+        click.echo(f"Using alias '{alias}' for directory and file names")
+    click.echo(f"UniProt ID: {uniprot_id}")
     click.echo(f"Output will be saved to: {output_path}")
     click.echo(f"Timeout set to: {timeout} seconds")
     click.echo(f"Max retries: {max_retries}")
@@ -398,11 +439,14 @@ Sometimes different genes in the same organism have the same name. In this case,
         else:
             report_text = str(final_output)
 
-        # Save the research report
-        report_file = output_path / f"{gene_symbol}-deep-research.md"
+        # Save the research report using dir_name for filenames
+        report_file = output_path / f"{dir_name}-deep-research.md"
         with open(report_file, "w", encoding="utf-8") as f:
             f.write(f"# Deep Research Report: {gene_symbol} ({organism})\n\n")
             f.write("Generated using OpenAI Deep Research API\n\n")
+            if alias and uniprot_id:
+                f.write(f"UniProt ID: {uniprot_id}\n")
+                f.write(f"Directory alias: {alias}\n\n")
             f.write("---\n\n")
             f.write(report_text)
 
@@ -416,7 +460,7 @@ Sometimes different genes in the same organism have the same name. In this case,
                 if hasattr(first_content, "annotations"):
                     annotations = first_content.annotations  # type: ignore
                     if annotations:
-                        citations_file = output_path / f"{gene_symbol}-citations.md"
+                        citations_file = output_path / f"{dir_name}-citations.md"
                         with open(citations_file, "w", encoding="utf-8") as f:
                             f.write(f"# Citations for {gene_symbol} Research\n\n")
                             for i, annotation in enumerate(annotations, 1):
@@ -431,7 +475,7 @@ Sometimes different genes in the same organism have the same name. In this case,
                 if hasattr(item, "type") and item.type == "reasoning"
             ]  # type: ignore
             if reasoning_steps:
-                reasoning_file = output_path / f"{gene_symbol}-reasoning.md"
+                reasoning_file = output_path / f"{dir_name}-reasoning.md"
                 with open(reasoning_file, "w", encoding="utf-8") as f:
                     f.write(f"# Reasoning Steps for {gene_symbol} Research\n\n")
                     for i, step in enumerate(reasoning_steps, 1):

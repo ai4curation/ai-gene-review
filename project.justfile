@@ -11,8 +11,11 @@ fetch-gene organism gene *args="":
     uv run ai-gene-review fetch-gene {{organism}} {{gene}} --output-dir . {{args}}
 
 # Conduct deep research on a gene using OpenAI Deep Research API
-deep-research organism gene *args="":
-    uv run python src/ai_gene_review/tools/deep_research.py {{gene}} --organism {{organism}} --output-dir genes/{{organism}}/{{gene}} {{args}}
+# Use --alias to specify a custom directory name and file prefix
+# Example: just deep-research human CFAP300
+# Example: just deep-research ACEPA A0A1Y0Y121 --alias xdhB
+deep-research organism gene_or_uniprot *args="":
+    uv run python src/ai_gene_review/tools/deep_research.py {{organism}} {{gene_or_uniprot}} {{args}}
 
 # Fetch a specific PMID
 fetch-pmid pmid output_dir="publications":
@@ -78,7 +81,11 @@ validate-organism organism:
 
 # Validate all gene review files (shows detailed errors by default)
 validate-all:
+    @echo "Validating all gene review YAML files..."
     uv run ai-gene-review validate --verbose "genes/*/*/*-ai-review.yaml"
+    @echo ""
+    @echo "Checking PMID references in all pathway markdown files..."
+    @uv run python src/ai_gene_review/tools/validate_pmid_references.py genes/ || (echo "❌ PMID validation failed" && exit 1)
 
 # Validate all gene review files (summary only, no details)
 validate-all-summary:
