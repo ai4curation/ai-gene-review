@@ -797,16 +797,47 @@ plt.rcParams['axes.labelsize'] = 12
 tsv_path = Path('../exports/exported_annotations.tsv')
 df = pd.read_csv(tsv_path, sep='\t')
 
-# Basic statistics
-print(f&quot;📊 Dataset Overview&quot;)
+# Report PENDING annotations first
+pending_df = df[df['review_action'] == 'PENDING'].copy() if 'PENDING' in df['review_action'].values else pd.DataFrame()
+
+if not pending_df.empty:
+    print(f&quot;⚠️  PENDING ANNOTATIONS&quot;)
+    print(f&quot;━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━&quot;)
+    print(f&quot;Total PENDING: {len(pending_df):,} annotations&quot;)
+    print(f&quot;\nPENDING by Species:&quot;)
+    for species, count in pending_df['taxon_label'].value_counts().items():
+        genes = pending_df[pending_df['taxon_label'] == species]['gene_symbol'].nunique()
+        print(f&quot;  • {species}: {count} annotations ({genes} genes)&quot;)
+
+    print(f&quot;\nGenes with most PENDING annotations:&quot;)
+    gene_pending = pending_df.groupby('gene_symbol').agg({
+        'term_id': 'count',
+        'taxon_label': 'first'
+    }).rename(columns={'term_id': 'pending_count'}).sort_values('pending_count', ascending=False)
+    for gene, row in gene_pending.head(10).iterrows():
+        print(f&quot;  • {gene} ({row['taxon_label']}): {row['pending_count']} pending&quot;)
+
+    print(f&quot;\n&quot; + &quot;=&quot;*50)
+    print(&quot;Note: PENDING annotations are excluded from percentage calculations below&quot;)
+    print(&quot;=&quot;*50 + &quot;\n&quot;)
+
+# Filter out PENDING for analysis
+df_analyzed = df[df['review_action'] != 'PENDING'].copy()
+
+# Basic statistics (excluding PENDING)
+print(f&quot;📊 Dataset Overview (Analyzed Annotations Only)&quot;)
 print(f&quot;━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━&quot;)
-print(f&quot;Total annotations reviewed: {len(df):,}&quot;)
-print(f&quot;Unique genes: {df['gene_symbol'].nunique()}&quot;)
-print(f&quot;Unique species: {df['taxon_label'].nunique()}&quot;)
-print(f&quot;Unique GO terms: {df['term_id'].nunique()}&quot;)
-print(f&quot;\nSpecies distribution:&quot;)
-for species, count in df['taxon_label'].value_counts().head().items():
+print(f&quot;Total annotations analyzed: {len(df_analyzed):,}&quot;)
+print(f&quot;Total PENDING (excluded): {len(pending_df):,}&quot;)
+print(f&quot;Unique genes: {df_analyzed['gene_symbol'].nunique()}&quot;)
+print(f&quot;Unique species: {df_analyzed['taxon_label'].nunique()}&quot;)
+print(f&quot;Unique GO terms: {df_analyzed['term_id'].nunique()}&quot;)
+print(f&quot;\nSpecies distribution (analyzed only):&quot;)
+for species, count in df_analyzed['taxon_label'].value_counts().head().items():
     print(f&quot;  • {species}: {count} annotations&quot;)
+
+# Keep original df variable name for compatibility, but use filtered data
+df = df_analyzed
 </code></pre>
 
 
@@ -2176,7 +2207,19 @@ print(&quot;\n&quot; + &quot;=&quot;*60)
 print(&quot;📊 KEY INSIGHTS FROM GENE ANNOTATION REVIEW&quot;)
 print(&quot;=&quot;*60)
 
-# Calculate key metrics
+# Re-load original df to check for PENDING
+tsv_path = Path('../exports/exported_annotations.tsv')
+df_full = pd.read_csv(tsv_path, sep='\t')
+pending_count = (df_full['review_action'] == 'PENDING').sum()
+
+if pending_count &amp;gt; 0:
+    print(f&quot;\n⚠️  PENDING Annotations:&quot;)
+    print(f&quot;  • {pending_count:,} annotations still pending review&quot;)
+    print(f&quot;  • {(pending_count / len(df_full) * 100):.1f}% of total dataset&quot;)
+    print(f&quot;\n  Note: The following statistics exclude PENDING annotations&quot;)
+    print(&quot;  &quot; + &quot;-&quot; * 50)
+
+# Calculate key metrics (df here is the filtered dataset without PENDING)
 total_annotations = len(df)
 acceptance_rate = (df['review_action'] == 'ACCEPT').mean() * 100
 modification_rate = (df['review_action'] == 'MODIFY').mean() * 100
@@ -2187,7 +2230,7 @@ evidence_accept = df.groupby('evidence_type')['review_action'].apply(
     lambda x: (x == 'ACCEPT').mean() * 100
 ).sort_values(ascending=False)
 
-print(&quot;\n🎯 Overall Performance:&quot;)
+print(&quot;\n🎯 Overall Performance (Analyzed Annotations):&quot;)
 print(f&quot;  • {acceptance_rate:.1f}% of annotations were accepted as-is&quot;)
 print(f&quot;  • {modification_rate:.1f}% need modifications&quot;)
 print(f&quot;  • {removal_rate:.1f}% should be removed&quot;)
@@ -2222,6 +2265,8 @@ modify_compliance = (df[df['review_action'] == 'MODIFY']['review_proposed_replac
 print(f&quot;\n  Modification compliance: {modify_compliance:.1f}% have proposed replacements&quot;)
 
 print(&quot;\n✅ Recommendations:&quot;)
+if pending_count &amp;gt; 100:
+    print(f&quot;  0. Complete review of {pending_count:,} PENDING annotations&quot;)
 if modification_rate &amp;gt; 30:
     print(&quot;  1. High modification rate suggests need for annotation guidelines review&quot;)
 if removal_rate &amp;gt; 20:
