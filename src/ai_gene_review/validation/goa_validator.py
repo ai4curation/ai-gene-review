@@ -8,6 +8,8 @@ from typing import Dict, List, Optional, Tuple
 import requests
 import yaml
 
+from ai_gene_review.validation.base_validator import BaseValidator
+
 
 @dataclass
 class GOAAnnotation:
@@ -75,7 +77,7 @@ class GOAValidationResult:
 
 
 @dataclass
-class GOAValidator:
+class GOAValidator(BaseValidator):
     """Validates that existing_annotations match the GOA source file.
 
     This validator ensures consistency between the curated existing_annotations
@@ -161,6 +163,13 @@ class GOAValidator:
         except Exception as e:
             print(f"Error parsing YAML file {yaml_file}: {e}")
             return []
+
+    def validate(
+        self, data: dict, yaml_file: Optional[Path] = None
+    ) -> List[GOAValidationResult]:
+        if not yaml_file:
+            return []
+        return [self.validate_against_goa(yaml_file)]
 
     def validate_against_goa(
         self, yaml_file: Path, goa_file: Optional[Path] = None

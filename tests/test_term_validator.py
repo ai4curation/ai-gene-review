@@ -89,7 +89,7 @@ def test_validate_term_not_found():
         assert "not found in ontology" in result.error_message
 
 
-def test_validate_terms_in_data():
+def test_validate():
     """Test recursive validation of terms in data structures."""
     validator = TermValidator()
 
@@ -127,7 +127,7 @@ def test_validate_terms_in_data():
             ],
         }
 
-        results = validator.validate_terms_in_data(data)
+        results = validator.validate(data)
 
         # Should find 3 terms
         assert len(results) == 3
@@ -222,7 +222,7 @@ def test_integration_with_main_validator():
                     path="existing_annotations[0].term",
                 ),
             ]
-            mock_validator.validate_terms_in_data.return_value = mock_results
+            mock_validator.validate.return_value = mock_results
 
             report = validate_gene_review(temp_path)
 

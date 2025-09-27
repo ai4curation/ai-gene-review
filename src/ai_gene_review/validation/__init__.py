@@ -10,12 +10,10 @@ This package contains all validation-related modules:
 from ai_gene_review.validation.publication_validator import (
     PublicationValidator,
     PublicationValidationResult,
-    validate_yaml_file_publications,
 )
 from ai_gene_review.validation.term_validator import (
     TermValidator,
     TermValidationResult,
-    validate_yaml_file,
 )
 from ai_gene_review.validation.validation_report import (
     BatchValidationReport,
@@ -41,11 +39,9 @@ __all__ = [
     # Term validation
     "TermValidator",
     "TermValidationResult",
-    "validate_yaml_file",
     # Publication validation
     "PublicationValidator",
     "PublicationValidationResult",
-    "validate_yaml_file_publications",
     # Validation reporting
     "ValidationReport",
     "ValidationIssue",

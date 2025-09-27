@@ -9,7 +9,6 @@ import yaml
 from ai_gene_review.validation import (
     PublicationValidator,
     PublicationValidationResult,
-    validate_yaml_file_publications,
     validate_gene_review,
 )
 
@@ -156,7 +155,7 @@ def test_validate_publication_not_found():
     assert "Could not verify" in result.error_message
 
 
-def test_validate_publications_in_data():
+def test_validate():
     """Test recursive validation in data structures."""
     validator = PublicationValidator()
 
@@ -195,7 +194,7 @@ def test_validate_publications_in_data():
             ],
         }
 
-        results = validator.validate_publications_in_data(data)
+        results = validator.validate(data)
 
         # Should find 3 PMIDs
         assert len(results) == 3
@@ -295,33 +294,3 @@ def test_validate_real_publication():
     assert "Title mismatch" in result.error_message
 
 
-def test_validate_yaml_file_publications(tmp_path):
-    """Test the convenience function for validating a YAML file."""
-    # Create test YAML file
-    data = {"references": [{"id": "PMID:12345", "title": "Test Article"}]}
-
-    yaml_file = tmp_path / "test.yaml"
-    with open(yaml_file, "w") as f:
-        yaml.dump(data, f)
-
-    # Mock the validator
-    with patch(
-        "ai_gene_review.validation.publication_validator.PublicationValidator"
-    ) as MockValidator:
-        mock_validator = Mock()
-        mock_validator.validate_publications_in_data.return_value = [
-            PublicationValidationResult(
-                pmid="12345",
-                provided_title="Test Article",
-                correct_title="Test Article",
-                is_valid=True,
-                from_cache=False,
-            )
-        ]
-        MockValidator.return_value = mock_validator
-
-        all_valid, results = validate_yaml_file_publications(yaml_file)
-
-        assert all_valid
-        assert len(results) == 1
-        assert results[0].is_valid

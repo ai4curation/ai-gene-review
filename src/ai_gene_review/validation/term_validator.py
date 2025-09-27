@@ -4,12 +4,13 @@ import pickle
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, Dict, List, Optional, Set
 
 import requests
-import yaml
-from oaklib import get_adapter  # type: ignore[import-untyped]
-from oaklib.datamodels.vocabulary import IS_A  # type: ignore[import-untyped]
+from oaklib import get_adapter
+from oaklib.datamodels.vocabulary import IS_A
+
+from ai_gene_review.validation.base_validator import BaseValidator
 
 
 @dataclass
@@ -26,7 +27,7 @@ class TermValidationResult:
 
 
 @dataclass
-class TermValidator:
+class TermValidator(BaseValidator):
     """Validates ontology term ID/label pairs against actual ontology data.
 
     This validator helps prevent hallucination by ensuring that when an
@@ -173,7 +174,18 @@ class TermValidator:
             path=path,
         )
 
-    def validate_terms_in_data(
+    def validate(self, data: dict) -> List[TermValidationResult]:
+        """Validate all ontology terms in a data structure.
+
+        Args:
+            data: The data structure to validate (dict, list, or primitive)
+
+        Returns:
+            List of validation results for all terms found
+        """
+        return self._validate_recursive(data)
+
+    def _validate_recursive(
         self, data: Any, path: str = ""
     ) -> List[TermValidationResult]:
         """Recursively validate all ontology terms in a data structure.
@@ -233,13 +245,13 @@ class TermValidator:
             # Recurse into dict values
             for key, value in data.items():
                 new_path = f"{path}.{key}" if path else key
-                results.extend(self.validate_terms_in_data(value, new_path))
+                results.extend(self._validate_recursive(value, new_path))
 
         elif isinstance(data, list):
             # Recurse into list items
             for i, item in enumerate(data):
                 new_path = f"{path}[{i}]"
-                results.extend(self.validate_terms_in_data(item, new_path))
+                results.extend(self._validate_recursive(item, new_path))
 
         return results
 
@@ -423,23 +435,13 @@ class TermValidator:
                 return None
         return self._ontology_adapters[ontology_name]
 
-    def _get_cache_dir(self) -> Path:
-        """Get the cache directory for validation data.
-
-        Returns:
-            Path to cache directory
-        """
-        cache_dir = Path.home() / ".cache" / "ai-gene-review"
-        cache_dir.mkdir(parents=True, exist_ok=True)
-        return cache_dir
-
     def _load_go_branch_cache(self) -> Dict[str, Set[str]]:
         """Load cached GO branch descendants from disk.
 
         Returns:
             Dictionary of branch root to descendant sets
         """
-        cache_file = self._get_cache_dir() / "go_branch_descendants.pkl"
+        cache_file = self.get_cache_dir() / "go_branch_descendants.pkl"
         if cache_file.exists():
             try:
                 with open(cache_file, "rb") as f:
@@ -454,7 +456,7 @@ class TermValidator:
         Args:
             cache: Dictionary of branch root to descendant sets
         """
-        cache_file = self._get_cache_dir() / "go_branch_descendants.pkl"
+        cache_file = self.get_cache_dir() / "go_branch_descendants.pkl"
         try:
             with open(cache_file, "wb") as f:
                 pickle.dump(cache, f)
@@ -625,28 +627,3 @@ class TermValidator:
         return results
 
 
-def validate_yaml_file(yaml_file: Path) -> Tuple[bool, List[TermValidationResult]]:
-    """Validate all ontology terms in a YAML file.
-
-    Args:
-        yaml_file: Path to the YAML file to validate
-
-    Returns:
-        Tuple of (all_valid, list_of_results)
-
-    Example:
-        >>> # Would require a real file
-        >>> # all_valid, results = validate_yaml_file(Path("test.yaml"))
-        >>> # for result in results:
-        >>> #     if not result.is_valid:
-        >>> #         print(result.error_message)
-    """
-    with open(yaml_file) as f:
-        data = yaml.safe_load(f)
-
-    validator = TermValidator()
-    results = validator.validate_terms_in_data(data)
-
-    all_valid = all(r.is_valid for r in results)
-
-    return all_valid, results

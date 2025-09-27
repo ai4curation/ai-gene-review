@@ -8,6 +8,7 @@ from typing import Any, Dict, List, Optional
 import yaml
 
 from ai_gene_review.etl.publication import extract_pmid, fetch_pubmed_data
+from ai_gene_review.validation.base_validator import BaseValidator
 
 
 @dataclass
@@ -24,7 +25,7 @@ class PublicationValidationResult:
 
 
 @dataclass
-class PublicationValidator:
+class PublicationValidator(BaseValidator):
     """Validates publication PMID/title pairs against actual publication data.
 
     This validator helps prevent hallucination by ensuring that when a
@@ -135,7 +136,18 @@ class PublicationValidator:
             from_cache=from_cache,
         )
 
-    def validate_publications_in_data(
+    def validate(self, data: dict) -> List[PublicationValidationResult]:
+        """Validate all publication references in a data structure.
+
+        Args:
+            data: The data structure to validate
+
+        Returns:
+            List of validation results for all publications found
+        """
+        return self._validate_recursive(data)
+
+    def _validate_recursive(
         self, data: Any, path: str = "", invalid_pmids: Optional[set] = None
     ) -> List[PublicationValidationResult]:
         """Recursively validate all publication references in a data structure.
@@ -206,17 +218,13 @@ class PublicationValidator:
             # Recurse into dict values
             for key, value in data.items():
                 new_path = f"{path}.{key}" if path else key
-                results.extend(
-                    self.validate_publications_in_data(value, new_path, invalid_pmids)
-                )
+                results.extend(self._validate_recursive(value, new_path, invalid_pmids))
 
         elif isinstance(data, list):
             # Recurse into list items
             for i, item in enumerate(data):
                 new_path = f"{path}[{i}]"
-                results.extend(
-                    self.validate_publications_in_data(item, new_path, invalid_pmids)
-                )
+                results.extend(self._validate_recursive(item, new_path, invalid_pmids))
 
         return results
 
@@ -384,23 +392,3 @@ def mark_invalid_pmids(
     return marked_count
 
 
-def validate_yaml_file_publications(
-    yaml_file: Path,
-) -> tuple[bool, List[PublicationValidationResult]]:
-    """Validate all publication references in a YAML file.
-
-    Args:
-        yaml_file: Path to the YAML file to validate
-
-    Returns:
-        Tuple of (all_valid, list_of_results)
-    """
-    with open(yaml_file) as f:
-        data = yaml.safe_load(f)
-
-    validator = PublicationValidator()
-    results = validator.validate_publications_in_data(data)
-
-    all_valid = all(r.is_valid for r in results)
-
-    return all_valid, results

@@ -197,7 +197,7 @@ def check_best_practices_rules(
     """
     # Validate ontology terms
     term_validator = TermValidator()
-    term_results = term_validator.validate_terms_in_data(data)
+    term_results = term_validator.validate(data)
 
     for result in term_results:
         if not result.is_valid:
@@ -232,7 +232,7 @@ def check_best_practices_rules(
 
     # Validate publication references
     pub_validator = PublicationValidator()
-    pub_results = pub_validator.validate_publications_in_data(data)
+    pub_results = pub_validator.validate(data)
 
     for pub_result in pub_results:
         if not pub_result.is_valid:
@@ -747,121 +747,127 @@ def check_best_practices_rules(
         goa_validator = GOAValidator()
         # yaml_file is guaranteed to be Path here (converted at line 92)
         assert isinstance(yaml_file, Path)
-        goa_result = goa_validator.validate_against_goa(yaml_file)
+        goa_results = goa_validator.validate(data, yaml_file=yaml_file)
 
-        if not goa_result.is_valid:
-            # Report GOA validation issues
-            if goa_result.error_message:
-                report.add_issue(
-                    ValidationSeverity.WARNING,
-                    f"GOA validation: {goa_result.error_message}",
-                    path="existing_annotations",
-                )
-
-            if goa_result.missing_in_yaml:
-                # Show first few missing annotations for debugging
-                missing_count = len(goa_result.missing_in_yaml)
-                examples = []
-                for ann in goa_result.missing_in_yaml[:5]:  # Show first 5
-                    examples.append(
-                        f"{ann.go_id} ({ann.go_term}) - {ann.evidence_code} - {ann.reference}"
+        if goa_results:
+            goa_result = goa_results[0]
+            if not goa_result.is_valid:
+                # Report GOA validation issues
+                if goa_result.error_message:
+                    report.add_issue(
+                        ValidationSeverity.WARNING,
+                        f"GOA validation: {goa_result.error_message}",
+                        path="existing_annotations",
                     )
 
-                if missing_count <= 5:
-                    detail = ": " + "; ".join(examples)
-                else:
-                    detail = (
-                        " (showing first 5): "
-                        + "; ".join(examples)
-                        + f" ... and {missing_count - 5} more"
+                if goa_result.missing_in_yaml:
+                    # Show first few missing annotations for debugging
+                    missing_count = len(goa_result.missing_in_yaml)
+                    examples = []
+                    for ann in goa_result.missing_in_yaml[:5]:  # Show first 5
+                        examples.append(
+                            f"{ann.go_id} ({ann.go_term}) - {ann.evidence_code} - {ann.reference}"
+                        )
+
+                    if missing_count <= 5:
+                        detail = ": " + "; ".join(examples)
+                    else:
+                        detail = (
+                            " (showing first 5): "
+                            + "; ".join(examples)
+                            + f" ... and {missing_count - 5} more"
+                        )
+
+                    report.add_issue(
+                        ValidationSeverity.ERROR,
+                        f"Missing {missing_count} annotations from GOA{detail}",
+                        path="existing_annotations",
+                        suggestion="Review GOA file and add missing annotations or document why they were excluded",
                     )
 
-                report.add_issue(
-                    ValidationSeverity.ERROR,
-                    f"Missing {missing_count} annotations from GOA{detail}",
-                    path="existing_annotations",
-                    suggestion="Review GOA file and add missing annotations or document why they were excluded",
-                )
+                if goa_result.missing_in_goa:
+                    # Show first few annotations not in GOA for debugging
+                    missing_count = len(goa_result.missing_in_goa)
+                    examples = []
+                    for ann_dict in goa_result.missing_in_goa[:5]:  # Show first 5
+                        # ann_dict is a Dict from the YAML, not a GOAAnnotation
+                        go_id = ann_dict.get("term", {}).get("id", "unknown")
+                        go_label = ann_dict.get("term", {}).get("label", "unknown")
+                        evidence = ann_dict.get("evidence_type", "unknown")
+                        ref = ann_dict.get("original_reference_id", "unknown")
+                        examples.append(f"{go_id} ({go_label}) - {evidence} - {ref}")
 
-            if goa_result.missing_in_goa:
-                # Show first few annotations not in GOA for debugging
-                missing_count = len(goa_result.missing_in_goa)
-                examples = []
-                for ann_dict in goa_result.missing_in_goa[:5]:  # Show first 5
-                    # ann_dict is a Dict from the YAML, not a GOAAnnotation
-                    go_id = ann_dict.get("term", {}).get("id", "unknown")
-                    go_label = ann_dict.get("term", {}).get("label", "unknown")
-                    evidence = ann_dict.get("evidence_type", "unknown")
-                    ref = ann_dict.get("original_reference_id", "unknown")
-                    examples.append(f"{go_id} ({go_label}) - {evidence} - {ref}")
+                    if missing_count <= 5:
+                        detail = ": " + "; ".join(examples)
+                    else:
+                        detail = (
+                            " (showing first 5): "
+                            + "; ".join(examples)
+                            + f" ... and {missing_count - 5} more"
+                        )
 
-                if missing_count <= 5:
-                    detail = ": " + "; ".join(examples)
-                else:
-                    detail = (
-                        " (showing first 5): "
-                        + "; ".join(examples)
-                        + f" ... and {missing_count - 5} more"
+                    report.add_issue(
+                        ValidationSeverity.ERROR,
+                        f"Found {missing_count} annotations not in GOA{detail}",
+                        path="existing_annotations",
+                        suggestion="Verify these annotations are correct or remove if not supported by GOA",
                     )
 
-                report.add_issue(
-                    ValidationSeverity.ERROR,
-                    f"Found {missing_count} annotations not in GOA{detail}",
-                    path="existing_annotations",
-                    suggestion="Verify these annotations are correct or remove if not supported by GOA",
-                )
+                # Don't report label mismatches - we validate against ontology, not GOA
+                # GOA files may use synonyms instead of primary labels
 
-            # Don't report label mismatches - we validate against ontology, not GOA
-            # GOA files may use synonyms instead of primary labels
-
-            if goa_result.mismatched_evidence:
-                # Evidence mismatches are warnings, not errors
-                report.add_issue(
-                    ValidationSeverity.WARNING,
-                    f"Found {len(goa_result.mismatched_evidence)} evidence type mismatches with GOA file",
-                    path="existing_annotations",
-                    suggestion="Consider updating evidence types to match GOA file",
-                )
+                if goa_result.mismatched_evidence:
+                    # Evidence mismatches are warnings, not errors
+                    report.add_issue(
+                        ValidationSeverity.WARNING,
+                        f"Found {len(goa_result.mismatched_evidence)} evidence type mismatches with GOA file",
+                        path="existing_annotations",
+                        suggestion="Consider updating evidence types to match GOA file",
+                    )
 
     # Validate supporting_text against cached publications if enabled
     if check_supporting_text and "existing_annotations" in data:
         st_validator = SupportingTextValidator()
-        st_report = st_validator.validate_data(data)
+        st_reports = st_validator.validate(data, yaml_file=yaml_file)
 
-        if not st_report.is_valid:
-            # Report invalid supporting texts
-            for st_result in st_report.results:
-                if not st_result.is_valid:
-                    severity = ValidationSeverity.WARNING
-
-                    # Check if this is a PMID finding without supporting_text
-                    if "PMID reference" in (
-                        st_result.error_message or ""
-                    ) and "without supporting_text" in (st_result.error_message or ""):
-                        # Always WARNING for missing supporting_text in PMID findings
+        if st_reports:
+            st_report = st_reports[0]
+            if not st_report.is_valid:
+                # Report invalid supporting texts
+                for st_result in st_report.results:
+                    if not st_result.is_valid:
                         severity = ValidationSeverity.WARNING
-                    elif st_result.similarity_score < 0.5:
-                        # Very low similarity suggests incorrect reference
-                        severity = ValidationSeverity.ERROR
 
+                        # Check if this is a PMID finding without supporting_text
+                        if "PMID reference" in (
+                            st_result.error_message or ""
+                        ) and "without supporting_text" in (
+                            st_result.error_message or ""
+                        ):
+                            # Always WARNING for missing supporting_text in PMID findings
+                            severity = ValidationSeverity.WARNING
+                        elif st_result.similarity_score < 0.5:
+                            # Very low similarity suggests incorrect reference
+                            severity = ValidationSeverity.ERROR
+
+                        report.add_issue(
+                            severity,
+                            st_result.error_message
+                            or "Supporting text not found in referenced publication",
+                            path=st_result.annotation_path,
+                            suggestion=st_result.suggested_fix,
+                        )
+
+            # Report coverage statistics as info
+            if st_report.total_annotations > 0:
+                coverage = st_report.validation_rate
+                if coverage < 50:
                     report.add_issue(
-                        severity,
-                        st_result.error_message
-                        or "Supporting text not found in referenced publication",
-                        path=st_result.annotation_path,
-                        suggestion=st_result.suggested_fix,
+                        ValidationSeverity.INFO,
+                        f"Only {coverage:.1f}% of annotations have supporting_text",
+                        path="existing_annotations",
+                        suggestion="Consider adding supporting_text to more annotations for better documentation",
                     )
-
-        # Report coverage statistics as info
-        if st_report.total_annotations > 0:
-            coverage = st_report.validation_rate
-            if coverage < 50:
-                report.add_issue(
-                    ValidationSeverity.INFO,
-                    f"Only {coverage:.1f}% of annotations have supporting_text",
-                    path="existing_annotations",
-                    suggestion="Consider adding supporting_text to more annotations for better documentation",
-                )
 
 
 def validate_multiple_files(

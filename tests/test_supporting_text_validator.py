@@ -4,10 +4,7 @@ import pytest
 from pathlib import Path
 import tempfile
 import yaml
-from ai_gene_review.validation.supporting_text_validator import (
-    SupportingTextValidator,
-    validate_supporting_text_in_file,
-)
+from ai_gene_review.validation.supporting_text_validator import SupportingTextValidator
 
 
 class TestSupportingTextValidator:
@@ -94,7 +91,7 @@ ISG15 conjugation may play an important regulatory role in IFN-mediated antivira
             ]
         }
 
-        report = validator.validate_data(data)
+        report = validator.validate(data)[0]
 
         # Should have found one annotation with supporting_text (in supported_by)
         assert report.annotations_with_supporting_text == 1
@@ -390,7 +387,7 @@ ISG15 conjugation may play an important regulatory role in IFN-mediated antivira
 
         # Validate
         validator = SupportingTextValidator(publications_dir=temp_publications_dir)
-        report = validator.validate_file(yaml_file)
+        report = validator.validate(yaml_data, yaml_file=yaml_file)[0]
 
         # Check results
         assert report.total_annotations == 2
@@ -520,7 +517,7 @@ ISG15 conjugation may play an important regulatory role in IFN-mediated antivira
             yaml.dump(yaml_data, f)
 
         validator = SupportingTextValidator(publications_dir=temp_publications_dir)
-        report = validator.validate_file(yaml_file)
+        report = validator.validate(yaml_data, yaml_file=yaml_file)[0]
 
         assert report.valid_supporting_texts == expected_valid
         assert report.invalid_supporting_texts == expected_invalid
@@ -556,7 +553,7 @@ ISG15 conjugation may play an important regulatory role in IFN-mediated antivira
             yaml.dump(yaml_data, f)
 
         validator = SupportingTextValidator(publications_dir=temp_publications_dir)
-        report = validator.validate_file(yaml_file)
+        report = validator.validate(yaml_data, yaml_file=yaml_file)[0]
 
         # Should find 2 findings with supporting_text
         assert report.annotations_with_supporting_text == 2
@@ -617,7 +614,7 @@ ISG15 conjugation may play an important regulatory role in IFN-mediated antivira
             yaml.dump(yaml_data, f)
 
         validator = SupportingTextValidator(publications_dir=temp_publications_dir)
-        report = validator.validate_file(yaml_file)
+        report = validator.validate(yaml_data, yaml_file=yaml_file)[0]
 
         # Should have 2 total (1 finding + 1 annotation)
         assert report.total_annotations == 2
@@ -692,7 +689,7 @@ CC       Rule:MF_01717}.
         
         # Validate
         validator = SupportingTextValidator(publications_dir=temp_publications_dir, gene_dir=gene_dir.parent.parent)
-        report = validator.validate_file(yaml_file)
+        report = validator.validate(yaml_data, yaml_file=yaml_file)[0]
         
         # Check results
         assert report.total_annotations == 4
@@ -764,7 +761,7 @@ CC       Rule:MF_01717}.
             }]
         }
         
-        report = validator.validate_data(data_valid)
+        report = validator.validate(data_valid)[0]
         assert report.is_valid
         assert report.valid_supporting_texts == 1
         assert report.invalid_supporting_texts == 0
@@ -785,7 +782,7 @@ CC       Rule:MF_01717}.
             }]
         }
         
-        report = validator.validate_data(data_invalid)
+        report = validator.validate(data_invalid)[0]
         assert not report.is_valid
         assert report.valid_supporting_texts == 0
         assert report.invalid_supporting_texts == 1
@@ -809,7 +806,7 @@ CC       Rule:MF_01717}.
             }]
         }
         
-        report = validator.validate_data(data)
+        report = validator.validate(data)[0]
         assert not report.is_valid
         assert report.invalid_supporting_texts == 1
         
@@ -829,7 +826,11 @@ class TestIntegration:
         if not jak1_file.exists():
             pytest.skip("JAK1 file not found")
 
-        report = validate_supporting_text_in_file(jak1_file)
+        with open(jak1_file, "r") as f:
+            data = yaml.safe_load(f)
+
+        validator = SupportingTextValidator()
+        report = validator.validate(data, yaml_file=jak1_file)[0]
 
         # Should have some results
         assert report.total_annotations > 0

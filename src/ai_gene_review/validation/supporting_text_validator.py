@@ -4,12 +4,15 @@ This module validates that supporting_text in annotations actually appears
 in the referenced cached publications.
 """
 
-from pathlib import Path
-from typing import Dict, Any, List, Optional
 import re
 from dataclasses import dataclass, field
 from difflib import SequenceMatcher
+from pathlib import Path
+from typing import Any, Dict, List, Optional
+
 import yaml
+
+from ai_gene_review.validation.base_validator import BaseValidator
 
 DEFAULT_SIMILARITY_THRESHOLD = 0.85
 
@@ -57,10 +60,15 @@ class SupportingTextValidationReport:
         ) * 100
 
 
-class SupportingTextValidator:
+class SupportingTextValidator(BaseValidator):
     """Validates supporting_text fields against cached publications."""
 
-    def __init__(self, publications_dir: Path = Path("publications"), gene_dir: Path = Path("genes"), reactome_dir: Path = Path("reactome")):
+    def __init__(
+        self,
+        publications_dir: Path = Path("publications"),
+        gene_dir: Path = Path("genes"),
+        reactome_dir: Path = Path("reactome"),
+    ):
         """Initialize validator with publications directory.
 
         Args:
@@ -916,7 +924,9 @@ class SupportingTextValidator:
             supporting_text, reference_id, annotation_path, data
         )
 
-    def validate_data(self, data: Dict[str, Any]) -> SupportingTextValidationReport:
+    def validate(
+        self, data: Dict[str, Any], yaml_file: Optional[Path] = None
+    ) -> List[SupportingTextValidationReport]:
         """Validate all supporting_text fields in gene review data.
 
         Validates supporting_text in both:
@@ -954,7 +964,7 @@ class SupportingTextValidator:
             ...         }
             ...     ]
             ... }
-            >>> report = validator.validate_data(data)
+            >>> report = validator.validate(data)
             >>> print(f"Total annotations: {report.total_annotations}")
             Total annotations: 1
             >>> print(f"With supporting text: {report.annotations_with_supporting_text}")
@@ -972,7 +982,7 @@ class SupportingTextValidator:
             ...         }
             ...     ]
             ... }
-            >>> report2 = validator.validate_data(data_with_pmid)
+            >>> report2 = validator.validate(data_with_pmid)
             >>> print(f"Valid: {report2.is_valid}")
             Valid: False
             >>> print(report2.results[0].error_message)
@@ -998,7 +1008,11 @@ class SupportingTextValidator:
                     report.total_annotations += 1
 
                     # NEW: Add warning if PMID, UniProt or Reactome reference has findings without supporting_text
-                    if (ref_id.startswith("PMID:") or ref_id.lower().startswith("uniprot:") or ref_id.upper().startswith("REACTOME:")) and findings:
+                    if (
+                        ref_id.startswith("PMID:")
+                        or ref_id.lower().startswith("uniprot:")
+                        or ref_id.upper().startswith("REACTOME:")
+                    ) and findings:
                         supporting_text = finding.get("supporting_text", "").strip()
                         if not supporting_text:
                             # Create a warning result for PMID findings without supporting_text
@@ -1052,66 +1066,4 @@ class SupportingTextValidator:
                     report.invalid_supporting_texts += 1
                     report.is_valid = False
 
-        return report
-
-    def validate_file(self, yaml_file: Path) -> SupportingTextValidationReport:
-        """Validate supporting_text in a gene review YAML file.
-
-        Loads a YAML file and validates all supporting_text fields against
-        cached publications. This is the main entry point for file validation.
-
-        Args:
-            yaml_file: Path to gene review YAML file (e.g., JAK1-ai-review.yaml)
-
-        Returns:
-            Validation report with comprehensive results for all annotations
-
-        Examples:
-            >>> from pathlib import Path
-            >>> validator = SupportingTextValidator()
-            >>> # Example: validate a gene review file if it exists
-            >>> yaml_file = Path("genes/human/JAK1/JAK1-ai-review.yaml")
-            >>> # if yaml_file.exists():
-            >>> #     report = validator.validate_file(yaml_file)
-            >>> #     print(f"Valid: {report.is_valid}")
-            >>> #     print(f"Coverage: {report.validation_rate:.1f}%")
-        """
-        try:
-            with open(yaml_file, "r") as f:
-                data = yaml.safe_load(f)
-
-            return self.validate_data(data)
-        except Exception as e:
-            report = SupportingTextValidationReport(is_valid=False)
-            result = SupportingTextValidationResult(
-                is_valid=False, error_message=f"Error loading file: {e}"
-            )
-            report.results.append(result)
-            return report
-
-
-def validate_supporting_text_in_file(
-    yaml_file: Path, publications_dir: Path = Path("publications"), reactome_dir: Path = Path("reactome")
-) -> SupportingTextValidationReport:
-    """Convenience function to validate supporting_text in a file.
-
-    Args:
-        yaml_file: Path to gene review YAML file
-        publications_dir: Path to cached publications directory
-        reactome_dir: Path to cached Reactome pathways directory
-
-    Returns:
-        Validation report
-
-    Example:
-        >>> from pathlib import Path
-        >>> # This would validate a real file if it exists
-        >>> # report = validate_supporting_text_in_file(
-        >>> #     Path("genes/human/JAK1/JAK1-ai-review.yaml")
-        >>> # )
-        >>> # print(f"Valid: {report.is_valid}")
-        >>> # print(f"Coverage: {report.validation_rate:.1f}%")
-        >>> # print(f"Accuracy: {report.accuracy_rate:.1f}%")
-    """
-    validator = SupportingTextValidator(publications_dir, reactome_dir=reactome_dir)
-    return validator.validate_file(yaml_file)
+        return [report]
