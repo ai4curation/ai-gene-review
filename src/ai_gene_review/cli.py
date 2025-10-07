@@ -259,6 +259,16 @@ def validate(
             help="Skip supporting_text validation against cached publications",
         ),
     ] = False,
+    tsv_output: Annotated[
+        Optional[Path],
+        typer.Option(
+            "--tsv-output",
+            help="Output validation results to TSV file with categorized issues",
+        ),
+    ] = None,
+    show_timing: Annotated[
+        bool, typer.Option("--show-timing", help="Show timing information for validation steps")
+    ] = False,
 ):
     """Validate gene review YAML files against the LinkML schema.
 
@@ -339,6 +349,17 @@ def validate(
                         err=True,
                     )
 
+        # Write TSV output if requested
+        if tsv_output:
+            try:
+                from ai_gene_review.validation.validation_report import BatchValidationReport
+                # Create a batch report with single file for TSV output
+                batch_report = BatchValidationReport(reports=[report])
+                batch_report.write_tsv(str(tsv_output))
+                typer.echo(f"TSV output written to: {tsv_output}")
+            except Exception as e:
+                typer.echo(f"Error writing TSV output: {e}", err=True)
+
         # Exit code based on validation result and strict mode
         if not report.is_valid or (strict and report.has_warnings):
             raise typer.Exit(code=1)
@@ -355,10 +376,19 @@ def validate(
             check_best_practices,
             check_goa,
             check_supporting_text,
+            show_progress=True,  # Enable progress bar for multiple files
         )
 
         # Show summary
         typer.echo(batch_report.summary())
+
+        # Write TSV output if requested
+        if tsv_output:
+            try:
+                batch_report.write_tsv(str(tsv_output))
+                typer.echo(f"TSV output written to: {tsv_output}")
+            except Exception as e:
+                typer.echo(f"Error writing TSV output: {e}", err=True)
 
         # Show details for invalid files if verbose
         if verbose and batch_report.invalid_files > 0:

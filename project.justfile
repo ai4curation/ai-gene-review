@@ -17,6 +17,13 @@ fetch-gene organism gene *args="":
 deep-research organism gene_or_uniprot *args="":
     uv run python src/ai_gene_review/tools/deep_research.py {{organism}} {{gene_or_uniprot}} {{args}}
 
+# Conduct deep research on a gene using FutureHouse Falcon API
+# Use --alias to specify a custom directory name and file prefix
+# Example: just deep-research-falcon human CFAP300
+# Example: just deep-research-falcon ACEPA A0A1Y0Y121 --alias xdhB
+deep-research-falcon organism gene_or_uniprot *args="":
+    uv run python src/ai_gene_review/tools/deep_research_falcon.py {{organism}} {{gene_or_uniprot}} {{args}}
+
 # Fetch a specific PMID
 fetch-pmid pmid output_dir="publications":
     uv run ai-gene-review fetch-pmid {{pmid}} --output-dir {{output_dir}}
@@ -77,23 +84,27 @@ validate-gene-verbose organism gene:
 
 # Validate all genes for an organism (shows detailed errors by default)
 validate-organism organism:
-    uv run ai-gene-review validate --verbose "genes/{{organism}}/*/*-ai-review.yaml"
+    @mkdir -p reports
+    uv run ai-gene-review validate --verbose --tsv-output reports/validation-{{organism}}.tsv "genes/{{organism}}/*/*-ai-review.yaml"
 
 # Validate all gene review files (shows detailed errors by default)
 validate-all:
     @echo "Validating all gene review YAML files..."
-    uv run ai-gene-review validate --verbose "genes/*/*/*-ai-review.yaml"
+    @mkdir -p reports
+    uv run ai-gene-review validate --verbose --tsv-output reports/validation-all.tsv "genes/*/*/*-ai-review.yaml"
     @echo ""
     @echo "Checking PMID references in all pathway markdown files..."
     @uv run python src/ai_gene_review/tools/validate_pmid_references.py genes/ || (echo "❌ PMID validation failed" && exit 1)
 
 # Validate all gene review files (summary only, no details)
 validate-all-summary:
-    uv run ai-gene-review validate "genes/*/*/*-ai-review.yaml"
+    @mkdir -p reports
+    uv run ai-gene-review validate --tsv-output reports/validation-summary.tsv "genes/*/*/*-ai-review.yaml"
 
 # Validate all gene review files (strict mode - warnings become errors)
 validate-all-strict:
-    uv run ai-gene-review validate --verbose --strict "genes/*/*/*-ai-review.yaml"
+    @mkdir -p reports
+    uv run ai-gene-review validate --verbose --strict --tsv-output reports/validation-strict.tsv "genes/*/*/*-ai-review.yaml"
 
 # Comprehensive validation: YAML schema + PMID references + mermaid syntax
 validate-comprehensive:
@@ -387,6 +398,9 @@ validate-gene-pmids organism gene:
     @echo "Validating PMID references for {{organism}}/{{gene}}..."
     uv run python src/ai_gene_review/tools/validate_pmid_references.py genes/{{organism}}/{{gene}}/
 
+# ============== Misannotation Analysis ==============
+# For misannotation analysis, use: cd analysis/misannotation && just help
+
 # Convert all pathway markdown files to HTML
 convert-all-pathways:
     #!/usr/bin/env bash
@@ -397,6 +411,28 @@ convert-all-pathways:
         count=$((count + 1))
     done
     echo "All $count pathway files converted!"
+
+# Find genes that lack deep research files (GENE-deep-research.md or GENE-falcon-research.md)
+find-genes-missing-research:
+    #!/usr/bin/env bash
+    echo "Finding gene directories missing deep research files..."
+    missing_count=0
+    total_count=0
+    for gene_dir in genes/*/*/; do
+        if [ -d "$gene_dir" ]; then
+            gene=$(basename "$gene_dir")
+            org=$(basename $(dirname "$gene_dir"))
+            total_count=$((total_count + 1))
+
+            # Check for either pattern: GENE-deep-research.md or GENE-falcon-research.md
+            if ! ls "$gene_dir"*-*research.md >/dev/null 2>&1; then
+                echo "$org/$gene"
+                missing_count=$((missing_count + 1))
+            fi
+        fi
+    done
+    echo ""
+    echo "Summary: $missing_count of $total_count genes lack deep research files"
 
 # ============== Publications Cache Management ==============
 
