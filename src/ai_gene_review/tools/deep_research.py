@@ -356,7 +356,7 @@ Sometimes different genes in the same organism have the same name. In this case,
     click.echo(f"Max retries: {max_retries}")
 
     response = None
-    last_error = None
+    last_error: Optional[Exception] = None
     
     for attempt in range(max_retries):
         try:

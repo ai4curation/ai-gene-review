@@ -19,6 +19,8 @@ from typing import List, Dict, Any, Optional, Tuple
 import yaml
 import re
 import traceback
+import time
+from contextlib import contextmanager
 from linkml_runtime.utils.schemaview import SchemaView  # type: ignore[import-untyped]
 from linkml.validators.jsonschemavalidator import JsonSchemaDataValidator  # type: ignore[import-untyped]
 
@@ -31,6 +33,20 @@ from ai_gene_review.validation.term_validator import TermValidator
 from ai_gene_review.validation.publication_validator import PublicationValidator
 from ai_gene_review.validation.goa_validator import GOAValidator
 from ai_gene_review.validation.supporting_text_validator import SupportingTextValidator
+
+
+@contextmanager
+def timer(name: str, callback: Optional[callable] = None):
+    """Context manager for timing operations with optional progress callback."""
+    start = time.perf_counter()
+    if callback:
+        callback(f"{name}...")
+    try:
+        yield
+    finally:
+        duration = time.perf_counter() - start
+        if callback:
+            callback(f"{name} ({duration:.2f}s)")
 
 
 def get_schema_path() -> Path:
@@ -64,6 +80,7 @@ def validate_gene_review(
     check_best_practices: bool = True,
     check_goa: bool = True,
     check_supporting_text: bool = True,
+    progress_callback: Optional[callable] = None,
 ) -> ValidationReport:
     """Validate a gene review YAML file against the LinkML schema.
 
@@ -73,6 +90,7 @@ def validate_gene_review(
         check_best_practices: Whether to check for best practices (soft failures)
         check_goa: Whether to validate against GOA file (enabled by default)
         check_supporting_text: Whether to validate supporting_text against cached publications
+        progress_callback: Optional callback function to report progress steps
 
     Returns:
         ValidationReport with detailed validation results
@@ -95,17 +113,23 @@ def validate_gene_review(
         Valid!
         >>> test_file.unlink()  # Clean up
     """
-    yaml_file = Path(yaml_file)
-    report = ValidationReport(file_path=yaml_file, is_valid=True)
+    yaml_file_path: Path = Path(yaml_file)
+    report = ValidationReport(file_path=yaml_file_path, is_valid=True)
+
+    if progress_callback:
+        progress_callback("Checking file existence")
 
     # Check if file exists
-    if not yaml_file.exists():
+    if not yaml_file_path.exists():
         report.add_issue(
-            ValidationSeverity.ERROR, f"File not found: {yaml_file}", path=None
+            ValidationSeverity.ERROR, f"File not found: {yaml_file_path}", path=None
         )
         return report
 
     try:
+        if progress_callback:
+            progress_callback("Loading schema")
+
         # Load schema
         if schema_path:
             schema_path_obj = Path(schema_path)
@@ -121,9 +145,15 @@ def validate_gene_review(
         else:
             load_schema()  # Validate schema can be loaded
 
+        if progress_callback:
+            progress_callback("Parsing YAML")
+
         # Load YAML data
-        with open(yaml_file, "r") as f:
+        with open(yaml_file_path, "r") as f:
             data = yaml.safe_load(f)
+
+        if progress_callback:
+            progress_callback("Schema validation")
 
         # Create validator
         validator = JsonSchemaDataValidator(str(schema_path or get_schema_path()))
@@ -142,12 +172,20 @@ def validate_gene_review(
                 path = path_match.group(1) if path_match else None
 
                 # Schema validation errors are hard failures
-                report.add_issue(ValidationSeverity.ERROR, message, path=path)
+                report.add_issue(
+                    ValidationSeverity.ERROR,
+                    message,
+                    path=path,
+                    validation_category="SchemaValidator",
+                    check_type="schema_validation"
+                )
 
         # Check best practices if enabled and no hard errors
         if check_best_practices and not report.has_errors:
+            if progress_callback:
+                progress_callback("Best practices validation")
             check_best_practices_rules(
-                data, report, yaml_file if check_goa else None, check_supporting_text
+                data, report, yaml_file_path if check_goa else None, check_supporting_text, progress_callback
             )
 
         return report
@@ -184,8 +222,9 @@ def validate_gene_review(
 def check_best_practices_rules(
     data: Dict[str, Any],
     report: ValidationReport,
-    yaml_file: Optional[Path | str] = None,
+    yaml_file: Optional[Path] = None,
     check_supporting_text: bool = True,
+    progress_callback: Optional[callable] = None,
 ) -> None:
     """Check for best practices and add soft failures (warnings).
 
@@ -194,7 +233,11 @@ def check_best_practices_rules(
         report: ValidationReport to add warnings to
         yaml_file: Path to YAML file for GOA validation (if enabled)
         check_supporting_text: Whether to validate supporting_text against publications
+        progress_callback: Optional callback function to report progress steps
     """
+    if progress_callback:
+        progress_callback("Validating ontology terms")
+
     # Validate ontology terms
     term_validator = TermValidator()
     term_results = term_validator.validate_terms_in_data(data)
@@ -208,6 +251,8 @@ def check_best_practices_rules(
                 suggestion=f"Use correct label: '{result.correct_label}'"
                 if result.correct_label
                 else None,
+                validation_category="TermValidator",
+                check_type="invalid_term_label"
             )
         elif result.is_obsolete:
             report.add_issue(
@@ -215,6 +260,8 @@ def check_best_practices_rules(
                 f"Term {result.term_id} is obsolete",
                 path=result.path,
                 suggestion="Consider using a non-obsolete term",
+                validation_category="TermValidator",
+                check_type="obsolete_term"
             )
 
     # Validate GO branch constraints in core_functions
@@ -229,6 +276,9 @@ def check_best_practices_rules(
                 if result.correct_label
                 else None,
             )
+
+    if progress_callback:
+        progress_callback("Validating publications")
 
     # Validate publication references
     pub_validator = PublicationValidator()
@@ -260,6 +310,8 @@ def check_best_practices_rules(
             "Description contains TODO placeholder",
             path="description",
             suggestion="Complete the gene description",
+            validation_category="BestPractices",
+            check_type="todo_placeholder"
         )
 
     # Check for missing optional but recommended fields
@@ -269,6 +321,8 @@ def check_best_practices_rules(
             "No aliases provided for the gene",
             path="aliases",
             suggestion="Consider adding known gene aliases if available",
+            validation_category="BestPractices",
+            check_type="missing_aliases"
         )
 
     # Check for missing references
@@ -278,6 +332,8 @@ def check_best_practices_rules(
             "No references provided",
             path="references",
             suggestion="Add relevant literature references",
+            validation_category="BestPractices",
+            check_type="missing_references"
         )
 
     # Check that all original_reference_ids in annotations point to valid references
@@ -319,6 +375,8 @@ def check_best_practices_rules(
                     f"File reference points to non-existent file: {file_path_str}",
                     path=path,
                     suggestion=f"Ensure the file exists at: genes/{file_path_str}",
+                    validation_category="ReferenceValidator",
+                    check_type="file_not_found"
                 )
             elif not full_path.is_file():
                 report.add_issue(
@@ -326,6 +384,8 @@ def check_best_practices_rules(
                     f"File reference points to a directory, not a file: {file_path_str}",
                     path=path,
                     suggestion="File references must point to actual files, not directories",
+                    validation_category="ReferenceValidator",
+                    check_type="file_is_directory"
                 )
 
     # Check file: references in main references section
@@ -369,6 +429,8 @@ def check_best_practices_rules(
                 f"Review incomplete: {pending_count} annotations marked as PENDING ({examples_text})",
                 path="existing_annotations",
                 suggestion="Complete the review by resolving PENDING annotations",
+                validation_category="BestPractices",
+                check_type="pending_annotations"
             )
 
     # Check for review-term-consistency: all annotations to the same term should have the same action
@@ -423,6 +485,8 @@ def check_best_practices_rules(
                         f"Inconsistent review actions for term {term_id} ({term_label or 'unknown'}): {'; '.join(action_summary)}",
                         path="existing_annotations",
                         suggestion="All annotations to the same term should have consistent review actions, regardless of evidence type",
+                        validation_category="BestPractices",
+                        check_type="inconsistent_review_actions"
                     )
     
     # Check for missing core functions
@@ -432,6 +496,8 @@ def check_best_practices_rules(
             "No core functions defined",
             path="core_functions",
             suggestion="Define the core molecular functions of the gene",
+            validation_category="BestPractices",
+            check_type="missing_core_functions"
         )
     else:
         # Validate that core function terms are properly supported
@@ -537,6 +603,8 @@ def check_best_practices_rules(
                             f"Core function term {term_id} ({term_label}) is not reflected in existing_annotations block",
                             path=f"core_functions[{i}].molecular_function",
                             suggestion="Consider adding this term to existing_annotations with action: NEW if it's a novel annotation",
+                            validation_category="BestPractices",
+                            check_type="core_function_molecular_function_not_in_annotations"
                         )
                 
                 # Check locations field (should be CC terms)
@@ -583,6 +651,8 @@ def check_best_practices_rules(
                                 f"Location term {loc_id} ({loc_label}) is not reflected in existing_annotations block",
                                 path=f"core_functions[{i}].locations[{j}]",
                                 suggestion="Consider adding this term to existing_annotations with action: NEW if it's a novel annotation",
+                                validation_category="BestPractices",
+                                check_type="core_function_location_not_in_annotations"
                             )
                 
                 # Check directly_involved_in field (should be BP terms)
@@ -618,6 +688,8 @@ def check_best_practices_rules(
                                 f"Process term {proc_id} ({proc_label}) is not reflected in existing_annotations block",
                                 path=f"core_functions[{i}].directly_involved_in[{j}]",
                                 suggestion="Consider adding this term to existing_annotations with action: NEW if it's a novel annotation",
+                                validation_category="BestPractices",
+                                check_type="core_function_process_not_in_annotations"
                             )
 
                 # Check in_complex field
@@ -744,9 +816,10 @@ def check_best_practices_rules(
 
     # Validate against GOA file if enabled
     if yaml_file is not None and "existing_annotations" in data:
+        if progress_callback:
+            progress_callback("Validating against GOA")
         goa_validator = GOAValidator()
-        # yaml_file is guaranteed to be Path here (converted at line 92)
-        assert isinstance(yaml_file, Path)
+        # yaml_file is guaranteed to be Path here
         goa_result = goa_validator.validate_against_goa(yaml_file)
 
         if not goa_result.is_valid:
@@ -825,6 +898,8 @@ def check_best_practices_rules(
 
     # Validate supporting_text against cached publications if enabled
     if check_supporting_text and "existing_annotations" in data:
+        if progress_callback:
+            progress_callback("Validating supporting text")
         st_validator = SupportingTextValidator()
         st_report = st_validator.validate_data(data)
 
@@ -850,6 +925,8 @@ def check_best_practices_rules(
                         or "Supporting text not found in referenced publication",
                         path=st_result.annotation_path,
                         suggestion=st_result.suggested_fix,
+                        validation_category="SupportingTextValidator",
+                        check_type="supporting_text_not_found"
                     )
 
         # Report coverage statistics as info
@@ -861,6 +938,8 @@ def check_best_practices_rules(
                     f"Only {coverage:.1f}% of annotations have supporting_text",
                     path="existing_annotations",
                     suggestion="Consider adding supporting_text to more annotations for better documentation",
+                    validation_category="SupportingTextValidator",
+                    check_type="low_supporting_text_coverage"
                 )
 
 
@@ -870,6 +949,7 @@ def validate_multiple_files(
     check_best_practices: bool = True,
     check_goa: bool = True,
     check_supporting_text: bool = True,
+    show_progress: bool = False,
 ) -> BatchValidationReport:
     """Validate multiple gene review YAML files.
 
@@ -879,6 +959,7 @@ def validate_multiple_files(
         check_best_practices: Whether to check for best practices
         check_goa: Whether to validate against GOA files
         check_supporting_text: Whether to validate supporting_text against cached publications
+        show_progress: Whether to show a progress bar for multiple files
 
     Returns:
         BatchValidationReport with results for all files
@@ -906,16 +987,49 @@ def validate_multiple_files(
     """
     batch_report = BatchValidationReport()
 
-    for yaml_file in yaml_files:
-        yaml_file = Path(yaml_file)
-        report = validate_gene_review(
-            yaml_file,
-            schema_path,
-            check_best_practices,
-            check_goa,
-            check_supporting_text,
-        )
-        batch_report.reports.append(report)
+    if show_progress and len(yaml_files) > 1:
+        from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TaskProgressColumn, TimeElapsedColumn
+
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            BarColumn(),
+            TaskProgressColumn(),
+            TimeElapsedColumn(),
+            console=None,  # Use default console
+        ) as progress:
+            main_task = progress.add_task("Validating files...", total=len(yaml_files))
+
+            for yaml_file in yaml_files:
+                yaml_file_path = Path(yaml_file)
+                progress.update(main_task, description=f"Validating {yaml_file_path.name}")
+
+                # Create a callback to show sub-steps for this file
+                def step_callback(step: str):
+                    progress.update(main_task, description=f"{yaml_file_path.name}: {step}")
+
+                report = validate_gene_review(
+                    yaml_file_path,
+                    schema_path,
+                    check_best_practices,
+                    check_goa,
+                    check_supporting_text,
+                    progress_callback=step_callback,
+                )
+                batch_report.reports.append(report)
+                progress.advance(main_task)
+    else:
+        # No progress bar for single files or when disabled
+        for yaml_file in yaml_files:
+            yaml_file = Path(yaml_file)
+            report = validate_gene_review(
+                yaml_file,
+                schema_path,
+                check_best_practices,
+                check_goa,
+                check_supporting_text,
+            )
+            batch_report.reports.append(report)
 
     return batch_report
 
