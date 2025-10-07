@@ -55,7 +55,7 @@ def extract_pmids_from_yaml(yaml_path: Path) -> Set[str]:
     Returns:
         Set of PMID strings from the references
     """
-    pmids = set()
+    pmids: set[str] = set()
     
     if not yaml_path.exists():
         return pmids

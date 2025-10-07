@@ -35,6 +35,12 @@ class ValidationIssue(BaseModel):
     suggestion: Optional[str] = Field(
         default=None, description="Suggested fix for the issue"
     )
+    validation_category: Optional[str] = Field(
+        default=None, description="Primary validation category (e.g., TermValidator, PublicationValidator)"
+    )
+    check_type: Optional[str] = Field(
+        default=None, description="Specific check type within the validation category"
+    )
 
     def is_error(self) -> bool:
         """Check if this is a hard failure."""
@@ -127,6 +133,8 @@ class ValidationReport(BaseModel):
         path: Optional[str] = None,
         details: Optional[Dict[str, Any]] = None,
         suggestion: Optional[str] = None,
+        validation_category: Optional[str] = None,
+        check_type: Optional[str] = None,
     ) -> None:
         """Add a validation issue to the report."""
         issue = ValidationIssue(
@@ -135,6 +143,8 @@ class ValidationReport(BaseModel):
             path=path,
             details=details,
             suggestion=suggestion,
+            validation_category=validation_category,
+            check_type=check_type,
         )
         self.issues.append(issue)
         # Update validity based on errors
@@ -182,6 +192,8 @@ class ValidationReport(BaseModel):
                     "path": issue.path,
                     "details": issue.details,
                     "suggestion": issue.suggestion,
+                    "validation_category": issue.validation_category,
+                    "check_type": issue.check_type,
                 }
                 for issue in self.issues
             ],
@@ -189,6 +201,41 @@ class ValidationReport(BaseModel):
             "schema_version": self.schema_version,
             "metadata": self.metadata,
         }
+
+    def to_tsv_rows(self) -> List[Dict[str, str]]:
+        """Convert validation issues to TSV-ready rows."""
+        import json
+
+        rows = []
+        for issue in self.issues:
+            row = {
+                "file_path": str(self.file_path) if self.file_path else "",
+                "severity": str(issue.severity),
+                "validation_category": issue.validation_category or "",
+                "check_type": issue.check_type or "",
+                "path": issue.path or "",
+                "message": issue.message,
+                "suggestion": issue.suggestion or "",
+                "details": json.dumps(issue.details) if issue.details else "",
+                "timestamp": self.timestamp.isoformat(),
+            }
+            rows.append(row)
+        return rows
+
+    @staticmethod
+    def tsv_header() -> List[str]:
+        """Get TSV column headers."""
+        return [
+            "file_path",
+            "severity",
+            "validation_category",
+            "check_type",
+            "path",
+            "message",
+            "suggestion",
+            "details",
+            "timestamp"
+        ]
 
 
 class BatchValidationReport(BaseModel):
@@ -270,3 +317,26 @@ class BatchValidationReport(BaseModel):
                     )
 
         return "\n".join(lines)
+
+    def to_tsv(self) -> str:
+        """Convert all validation issues to TSV format."""
+        import csv
+        from io import StringIO
+
+        output = StringIO()
+        writer = csv.DictWriter(output, fieldnames=ValidationReport.tsv_header(), delimiter='\t')
+
+        # Write header
+        writer.writeheader()
+
+        # Write all issues from all reports
+        for report in self.reports:
+            for row in report.to_tsv_rows():
+                writer.writerow(row)
+
+        return output.getvalue()
+
+    def write_tsv(self, file_path: str) -> None:
+        """Write validation issues to a TSV file."""
+        with open(file_path, 'w', newline='', encoding='utf-8') as f:
+            f.write(self.to_tsv())

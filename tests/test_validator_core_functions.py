@@ -49,7 +49,7 @@ def test_core_function_without_support_or_accepted_term():
         # Should have an error about the core function
         errors = [issue for issue in report.issues if issue.severity == ValidationSeverity.ERROR]
         assert any(
-            "GO:0004672" in issue.message and "not from an ACCEPTED annotation" in issue.message
+            "GO:0004672" in issue.message and "not from an ACCEPTED/NEW annotation" in issue.message
             for issue in errors
         ), "Should report error for core function not from ACCEPTED annotation and lacking supported_by"
     finally:
@@ -96,7 +96,7 @@ def test_core_function_from_accepted_annotation():
         # Should not have errors about this core function
         errors = [issue for issue in report.issues if issue.severity == ValidationSeverity.ERROR]
         assert not any(
-            "GO:0005524" in issue.message and "not from an ACCEPTED annotation" in issue.message
+            "GO:0005524" in issue.message and "not from an ACCEPTED/NEW annotation" in issue.message
             for issue in errors
         ), "Should not report error for core function from ACCEPTED annotation"
     finally:
@@ -142,7 +142,7 @@ def test_core_function_with_supported_by():
         # Should not have errors about this core function
         errors = [issue for issue in report.issues if issue.severity == ValidationSeverity.ERROR]
         assert not any(
-            "GO:0004672" in issue.message and "not from an ACCEPTED annotation" in issue.message
+            "GO:0004672" in issue.message and "not from an ACCEPTED/NEW annotation" in issue.message
             for issue in errors
         ), "Should not report error for core function with supported_by"
     finally:
@@ -191,7 +191,7 @@ def test_core_function_from_proposed_replacement():
         # Should not have errors about this core function
         errors = [issue for issue in report.issues if issue.severity == ValidationSeverity.ERROR]
         assert not any(
-            "GO:0004672" in issue.message and "not from an ACCEPTED annotation" in issue.message
+            "GO:0004672" in issue.message and "not from an ACCEPTED/NEW annotation" in issue.message
             for issue in errors
         ), "Should not report error for core function from proposed_replacement_terms"
     finally:

@@ -168,9 +168,9 @@ class MermaidValidator:
 
         if '(' in line and ')' in line:
             # Round bracket label
-            match = re.match(r'\s*(\w+)\(([^)]+)\)', line)
-            if match:
-                node_id, label = match.groups()
+            round_match = re.match(r'\s*(\w+)\(([^)]+)\)', line)
+            if round_match is not None:
+                node_id, label = round_match.groups()
                 self.node_ids.add(node_id)
                 self._validate_label(label, line_num, 'round')
 
