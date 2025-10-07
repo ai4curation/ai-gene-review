@@ -1,0 +1,35 @@
+# Citations for haox Research (Falcon)
+
+1. tsvik2022flavinmononucleotidedependentllactate pages 1-2
+2. gao2012nadindependentllactatedehydrogenase pages 1-2
+3. gao2012nadindependentllactatedehydrogenase pages 1-2, tsvik2022flavinmononucleotidedependentllactate pages 2-4
+4. jiang2014microbiallactateutilization pages 2-3, jiang2014microbiallactateutilization pages 1-2
+5. tsvik2022flavinmononucleotidedependentllactate pages 1-2, tsvik2022flavinmononucleotidedependentllactate pages 6-8
+6. tsvik2022flavinmononucleotidedependentllactate pages 8-9
+7. jiang2014microbiallactateutilization pages 2-3, tsvik2022flavinmononucleotidedependentllactate pages 1-2
+8. jiang2014microbiallactateutilization pages 2-3, tsvik2022flavinmononucleotidedependentllactate pages 8-9
+9. tsvik2022flavinmononucleotidedependentllactate pages 6-8, tsvik2022flavinmononucleotidedependentllactate pages 1-2
+10. jiang2014microbiallactateutilization pages 1-2, tsvik2022flavinmononucleotidedependentllactate pages 2-4
+11. jiang2014microbiallactateutilization pages 2-3
+12. tsvik2022flavinmononucleotidedependentllactate pages 4-5
+13. tsvik2022flavinmononucleotidedependentllactate pages 2-4, jiang2014microbiallactateutilization pages 1-2
+14. tsvik2022flavinmononucleotidedependentllactate pages 4-5, tsvik2022flavinmononucleotidedependentllactate pages 6-8
+15. tsvik2022flavinmononucleotidedependentllactate pages 8-9, jiang2014microbiallactateutilization pages 2-3
+16. tsvik2022flavinmononucleotidedependentllactate pages 2-4
+17. tsvik2022flavinmononucleotidedependentllactate pages 8-9, tsvik2022flavinmononucleotidedependentllactate pages 1-2
+18. tsvik2022flavinmononucleotidedependentllactate pages 1-2, tsvik2022flavinmononucleotidedependentllactate pages 8-9
+19. tsvik2022flavinmononucleotidedependentllactate pages 4-5, jiang2014microbiallactateutilization pages 2-3
+20. gao2012nadindependentllactatedehydrogenase pages 1-2, tsvik2022flavinmononucleotidedependentllactate pages 6-8
+21. gao2012nadindependentllactatedehydrogenase pages 1-2, jiang2014microbiallactateutilization pages 2-3
+22. tsvik2022flavinmononucleotidedependentllactate pages 8-9, jiang2014microbiallactateutilization pages 1-2
+23. tsvik2022flavinmononucleotidedependentllactate pages 2-4, tsvik2022flavinmononucleotidedependentllactate pages 1-2
+24. tsvik2022flavinmononucleotidedependentllactate pages 8-9, tsvik2022flavinmononucleotidedependentllactate pages 4-5
+25. jiang2014microbiallactateutilization pages 1-2
+26. tsvik2022flavinmononucleotidedependentllactate pages 1-2, tsvik2022flavinmononucleotidedependentllactate pages 2-4
+27. tsvik2022flavinmononucleotidedependentllactate pages 2-4, tsvik2022flavinmononucleotidedependentllactate pages 4-5
+28. tsvik2022flavinmononucleotidedependentllactate pages 4-5, tsvik2022flavinmononucleotidedependentllactate pages 8-9
+29. tsvik2022flavinmononucleotidedependentllactate pages 6-8, tsvik2022flavinmononucleotidedependentllactate pages 2-4
+30. tsvik2022flavinmononucleotidedependentllactate pages 1-2, gao2012nadindependentllactatedehydrogenase pages 1-2
+31. tsvik2022flavinmononucleotidedependentllactate pages 1-2, jiang2014microbiallactateutilization pages 1-2
+32. tsvik2022flavinmononucleotidedependentllactate pages 4-5, tsvik2022flavinmononucleotidedependentllactate pages 1-2
+33. tsvik2022flavinmononucleotidedependentllactate pages 6-8

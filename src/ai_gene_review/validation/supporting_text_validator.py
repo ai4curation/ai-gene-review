@@ -192,7 +192,7 @@ class SupportingTextValidator:
             return reference_id[9:]  # Skip "Reactome:" or "REACTOME:"
         return None
 
-    def load_uniprot_file(self, uniprot_id: str, yaml_data: Dict[str, Any] = None) -> Optional[str]:
+    def load_uniprot_file(self, uniprot_id: str, yaml_data: Optional[Dict[str, Any]] = None) -> Optional[str]:
         """Load a UniProt file for a given ID.
 
         Attempts to find and load the UniProt file from the gene directory structure.
@@ -660,7 +660,7 @@ class SupportingTextValidator:
         supporting_text: str,
         reference_id: str,
         annotation_path: str,
-        yaml_data: Dict[str, Any] = None,
+        yaml_data: Optional[Dict[str, Any]] = None,
     ) -> Optional[SupportingTextValidationResult]:
         """Core validation method for checking supporting text against a reference.
 
@@ -888,7 +888,7 @@ class SupportingTextValidator:
         reference_id: str,
         finding_index: int,
         ref_index: int,
-        data: Dict[str, Any] = None,
+        data: Optional[Dict[str, Any]] = None,
     ) -> Optional[SupportingTextValidationResult]:
         """Validate supporting_text for a single finding in references section.
 
