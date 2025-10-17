@@ -1,7 +1,7 @@
 
 # AI Gene Review
 
-AI-assisted tool for reviewing and curating gene annotations. This project provides a structured workflow for validating existing Gene Ontology (GO) annotations using AI-driven analysis combined with literature research and bioinformatics evidence.
+AI-assisted tool for reviewing and curating gene annotations with **community feedback integration**. This project provides a structured workflow for validating existing Gene Ontology (GO) annotations using AI-driven analysis combined with literature research, bioinformatics evidence, and crowdsourced expert feedback.
 
 ## Overview
 
@@ -11,6 +11,7 @@ The AI Gene Review tool helps researchers and curators:
 - **Fetch and organize** gene data from UniProt and GOA databases
 - **Validate annotation files** against LinkML schemas
 - **Manage references** and supporting literature
+- **Collect community feedback** through integrated voting and evaluation systems
 
 ## Quick Start
 
@@ -53,7 +54,9 @@ just stats-open           # Generate and open in browser
 2. **Literature Research**: Gather supporting publications and evidence
 3. **Create Review**: Structure annotations using the YAML schema
 4. **Validate**: Check against LinkML schema and best practices
-5. **Iterate**: Refine annotations based on validation results
+5. **Generate HTML**: Render interactive web pages with voting capabilities
+6. **Collect Feedback**: Community voting and expert evaluation forms
+7. **Iterate**: Refine annotations based on validation results and community input
 
 ## Key Features
 
@@ -64,16 +67,26 @@ just stats-open           # Generate and open in browser
 - 🔄 **Batch processing**: Handle multiple genes efficiently
 - 📊 **Structured reviews**: YAML-based gene annotation reviews
 - 🔍 **Evidence tracking**: Detailed provenance and supporting text
+- 🗳️ **Community voting**: Thumbs up/down feedback on AI decisions
+- 📝 **Expert evaluation**: Detailed feedback forms for comprehensive gene review assessment
+- 🎨 **Interactive web interface**: Rich HTML rendering with modern UI
 
 
 ## Resources
 
-### Documentation & Visualization
+### Web Applications & Documentation
 
-- **Documentation Website**: [https://monarch-initiative.github.io/ai-gene-review](https://monarch-initiative.github.io/ai-gene-review)
-- **Interactive Web App**: [https://ai4curation.github.io/ai-gene-review/app/index.html](https://ai4curation.github.io/ai-gene-review/app/index.html) - Browse and explore gene annotation reviews
-- **Statistics Dashboard**: [https://ai4curation.github.io/ai-gene-review/docs/stats_report.html](https://ai4curation.github.io/ai-gene-review/docs/stats_report.html) - Summary Stats
-- **Slide Overview**: [https://docs.google.com/presentation/d/1xBFIQE0jt7K6kFg4zFzUwLDHtnDWat2ZVDarhcpA3_4/edit?slide=id.p#slide=id.p](slides)
+- **Main Project Site**: [https://ai4curation.io/ai-gene-review](https://ai4curation.io/ai-gene-review) *(coming soon)*
+- **Interactive Web App**: [Browse Gene Reviews](https://ai4curation.io/ai-gene-review/app/index.html) - Search and explore gene annotation reviews
+- **Statistics Dashboard**: [Summary Statistics](https://ai4curation.io/ai-gene-review/docs/stats_report.html) - Analytics and review metrics
+- **Evaluation Form**: [https://go.lbl.gov/gene-eval](https://go.lbl.gov/gene-eval) - Detailed expert feedback form
+- **Project Slides**: [Overview Presentation](https://docs.google.com/presentation/d/1xBFIQE0jt7K6kFg4zFzUwLDHtnDWat2ZVDarhcpA3_4/edit?slide=id.p#slide=id.p)
+
+### Documentation Pages
+
+- **Voting System Guide**: Learn how to provide feedback on AI curation decisions
+- **Evaluation Form Guide**: Comprehensive guide for detailed gene review evaluation
+- **GitHub Issues**: [Report bugs and feature requests](https://github.com/monarch-initiative/ai-gene-review/issues)
 
 ## Gene Review Structure
 
@@ -110,6 +123,51 @@ The repository includes example gene reviews for:
 - **Worm**: lrx-1
 
 Browse the `genes/` directory to see complete examples.
+
+## Community Feedback System
+
+The AI Gene Review project includes a comprehensive feedback system to improve AI curation through community input:
+
+### 🗳️ Quick Voting System
+
+Every gene review page includes thumbs up/down voting on:
+- **Individual annotation decisions** (ACCEPT, REMOVE, MODIFY actions)
+- **Gene descriptions** and summaries
+- **Core function definitions**
+- **Suggested questions** for experts
+- **Suggested experiments**
+- **Documentation sections** (Deep Research, Notes, Bioinformatics Results)
+- **Proposed new GO terms**
+- **Pathway visualizations**
+
+**Features:**
+- Anonymous voting with session-based tracking
+- Instant visual feedback with vote persistence
+- Rate limiting to prevent abuse
+- Vote data collection via Google Apps Script
+
+### 📝 Detailed Evaluation Form
+
+For comprehensive feedback, use the evaluation form at [https://go.lbl.gov/gene-eval](https://go.lbl.gov/gene-eval):
+
+- **Structured assessment** of annotation quality
+- **Pre-filled gene information** when accessed from gene pages
+- **Multiple choice and free-text** questions
+- **Expert-level feedback** for improving AI curation
+
+### 🎯 Feedback Integration
+
+The feedback system enables:
+- **Data-driven improvements** to AI curation algorithms
+- **Identification of problematic patterns** in automated annotations
+- **Community validation** of AI decisions
+- **Prioritization of genes** needing expert attention
+
+### How to Provide Feedback
+
+1. **Quick feedback**: Use 👍/👎 buttons on any gene review page
+2. **Detailed feedback**: Click "📝 Provide Detailed Feedback" button or visit the evaluation form directly
+3. **Technical feedback**: Submit issues and suggestions via [GitHub Issues](https://github.com/monarch-initiative/ai-gene-review/issues)
 
 ## Case Studies
 
@@ -239,6 +297,13 @@ uv run ai-gene-review --help                    # Show CLI help
 uv run ai-gene-review fetch-gene human BRCA1    # Fetch gene data
 uv run ai-gene-review validate <yaml-file>      # Validate review file
 uv run ai-gene-review batch-fetch <input-file>  # Process multiple genes
+```
+
+**HTML Rendering:**
+```bash
+just render human BRCA1        # Render single gene to HTML
+just render-all                # Render all gene reviews to HTML
+python -m ai_gene_review.render --all genes/    # Alternative rendering command
 ```
 
 ## Contributing
