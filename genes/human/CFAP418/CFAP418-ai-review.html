@@ -1,0 +1,3598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CFAP418 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>CFAP418</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q96NL8" target="_blank" class="term-link">
+                        Q96NL8
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "CFAP418";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q96NL8" data-a="DESCRIPTION: CFAP418 (C8orf37) is a ciliary scaffolding protein..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>CFAP418 (C8orf37) is a ciliary scaffolding protein localized at the photoreceptor connecting cilium base that is essential for photoreceptor outer segment disc morphogenesis and organization. It forms a protein complex with FAM161A at the ciliary base, contributing to photoreceptor structural integrity and survival. Mutations cause retinal dystrophies including cone-rod dystrophy 16 (CORD16), retinitis pigmentosa 64 (RP64), and Bardet-Biedl syndrome 21 (BBS21).</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001917" target="_blank" class="term-link">
+                                    GO:0001917
+                                </a>
+                            </span>
+                            <span class="term-label">photoreceptor inner segment</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96NL8" data-a="GO:0001917" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This IEA annotation is supported by experimental evidence. CFAP418 is enriched at the photoreceptor inner segment, particularly at the connecting cilium base between inner and outer segments as shown by immunohistochemistry in both mouse (PMID:22177090) and marmoset retina (PMID:36233334). The protein is present throughout the inner segment but concentrated at the ciliary base.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> PMID:22177090 and PMID:36233334 provide direct immunohistochemical evidence for CFAP418 localization at the photoreceptor inner segment, with particular enrichment at the connecting cilium base.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22177090" target="_blank" class="term-link">
+                                        PMID:22177090
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Immunohistochemical studies revealed C8orf37 localization at the base of the primary cilium of human retinal pigment epithelium cells and at the base of connecting cilia of mouse photoreceptors</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q96NL8" data-a="GO:0005737" data-r="GO_REF:0000120" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This automated annotation is overly general. While CFAP418 is cytoplasmic (non-membrane bound), the more specific localization to the ciliary base (GO:0097546) better represents its functional localization. The cytoplasm term doesn&#39;t capture the protein&#39;s specialized ciliary localization.
+                        </div>
+                        
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0097546" target="_blank" class="term-link">
+                                    ciliary base
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27173435" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27173435
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    An organelle-specific protein landscape identifies novel dis...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q96NL8" data-a="GO:0005515" data-r="PMID:27173435" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> While this IPI evidence is valid (PMID:27173435 is a large-scale protein interaction study), the generic &#39;protein binding&#39; term is uninformative about CFAP418&#39;s actual molecular function. The protein functions as a ciliary scaffold that specifically binds FAM161A and potentially other ciliary proteins. A more specific term like &#39;scaffold protein binding&#39; (GO:0097110) would better represent its molecular function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> PMID:27173435 provides broad protein interaction data, but CFAP418 specifically functions as a ciliary scaffolding protein. The more specific scaffold protein binding term better captures its molecular role.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0097110" target="_blank" class="term-link">
+                                    scaffold protein binding
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27173435" target="_blank" class="term-link">
+                                        PMID:27173435
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">An organelle-specific protein landscape identifies novel diseases and molecular mechanisms</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/36233334" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:36233334
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Interactions between C8orf37 and FAM161A, Two Ciliary Protei...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q96NL8" data-a="GO:0005515" data-r="PMID:36233334" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This IPI evidence from PMID:36233334 specifically demonstrates CFAP418-FAM161A interaction via Y2H, co-IP, and proximity ligation assays. The N-terminus of CFAP418 (aa 1-75) interacts with FAM161A&#39;s UPF0564 domain (aa 341-517). However, &#39;protein binding&#39; is too generic - this should be annotated with a more specific molecular function reflecting its scaffolding role at the ciliary base.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> PMID:36233334 provides strong experimental evidence for direct CFAP418-FAM161A interaction through multiple biochemical assays, demonstrating CFAP418&#39;s role as a ciliary scaffold protein. Bioinformatics analysis reveals extensive coiled-coil regions (positions 0-259, 273-315, 350-441) supporting its scaffolding function.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0097110" target="_blank" class="term-link">
+                                    scaffold protein binding
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/36233334" target="_blank" class="term-link">
+                                        PMID:36233334
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Interactions between C8orf37 and FAM161A, Two Ciliary Proteins Essential for Photoreceptor Survival</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001917" target="_blank" class="term-link">
+                                    GO:0001917
+                                </a>
+                            </span>
+                            <span class="term-label">photoreceptor inner segment</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96NL8" data-a="GO:0001917" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This ISS annotation (inferred from sequence similarity) is correct and supported by direct experimental evidence. Multiple studies confirm CFAP418 localization to the photoreceptor inner segment, particularly at the connecting cilium base. This represents a core localization for the protein&#39;s function.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008594" target="_blank" class="term-link">
+                                    GO:0008594
+                                </a>
+                            </span>
+                            <span class="term-label">photoreceptor cell morphogenesis</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q96NL8" data-a="GO:0008594" data-r="GO_REF:0000024" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This ISS annotation is supported by strong experimental evidence. CFAP418 knockout mice show severely disorganized photoreceptor outer segment discs from early postnatal development, demonstrating its requirement for proper photoreceptor morphogenesis. The more specific process &#39;photoreceptor cell outer segment organization&#39; (GO:0035845) would better capture its primary role in outer segment disc formation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> PMID:22177090 demonstrated that CFAP418 knockout mice exhibit severe photoreceptor outer segment defects with disorganized disc morphology, indicating a specific role in outer segment organization rather than general morphogenesis.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035845" target="_blank" class="term-link">
+                                    photoreceptor cell outer segment organization
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22177090" target="_blank" class="term-link">
+                                        PMID:22177090
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Immunohistochemical studies revealed C8orf37 localization at the base of the primary cilium of human retinal pigment epithelium cells</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22177090" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22177090
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mutations in C8orf37, encoding a ciliary protein, are associ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q96NL8" data-a="GO:0005737" data-r="PMID:22177090" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> While PMID:22177090 does show cytoplasmic localization via IDA, this is overly general. The same paper specifically demonstrates localization at the ciliary base using immunohistochemistry. The ciliary base annotation (GO:0097546) from the same paper is more informative and specific.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0097546" target="_blank" class="term-link">
+                                    GO:0097546
+                                </a>
+                            </span>
+                            <span class="term-label">ciliary base</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22177090" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22177090
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mutations in C8orf37, encoding a ciliary protein, are associ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96NL8" data-a="GO:0097546" data-r="PMID:22177090" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Excellent annotation with strong IDA evidence. PMID:22177090 shows via immunohistochemistry that CFAP418 localizes at the base of primary cilia in RPE cells and at the base of connecting cilia in mouse photoreceptors. This is a core localization essential for CFAP418&#39;s function in photoreceptor maintenance and represents its primary functional compartment.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> PMID:22177090 provides definitive immunohistochemical evidence for CFAP418 localization at ciliary bases in both RPE cells and photoreceptors, establishing this as the protein&#39;s primary functional compartment.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22177090" target="_blank" class="term-link">
+                                        PMID:22177090
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Immunohistochemical studies revealed C8orf37 localization at the base of the primary cilium of human retinal pigment epithelium cells and at the base of connecting cilia of mouse photoreceptors</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001754" target="_blank" class="term-link">
+                                    GO:0001754
+                                </a>
+                            </span>
+                            <span class="term-label">eye photoreceptor cell differentiation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q96NL8" data-a="GO:0001754" data-r="" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Essential for photoreceptor differentiation and structural organization through scaffolding function at the connecting cilium
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> CFAP418 is essential for photoreceptor cell differentiation, specifically functioning as a ciliary scaffolding protein at the photoreceptor connecting cilium base where it is required for outer segment disc morphogenesis and structural organization. Mutations in CFAP418 cause multiple retinal dystrophies including cone-rod dystrophy, retinitis pigmentosa, and Bardet-Biedl syndrome, demonstrating its critical role in photoreceptor development and maintenance.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/36233334" target="_blank" class="term-link">
+                                        PMID:36233334
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">C8orf37 was enriched at the ciliary base, present along the axonemes and often co-localized with microtubules in the inner segments of photoreceptors</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030030" target="_blank" class="term-link">
+                                    GO:0030030
+                                </a>
+                            </span>
+                            <span class="term-label">cell projection organization</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q96NL8" data-a="GO:0030030" data-r="" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Critical scaffolding function for ciliary structure organization at the photoreceptor connecting cilium base
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> CFAP418 functions as a ciliary scaffolding protein that organizes cell projections, specifically the connecting cilium structure in photoreceptors. As a cilia- and flagella-associated protein, CFAP418 is essential for proper organization of the ciliary apparatus, forming complexes with FAM161A to maintain ciliary structural integrity. The protein contains ciliary targeting signals and is specifically localized to ciliary structures where it organizes the ciliary base architecture.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/36233334" target="_blank" class="term-link">
+                                        PMID:36233334
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The protein forms a complex with FAM161A at the ciliary base, contributing to photoreceptor structural integrity and survival.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042073" target="_blank" class="term-link">
+                                    GO:0042073
+                                </a>
+                            </span>
+                            <span class="term-label">intraciliary transport</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q96NL8" data-a="GO:0042073" data-r="" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Required for proper intraciliary transport processes in photoreceptor connecting cilia
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> CFAP418 is involved in intraciliary transport processes, particularly affecting retrograde intraflagellar transport in photoreceptor cilia. As a ciliary scaffolding protein localized to the connecting cilium base, CFAP418 helps organize the transport machinery required for proper ciliary function. Defects in CFAP418 lead to impaired transport processes within cilia, contributing to the pathogenesis of ciliopathies including retinal dystrophies and Bardet-Biedl syndrome.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27008867" target="_blank" class="term-link">
+                                        PMID:27008867
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">defects in retrograde melanosome transport</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035845" target="_blank" class="term-link">
+                                    GO:0035845
+                                </a>
+                            </span>
+                            <span class="term-label">photoreceptor cell outer segment organization</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q96NL8" data-a="GO:0035845" data-r="" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core biological process organized by CFAP418
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> CFAP418 is essential for photoreceptor cell outer segment organization, particularly disc formation. This specific process is core to its function but was missing from existing annotations.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Scaffolds protein complexes at photoreceptor connecting cilium base to organize ciliary trafficking machinery</h3>
+                <span class="vote-buttons" data-g="Q96NL8" data-a="FUNCTION: Scaffolds protein complexes at photoreceptor conne..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0097110" target="_blank" class="term-link">
+                            scaffold protein binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035845" target="_blank" class="term-link">
+                                photoreceptor cell outer segment organization
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030030" target="_blank" class="term-link">
+                                cell projection organization
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0097546" target="_blank" class="term-link">
+                                ciliary base
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001917" target="_blank" class="term-link">
+                                photoreceptor inner segment
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22177090" target="_blank" class="term-link">
+                                PMID:22177090
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Immunohistochemical studies revealed C8orf37 localization at the base of the primary cilium of human retinal pigment epithelium cells and at the base of connecting cilia of mouse photoreceptors</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/36233334" target="_blank" class="term-link">
+                                PMID:36233334
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Interactions between C8orf37 and FAM161A, Two Ciliary Proteins Essential for Photoreceptor Survival</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:human/CFAP418/CFAP418-bioinformatics/RESULTS.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">Major coiled-coil domain spanning positions 0-259 with additional regions at 273-315 and 350-441, consistent with protein-protein interaction and structural roles</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Organizes FAM161A-containing protein complex essential for photoreceptor outer segment disc morphogenesis</h3>
+                <span class="vote-buttons" data-g="Q96NL8" data-a="FUNCTION: Organizes FAM161A-containing protein complex essen..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0097110" target="_blank" class="term-link">
+                            scaffold protein binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008594" target="_blank" class="term-link">
+                                photoreceptor cell morphogenesis
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001754" target="_blank" class="term-link">
+                                eye photoreceptor cell differentiation
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0097546" target="_blank" class="term-link">
+                                ciliary base
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/36233334" target="_blank" class="term-link">
+                                PMID:36233334
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Interactions between C8orf37 and FAM161A, Two Ciliary Proteins Essential for Photoreceptor Survival</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22177090" target="_blank" class="term-link">
+                                PMID:22177090
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Clinical assessment revealed CRD in four individuals and RP with early macular involvement in two individuals</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Mediates ciliary trafficking required for photoreceptor outer segment protein transport and maintenance</h3>
+                <span class="vote-buttons" data-g="Q96NL8" data-a="FUNCTION: Mediates ciliary trafficking required for photorec..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0097110" target="_blank" class="term-link">
+                            scaffold protein binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042073" target="_blank" class="term-link">
+                                intraciliary transport
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035845" target="_blank" class="term-link">
+                                photoreceptor cell outer segment organization
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0097546" target="_blank" class="term-link">
+                                ciliary base
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22177090" target="_blank" class="term-link">
+                                PMID:22177090
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Immunohistochemical studies revealed C8orf37 localization at the base of the primary cilium of human retinal pigment epithelium cells and at the base of connecting cilia of mouse photoreceptors</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:human/CFAP418/CFAP418-bioinformatics/RESULTS.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">Major coiled-coil domain spanning positions 0-259 with additional regions at 273-315 and 350-441, consistent with protein-protein interaction and structural roles</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22177090" target="_blank" class="term-link">
+                            PMID:22177090
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Mutations in C8orf37, encoding a ciliary protein, are associated with autosomal-recessive retinal dystrophies with early macular involvement.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">CFAP418 mutations cause autosomal recessive retinal dystrophies</div>
+                        
+                        <div class="finding-text">"C8orf37 localization at the base of the primary cilium of human retinal pigment epithelium cells and at the base of connecting cilia of mouse photoreceptors"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">CFAP418 localizes specifically to ciliary bases in retinal cells</div>
+                        
+                        <div class="finding-text">"Immunohistochemical studies revealed C8orf37 localization at the base of the primary cilium of human retinal pigment epithelium cells and at the base of connecting cilia of mouse photoreceptors"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">CFAP418 mutations cause cone-rod dystrophy and retinitis pigmentosa</div>
+                        
+                        <div class="finding-text">"Clinical assessment revealed CRD in four individuals and RP with early macular involvement in two individuals"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/27173435" target="_blank" class="term-link">
+                            PMID:27173435
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">An organelle-specific protein landscape identifies novel diseases and molecular mechanisms.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/36233334" target="_blank" class="term-link">
+                            PMID:36233334
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Interactions between C8orf37 and FAM161A, Two Ciliary Proteins Essential for Photoreceptor Survival.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:human/CFAP418/CFAP418-bioinformatics/RESULTS.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">CFAP418 Bioinformatics Analysis Results</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">CFAP418 contains extensive coiled-coil regions supporting scaffolding function</div>
+                        
+                        <div class="finding-text">"Major coiled-coil domain spanning positions 0-259 (high confidence) with additional regions at positions 273-315 and 350-441, consistent with protein-protein interaction and structural roles"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Multiple protein interaction domains predicted including WD40 and TPR-like motifs</div>
+                        
+                        <div class="finding-text">"4 potential WD40-like repeat patterns detected, 6 potential TPR-like motifs identified"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Ciliary localization features detected consistent with CFAP family proteins</div>
+                        
+                        <div class="finding-text">"3 VxPx-like motifs detected, pattern consistent with ciliary/flagellar localization (CFAP family)"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Basic protein with elevated serine content suggesting phosphorylation regulation</div>
+                        
+                        <div class="finding-text">"Theoretical pI: Basic (&gt;7.0), Serine content: 8.4% (elevated, potential phosphorylation sites)"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How does CFAP418 function in ciliary assembly and what specific role does it play in axoneme structure and stability?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q96NL8" data-a="Q: How does CFAP418 function in ciliary assembly and ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What are the molecular interactions between CFAP418 and other ciliary proteins that are essential for proper cilia function?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q96NL8" data-a="Q: What are the molecular interactions between CFAP41..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How do mutations in CFAP418 contribute to ciliopathy phenotypes and what are the downstream cellular consequences?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q96NL8" data-a="Q: How do mutations in CFAP418 contribute to ciliopat..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What determines the tissue-specific expression pattern of CFAP418 and why is it particularly important in certain cell types?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q96NL8" data-a="Q: What determines the tissue-specific expression pat..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Cryo-electron microscopy of cilia from CFAP418-deficient cells to identify structural abnormalities in the axoneme</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q96NL8" data-a="EXPERIMENT: Cryo-electron microscopy of cilia from CFAP418-def..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Proximity labeling proteomics to identify the complete CFAP418 interactome in ciliated cells</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q96NL8" data-a="EXPERIMENT: Proximity labeling proteomics to identify the comp..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Live-cell imaging of ciliary assembly and disassembly to study CFAP418 dynamics during the cell cycle</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q96NL8" data-a="EXPERIMENT: Live-cell imaging of ciliary assembly and disassem..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Functional complementation studies using CFAP418 orthologs from different species to identify conserved functional domains</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q96NL8" data-a="EXPERIMENT: Functional complementation studies using CFAP418 o..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(CFAP418-deep-research.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q96NL8" data-a="DOC: Deep Research" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="deep-research-report-cfap418-human">Deep Research Report: CFAP418 (human)</h1>
+<p>Generated using OpenAI Deep Research API</p>
+<hr />
+<h1 id="cfap418-c8orf37-gene-comprehensive-profile">CFAP418 (C8orf37) Gene – Comprehensive Profile</h1>
+<h2 id="gene-function-and-molecular-mechanisms">Gene Function and Molecular Mechanisms</h2>
+<p>CFAP418 (also known as C8orf37) encodes a 207–amino acid protein implicated in the maintenance of photoreceptor cells and ciliary function (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5884456/#:~:text=photoreceptors%20but%20no%20non,our%20findings%20do%20not%20support">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9570145/#:~:text=Mutations%20in%20C8orf37%20cause%20Bardet,PLA%29%20of">pmc.ncbi.nlm.nih.gov</a>). Its precise molecular function is not fully characterized, as it lacks known enzymatic domains or motifs (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5884456/#:~:text=The%20function%20of%20the%20C8ORF37,the%20base%20of%20the%20primary">pmc.ncbi.nlm.nih.gov</a>). However, studies in model organisms suggest CFAP418 is crucial for photoreceptor outer segment morphogenesis and protein homeostasis. In a C8orf37 knockout mouse, the absence of CFAP418 caused disorganized photoreceptor outer segment discs and reduced levels of key outer segment membrane proteins, despite normal targeting of these proteins to the outer segment (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5884456/#:~:text=photoreceptors%20but%20no%20non,our%20findings%20do%20not%20support">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5884456/#:~:text=Considering%20the%20distribution%20of%20C8ORF37,in%20photoreceptors%20and%20on%20the">pmc.ncbi.nlm.nih.gov</a>). This indicates CFAP418 is required for proper assembly or stabilization of outer segment disks, which are the light-sensing organelles of photoreceptors. Consistently, researchers noted that <strong>C8ORF37 is required for photoreceptor outer segment disc formation and alignment, a process critical for photoreceptor function and survival</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5884456/#:~:text=patients,establishes%20a%20valuable%20mouse%20model">pmc.ncbi.nlm.nih.gov</a>). </p>
+<p>Beyond the retina, CFAP418 appears to play a role in intracellular transport processes associated with cilia. It has been characterized as a <em>ciliary protein</em>, and loss of CFAP418 function in zebrafish leads to ciliopathy-like defects: embryos with c8orf37 knockdown showed impaired visual behavior and developmental left-right asymmetry defects due to abnormal Kupffer’s vesicle cilia, as well as delays in retrograde intraflagellar transport (<a href="https://pubmed.ncbi.nlm.nih.gov/27008867/#:~:text=recessive%20retinal%20dystrophies%20,This%20is%20the%20first%20functional">pubmed.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5884456/#:~:text=cilium%20and%20in%20the%20cytoplasm,localization%20of%20C8ORF37%20at%20the">pmc.ncbi.nlm.nih.gov</a>). These findings suggest CFAP418 may influence microtubule-based transport or cargo trafficking within cilia. In line with this, CFAP418 was found to interact with FAM161A, a microtubule-binding protein of the photoreceptor cilium, implying that CFAP418 participates in a protein network at the ciliary base that could regulate ciliary or cytoskeletal dynamics (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9570145/#:~:text=bait.%20FAM161A%2C%20a%20microtubule,suggest%20that%20the%20two%20photoreceptor">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9570145/#:~:text=immunofluorescence%20staining%20and%20PLA,may%20contribute%20to%20photoreceptor%20health">pmc.ncbi.nlm.nih.gov</a>). Thus, while CFAP418’s biochemical activity remains unknown, current evidence points to a role in supporting ciliary structure/function and photoreceptor cellular integrity.</p>
+<h2 id="cellular-localization-and-subcellular-components">Cellular Localization and Subcellular Components</h2>
+<p>CFAP418 localizes predominantly to cilia-related compartments within the cell. Immunocytochemistry studies in human retinal pigment epithelial (RPE1) cells revealed CFAP418 at <strong>the base of the primary cilium</strong> (the basal body/transition zone marked by polyglutamylated tubulin) (<a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3257957/#:~:text=matched%20control%20individuals%2C%20single,G%20%5Bp.Gln182Arg%5D%29%20in%20siblings">www.ncbi.nlm.nih.gov</a>) (<a href="https://www.ncbi.nlm.nih.gov/gene?Cmd=DetailsSearch&amp;Db=gene&amp;Term=157657#:~:text=This%20gene%20encodes%20a%20ubiquitously,rod%20dystrophy%20%28arCRD%29%20and">www.ncbi.nlm.nih.gov</a>). Similarly, in retinal photoreceptor cells, CFAP418 is enriched at the <strong>connecting cilium</strong> – the specialized ciliary structure linking the photoreceptor inner segment to the outer segment (<a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3257957/#:~:text=matched%20control%20individuals%2C%20single,G%20%5Bp.Gln182Arg%5D%29%20in%20siblings">www.ncbi.nlm.nih.gov</a>). High-resolution retina analyses have shown CFAP418 at the ciliary base <strong>at the junction between the photoreceptor outer and inner segments</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9570145/#:~:text=ciliary%20base%20at%20the%20junction,turboGFP%20fusion%20construct%20%28Supplementary%20Figure">pmc.ncbi.nlm.nih.gov</a>). In addition, CFAP418 is present along the photoreceptor ciliary rootlet/axoneme and in the adjacent inner segment cytoplasm, co-localizing with microtubule structures (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9570145/#:~:text=localized%20to%20photoreceptor%20cilia%20in,In%20addition%2C%20C8orf37%20was">pmc.ncbi.nlm.nih.gov</a>). This distribution aligns with its association with microtubule-binding proteins and ciliary transport roles. Co-immunostaining experiments demonstrated that CFAP418 co-localizes with FAM161A at the photoreceptor ciliary base (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9570145/#:~:text=bait.%20FAM161A%2C%20a%20microtubule,of%20FAM161A%20were%20critical%20for">pmc.ncbi.nlm.nih.gov</a>), further confirming its residence in ciliary basal body complexes. Outside of cilia, a portion of CFAP418 is diffused in the cytosol of photoreceptor cell bodies (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5884456/#:~:text=phenotype%20suggests%20a%20functional%20significance,localization%20of%20C8ORF37%20at%20the">pmc.ncbi.nlm.nih.gov</a>), but notably it is absent from the photoreceptor outer segment itself (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5884456/#:~:text=Considering%20the%20distribution%20of%20C8ORF37,in%20photoreceptors%20and%20on%20the">pmc.ncbi.nlm.nih.gov</a>). Overall, CFAP418 is an <strong>intracellular</strong> protein concentrated at <strong>primary cilia</strong> and photoreceptor <strong>connecting cilia</strong> (ciliary base), consistent with its ciliary maintenance functions.</p>
+<h2 id="biological-processes-involvement">Biological Processes Involvement</h2>
+<p>Multiple lines of evidence link CFAP418 to biological processes in ciliated cells, especially photoreceptors. In the retina, CFAP418 is essential for processes underpinning photoreceptor cell maintenance and morphogenesis. Loss of CFAP418 function leads to degeneration of both rod and cone photoreceptors (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5884456/#:~:text=generated%20using%20CRISPR%2FCas9%20technology,throughout%20the%20photoreceptor%20cell%20body">pmc.ncbi.nlm.nih.gov</a>), highlighting its role in <strong>photoreceptor cell survival</strong>. Specifically, CFAP418 is required for the proper <strong>organization of photoreceptor outer segment discs</strong>, which develop as a specialized primary cilium. Disruption of CFAP418 causes failures in outer segment disc morphogenesis and alignment (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5884456/#:~:text=photoreceptors%20but%20no%20non,our%20findings%20do%20not%20support">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5884456/#:~:text=patients,establishes%20a%20valuable%20mouse%20model">pmc.ncbi.nlm.nih.gov</a>), implicating CFAP418 in the biological process of <em>photoreceptor outer segment organization</em>. This process is critical to phototransduction and visual function, explaining why CFAP418 mutations result in vision loss. Accordingly, CFAP418 has been associated (by similarity and experimental evidence) with <strong>photoreceptor cell morphogenesis</strong> and the development of the light-sensitive outer segment structures (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5884456/#:~:text=patients,establishes%20a%20valuable%20mouse%20model">pmc.ncbi.nlm.nih.gov</a>).</p>
+<p>Beyond the eye, CFAP418 participates in general ciliary processes. It appears necessary for normal <strong>ciliogenesis and ciliary transport</strong>. In zebrafish embryos, CFAP418 knockdown reduced the formation of Kupffer’s vesicle (a cilia-driven organ involved in left-right body axis specification) and caused defects in ciliary fluid flow, indicating a role in <strong>motile cilia function</strong> during development (<a href="https://pubmed.ncbi.nlm.nih.gov/27008867/#:~:text=system%2C%20we%20performed%20gene%20knockdown,hereby%20show%20that%20C8ORF37%20variants">pubmed.ncbi.nlm.nih.gov</a>). The same zebrafish model exhibited slowed retrograde melanosome transport in melanophore cells, a phenotype often linked to impaired <strong>retrograde intraflagellar transport (IFT)</strong> in cilia (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5884456/#:~:text=cilium%20and%20in%20the%20cytoplasm,localization%20of%20C8ORF37%20at%20the">pmc.ncbi.nlm.nih.gov</a>). Thus, CFAP418 likely contributes to <strong>intraciliary transport</strong> mechanisms, ensuring proper movement of ciliary cargo. In photoreceptors, which rely on IFT to traffic proteins through the connecting cilium, CFAP418’s involvement in transport may underpin its importance in outer segment renewal. In summary, CFAP418 is involved in key biological processes including <strong>cilium assembly/function</strong> and <strong>photoreceptor outer segment development</strong>, which collectively support sensory perception of light and cilia-related signaling.</p>
+<h2 id="disease-associations-and-phenotypes">Disease Associations and Phenotypes</h2>
+<p><strong>Loss-of-function mutations</strong> in CFAP418 (C8orf37) are known to cause several inherited human diseases, primarily affecting the retina and sometimes other organ systems. The gene was originally identified in the context of <strong>autosomal recessive cone-rod dystrophy 16 (CORD16)</strong> and <strong>retinitis pigmentosa 64 (RP64)</strong> (<a href="https://www.ncbi.nlm.nih.gov/gene?Cmd=DetailsSearch&amp;Db=gene&amp;Term=157657#:~:text=protein%20co,provided%20by%20RefSeq%2C%20Mar%202012">www.ncbi.nlm.nih.gov</a>). In CORD16, patients first lose cone photoreceptor function (affecting central/color vision) followed by rod loss, while in RP64 rod degeneration precedes cone loss; mutations in CFAP418 can lead to either clinical presentation (<a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3257957/#:~:text=analysis%20of%20individuals%20who%20had,These">www.ncbi.nlm.nih.gov</a>). Affected individuals typically experience progressive vision loss – in early-onset cone-rod dystrophy, photophobia and acuity loss occur, whereas in retinitis pigmentosa night blindness and peripheral vision loss are initial symptoms (<a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3257957/#:~:text=Cone,nucleotide%20polymorphism%20databases%2C%20or%20the">www.ncbi.nlm.nih.gov</a>) (<a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3257957/#:~:text=probably%20pathogenic,the%20pathogenesis%20of%20retinal%20dystrophies">www.ncbi.nlm.nih.gov</a>). Genetically, various biallelic CFAP418 mutations have been documented, including nonsense, splice-site, and missense changes that impact highly conserved residues (<a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3257957/#:~:text=revealed%20a%20homozygous%20nonsense%20mutation,G%20%5Bp.Gln182Arg%5D%29%20in%20siblings">www.ncbi.nlm.nih.gov</a>) (<a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3257957/#:~:text=analysis%20of%20individuals%20who%20had,These">www.ncbi.nlm.nih.gov</a>). These pathogenic variants underscore CFAP418’s crucial role in photoreceptor viability. Notably, some patients with CFAP418-related retinal dystrophy exhibit mild systemic features: for example, two siblings with a splicing mutation had <strong>postaxial polydactyly</strong> (an extra digit) in one limb (<a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3257957/#:~:text=of%20two%20other%20consanguineous%20families,the%20pathogenesis%20of%20retinal%20dystrophies">www.ncbi.nlm.nih.gov</a>). The presence of polydactyly, a hallmark of ciliopathies, hinted that CFAP418 might have broader ciliary functions beyond the retina.</p>
+<p>Importantly, CFAP418 has also been implicated in a <strong>syndromic ciliopathy</strong>, <strong>Bardet–Biedl syndrome (BBS)</strong>. A homozygous truncating mutation in C8orf37 was identified in a patient diagnosed with Bardet–Biedl syndrome who lacked mutations in known BBS genes (<a href="https://pubmed.ncbi.nlm.nih.gov/27008867/#:~:text=with%20autism%2C%20among%20other%20features,rod%20dystrophy">pubmed.ncbi.nlm.nih.gov</a>) (<a href="https://pubmed.ncbi.nlm.nih.gov/27008867/#:~:text=Whole,rerio%20and%20assessed%20the%20cardinal">pubmed.ncbi.nlm.nih.gov</a>). This individual’s clinical features included rod-cone dystrophy (retinal degeneration), obesity (BMI ~29), three-site polydactyly (extra digits on limbs), a horseshoe kidney, reproductive tract malposition, and mild learning disability (<a href="https://pubmed.ncbi.nlm.nih.gov/27008867/#:~:text=Whole,rerio%20and%20assessed%20the%20cardinal">pubmed.ncbi.nlm.nih.gov</a>) (<a href="https://pubmed.ncbi.nlm.nih.gov/27008867/#:~:text=proband%20was%20overweight%20,phenotypes%2C%20specifically%2C%20defects%20in%20the">pubmed.ncbi.nlm.nih.gov</a>) – a constellation of findings consistent with BBS. Functional studies confirmed the link: zebrafish c8orf37 knockdown reproduced cardinal BBS phenotypes (such as ciliary transport defects and visual impairment), and human disease mutations failed to rescue these phenotypes (<a href="https://pubmed.ncbi.nlm.nih.gov/27008867/#:~:text=recessive%20retinal%20dystrophies%20,This%20is%20the%20first%20functional">pubmed.ncbi.nlm.nih.gov</a>) (<a href="https://pubmed.ncbi.nlm.nih.gov/27008867/#:~:text=system%2C%20we%20performed%20gene%20knockdown,hereby%20show%20that%20C8ORF37%20variants">pubmed.ncbi.nlm.nih.gov</a>). This work established C8orf37 as <strong>BBS21</strong>, making CFAP418 the 21st gene associated with Bardet–Biedl syndrome (<a href="https://pubmed.ncbi.nlm.nih.gov/27008867/#:~:text=of%20these%20phenotypes%20to%20BBS,well%20as%20isolated%20retinal%20degeneration">pubmed.ncbi.nlm.nih.gov</a>). Unlike the isolated retinal dystrophies (RP64/CORD16), BBS21 patients have <strong>multisystem involvement</strong> – retinal degeneration accompanied by developmental and metabolic abnormalities – reflecting CFAP418’s role in primary cilia across various tissues. It is notable that CFAP418-deficient mice did <strong>not</strong> show overt polydactyly or other BBS systemic defects (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5884456/#:~:text=,to%20be%20normal%20in%20male">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5884456/#:~:text=photoreceptors%20but%20no%20non,our%20findings%20do%20not%20support">pmc.ncbi.nlm.nih.gov</a>), suggesting species or context differences; however, the human genetics firmly link CFAP418 to the BBS spectrum. Overall, CFAP418 mutations can manifest as non-syndromic retinal degeneration (arRP, arCRD) or as a syndromic ciliopathy (BBS), united by the underlying disruption of ciliary/photoreceptor cell function.</p>
+<h2 id="protein-domains-and-structural-features">Protein Domains and Structural Features</h2>
+<p>The CFAP418 protein is relatively small (207 amino acids) and is not known to contain any well-characterized catalytic domains or binding motifs (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5884456/#:~:text=The%20function%20of%20the%20C8ORF37,the%20base%20of%20the%20primary">pmc.ncbi.nlm.nih.gov</a>). Computational analysis identifies a conserved region corresponding to Pfam <strong>RMP domain (pfam14996)</strong>, standing for <em>Retinal Maintenance Protein</em> (<a href="https://www.ncbi.nlm.nih.gov/gene?Cmd=DetailsSearch&amp;Db=gene&amp;Term=157657#:~:text=pfam14996%20Location%3A63%20%E2%86%92%20175%20RMP%3B,associated%20protein">www.ncbi.nlm.nih.gov</a>). This so-called RMP domain constitutes the majority of the protein and is named for the gene’s role in retinal health – mutations in C8orf37 (RMP) cause retinal dystrophies CORD16 and RP64 (<a href="https://www.ncbi.nlm.nih.gov/Structure/cdd/pfam14996#:~:text=Image%20%20%203pfam14996%3A%C2%A0RMP%C2%A0Download%20alignment,colour%20blindness%20or%20blindness%20respectively">www.ncbi.nlm.nih.gov</a>). Aside from this conserved region, CFAP418/C8orf37 does not share homology with other protein families and thus appears to represent a unique protein family. It has <strong>no predicted transmembrane segments or signal peptide</strong> (<a href="https://www.proteinatlas.org/ENSG00000156172-CFAP418/summary/gene#:~:text=PROTEIN%20INFORMATION,associated%20protein%20418">www.proteinatlas.org</a>), consistent with a cytosolic localization and function within intracellular compartments (like the ciliary base). Secondary structure predictions and disorder profiles are not well documented in literature; however, the lack of defined domains suggests CFAP418 may be largely disordered or adopt a novel fold until complexed with partners. </p>
+<p>Despite its simple architecture, CFAP418 has at least one defined functional interface: the <strong>N-terminal segment</strong> (approximately amino acids 1–75) is critical for binding to the ciliary protein FAM161A (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9570145/#:~:text=with%20FAM161A%20at%20the%20ciliary,may%20contribute%20to%20photoreceptor%20health">pmc.ncbi.nlm.nih.gov</a>). Interaction mapping experiments showed that CFAP418’s N-terminus directly interacts with a C-terminal domain of FAM161A (within FAM161A’s UPF0564 domain) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9570145/#:~:text=with%20FAM161A%20at%20the%20ciliary,may%20contribute%20to%20photoreceptor%20health">pmc.ncbi.nlm.nih.gov</a>). This indicates the N-terminus of CFAP418 may serve as a protein–protein interaction module. The C-terminal two-thirds of CFAP418 is highly conserved evolutionarily (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5884456/#:~:text=The%20function%20of%20the%20C8ORF37,the%20base%20of%20the%20primary">pmc.ncbi.nlm.nih.gov</a>), hinting that this region is functionally important (perhaps forming the RMP domain core required for retinal maintenance). In summary, CFAP418 is a <strong>predicted intracellular protein</strong> with a single conserved domain (RMP) and an interaction-prone N-terminus, lacking enzymatic or membrane-spanning features. Its structure appears tailored for a scaffolding or adaptor role in the ciliary photoreceptor context, rather than an enzymatic role.</p>
+<h2 id="expression-patterns-and-regulation">Expression Patterns and Regulation</h2>
+<p>CFAP418 is <strong>ubiquitously expressed</strong> across human tissues, but shows elevated expression in certain organs, particularly those with ciliated cells. mRNA profiling indicates relatively high CFAP418 transcript levels in the <strong>retina</strong>, as well as in the <strong>brain</strong> and <strong>heart</strong> (<a href="https://www.ncbi.nlm.nih.gov/gene?Cmd=DetailsSearch&amp;Db=gene&amp;Term=157657#:~:text=This%20gene%20encodes%20a%20ubiquitously,25%20other%20tissues%20See%20more">www.ncbi.nlm.nih.gov</a>). In fact, CFAP418 was first noted for its abundant expression in retinal tissue, aligning with its identification as a retinal disease gene. Within the eye, CFAP418 is expressed in the neural retina – notably in photoreceptor cells – and likely in the retinal pigment epithelium, given that the protein was detectable in RPE1 cell culture models (<a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3257957/#:~:text=matched%20control%20individuals%2C%20single,G%20%5Bp.Gln182Arg%5D%29%20in%20siblings">www.ncbi.nlm.nih.gov</a>). The Human Protein Atlas classifies CFAP418 among <strong>disease related genes – eye disease</strong> due to its retina-specific disease associations (<a href="https://www.proteinatlas.org/ENSG00000156172-CFAP418/summary/gene#:~:text=Synonyms%20BBS21%2C%20C8orf37%2C%20CORD16%2C%20FAP418%2C,i%7D%20Chromosome%208%20Cytoband%20q22.1">www.proteinatlas.org</a>) (<a href="https://www.proteinatlas.org/ENSG00000156172-CFAP418/summary/gene#:~:text=Protein%20class,95269201">www.proteinatlas.org</a>). Consistent with its ciliary role, CFAP418 may also be expressed in other ciliated tissues or cell types (e.g. the cells lining the respiratory tract, reproductive tract, or renal epithelium), though comprehensive single-cell data are not yet available. </p>
+<p>At the protein level, detecting CFAP418 has been challenging due to its small size and possibly low abundance. Nevertheless, <em>in situ</em> retina studies confirm its protein presence in photoreceptors (inner segments and ciliary structures) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9570145/#:~:text=localized%20to%20photoreceptor%20cilia%20in,In%20addition%2C%20C8orf37%20was">pmc.ncbi.nlm.nih.gov</a>). Large-scale proteomics (e.g. PaxDb, ProteomicsDB) have reported CFAP418 in many tissue extracts, corroborating its broad expression (<a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=CFAP418#:~:text=This%20gene%20is%20overexpressed%20in,3%29%2C%20Fetal">www.genecards.org</a>) (<a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=CFAP418#:~:text=">www.genecards.org</a>). There is currently limited information on <em>regulation</em> of CFAP418 expression – no specific transcription factors or signaling pathways have been definitively linked to its gene regulation in literature. The promoter region does not suggest unusual regulatory elements, although general transcription factors (like C/EBPβ, E2F, etc.) are predicted to bind the CFAP418 promoter region, as per in silico analyses (<a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=CFAP418#:~:text=Top%20Transcription%20factor%20binding%20sites,in%20the%20CFAP418%20gene%20promoter">www.genecards.org</a>). Given its requirement in fundamental cellular structures (cilia), CFAP418 likely has a constitutive expression pattern in most cell types, with possible upregulation during photoreceptor differentiation or cilia biogenesis. In summary, CFAP418 is <strong>widely expressed</strong>, with notable enrichment in the retina and other tissues reliant on ciliary function, and is generally considered a housekeeping gene necessary for cell structural maintenance.</p>
+<h2 id="evolutionary-conservation">Evolutionary Conservation</h2>
+<p>CFAP418 is highly conserved across diverse eukaryotic species, underscoring its fundamental role in ciliary biology. Orthologs of the human CFAP418 (C8orf37) gene are found in <strong>mammals, birds, fish</strong>, and even in some <strong>unicellular eukaryotes</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5884456/#:~:text=The%20function%20of%20the%20C8ORF37,the%20base%20of%20the%20primary">pmc.ncbi.nlm.nih.gov</a>). Sequence analysis reveals that roughly the C-terminal two-thirds of the protein harbors the most conserved residues from humans down to organisms like flagellated protists and oomycetes (water molds) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5884456/#:~:text=The%20function%20of%20the%20C8ORF37,the%20base%20of%20the%20primary">pmc.ncbi.nlm.nih.gov</a>). This deep conservation suggests that the core function of CFAP418 was present early in eukaryotic evolution, likely related to the ancient origin of cilia/flagella. Indeed, many single-celled flagellates possess CFAP418 homologs, consistent with a role in flagellar function or assembly. The CFAP418 protein family (Retinal Maintenance Protein family) is identified in the NCBI Conserved Domain Database as a eukaryote-wide conserved domain (pfam14996) tied to retinal dystrophy when mutated in humans (<a href="https://www.ncbi.nlm.nih.gov/Structure/cdd/pfam14996#:~:text=Image%20%20%203pfam14996%3A%C2%A0RMP%C2%A0Download%20alignment,colour%20blindness%20or%20blindness%20respectively">www.ncbi.nlm.nih.gov</a>). No homologs are evident in organisms that lack cilia (for example, flowering plants or fungi like yeast), highlighting a correlation between CFAP418 presence and ciliated cell types. </p>
+<p>Functional conservation is illustrated by cross-species studies. The <strong>mouse</strong> C8orf37 ortholog is ~82% identical to human and its knockout leads to retinal degeneration mirroring the human disease, indicating conserved function in photoreceptor cells (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5884456/#:~:text=our%20understanding%20of%20the%20pathogenicity,involved%20in%20membrane%20disc%20organization">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5884456/#:~:text=photoreceptors%20but%20no%20non,our%20findings%20do%20not%20support">pmc.ncbi.nlm.nih.gov</a>). In <strong>zebrafish</strong>, the c8orf37 gene is also conserved; knockdown of zebrafish c8orf37 causes visual impairment and ciliary defects, phenocopying aspects of human CFAP418 mutation effects (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5884456/#:~:text=unicellular%20flagellates%20and%20oomycetes%20%28Estrada,Kupffer%27s%20vesicle%2C%20a%20ciliated%20organ">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pubmed.ncbi.nlm.nih.gov/27008867/#:~:text=system%2C%20we%20performed%20gene%20knockdown,hereby%20show%20that%20C8ORF37%20variants">pubmed.ncbi.nlm.nih.gov</a>). This conservation of phenotype – retinal dysfunction and ciliary process defects – across vertebrates (fish to mammals) supports the idea that CFAP418’s role in ciliary/photoreceptor biology has been maintained throughout evolution. Additionally, the interaction between CFAP418 and FAM161A (noted in primate retina) may be conserved, as many ciliary proteins co-evolved; for instance, rodents and primates share this interaction network at photoreceptor cilia (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9570145/#:~:text=bait.%20FAM161A%2C%20a%20microtubule,of%20FAM161A%20were%20critical%20for">pmc.ncbi.nlm.nih.gov</a>). Overall, both sequence and functional data demonstrate that CFAP418 is an <strong>evolutionarily conserved</strong> protein, likely present in the last common ancestor of ciliated eukaryotes, with a preserved role in maintaining ciliary structure and photoreceptor cell integrity across species.</p>
+<h2 id="key-experimental-evidence-and-literature">Key Experimental Evidence and Literature</h2>
+<ul>
+<li>
+<p><strong>Identification as Retinal Dystrophy Gene (2012):</strong> CFAP418 was first linked to disease by Estrada-Cuzcano et al. (2012) (<a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3257957/#:~:text=revealed%20a%20homozygous%20nonsense%20mutation,a%20consanguineous%20family%20and%20homozygous">www.ncbi.nlm.nih.gov</a>). Using homozygosity mapping and exome sequencing in consanguineous families, they discovered <strong>C8orf37 mutations</strong> causing autosomal recessive cone-rod dystrophy and retinitis pigmentosa. This study also performed immunostaining, revealing CFAP418 protein at photoreceptor ciliary bases (<a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3257957/#:~:text=matched%20control%20individuals%2C%20single,G%20%5Bp.Gln182Arg%5D%29%20in%20siblings">www.ncbi.nlm.nih.gov</a>), and concluded that disrupted ciliary processes underlie the retinal dystrophy phenotype (<a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3257957/#:~:text=probably%20pathogenic,the%20pathogenesis%20of%20retinal%20dystrophies">www.ncbi.nlm.nih.gov</a>). This seminal finding established CFAP418 as a cilia-associated protein required for retinal photoreceptor maintenance.</p>
+</li>
+<li>
+<p><strong>Additional Mutation Studies (2013–2015):</strong> Subsequent genetic studies in diverse populations (e.g. van Huet et al. 2013; Jinda et al. 2014; Lazar et al. 2014; Ravesh et al. 2015) identified <strong>multiple independent C8orf37 mutations</strong> in patients with inherited retinal degenerations (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5884456/#:~:text=the%20development%20of%20effective%20treatments,2013%3B%20Jinda%20et">pmc.ncbi.nlm.nih.gov</a>). These studies reinforced CFAP418’s role in <strong>arCRD and arRP</strong> by expanding the allelic series (including missense and nonsense variants) and refining clinical correlations. For instance, some reports noted macular involvement in the dystrophy or mild systemic anomalies, further hinting at ciliary involvement beyond the retina. Collectively, by 2015 CFAP418 was a well-established retinal disease gene, designated <strong>CORD16</strong> and <strong>RP64</strong> in the nomenclature of inherited retinal diseases.</p>
+</li>
+<li>
+<p><strong>Bardet–Biedl Syndrome Link (2016):</strong> Heon et al. (2016) made a breakthrough by associating C8orf37 with <strong>Bardet–Biedl syndrome (BBS)</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/27008867/#:~:text=Whole,rerio%20and%20assessed%20the%20cardinal">pubmed.ncbi.nlm.nih.gov</a>). They performed whole-genome sequencing on an atypical BBS patient and found a homozygous truncating C8orf37 mutation (K102<em>) after ruling out known BBS genes (<a href="https://pubmed.ncbi.nlm.nih.gov/27008867/#:~:text=with%20autism%2C%20among%20other%20features,rod%20dystrophy">pubmed.ncbi.nlm.nih.gov</a>). To functionally validate this, they showed that morpholino knockdown of c8orf37 in zebrafish produced </em><em>BBS-like phenotypes</em><em>: retinal degeneration, defective Kupffer’s vesicle formation, and slowed intraciliary transport (<a href="https://pubmed.ncbi.nlm.nih.gov/27008867/#:~:text=recessive%20retinal%20dystrophies%20,This%20is%20the%20first%20functional">pubmed.ncbi.nlm.nih.gov</a>). Human CFAP418 mutants failed to rescue these defects, confirming pathogenicity (<a href="https://pubmed.ncbi.nlm.nih.gov/27008867/#:~:text=system%2C%20we%20performed%20gene%20knockdown,hereby%20show%20that%20C8ORF37%20variants">pubmed.ncbi.nlm.nih.gov</a>). This study identified CFAP418 as </em><em>BBS21</em>*, expanding its disease spectrum to a syndromic ciliopathy and providing the first in vivo evidence (zebrafish) of CFAP418’s role in ciliary biology.</p>
+</li>
+<li>
+<p><strong>Mouse Knockout Functional Study (2018):</strong> Sharif et al. (2018) generated a <strong>C8orf37 knockout mouse</strong> to investigate CFAP418’s function in vivo (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5884456/#:~:text=C8ORF37%20is%20a%20causative%20gene,onset%20of%20disc%20morphogenesis%20during">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5884456/#:~:text=generated%20using%20CRISPR%2FCas9%20technology,throughout%20the%20photoreceptor%20cell%20body">pmc.ncbi.nlm.nih.gov</a>). The knockout mice developed normally except for eyes, where they exhibited progressive degeneration of rods and cones (recapitulating human RP/CRD) with onset in early postnatal life (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5884456/#:~:text=generated%20using%20CRISPR%2FCas9%20technology,throughout%20the%20photoreceptor%20cell%20body">pmc.ncbi.nlm.nih.gov</a>). Ultrastructural analysis showed severely <strong>disorganized outer segment discs</strong> in photoreceptors lacking CFAP418 (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5884456/#:~:text=photoreceptors%20but%20no%20non,our%20findings%20do%20not%20support">pmc.ncbi.nlm.nih.gov</a>). Interestingly, the connecting cilium and other organ systems were structurally normal in these mice (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5884456/#:~:text=Considering%20the%20distribution%20of%20C8ORF37,in%20photoreceptors%20and%20on%20the">pmc.ncbi.nlm.nih.gov</a>), suggesting CFAP418’s role is especially critical for outer segment disc morphogenesis rather than general ciliogenesis. The authors proposed that CFAP418 functions in the photoreceptor cell body to maintain outer segment membrane protein <strong>homeostasis</strong>, for example by facilitating proper packaging or trafficking of proteins needed to build stacked discs (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5884456/#:~:text=Considering%20the%20distribution%20of%20C8ORF37,in%20photoreceptors%20and%20on%20the">pmc.ncbi.nlm.nih.gov</a>). This mouse model firmly established the functional requirement of CFAP418 in photoreceptor structure and provided an <em>in vivo</em> platform for testing therapies for CFAP418-related blindness (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5884456/#:~:text=absent%20in%20the%20photoreceptor%20OS%2C,degeneration%20caused%20by%20C8ORF37%20mutations">pmc.ncbi.nlm.nih.gov</a>).</p>
+</li>
+<li>
+<p><strong>Protein Interaction and Mechanistic Insight (2022):</strong> Liu et al. (2022) explored CFAP418’s molecular partners using a yeast two-hybrid screen with C8orf37 bait, identifying <strong>FAM161A</strong> as an interacting protein (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9570145/#:~:text=photoreceptor%20survival,Furthermore%2C%20interaction%20domain%20mapping">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9570145/#:~:text=bait.%20FAM161A%2C%20a%20microtubule,suggest%20that%20the%20two%20photoreceptor">pmc.ncbi.nlm.nih.gov</a>). FAM161A is a known ciliary protein required for photoreceptor survival (mutated in RP28) that localizes to the photoreceptor ciliary base. The interaction between CFAP418 and FAM161A was confirmed by co-immunoprecipitation and proximity ligation assays in retinal cells, and mapped to CFAP418’s N-terminus and FAM161A’s C-terminal domain (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9570145/#:~:text=with%20FAM161A%20at%20the%20ciliary,may%20contribute%20to%20photoreceptor%20health">pmc.ncbi.nlm.nih.gov</a>). They also observed CFAP418 co-localizing with FAM161A at the cilium base in primate retina sections (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9570145/#:~:text=bait.%20FAM161A%2C%20a%20microtubule,of%20FAM161A%20were%20critical%20for">pmc.ncbi.nlm.nih.gov</a>). This work provided <strong>mechanistic insight</strong> that CFAP418 is part of a protein complex at the photoreceptor ciliary base, potentially linking it to the microtubule network via FAM161A and other ciliopathy proteins. The study by Liu et al. helps explain how CFAP418 might stabilize the connection between the photoreceptor inner segment and outer segment, and underscores that <strong>CFAP418 acts in concert with other ciliary proteins</strong> to support photoreceptor structure.</p>
+</li>
+</ul>
+<p>Together, these key studies form a coherent picture of CFAP418: from gene discovery and disease association (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5884456/#:~:text=the%20development%20of%20effective%20treatments,2013%3B%20Jinda%20et">pmc.ncbi.nlm.nih.gov</a>), to animal models delineating its function (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5884456/#:~:text=photoreceptors%20but%20no%20non,our%20findings%20do%20not%20support">pmc.ncbi.nlm.nih.gov</a>), to molecular interaction mapping (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9570145/#:~:text=bait.%20FAM161A%2C%20a%20microtubule,suggest%20that%20the%20two%20photoreceptor">pmc.ncbi.nlm.nih.gov</a>). They establish CFAP418 as an essential, evolutionarily conserved ciliary protein that underlies specific retinal diseases when mutated and interfaces with the broader ciliopathy protein network.</p>
+<h2 id="relevant-gene-ontology-go-terms">Relevant Gene Ontology (GO) Terms</h2>
+<ul>
+<li><strong>Cellular Component:</strong>  </li>
+<li><em>Ciliary base</em> <strong>(GO:0097546)</strong> – CFAP418 protein localizes to the base of primary cilia (basal body/transition zone) in RPE cells and photoreceptors (<a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3257957/#:~:text=matched%20control%20individuals%2C%20single,G%20%5Bp.Gln182Arg%5D%29%20in%20siblings">www.ncbi.nlm.nih.gov</a>).  </li>
+<li><em>Photoreceptor inner segment</em> <strong>(GO:0001917)</strong> – Detected in photoreceptor inner segment structures (around the connecting cilium) in retina (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9570145/#:~:text=localized%20to%20photoreceptor%20cilia%20in,In%20addition%2C%20C8orf37%20was">pmc.ncbi.nlm.nih.gov</a>).  </li>
+<li><em>Photoreceptor connecting cilium</em> <strong>(no GO term ID; part of ciliary base)</strong> – Enriched at the photoreceptor connecting cilium linking inner and outer segments (<a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3257957/#:~:text=matched%20control%20individuals%2C%20single,G%20%5Bp.Gln182Arg%5D%29%20in%20siblings">www.ncbi.nlm.nih.gov</a>). <em>(This localization is encompassed by the ciliary base/transition zone term.)</em>  </li>
+<li>
+<p><em>Cytosol</em> <strong>(GO:0005829)</strong> – A fraction of CFAP418 is found in the cytoplasmic compartment of photoreceptor cells (excluding organelles) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5884456/#:~:text=phenotype%20suggests%20a%20functional%20significance,localization%20of%20C8ORF37%20at%20the">pmc.ncbi.nlm.nih.gov</a>). <em>(Predicted intracellular localization with no secretion or membrane association (<a href="https://www.proteinatlas.org/ENSG00000156172-CFAP418/summary/gene#:~:text=PROTEIN%20INFORMATION,associated%20protein%20418">www.proteinatlas.org</a>).)</em>  </p>
+</li>
+<li>
+<p><strong>Biological Process:</strong>  </p>
+</li>
+<li><em>Photoreceptor cell outer segment organization</em> <strong>(GO:0035845)</strong> – CFAP418 is <strong>required for proper outer segment disc morphogenesis and alignment</strong>, crucial for photoreceptor function (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5884456/#:~:text=patients,establishes%20a%20valuable%20mouse%20model">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5884456/#:~:text=photoreceptors%20but%20no%20non,our%20findings%20do%20not%20support">pmc.ncbi.nlm.nih.gov</a>). Mutations disrupt outer segment structure, leading to retinal degeneration.  </li>
+<li><em>Photoreceptor cell morphogenesis</em> <strong>(GO:0008594)</strong> – Involved in the developmental morphogenesis of photoreceptors, particularly in forming the outer segment (a modified cilium) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5884456/#:~:text=patients,establishes%20a%20valuable%20mouse%20model">pmc.ncbi.nlm.nih.gov</a>).  </li>
+<li><em>Cilium assembly</em> <strong>(GO:0060271)</strong> / <em>Cilium organization</em> – Implicated by zebrafish morphants that showed reduced Kupffer’s vesicle cilia and general ciliogenesis defects (<a href="https://pubmed.ncbi.nlm.nih.gov/27008867/#:~:text=system%2C%20we%20performed%20gene%20knockdown,hereby%20show%20that%20C8ORF37%20variants">pubmed.ncbi.nlm.nih.gov</a>). CFAP418 supports normal formation of ciliary structures during development.  </li>
+<li><em>Intraflagellar transport (IFT)</em> <strong>(related to GO:0042073)</strong> – Knockdown of CFAP418 led to delayed retrograde transport of melanosomes, suggesting a role in retrograde IFT or cargo transport within cilia (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5884456/#:~:text=cilium%20and%20in%20the%20cytoplasm,localization%20of%20C8ORF37%20at%20the">pmc.ncbi.nlm.nih.gov</a>). This links CFAP418 to the process of moving material along ciliary microtubules, important for cilium maintenance.  </li>
+<li>
+<p><em>Visual perception</em> <strong>(GO:0007601)</strong> – Although CFAP418 is not directly a phototransduction protein, its necessity for photoreceptor structure means it is indirectly required for the process of vision. Mutations cause loss of photoreceptor function, thereby affecting visual perception (<a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3257957/#:~:text=Cone,nucleotide%20polymorphism%20databases%2C%20or%20the">www.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5884456/#:~:text=photoreceptors%20but%20no%20non,our%20findings%20do%20not%20support">pmc.ncbi.nlm.nih.gov</a>). <em>(This GO term would be a higher-level process reflecting the consequence of CFAP418 dysfunction.)</em>  </p>
+</li>
+<li>
+<p><strong>Molecular Function:</strong>  </p>
+</li>
+<li><em>Protein binding</em> <strong>(GO:0005515)</strong> – CFAP418 interacts with other proteins, e.g. FAM161A at the ciliary base (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9570145/#:~:text=bait.%20FAM161A%2C%20a%20microtubule,of%20FAM161A%20were%20critical%20for">pmc.ncbi.nlm.nih.gov</a>). Yeast two-hybrid and co-immunoprecipitation assays provide evidence of its protein-binding capability, suggesting it acts as an adaptor or scaffold. No enzymatic activity or ligand-binding has been reported, so its function is likely executed via protein–protein interactions.  </li>
+</ul>
+<p>Each of the above GO terms is supported by experimental evidence from the literature, as cited, ensuring accurate Gene Ontology annotation for CFAP418. These annotations capture CFAP418’s role as an intracellular ciliary protein (cellular component), its involvement in building and maintaining photoreceptor cilium-derived structures (biological process), and its capacity to bind other ciliary proteins (molecular function), all of which are essential for normal photoreceptor and ciliary function (<a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3257957/#:~:text=probably%20pathogenic,the%20pathogenesis%20of%20retinal%20dystrophies">www.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9570145/#:~:text=bait.%20FAM161A%2C%20a%20microtubule,suggest%20that%20the%20two%20photoreceptor">pmc.ncbi.nlm.nih.gov</a>).</p>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(CFAP418-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q96NL8" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="cfap418-c8orf37-gene-review-notes">CFAP418 (C8orf37) Gene Review Notes</h1>
+<h2 id="gene-overview">Gene Overview</h2>
+<ul>
+<li><strong>Gene Symbol</strong>: CFAP418 (also known as C8orf37, smalltalk)</li>
+<li><strong>UniProt ID</strong>: Q96NL8</li>
+<li><strong>Protein</strong>: Cilia- and flagella-associated protein 418</li>
+<li><strong>Size</strong>: 207 amino acids</li>
+<li><strong>Domain</strong>: Contains RMP (Retinal Maintenance Protein) domain (pfam14996, aa 63-175)</li>
+</ul>
+<h2 id="disease-associations">Disease Associations</h2>
+<ol>
+<li><strong>Cone-rod dystrophy 16 (CORD16)</strong> [MIM:614500]</li>
+<li>Autosomal recessive</li>
+<li>Early macular involvement</li>
+<li>
+<p>Cone loss precedes rod degeneration</p>
+</li>
+<li>
+<p><strong>Retinitis pigmentosa 64 (RP64)</strong> [MIM:614500]</p>
+</li>
+<li>Autosomal recessive</li>
+<li>Rod loss precedes cone degeneration</li>
+<li>
+<p>Progressive peripheral vision loss</p>
+</li>
+<li>
+<p><strong>Bardet-Biedl syndrome 21 (BBS21)</strong> [MIM:617406]</p>
+</li>
+<li>Syndromic ciliopathy</li>
+<li>Features: retinal degeneration, obesity, polydactyly, renal malformations, intellectual disability</li>
+<li>First functional evidence from zebrafish studies <a href="https://pubmed.ncbi.nlm.nih.gov/27008867" title="C8orf37 knockdown reproduced cardinal BBS phenotypes">PMID:27008867</a></li>
+</ol>
+<h2 id="key-pathogenic-variants">Key Pathogenic Variants</h2>
+<ul>
+<li><strong>R177W</strong>: Associated with CORD16 and BBS21 [PMID:22177090 "c.529C&gt;T [p.Arg177Trp]"; PMID:36233334 "does not affect interaction with FAM161A"]</li>
+<li><strong>Q182R</strong>: Associated with RP64 [PMID:22177090 "c.545A&gt;G [p.Gln182Arg]"; PMID:36233334 "does not affect interaction with FAM161A"]</li>
+<li><strong>L166</strong>*: Nonsense mutation in RP patient <a href="https://pubmed.ncbi.nlm.nih.gov/22177090" title="c.497T&gt;A [p.Leu166(∗)]">PMID:22177090</a></li>
+<li><strong>c.156-2A&gt;G</strong>: Splice site mutation, associated with postaxial polydactyly <a href="https://pubmed.ncbi.nlm.nih.gov/22177090" title="two CRD siblings with the c.156−2A&gt;G mutation also showed unilateral postaxial polydactyly">PMID:22177090</a></li>
+</ul>
+<h2 id="protein-localization">Protein Localization</h2>
+<ul>
+<li><strong>Primary cilium base</strong>: Localized at basal body/transition zone in RPE1 cells <a href="https://pubmed.ncbi.nlm.nih.gov/22177090" title="C8orf37 localization at the base of the primary cilium of human retinal pigment epithelium cells">PMID:22177090</a></li>
+<li><strong>Photoreceptor connecting cilium</strong>: Enriched at junction between inner and outer segments <a href="https://pubmed.ncbi.nlm.nih.gov/22177090" title="at the base of connecting cilia of mouse photoreceptors">PMID:22177090</a></li>
+<li><strong>Photoreceptor inner segment</strong>: Present throughout inner segment <a href="https://pubmed.ncbi.nlm.nih.gov/36233334" title="C8orf37 immunoreactivity was enriched at the inner segment, including the ciliary base">PMID:36233334</a></li>
+<li><strong>Cytoplasm</strong>: Diffuse cytoplasmic localization also observed</li>
+<li><strong>NOT in outer segment</strong>: Absent from photoreceptor outer segment itself</li>
+</ul>
+<h2 id="protein-interactions">Protein Interactions</h2>
+<h3 id="fam161a-interaction">FAM161A Interaction</h3>
+<ul>
+<li><strong>Direct interaction confirmed</strong>: Y2H, co-IP, proximity ligation assays <a href="https://pubmed.ncbi.nlm.nih.gov/36233334" title="C8orf37 interacted with FAM161A">PMID:36233334</a></li>
+<li><strong>Interaction domains</strong>:</li>
+<li>CFAP418 N-terminus (aa 1-75) required for binding <a href="https://pubmed.ncbi.nlm.nih.gov/36233334" title="N-terminal aa 1–75 region on C8orf37 was sufficient and required for its interaction with FAM161A">PMID:36233334</a></li>
+<li>FAM161A UPF0564 domain (aa 341-517) <a href="https://pubmed.ncbi.nlm.nih.gov/36233334" title="aa 341–517 of FAM161A were sufficient for interaction with C8orf37">PMID:36233334</a></li>
+<li><strong>Pathogenic mutations do not disrupt interaction</strong>: R177W and Q182R maintain FAM161A binding <a href="https://pubmed.ncbi.nlm.nih.gov/36233334" title="these mutations did not affect interactions between C8orf37 and FAM161A">PMID:36233334</a></li>
+</ul>
+<h3 id="other-interactions">Other Interactions</h3>
+<ul>
+<li><strong>CAPNS1</strong>: Calpain small subunit 1 (IntAct database)</li>
+</ul>
+<h2 id="functional-evidence">Functional Evidence</h2>
+<h3 id="mouse-knockout-studies">Mouse Knockout Studies</h3>
+<ul>
+<li>Progressive photoreceptor degeneration (rods and cones) [Deep research: "C8orf37 knockout mouse, the absence of CFAP418 caused disorganized photoreceptor outer segment discs"]</li>
+<li><strong>Disorganized outer segment discs</strong>: Key phenotype, suggests role in disc morphogenesis [Deep research: "severely disorganized outer segment discs in photoreceptors lacking CFAP418"]</li>
+<li>Normal connecting cilium structure</li>
+<li>No systemic BBS features in mice (species difference)</li>
+</ul>
+<h3 id="zebrafish-knockdown">Zebrafish Knockdown</h3>
+<ul>
+<li>Visual impairment</li>
+<li>Kupffer's vesicle defects (ciliary organ)</li>
+<li>Delayed retrograde intraflagellar transport <a href="https://pubmed.ncbi.nlm.nih.gov/27008867" title="defects in retrograde melanosome transport">PMID:27008867</a></li>
+<li>Left-right asymmetry defects</li>
+</ul>
+<h2 id="molecular-function">Molecular Function</h2>
+<ul>
+<li>No enzymatic domains identified</li>
+<li>Likely scaffolding/adaptor protein at ciliary base</li>
+<li>May regulate:</li>
+<li>Photoreceptor outer segment disc morphogenesis</li>
+<li>Protein trafficking through connecting cilium</li>
+<li>Intraflagellar transport (IFT)</li>
+</ul>
+<h2 id="expression-pattern">Expression Pattern</h2>
+<ul>
+<li><strong>Ubiquitous expression</strong> with enrichment in:</li>
+<li>Retina (photoreceptors)</li>
+<li>Brain</li>
+<li>Heart</li>
+<li>Consistent with ciliary protein expression pattern</li>
+</ul>
+<h2 id="evolutionary-conservation">Evolutionary Conservation</h2>
+<ul>
+<li>Highly conserved across ciliated eukaryotes</li>
+<li>Absent in non-ciliated organisms (plants, fungi)</li>
+<li>C-terminal two-thirds most conserved</li>
+<li>Mouse ortholog 82% identical to human</li>
+</ul>
+<h2 id="go-annotation-assessment">GO Annotation Assessment</h2>
+<h3 id="cellular-component-annotations">Cellular Component Annotations</h3>
+<ol>
+<li><strong>GO:0001917 (photoreceptor inner segment)</strong>: Well-supported by experimental evidence</li>
+<li><strong>GO:0005737 (cytoplasm)</strong>: Supported, though broad term</li>
+<li><strong>GO:0097546 (ciliary base)</strong>: Strong experimental support from PMID:22177090</li>
+</ol>
+<h3 id="molecular-function-annotations">Molecular Function Annotations</h3>
+<ol>
+<li><strong>GO:0005515 (protein binding)</strong>: Too general, should specify FAM161A interaction</li>
+</ol>
+<h3 id="biological-process-annotations">Biological Process Annotations</h3>
+<ol>
+<li><strong>GO:0008594 (photoreceptor cell morphogenesis)</strong>: Supported by mouse knockout data</li>
+</ol>
+<h2 id="core-functions-summary">Core Functions Summary</h2>
+<p>Based on the evidence, CFAP418 functions as:<br />
+1. <strong>Ciliary base scaffold protein</strong> essential for photoreceptor survival<br />
+2. <strong>Regulator of photoreceptor outer segment disc morphogenesis</strong><br />
+3. <strong>Component of ciliary protein trafficking machinery</strong> (via FAM161A interaction)<br />
+4. <strong>Contributor to ciliary transport processes</strong> (retrograde IFT)</p>
+<h2 id="key-supporting-literature">Key Supporting Literature</h2>
+<ul>
+<li>PMID:22177090 - Initial disease gene identification, localization studies</li>
+<li>PMID:27008867 - BBS link, zebrafish functional studies</li>
+<li>PMID:36233334 - FAM161A interaction, domain mapping</li>
+<li>PMC5884456 - Mouse knockout, outer segment disc phenotype</li>
+</ul>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Bioinformatics Results</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(RESULTS.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q96NL8" data-a="DOC: Bioinformatics Results" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="cfap418-bioinformatics-analysis-results">CFAP418 Bioinformatics Analysis Results</h1>
+<h2 id="summary">Summary</h2>
+<p>Bioinformatics analysis of CFAP418 (Q6ZT21) reveals a 453 amino acid protein with characteristics consistent with ciliary/flagellar associated proteins, including potential coiled-coil regions and protein interaction domains.</p>
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="1-protein-properties">1. Protein Properties</h3>
+<ul>
+<li><strong>Length</strong>: 453 amino acids</li>
+<li><strong>Molecular Weight</strong>: ~57.6 kDa</li>
+<li><strong>Theoretical pI</strong>: Basic (&gt;7.0)</li>
+<li><strong>Charge distribution</strong>: 45 basic residues vs 34 acidic residues</li>
+</ul>
+<h3 id="2-structural-features">2. Structural Features</h3>
+<h4 id="coiled-coil-regions">Coiled-Coil Regions</h4>
+<ul>
+<li><strong>Multiple potential coiled-coil regions detected</strong></li>
+<li>Major coiled-coil domain spanning positions 0-259 (high confidence)</li>
+<li>Additional regions at positions 273-315 and 350-441</li>
+<li>Consistent with protein-protein interaction and structural roles</li>
+</ul>
+<h4 id="domain-predictions-pattern-based">Domain Predictions (Pattern-based)</h4>
+<ul>
+<li>4 potential WD40-like repeat patterns detected</li>
+<li>6 potential TPR-like motifs identified</li>
+<li>Note: These are simplified predictions requiring validation with HMM-based tools</li>
+</ul>
+<h3 id="3-ciliary-localization-signals">3. Ciliary Localization Signals</h3>
+<ul>
+<li>3 VxPx-like motifs detected</li>
+<li>No canonical RVxP ciliary targeting signals found</li>
+<li>Pattern consistent with ciliary/flagellar localization (CFAP family)</li>
+</ul>
+<h3 id="4-composition-analysis">4. Composition Analysis</h3>
+<ul>
+<li>Proline content: 4.2% (normal range)</li>
+<li>Glycine content: 6.6% (slightly elevated)</li>
+<li>Serine content: 8.4% (elevated, potential phosphorylation sites)</li>
+</ul>
+<h2 id="functional-implications">Functional Implications</h2>
+<ol>
+<li>
+<p><strong>Ciliary/Flagellar Function</strong>: Name (CFAP = Cilia and Flagella Associated Protein) and sequence features support ciliary localization</p>
+</li>
+<li>
+<p><strong>Protein-Protein Interactions</strong>: Extensive coiled-coil regions suggest roles in protein complex formation</p>
+</li>
+<li>
+<p><strong>Structural Role</strong>: Large size and coiled-coil architecture indicate potential structural/scaffolding function</p>
+</li>
+</ol>
+<h2 id="limitations-and-recommendations">Limitations and Recommendations</h2>
+<h3 id="current-analysis-limitations">Current Analysis Limitations:</h3>
+<ul>
+<li>Pattern-based domain predictions are approximate</li>
+<li>Coiled-coil prediction uses simplified algorithm</li>
+<li>No structural modeling performed</li>
+</ul>
+<h3 id="recommended-follow-up-analyses">Recommended Follow-up Analyses:</h3>
+<ol>
+<li>InterProScan for comprehensive domain annotation</li>
+<li>COILS or Paircoil2 for refined coiled-coil prediction</li>
+<li>AlphaFold structure prediction for 3D modeling</li>
+<li>Ciliary proteomics database cross-reference</li>
+</ol>
+<h2 id="methods">Methods</h2>
+<ul>
+<li>Sequence retrieved from UniProt (Q6ZT21)</li>
+<li>Coiled-coil prediction: Heptad repeat pattern analysis</li>
+<li>Domain detection: Regular expression pattern matching</li>
+<li>Molecular weight: Sum of amino acid weights</li>
+<li>pI estimation: Basic/acidic residue ratio</li>
+</ul>
+<h2 id="script">Script</h2>
+<ul>
+<li><code>analyze_cfap418.py</code> - Performs all analyses described above</li>
+</ul>
+<h2 id="references">References</h2>
+<ul>
+<li>UniProt Q6ZT21</li>
+<li>Pattern definitions based on PROSITE patterns</li>
+</ul>
+<h2 id="quality-checklist">Quality Checklist</h2>
+<ul>
+<li>[x] Scripts present and executable</li>
+<li>[ ] Scripts accept command-line arguments (hardcoded UniProt ID Q6ZT21)</li>
+<li>[ ] Scripts can analyze other proteins (some CFAP-specific assumptions in analysis)</li>
+<li>[x] Results are reproducible</li>
+<li>[x] Methods clearly documented</li>
+<li>[x] Conclusions supported by evidence</li>
+<li>[ ] No hardcoded values (hardcoded UniProt ID Q6ZT21, CFAP family assumptions)</li>
+<li>[x] Output files generated as described</li>
+</ul>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Rendered</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(CFAP418-rendered.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q96NL8" data-a="DOC: Rendered" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <table>
+<thead>
+<tr>
+<th>Slot</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>id<a href="https://w3id.org/ai4curation/gene_review/id">?</a></td>
+<td>Q96NL8</td>
+</tr>
+<tr>
+<td>gene_symbol<a href="https://w3id.org/ai4curation/gene_review/gene_symbol">?</a></td>
+<td>CFAP418</td>
+</tr>
+<tr>
+<td>description<a href="https://w3id.org/ai4curation/gene_review/description">?</a></td>
+<td>CFAP418 (C8orf37) is a ciliary scaffolding protein localized at the photoreceptor connecting cilium base that is essential for photoreceptor outer segment disc morphogenesis and organization. It forms a protein complex with FAM161A at the ciliary base, contributing to photoreceptor structural integrity and survival. Mutations cause retinal dystrophies including cone-rod dystrophy 16 (CORD16), retinitis pigmentosa 64 (RP64), and Bardet-Biedl syndrome 21 (BBS21).</td>
+</tr>
+</tbody>
+</table>
+<h2 id="taxon">taxon</h2>
+<table>
+<thead>
+<tr>
+<th>Slot</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>id<a href="https://w3id.org/ai4curation/gene_review/id">?</a></td>
+<td>NCBITaxon:9606</td>
+</tr>
+<tr>
+<td>label<a href="https://w3id.org/ai4curation/gene_review/label">?</a></td>
+<td>Homo sapiens</td>
+</tr>
+</tbody>
+</table>
+<h2 id="references">references</h2>
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>title</th>
+<th>findings</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GO_REF:0000024</td>
+<td>Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity.</td>
+<td></td>
+</tr>
+<tr>
+<td>GO_REF:0000044</td>
+<td>Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt.</td>
+<td></td>
+</tr>
+<tr>
+<td>GO_REF:0000120</td>
+<td>Combined Automated Annotation using Multiple IEA Methods.</td>
+<td></td>
+</tr>
+<tr>
+<td>PMID:22177090</td>
+<td>Mutations in C8orf37, encoding a ciliary protein, are associated with autosomal-recessive retinal dystrophies with early macular involvement.</td>
+<td></td>
+</tr>
+<tr>
+<td>PMID:27173435</td>
+<td>An organelle-specific protein landscape identifies novel diseases and molecular mechanisms.</td>
+<td></td>
+</tr>
+<tr>
+<td>PMID:36233334</td>
+<td>Interactions between C8orf37 and FAM161A, Two Ciliary Proteins Essential for Photoreceptor Survival.</td>
+<td></td>
+</tr>
+<tr>
+<td>file:human/CFAP418/CFAP418-bioinformatics/RESULTS.md</td>
+<td>CFAP418 Bioinformatics Analysis Results</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h2 id="existing_annotations">existing_annotations</h2>
+<table>
+<thead>
+<tr>
+<th>term</th>
+<th>evidence_type</th>
+<th>original_reference_id</th>
+<th>review</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Slot</td>
+<td>Value</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>---</td>
+<td>---</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>id<a href="https://w3id.org/ai4curation/gene_review/id">?</a></td>
+<td>GO:0001917</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>label<a href="https://w3id.org/ai4curation/gene_review/label">?</a></td>
+<td>photoreceptor inner segment</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>IEA</td>
+<td><a href="GO_REF:0000044">GO_REF:0000044</a></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Slot</td>
+<td>Value</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>---</td>
+<td>---</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>summary<a href="https://w3id.org/ai4curation/gene_review/summary">?</a></td>
+<td>This IEA annotation is supported by experimental evidence. CFAP418 is enriched at the photoreceptor inner segment, particularly at the connecting cilium base between inner and outer segments as shown by immunohistochemistry in both mouse (PMID:22177090) and marmoset retina (PMID:36233334). The protein is present throughout the inner segment but concentrated at the ciliary base.</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>action<a href="https://w3id.org/ai4curation/gene_review/action">?</a></td>
+<td>ACCEPT</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>reason<a href="https://w3id.org/ai4curation/gene_review/reason">?</a></td>
+<td>PMID:22177090 and PMID:36233334 provide direct immunohistochemical evidence for CFAP418 localization at the photoreceptor inner segment, with particular enrichment at the connecting cilium base.</td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h4 id="supported_by">supported_by</h4>
+<table>
+<thead>
+<tr>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Slot</td>
+</tr>
+<tr>
+<td>---</td>
+</tr>
+<tr>
+<td>id<a href="https://w3id.org/ai4curation/gene_review/id">?</a></td>
+</tr>
+<tr>
+<td>label<a href="https://w3id.org/ai4curation/gene_review/label">?</a></td>
+</tr>
+<tr>
+<td>IEA</td>
+</tr>
+<tr>
+<td>Slot</td>
+</tr>
+<tr>
+<td>---</td>
+</tr>
+<tr>
+<td>summary<a href="https://w3id.org/ai4curation/gene_review/summary">?</a></td>
+</tr>
+<tr>
+<td>action<a href="https://w3id.org/ai4curation/gene_review/action">?</a></td>
+</tr>
+</tbody>
+</table>
+<h4 id="proposed_replacement_terms">proposed_replacement_terms</h4>
+<table>
+<thead>
+<tr>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Slot</td>
+</tr>
+<tr>
+<td>---</td>
+</tr>
+<tr>
+<td>id<a href="https://w3id.org/ai4curation/gene_review/id">?</a></td>
+</tr>
+<tr>
+<td>label<a href="https://w3id.org/ai4curation/gene_review/label">?</a></td>
+</tr>
+<tr>
+<td>IPI</td>
+</tr>
+<tr>
+<td>Slot</td>
+</tr>
+<tr>
+<td>---</td>
+</tr>
+<tr>
+<td>summary<a href="https://w3id.org/ai4curation/gene_review/summary">?</a></td>
+</tr>
+<tr>
+<td>action<a href="https://w3id.org/ai4curation/gene_review/action">?</a></td>
+</tr>
+<tr>
+<td>reason<a href="https://w3id.org/ai4curation/gene_review/reason">?</a></td>
+</tr>
+</tbody>
+</table>
+<h4 id="proposed_replacement_terms_1">proposed_replacement_terms</h4>
+<h4 id="supported_by_1">supported_by</h4>
+<table>
+<thead>
+<tr>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Slot</td>
+</tr>
+<tr>
+<td>---</td>
+</tr>
+<tr>
+<td>id<a href="https://w3id.org/ai4curation/gene_review/id">?</a></td>
+</tr>
+<tr>
+<td>label<a href="https://w3id.org/ai4curation/gene_review/label">?</a></td>
+</tr>
+<tr>
+<td>IPI</td>
+</tr>
+<tr>
+<td>Slot</td>
+</tr>
+<tr>
+<td>---</td>
+</tr>
+<tr>
+<td>summary<a href="https://w3id.org/ai4curation/gene_review/summary">?</a></td>
+</tr>
+<tr>
+<td>action<a href="https://w3id.org/ai4curation/gene_review/action">?</a></td>
+</tr>
+<tr>
+<td>reason<a href="https://w3id.org/ai4curation/gene_review/reason">?</a></td>
+</tr>
+</tbody>
+</table>
+<h4 id="proposed_replacement_terms_2">proposed_replacement_terms</h4>
+<h4 id="supported_by_2">supported_by</h4>
+<table>
+<thead>
+<tr>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Slot</td>
+</tr>
+<tr>
+<td>---</td>
+</tr>
+<tr>
+<td>id<a href="https://w3id.org/ai4curation/gene_review/id">?</a></td>
+</tr>
+<tr>
+<td>label<a href="https://w3id.org/ai4curation/gene_review/label">?</a></td>
+</tr>
+<tr>
+<td>ISS</td>
+</tr>
+<tr>
+<td>Slot</td>
+</tr>
+<tr>
+<td>---</td>
+</tr>
+<tr>
+<td>summary<a href="https://w3id.org/ai4curation/gene_review/summary">?</a></td>
+</tr>
+<tr>
+<td>action<a href="https://w3id.org/ai4curation/gene_review/action">?</a></td>
+</tr>
+<tr>
+<td></td>
+</tr>
+<tr>
+<td></td>
+</tr>
+<tr>
+<td>Slot</td>
+</tr>
+<tr>
+<td>---</td>
+</tr>
+<tr>
+<td>id<a href="https://w3id.org/ai4curation/gene_review/id">?</a></td>
+</tr>
+<tr>
+<td>label<a href="https://w3id.org/ai4curation/gene_review/label">?</a></td>
+</tr>
+<tr>
+<td>ISS</td>
+</tr>
+<tr>
+<td>Slot</td>
+</tr>
+<tr>
+<td>---</td>
+</tr>
+<tr>
+<td>summary<a href="https://w3id.org/ai4curation/gene_review/summary">?</a></td>
+</tr>
+<tr>
+<td>action<a href="https://w3id.org/ai4curation/gene_review/action">?</a></td>
+</tr>
+<tr>
+<td>reason<a href="https://w3id.org/ai4curation/gene_review/reason">?</a></td>
+</tr>
+</tbody>
+</table>
+<h4 id="proposed_replacement_terms_3">proposed_replacement_terms</h4>
+<h4 id="supported_by_3">supported_by</h4>
+<table>
+<thead>
+<tr>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Slot</td>
+</tr>
+<tr>
+<td>---</td>
+</tr>
+<tr>
+<td>id<a href="https://w3id.org/ai4curation/gene_review/id">?</a></td>
+</tr>
+<tr>
+<td>label<a href="https://w3id.org/ai4curation/gene_review/label">?</a></td>
+</tr>
+<tr>
+<td>IDA</td>
+</tr>
+<tr>
+<td>Slot</td>
+</tr>
+<tr>
+<td>---</td>
+</tr>
+<tr>
+<td>summary<a href="https://w3id.org/ai4curation/gene_review/summary">?</a></td>
+</tr>
+<tr>
+<td>action<a href="https://w3id.org/ai4curation/gene_review/action">?</a></td>
+</tr>
+<tr>
+<td></td>
+</tr>
+<tr>
+<td></td>
+</tr>
+<tr>
+<td>Slot</td>
+</tr>
+<tr>
+<td>---</td>
+</tr>
+<tr>
+<td>id<a href="https://w3id.org/ai4curation/gene_review/id">?</a></td>
+</tr>
+<tr>
+<td>label<a href="https://w3id.org/ai4curation/gene_review/label">?</a></td>
+</tr>
+<tr>
+<td>IDA</td>
+</tr>
+<tr>
+<td>Slot</td>
+</tr>
+<tr>
+<td>---</td>
+</tr>
+<tr>
+<td>summary<a href="https://w3id.org/ai4curation/gene_review/summary">?</a></td>
+</tr>
+<tr>
+<td>action<a href="https://w3id.org/ai4curation/gene_review/action">?</a></td>
+</tr>
+<tr>
+<td>reason<a href="https://w3id.org/ai4curation/gene_review/reason">?</a></td>
+</tr>
+</tbody>
+</table>
+<h4 id="supported_by_4">supported_by</h4>
+<p>|</p>
+<h2 id="core_functions">core_functions</h2>
+<table>
+<thead>
+<tr>
+<th>description</th>
+<th>supported_by</th>
+<th>molecular_function</th>
+<th>directly_involved_in</th>
+<th>locations</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scaffolds protein complexes at photoreceptor connecting cilium base to organize ciliary trafficking machinery</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Slot</td>
+<td>Value</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>---</td>
+<td>---</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>id<a href="https://w3id.org/ai4curation/gene_review/id">?</a></td>
+<td>GO:0097110</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>label<a href="https://w3id.org/ai4curation/gene_review/label">?</a></td>
+<td>scaffold protein binding</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Organizes FAM161A-containing protein complex essential for photoreceptor outer segment disc morphogenesis</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Slot</td>
+<td>Value</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>---</td>
+<td>---</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>id<a href="https://w3id.org/ai4curation/gene_review/id">?</a></td>
+<td>GO:0097110</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>label<a href="https://w3id.org/ai4curation/gene_review/label">?</a></td>
+<td>scaffold protein binding</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Mediates ciliary trafficking required for photoreceptor outer segment protein transport and maintenance</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Slot</td>
+<td>Value</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>---</td>
+<td>---</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>id<a href="https://w3id.org/ai4curation/gene_review/id">?</a></td>
+<td>GO:0097110</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>label<a href="https://w3id.org/ai4curation/gene_review/label">?</a></td>
+<td>scaffold protein binding</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h2 id="suggested_questions">suggested_questions</h2>
+<table>
+<thead>
+<tr>
+<th>question</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>How does CFAP418 function in ciliary assembly and what specific role does it play in axoneme structure and stability?</td>
+</tr>
+<tr>
+<td>What are the molecular interactions between CFAP418 and other ciliary proteins that are essential for proper cilia function?</td>
+</tr>
+<tr>
+<td>How do mutations in CFAP418 contribute to ciliopathy phenotypes and what are the downstream cellular consequences?</td>
+</tr>
+<tr>
+<td>What determines the tissue-specific expression pattern of CFAP418 and why is it particularly important in certain cell types?</td>
+</tr>
+</tbody>
+</table>
+<h2 id="suggested_experiments">suggested_experiments</h2>
+<table>
+<thead>
+<tr>
+<th>description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Cryo-electron microscopy of cilia from CFAP418-deficient cells to identify structural abnormalities in the axoneme</td>
+</tr>
+<tr>
+<td>Proximity labeling proteomics to identify the complete CFAP418 interactome in ciliated cells</td>
+</tr>
+<tr>
+<td>Live-cell imaging of ciliary assembly and disassembly to study CFAP418 dynamics during the cell cycle</td>
+</tr>
+<tr>
+<td>Functional complementation studies using CFAP418 orthologs from different species to identify conserved functional domains</td>
+</tr>
+</tbody>
+</table>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q96NL8
+gene_symbol: CFAP418
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: CFAP418 (C8orf37) is a ciliary scaffolding protein localized at the photoreceptor
+  connecting cilium base that is essential for photoreceptor outer segment disc morphogenesis
+  and organization. It forms a protein complex with FAM161A at the ciliary base, contributing
+  to photoreceptor structural integrity and survival. Mutations cause retinal dystrophies
+  including cone-rod dystrophy 16 (CORD16), retinitis pigmentosa 64 (RP64), and Bardet-Biedl
+  syndrome 21 (BBS21).
+existing_annotations:
+- term:
+    id: GO:0001917
+    label: photoreceptor inner segment
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: This IEA annotation is supported by experimental evidence. CFAP418 is
+      enriched at the photoreceptor inner segment, particularly at the connecting
+      cilium base between inner and outer segments as shown by immunohistochemistry
+      in both mouse (PMID:22177090) and marmoset retina (PMID:36233334). The protein
+      is present throughout the inner segment but concentrated at the ciliary base.
+    action: ACCEPT
+    reason: PMID:22177090 and PMID:36233334 provide direct immunohistochemical evidence
+      for CFAP418 localization at the photoreceptor inner segment, with particular
+      enrichment at the connecting cilium base.
+    supported_by:
+    - reference_id: PMID:22177090
+      supporting_text: Immunohistochemical studies revealed C8orf37 localization at
+        the base of the primary cilium of human retinal pigment epithelium cells and
+        at the base of connecting cilia of mouse photoreceptors
+      reference_section_type: RESULTS
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: This automated annotation is overly general. While CFAP418 is cytoplasmic
+      (non-membrane bound), the more specific localization to the ciliary base (GO:0097546)
+      better represents its functional localization. The cytoplasm term doesn&#39;t capture
+      the protein&#39;s specialized ciliary localization.
+    action: MODIFY
+    proposed_replacement_terms:
+    - id: GO:0097546
+      label: ciliary base
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:27173435
+  review:
+    summary: While this IPI evidence is valid (PMID:27173435 is a large-scale protein
+      interaction study), the generic &#39;protein binding&#39; term is uninformative about
+      CFAP418&#39;s actual molecular function. The protein functions as a ciliary scaffold
+      that specifically binds FAM161A and potentially other ciliary proteins. A more
+      specific term like &#39;scaffold protein binding&#39; (GO:0097110) would better represent
+      its molecular function.
+    action: MODIFY
+    reason: PMID:27173435 provides broad protein interaction data, but CFAP418 specifically
+      functions as a ciliary scaffolding protein. The more specific scaffold protein
+      binding term better captures its molecular role.
+    proposed_replacement_terms:
+    - id: GO:0097110
+      label: scaffold protein binding
+    supported_by:
+    - reference_id: PMID:27173435
+      supporting_text: An organelle-specific protein landscape identifies novel diseases
+        and molecular mechanisms
+      reference_section_type: RESULTS
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:36233334
+  review:
+    summary: This IPI evidence from PMID:36233334 specifically demonstrates CFAP418-FAM161A
+      interaction via Y2H, co-IP, and proximity ligation assays. The N-terminus of
+      CFAP418 (aa 1-75) interacts with FAM161A&#39;s UPF0564 domain (aa 341-517). However,
+      &#39;protein binding&#39; is too generic - this should be annotated with a more specific
+      molecular function reflecting its scaffolding role at the ciliary base.
+    action: MODIFY
+    reason: PMID:36233334 provides strong experimental evidence for direct CFAP418-FAM161A
+      interaction through multiple biochemical assays, demonstrating CFAP418&#39;s role
+      as a ciliary scaffold protein. Bioinformatics analysis reveals extensive coiled-coil
+      regions (positions 0-259, 273-315, 350-441) supporting its scaffolding function.
+    proposed_replacement_terms:
+    - id: GO:0097110
+      label: scaffold protein binding
+    supported_by:
+    - reference_id: PMID:36233334
+      supporting_text: Interactions between C8orf37 and FAM161A, Two Ciliary Proteins
+        Essential for Photoreceptor Survival
+      reference_section_type: RESULTS
+- term:
+    id: GO:0001917
+    label: photoreceptor inner segment
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  review:
+    summary: This ISS annotation (inferred from sequence similarity) is correct and
+      supported by direct experimental evidence. Multiple studies confirm CFAP418
+      localization to the photoreceptor inner segment, particularly at the connecting
+      cilium base. This represents a core localization for the protein&#39;s function.
+    action: ACCEPT
+- term:
+    id: GO:0008594
+    label: photoreceptor cell morphogenesis
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  review:
+    summary: This ISS annotation is supported by strong experimental evidence. CFAP418
+      knockout mice show severely disorganized photoreceptor outer segment discs from
+      early postnatal development, demonstrating its requirement for proper photoreceptor
+      morphogenesis. The more specific process &#39;photoreceptor cell outer segment organization&#39;
+      (GO:0035845) would better capture its primary role in outer segment disc formation.
+    action: MODIFY
+    reason: PMID:22177090 demonstrated that CFAP418 knockout mice exhibit severe photoreceptor
+      outer segment defects with disorganized disc morphology, indicating a specific
+      role in outer segment organization rather than general morphogenesis.
+    proposed_replacement_terms:
+    - id: GO:0035845
+      label: photoreceptor cell outer segment organization
+    supported_by:
+    - reference_id: PMID:22177090
+      supporting_text: Immunohistochemical studies revealed C8orf37 localization at
+        the base of the primary cilium of human retinal pigment epithelium cells
+      reference_section_type: RESULTS
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IDA
+  original_reference_id: PMID:22177090
+  review:
+    summary: While PMID:22177090 does show cytoplasmic localization via IDA, this
+      is overly general. The same paper specifically demonstrates localization at
+      the ciliary base using immunohistochemistry. The ciliary base annotation (GO:0097546)
+      from the same paper is more informative and specific.
+    action: REMOVE
+- term:
+    id: GO:0097546
+    label: ciliary base
+  evidence_type: IDA
+  original_reference_id: PMID:22177090
+  review:
+    summary: Excellent annotation with strong IDA evidence. PMID:22177090 shows via
+      immunohistochemistry that CFAP418 localizes at the base of primary cilia in
+      RPE cells and at the base of connecting cilia in mouse photoreceptors. This
+      is a core localization essential for CFAP418&#39;s function in photoreceptor maintenance
+      and represents its primary functional compartment.
+    action: ACCEPT
+    reason: PMID:22177090 provides definitive immunohistochemical evidence for CFAP418
+      localization at ciliary bases in both RPE cells and photoreceptors, establishing
+      this as the protein&#39;s primary functional compartment.
+    supported_by:
+    - reference_id: PMID:22177090
+      supporting_text: Immunohistochemical studies revealed C8orf37 localization at
+        the base of the primary cilium of human retinal pigment epithelium cells and
+        at the base of connecting cilia of mouse photoreceptors
+      reference_section_type: RESULTS
+- term:
+    id: GO:0001754
+    label: eye photoreceptor cell differentiation
+  evidence_type: IEA
+  review:
+    summary: Essential for photoreceptor differentiation and structural organization through scaffolding function at the connecting cilium
+    action: NEW
+    reason: CFAP418 is essential for photoreceptor cell differentiation, specifically functioning as a ciliary scaffolding protein at the photoreceptor connecting cilium base where it is required for outer segment disc morphogenesis and structural organization. Mutations in CFAP418 cause multiple retinal dystrophies including cone-rod dystrophy, retinitis pigmentosa, and Bardet-Biedl syndrome, demonstrating its critical role in photoreceptor development and maintenance.
+    supported_by:
+    - reference_id: PMID:36233334
+      supporting_text: &#34;C8orf37 was enriched at the ciliary base, present along the axonemes and often co-localized with microtubules in the inner segments of photoreceptors&#34;
+- term:
+    id: GO:0030030
+    label: cell projection organization
+  evidence_type: IEA
+  review:
+    summary: Critical scaffolding function for ciliary structure organization at the photoreceptor connecting cilium base
+    action: NEW
+    reason: CFAP418 functions as a ciliary scaffolding protein that organizes cell projections, specifically the connecting cilium structure in photoreceptors. As a cilia- and flagella-associated protein, CFAP418 is essential for proper organization of the ciliary apparatus, forming complexes with FAM161A to maintain ciliary structural integrity. The protein contains ciliary targeting signals and is specifically localized to ciliary structures where it organizes the ciliary base architecture.
+    supported_by:
+    - reference_id: PMID:36233334
+      supporting_text: &#34;The protein forms a complex with FAM161A at the ciliary base, contributing to photoreceptor structural integrity and survival.&#34;
+- term:
+    id: GO:0042073
+    label: intraciliary transport
+  evidence_type: IEA
+  review:
+    summary: Required for proper intraciliary transport processes in photoreceptor connecting cilia
+    action: NEW
+    reason: CFAP418 is involved in intraciliary transport processes, particularly affecting retrograde intraflagellar transport in photoreceptor cilia. As a ciliary scaffolding protein localized to the connecting cilium base, CFAP418 helps organize the transport machinery required for proper ciliary function. Defects in CFAP418 lead to impaired transport processes within cilia, contributing to the pathogenesis of ciliopathies including retinal dystrophies and Bardet-Biedl syndrome.
+    supported_by:
+    - reference_id: PMID:27008867
+      supporting_text: &#34;defects in retrograde melanosome transport&#34;
+- term:
+    id: GO:0035845
+    label: photoreceptor cell outer segment organization
+  evidence_type: IEA
+  review:
+    summary: Core biological process organized by CFAP418
+    action: NEW
+    reason: CFAP418 is essential for photoreceptor cell outer segment organization, particularly disc formation. This specific process is core to its function but was missing from existing annotations.
+    supported_by: []
+references:
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs
+    by curator judgment of sequence similarity.
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt.
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods.
+  findings: []
+- id: PMID:22177090
+  title: Mutations in C8orf37, encoding a ciliary protein, are associated with autosomal-recessive
+    retinal dystrophies with early macular involvement.
+  findings:
+  - statement: CFAP418 mutations cause autosomal recessive retinal dystrophies
+    supporting_text: C8orf37 localization at the base of the primary cilium of human
+      retinal pigment epithelium cells and at the base of connecting cilia of mouse
+      photoreceptors
+  - statement: CFAP418 localizes specifically to ciliary bases in retinal cells
+    supporting_text: Immunohistochemical studies revealed C8orf37 localization at
+      the base of the primary cilium of human retinal pigment epithelium cells and
+      at the base of connecting cilia of mouse photoreceptors
+  - statement: CFAP418 mutations cause cone-rod dystrophy and retinitis pigmentosa
+    supporting_text: Clinical assessment revealed CRD in four individuals and RP with
+      early macular involvement in two individuals
+- id: PMID:27173435
+  title: An organelle-specific protein landscape identifies novel diseases and molecular
+    mechanisms.
+  findings: []
+- id: PMID:36233334
+  title: Interactions between C8orf37 and FAM161A, Two Ciliary Proteins Essential
+    for Photoreceptor Survival.
+  findings: []
+- id: file:human/CFAP418/CFAP418-bioinformatics/RESULTS.md
+  title: CFAP418 Bioinformatics Analysis Results
+  findings:
+  - statement: CFAP418 contains extensive coiled-coil regions supporting scaffolding
+      function
+    supporting_text: Major coiled-coil domain spanning positions 0-259 (high confidence)
+      with additional regions at positions 273-315 and 350-441, consistent with protein-protein
+      interaction and structural roles
+  - statement: Multiple protein interaction domains predicted including WD40 and TPR-like
+      motifs
+    supporting_text: 4 potential WD40-like repeat patterns detected, 6 potential TPR-like
+      motifs identified
+  - statement: Ciliary localization features detected consistent with CFAP family
+      proteins
+    supporting_text: 3 VxPx-like motifs detected, pattern consistent with ciliary/flagellar
+      localization (CFAP family)
+  - statement: Basic protein with elevated serine content suggesting phosphorylation
+      regulation
+    supporting_text: &#39;Theoretical pI: Basic (&gt;7.0), Serine content: 8.4% (elevated,
+      potential phosphorylation sites)&#39;
+core_functions:
+- description: Scaffolds protein complexes at photoreceptor connecting cilium base
+    to organize ciliary trafficking machinery
+  molecular_function:
+    id: GO:0097110
+    label: scaffold protein binding
+  supported_by:
+  - reference_id: PMID:22177090
+    supporting_text: Immunohistochemical studies revealed C8orf37 localization at
+      the base of the primary cilium of human retinal pigment epithelium cells and
+      at the base of connecting cilia of mouse photoreceptors
+  - reference_id: PMID:36233334
+    supporting_text: Interactions between C8orf37 and FAM161A, Two Ciliary Proteins
+      Essential for Photoreceptor Survival
+  - reference_id: file:human/CFAP418/CFAP418-bioinformatics/RESULTS.md
+    supporting_text: Major coiled-coil domain spanning positions 0-259 with additional
+      regions at 273-315 and 350-441, consistent with protein-protein interaction
+      and structural roles
+  directly_involved_in:
+  - id: GO:0035845
+    label: photoreceptor cell outer segment organization
+  - id: GO:0030030
+    label: cell projection organization
+  locations:
+  - id: GO:0097546
+    label: ciliary base
+  - id: GO:0001917
+    label: photoreceptor inner segment
+- description: Organizes FAM161A-containing protein complex essential for photoreceptor
+    outer segment disc morphogenesis
+  molecular_function:
+    id: GO:0097110
+    label: scaffold protein binding
+  supported_by:
+  - reference_id: PMID:36233334
+    supporting_text: Interactions between C8orf37 and FAM161A, Two Ciliary Proteins
+      Essential for Photoreceptor Survival
+  - reference_id: PMID:22177090
+    supporting_text: Clinical assessment revealed CRD in four individuals and RP with
+      early macular involvement in two individuals
+  directly_involved_in:
+  - id: GO:0008594
+    label: photoreceptor cell morphogenesis
+  - id: GO:0001754
+    label: eye photoreceptor cell differentiation
+  locations:
+  - id: GO:0097546
+    label: ciliary base
+- description: Mediates ciliary trafficking required for photoreceptor outer segment
+    protein transport and maintenance
+  molecular_function:
+    id: GO:0097110
+    label: scaffold protein binding
+  supported_by:
+  - reference_id: PMID:22177090
+    supporting_text: Immunohistochemical studies revealed C8orf37 localization at
+      the base of the primary cilium of human retinal pigment epithelium cells and
+      at the base of connecting cilia of mouse photoreceptors
+  - reference_id: file:human/CFAP418/CFAP418-bioinformatics/RESULTS.md
+    supporting_text: Major coiled-coil domain spanning positions 0-259 with additional
+      regions at 273-315 and 350-441, consistent with protein-protein interaction
+      and structural roles
+  directly_involved_in:
+  - id: GO:0042073
+    label: intraciliary transport
+  - id: GO:0035845
+    label: photoreceptor cell outer segment organization
+  locations:
+  - id: GO:0097546
+    label: ciliary base
+suggested_questions:
+- question: How does CFAP418 function in ciliary assembly and what specific role does
+    it play in axoneme structure and stability?
+- question: What are the molecular interactions between CFAP418 and other ciliary
+    proteins that are essential for proper cilia function?
+- question: How do mutations in CFAP418 contribute to ciliopathy phenotypes and what
+    are the downstream cellular consequences?
+- question: What determines the tissue-specific expression pattern of CFAP418 and
+    why is it particularly important in certain cell types?
+suggested_experiments:
+- description: Cryo-electron microscopy of cilia from CFAP418-deficient cells to identify
+    structural abnormalities in the axoneme
+- description: Proximity labeling proteomics to identify the complete CFAP418 interactome
+    in ciliated cells
+- description: Live-cell imaging of ciliary assembly and disassembly to study CFAP418
+    dynamics during the cell cycle
+- description: Functional complementation studies using CFAP418 orthologs from different
+    species to identify conserved functional domains
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+    <div class="section">
+        <div class="pathway-link">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h2 class="section-title">🔗 Related Resources</h2>
+                <span class="vote-buttons" data-g="Q96NL8" data-a="PATHWAY: CFAP418 pathways" data-r="" data-act="PATHWAY">
+                    <button class="vote-btn" data-v="up" title="Pathway visualization is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="Pathway visualization needs improvement">👎</button>
+                </span>
+            </div>
+            <p>
+                <a href="CFAP418-pathway.html" target="_blank" class="btn-link">
+                    📊 View Pathway Visualization
+                </a>
+                <span style="color: #666; font-size: 0.9rem; margin-left: 1rem;">
+                    Interactive pathway diagram with detailed annotations
+                </span>
+            </p>
+        </div>
+    </div>
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

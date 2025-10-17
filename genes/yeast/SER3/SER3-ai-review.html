@@ -1,0 +1,2825 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SER3 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>SER3</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P40054" target="_blank" class="term-link">
+                        P40054
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Saccharomyces cerevisiae S288C</span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "SER3";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P40054" data-a="DESCRIPTION: SER3 encodes D-3-phosphoglycerate dehydrogenase 1,..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>SER3 encodes D-3-phosphoglycerate dehydrogenase 1, the enzyme that catalyzes the first and committed step of L-serine biosynthesis via the phosphorylated pathway. Ser3p oxidizes 3-phosphoglycerate to 3-phosphohydroxypyruvate with concurrent reduction of NAD+ to NADH. The enzyme also exhibits alpha-ketoglutarate reductase activity, converting α-ketoglutarate to D-2-hydroxyglutarate. SER3 is subject to complex transcriptional regulation including repression by the SRG1 lncRNA in serine-replete conditions and activation by Gcn4p during amino acid starvation. The protein is also post-translationally regulated by TORC1-mediated phosphorylation.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004617" target="_blank" class="term-link">
+                                    GO:0004617
+                                </a>
+                            </span>
+                            <span class="term-label">phosphoglycerate dehydrogenase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P40054" data-a="GO:0004617" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the primary and well-established function of Ser3p. Multiple experimental studies confirm Ser3p catalyzes the oxidation of 3-phosphoglycerate to 3-phosphohydroxypyruvate with NAD+ as cofactor. This is supported by IMP evidence in PMID:12525494.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006564" target="_blank" class="term-link">
+                                    GO:0006564
+                                </a>
+                            </span>
+                            <span class="term-label">L-serine biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P40054" data-a="GO:0006564" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct - Ser3p catalyzes the first step of the phosphorylated L-serine biosynthetic pathway. Loss of both SER3 and SER33 renders yeast auxotrophic for serine, confirming this role. Supported by IMP evidence in PMID:12525494.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008652" target="_blank" class="term-link">
+                                    GO:0008652
+                                </a>
+                            </span>
+                            <span class="term-label">amino acid biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P40054" data-a="GO:0008652" data-r="GO_REF:0000043" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is a correct but overly general annotation. While Ser3p does participate in amino acid biosynthesis (specifically serine), the more specific term GO:0006564 (L-serine biosynthetic process) is more informative and appropriate.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016491" target="_blank" class="term-link">
+                                    GO:0016491
+                                </a>
+                            </span>
+                            <span class="term-label">oxidoreductase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P40054" data-a="GO:0016491" data-r="GO_REF:0000043" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is correct but too general. Ser3p is indeed an oxidoreductase that uses NAD+ as cofactor, but the more specific terms GO:0004617 (phosphoglycerate dehydrogenase activity) and GO:0016616 provide more informative functional descriptions.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016616" target="_blank" class="term-link">
+                                    GO:0016616
+                                </a>
+                            </span>
+                            <span class="term-label">oxidoreductase activity, acting on the CH-OH group of donors, NAD or NADP as acceptor</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P40054" data-a="GO:0016616" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This accurately describes the biochemical mechanism of Ser3p, which oxidizes the CH-OH group of 3-phosphoglycerate using NAD+ as electron acceptor. This is mechanistically correct and more specific than the general oxidoreductase activity term.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051287" target="_blank" class="term-link">
+                                    GO:0051287
+                                </a>
+                            </span>
+                            <span class="term-label">NAD binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P40054" data-a="GO:0051287" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct - Ser3p requires NAD+ as a cofactor for its dehydrogenase activity. The protein contains a Rossmann fold domain for NAD+ binding, which is conserved across phosphoglycerate dehydrogenases.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10688190" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10688190
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A comprehensive analysis of protein-protein interactions in ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="P40054" data-a="GO:0005515" data-r="PMID:10688190" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Protein binding is too generic and uninformative. While Ser3p may interact with other proteins (as suggested by multiple IPI annotations), this term does not provide meaningful functional information about the gene.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16429126" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16429126
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Proteome survey reveals modularity of the yeast cell machine...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="P40054" data-a="GO:0005515" data-r="PMID:16429126" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Protein binding is too generic and uninformative. Multiple protein binding annotations from high-throughput studies do not provide meaningful functional information.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16554755" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16554755
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Global landscape of protein complexes in the yeast Saccharom...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="P40054" data-a="GO:0005515" data-r="PMID:16554755" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Protein binding is too generic and uninformative. While this may be part of protein complexes, the generic protein binding term adds no functional value.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18719252" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18719252
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    High-quality binary protein interaction map of the yeast int...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="P40054" data-a="GO:0005515" data-r="PMID:18719252" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Protein binding is too generic and uninformative. High-throughput interaction studies detect many non-specific interactions.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31454312" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:31454312
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The role of structural pleiotropy and regulatory evolution i...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="P40054" data-a="GO:0005515" data-r="PMID:31454312" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Protein binding is too generic and uninformative. This study focuses on paralog retention and does not provide specific functional interaction data.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/37968396" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:37968396
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The social and structural architecture of the yeast protein ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="P40054" data-a="GO:0005515" data-r="PMID:37968396" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Protein binding is too generic and uninformative. Network studies identify many interactions but do not establish functional significance.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006979" target="_blank" class="term-link">
+                                    GO:0006979
+                                </a>
+                            </span>
+                            <span class="term-label">response to oxidative stress</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26527276" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:26527276
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Serine and SAM Responsive Complex SESAME Regulates Histone M...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="P40054" data-a="GO:0006979" data-r="PMID:26527276" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation appears to be based on the SESAME complex study. However, SER3 primary function is serine biosynthesis, not oxidative stress response. While serine metabolism may be affected by cellular redox state, this is not a core function of SER3.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0040029" target="_blank" class="term-link">
+                                    GO:0040029
+                                </a>
+                            </span>
+                            <span class="term-label">epigenetic regulation of gene expression</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26527276" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:26527276
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Serine and SAM Responsive Complex SESAME Regulates Histone M...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="P40054" data-a="GO:0040029" data-r="PMID:26527276" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This appears to be based on the SESAME complex study linking serine metabolism to histone modifications. However, this is an indirect connection through metabolite availability rather than a direct function of SER3. The primary function of SER3 is serine biosynthesis.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1902494" target="_blank" class="term-link">
+                                    GO:1902494
+                                </a>
+                            </span>
+                            <span class="term-label">catalytic complex</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26527276" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:26527276
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Serine and SAM Responsive Complex SESAME Regulates Histone M...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="P40054" data-a="GO:1902494" data-r="PMID:26527276" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is a cellular component term that is too generic. While Ser3p may function as part of multimeric complexes (like many dehydrogenases), this term provides little specific information about localization.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14562095" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:14562095
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Global analysis of protein localization in budding yeast.
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P40054" data-a="GO:0005737" data-r="PMID:14562095" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct localization. Ser3p is a cytosolic enzyme involved in central metabolism. This is supported by high-throughput localization studies and consistent with its role in metabolizing cytosolic glycolytic intermediates.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16120614" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16120614
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Serinc, an activity-regulated protein family, incorporates s...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="P40054" data-a="GO:0005515" data-r="PMID:16120614" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Protein binding is too generic and uninformative. This study is about Serinc proteins, not directly about SER3 function.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0047545" target="_blank" class="term-link">
+                                    GO:0047545
+                                </a>
+                            </span>
+                            <span class="term-label">2-hydroxyglutarate dehydrogenase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26774271" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:26774271
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Saccharomyces cerevisiae Forms D-2-Hydroxyglutarate and Coup...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P40054" data-a="GO:0047545" data-r="PMID:26774271" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is experimentally demonstrated secondary activity of Ser3p. The study shows Ser3p can convert D-2-hydroxyglutarate to α-ketoglutarate. This is a bona fide additional molecular function supported by direct biochemical evidence.
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26774271" target="_blank" class="term-link">
+                                        PMID:26774271
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Ser3p was identified as a 2-hydroxyglutarate dehydrogenase that oxidizes D-2-hydroxyglutarate to α-ketoglutarate</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0047545" target="_blank" class="term-link">
+                                    GO:0047545
+                                </a>
+                            </span>
+                            <span class="term-label">2-hydroxyglutarate dehydrogenase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26774271" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:26774271
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Saccharomyces cerevisiae Forms D-2-Hydroxyglutarate and Coup...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P40054" data-a="GO:0047545" data-r="PMID:26774271" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This provides additional experimental support for the 2-hydroxyglutarate dehydrogenase activity through mutant phenotype analysis. While redundant with IDA evidence, IMP provides independent validation.
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26774271" target="_blank" class="term-link">
+                                        PMID:26774271
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Mutant strains lacking Ser3p showed deficiency in D-2-hydroxyglutarate metabolism</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0047545" target="_blank" class="term-link">
+                                    GO:0047545
+                                </a>
+                            </span>
+                            <span class="term-label">2-hydroxyglutarate dehydrogenase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IGI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26774271" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:26774271
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Saccharomyces cerevisiae Forms D-2-Hydroxyglutarate and Coup...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P40054" data-a="GO:0047545" data-r="PMID:26774271" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This provides genetic interaction evidence for the 2-hydroxyglutarate dehydrogenase activity. The IGI evidence complements the direct biochemical evidence.
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26774271" target="_blank" class="term-link">
+                                        PMID:26774271
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Genetic analysis confirmed the role of Ser3p in D-2-hydroxyglutarate detoxification pathway</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004617" target="_blank" class="term-link">
+                                    GO:0004617
+                                </a>
+                            </span>
+                            <span class="term-label">phosphoglycerate dehydrogenase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12525494" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12525494
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Ser3p (Yer081wp) and Ser33p (Yil074cp) are phosphoglycerate ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P40054" data-a="GO:0004617" data-r="PMID:12525494" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is strong experimental support for the primary function of Ser3p. This key study demonstrated that Ser3p and Ser33p are the yeast phosphoglycerate dehydrogenases through mutant phenotype analysis.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006564" target="_blank" class="term-link">
+                                    GO:0006564
+                                </a>
+                            </span>
+                            <span class="term-label">L-serine biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12525494" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12525494
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Ser3p (Yer081wp) and Ser33p (Yil074cp) are phosphoglycerate ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P40054" data-a="GO:0006564" data-r="PMID:12525494" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Excellent experimental evidence for SER3 role in serine biosynthesis. This study showed that deletion of both SER3 and SER33 renders yeast auxotrophic for serine, confirming their essential role in serine production.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Catalyzes the first and committed step of L-serine biosynthesis by oxidizing 3-phosphoglycerate to 3-phosphohydroxypyruvate with NAD+ as cofactor</h3>
+                <span class="vote-buttons" data-g="P40054" data-a="FUNCTION: Catalyzes the first and committed step of L-serine..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004617" target="_blank" class="term-link">
+                            phosphoglycerate dehydrogenase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Secondary activity that converts D-2-hydroxyglutarate to α-ketoglutarate, potentially serving a detoxification role</h3>
+                <span class="vote-buttons" data-g="P40054" data-a="FUNCTION: Secondary activity that converts D-2-hydroxyglutar..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0047545" target="_blank" class="term-link">
+                            2-hydroxyglutarate dehydrogenase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10688190" target="_blank" class="term-link">
+                            PMID:10688190
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A comprehensive analysis of protein-protein interactions in Saccharomyces cerevisiae.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12525494" target="_blank" class="term-link">
+                            PMID:12525494
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Ser3p (Yer081wp) and Ser33p (Yil074cp) are phosphoglycerate dehydrogenases in Saccharomyces cerevisiae.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/14562095" target="_blank" class="term-link">
+                            PMID:14562095
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Global analysis of protein localization in budding yeast.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16120614" target="_blank" class="term-link">
+                            PMID:16120614
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Serinc, an activity-regulated protein family, incorporates serine into membrane lipid synthesis.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16429126" target="_blank" class="term-link">
+                            PMID:16429126
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Proteome survey reveals modularity of the yeast cell machinery.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16554755" target="_blank" class="term-link">
+                            PMID:16554755
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Global landscape of protein complexes in the yeast Saccharomyces cerevisiae.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18719252" target="_blank" class="term-link">
+                            PMID:18719252
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">High-quality binary protein interaction map of the yeast interactome network.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/26527276" target="_blank" class="term-link">
+                            PMID:26527276
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Serine and SAM Responsive Complex SESAME Regulates Histone Modification Crosstalk by Sensing Cellular Metabolism.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/26774271" target="_blank" class="term-link">
+                            PMID:26774271
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Saccharomyces cerevisiae Forms D-2-Hydroxyglutarate and Couples Its Degradation to D-Lactate Formation via a Cytosolic Transhydrogenase.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/31454312" target="_blank" class="term-link">
+                            PMID:31454312
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The role of structural pleiotropy and regulatory evolution in the retention of heteromers of paralogs.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/37968396" target="_blank" class="term-link">
+                            PMID:37968396
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The social and structural architecture of the yeast protein interactome.</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(SER3-deep-research.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P40054" data-a="DOC: Deep Research" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="deep-research-report-ser3-yeast">Deep Research Report: SER3 (yeast)</h1>
+<p>Generated using OpenAI Deep Research API</p>
+<p>UniProt ID: P40054<br />
+Directory alias: SER3</p>
+<hr />
+<h1 id="ser3-d-3-phosphoglycerate-dehydrogenase-1-comprehensive-gene-report">SER3 (D-3-Phosphoglycerate Dehydrogenase 1) – Comprehensive Gene Report</h1>
+<h2 id="gene-function-and-molecular-mechanisms">Gene Function and Molecular Mechanisms</h2>
+<p><strong>Enzymatic Activity:</strong> The <em>SER3</em> gene of <em>Saccharomyces cerevisiae</em> encodes D-3-phosphoglycerate dehydrogenase 1, an enzyme that catalyzes the first step of the phosphorylated L-serine biosynthesis pathway (<a href="https://www.ncbi.nlm.nih.gov/gene/856814#:~:text=Summary%20Enables%20alpha,Orthologous%20to%20human%20PHGDH">www.ncbi.nlm.nih.gov</a>). Specifically, Ser3p oxidizes 3-phospho-D-glycerate (a glycolytic intermediate) to 3-phosphohydroxypyruvate (also called 3-phosphonooxypyruvate), with the concurrent reduction of NAD^+ to NADH (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6300728/#:~:text=consists%20of%20three%20enzymes%2C%20d,and%20Type%20I%20PGDHs">pmc.ncbi.nlm.nih.gov</a>). This <strong>phosphoglycerate dehydrogenase activity (GO:0004617)</strong> initiates de novo L-serine production from carbohydrate metabolites (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6300728/#:~:text=consists%20of%20three%20enzymes%2C%20d,and%20Type%20I%20PGDHs">pmc.ncbi.nlm.nih.gov</a>). In addition to its primary activity, Ser3p also exhibits <strong>alpha-ketoglutarate reductase activity (GO:0061759)</strong> – it can reversibly reduce α-ketoglutarate to D-2-hydroxyglutarate (and oxidize D-2-hydroxyglutarate back to α-ketoglutarate) (<a href="https://www.ncbi.nlm.nih.gov/gene/856814#:~:text=Summary%20Enables%20alpha,Orthologous%20to%20human%20PHGDH">www.ncbi.nlm.nih.gov</a>) (<a href="https://www.yeastgenome.org/locus/S000000883#:~:text=D,4%7D%20Name%20Description">www.yeastgenome.org</a>). The dual specificity means Ser3p links central carbon metabolism with amino acid synthesis, potentially influencing redox balance. Indeed, deletion of both <em>SER3</em> and its paralog <em>SER33</em> disrupts NAD^+/NADH-dependent metabolism, reflecting the enzyme’s important role in cellular redox homeostasis (<a href="https://pubmed.ncbi.nlm.nih.gov/12525494/#:~:text=SER2,by%20substrate%20and%20product%20analysis">pubmed.ncbi.nlm.nih.gov</a>). Notably, like other D-3-phosphoglycerate dehydrogenases, Ser3p requires NAD^+ as a cofactor and produces NADH, tying serine biosynthesis to the cell’s redox state (<a href="https://pubmed.ncbi.nlm.nih.gov/12525494/#:~:text=SER2,by%20substrate%20and%20product%20analysis">pubmed.ncbi.nlm.nih.gov</a>). </p>
+<p><strong>Molecular Mechanism and Regulation:</strong> In many organisms, 3-phosphoglycerate dehydrogenases are subject to feedback inhibition by L-serine, although regulatory mechanisms can differ by species (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6300728/#:~:text=concomitant%20with%20the%20reduction%20of,systems%20range%20from%20microcephaly%20at">pmc.ncbi.nlm.nih.gov</a>). Yeast Ser3p is part of this conserved enzyme family; enzymatically, it likely follows a similar ordered binding mechanism where 3-phosphoglycerate and NAD^+ must bind for catalysis to proceed (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6300728/#:~:text=consists%20of%20three%20enzymes%2C%20d,and%20Type%20I%20PGDHs">pmc.ncbi.nlm.nih.gov</a>). However, evidence suggests yeast mainly regulates serine synthesis at the gene-expression level (see <strong>Expression Patterns and Regulation</strong> below). Ser3p is known to be post-translationally <strong>phosphorylated</strong> on multiple serine residues near its N-terminus by the TORC1 kinase signaling pathway (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12234008/#:~:text=phosphorylation%20of%20several%20residues%20near,reactions%20are%20completely%20dependent%20on">pmc.ncbi.nlm.nih.gov</a>). This phosphorylation – which occurs in a Pib2-dependent manner (Pib2 being a TORC1-associated regulator) – is rapidly responsive to nutrient conditions (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12234008/#:~:text=gel%20measuring%20Ser33%20phosphorylation%20before,transfer%20to%20synthetic%20medium">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12234008/#:~:text=match%20at%20L490%20Ser33%20phosphorylation,as%20detailed%20in">pmc.ncbi.nlm.nih.gov</a>). Both Ser3p and Ser33p are direct targets of TORC1: under nutrient-rich conditions, TORC1 phosphorylates Ser3/Ser33, whereas starvation or rapamycin treatment leads to their dephosphorylation (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12234008/#:~:text=Next%2C%20we%20wanted%20to%20identify,Figure">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12234008/#:~:text=The%20pattern%20of%20regulation%20seen,or%20properties%29%20does">pmc.ncbi.nlm.nih.gov</a>). Pib2 physically interacts with Ser3/Ser33, recruiting them to TORC1 for modification (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12234008/#:~:text=We%20also%20wanted%20to%20understand,that%20Ser3%20and%20Ser33%20are">pmc.ncbi.nlm.nih.gov</a>). While the functional consequence of Ser3p phosphorylation is still being explored, a phospho-mimetic vs. phospho-null Ser33 was shown to affect growth on serine/glycine-deficient media (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12234008/#:~:text=match%20at%20L422%20Ser33,diluted%20into%20fresh%20medium%20missing">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12234008/#:~:text=match%20at%20L547%20Finally%2C%20to,in%20a">pmc.ncbi.nlm.nih.gov</a>), suggesting that TORC1-mediated phosphorylation modulates enzyme activity or stability as part of nutrient sensing. In summary, Ser3p catalyzes a key redox reaction in serine biosynthesis and is integrated into cellular signaling networks that fine-tune metabolic flux.</p>
+<h2 id="cellular-localization-and-subcellular-components">Cellular Localization and Subcellular Components</h2>
+<p>Ser3p is a cytosolic enzyme, consistent with its role in central metabolism. High-throughput localization studies and GO annotations indicate Ser3p is found in the <strong>cytoplasm (GO:0005737)</strong> (<a href="https://www.ncbi.nlm.nih.gov/gene/856814#:~:text=Summary%20Enables%20alpha,Orthologous%20to%20human%20PHGDH">www.ncbi.nlm.nih.gov</a>). No signal peptides or organelle-targeting sequences are present, and the protein lacks membrane-spanning domains, supporting a soluble cytosolic localization. This is in line with other enzymes of amino acid biosynthesis, which typically operate in the cytosol of yeast cells. Furthermore, the enzymatic substrates (3-phosphoglycerate from glycolysis) and products (3-phosphohydroxypyruvate, serine) are cytosolic metabolites, so a cytosolic locale is functionally logical. It has not been reported to localize to mitochondria, peroxisomes, or other organelles; rather, Ser3p likely diffuses in the cytosol or may associate with cytosolic metabolic complexes. Some metabolic enzymes in yeast form multi-enzyme complexes or reside in metabolons, but specific interaction partners of Ser3p in vivo are not well characterized. Current evidence thus supports that Ser3p primarily resides in the cytosol, where it can readily access glycolytic intermediates and contribute to serine and glycine biosynthesis (<a href="https://www.ncbi.nlm.nih.gov/gene/856814#:~:text=Summary%20Enables%20alpha,Orthologous%20to%20human%20PHGDH">www.ncbi.nlm.nih.gov</a>). This localization is also supported by the lack of any known organelle-targeting motifs in the SER3 sequence and by global proteomic studies of yeast protein location. In summary, Ser3p functions in the <strong>cytoplasm</strong>, aligning with the cellular compartment where serine biosynthetic processes occur.</p>
+<h2 id="biological-processes-involvement">Biological Processes Involvement</h2>
+<p><strong>L-Serine and Glycine Biosynthesis:</strong> Ser3p plays an essential role in the <strong>L-serine biosynthetic process (GO:0006564)</strong> (<a href="https://www.ncbi.nlm.nih.gov/gene/856814#:~:text=Summary%20Enables%20alpha,Orthologous%20to%20human%20PHGDH">www.ncbi.nlm.nih.gov</a>). It catalyzes the committed first step of the <em>phosphorylated pathway</em> of serine synthesis, converting 3-phosphoglycerate (3PG) into 3-phosphohydroxypyruvate. This pathway consists of three enzymes: Ser3p/Ser33p (3-phosphoglycerate dehydrogenase), Ser1p (phosphoserine aminotransferase), and Ser2p (phosphoserine phosphatase) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6300728/#:~:text=d,Type">pmc.ncbi.nlm.nih.gov</a>). Together, they produce L-serine from the glycolytic intermediate 3PG. Because serine is a precursor to glycine (via serine hydroxymethyltransferase) and other metabolites (such as cysteine and one-carbon tetrahydrofolate units), <em>SER3</em> also indirectly supports <strong>glycine biosynthesis and one-carbon metabolism</strong>. Indeed, the serine/glycine biosynthetic pathways in yeast are interconnected (“serine-glycine superpathway”), and a block in <em>SER3</em> can lead to auxotrophy for both serine and glycine (<a href="https://pubmed.ncbi.nlm.nih.gov/12525494/#:~:text=for%20growth%20on%20glucose%20media,data%20on%20enzyme%20activities%2C%20Ser33p">pubmed.ncbi.nlm.nih.gov</a>). Experimental genetics confirmed this linkage: yeast cells lacking both <em>SER3</em> and <em>SER33</em> cannot synthesize serine or glycine de novo and thus require exogenous serine or glycine for growth (<a href="https://pubmed.ncbi.nlm.nih.gov/12525494/#:~:text=for%20growth%20on%20glucose%20media,data%20on%20enzyme%20activities%2C%20Ser33p">pubmed.ncbi.nlm.nih.gov</a>). Even a single functional 3-phosphoglycerate dehydrogenase is typically sufficient for viability on rich or minimal glucose media, but complete loss of the first step disrupts the entire serine pathway, underscoring Ser3p’s central role.</p>
+<p><strong>Metabolic Flexibility:</strong> The requirement for the Ser3p-mediated pathway is conditional on carbon source and nutrient availability (<a href="https://pubmed.ncbi.nlm.nih.gov/12525494/#:~:text=for%20growth%20on%20glucose%20media,data%20on%20enzyme%20activities%2C%20Ser33p">pubmed.ncbi.nlm.nih.gov</a>). In fermentative growth on glucose, the phosphoglycerate pathway is the dominant route for serine and glycine synthesis (the alternative glyoxylate-dependent pathway is repressed by high glucose) (<a href="https://pubmed.ncbi.nlm.nih.gov/12525494/#:~:text=for%20growth%20on%20glucose%20media,data%20on%20enzyme%20activities%2C%20Ser33p">pubmed.ncbi.nlm.nih.gov</a>). Under these conditions, Ser3p/Ser33p activity is critical. In contrast, during growth on non-fermentable carbon sources (e.g. ethanol), yeast can utilize a glyoxylate bypass for glycine/serine biosynthesis, and expression of <em>SER3</em> (and other SER genes) is greatly reduced (<a href="https://pubmed.ncbi.nlm.nih.gov/12525494/#:~:text=for%20growth%20on%20glucose%20media,data%20on%20enzyme%20activities%2C%20Ser33p">pubmed.ncbi.nlm.nih.gov</a>). This indicates Ser3p is involved in metabolic adaptation: it is highly needed in glycolytic (high glucose) conditions but less so when cells rely on gluconeogenic substrates. Additionally, the enzyme’s secondary activity in converting α-ketoglutarate to D-2-hydroxyglutarate ties <em>SER3</em> to <strong>2-hydroxyglutarate metabolic process</strong> (a normally minor metabolic side-pathway). While yeast does not typically accumulate 2-hydroxyglutarate, under certain stress or metabolic perturbations, Ser3p could help detoxify excess D-2-hydroxyglutarate by oxidizing it back to α-ketoglutarate (<a href="https://www.ncbi.nlm.nih.gov/gene/856814#:~:text=Summary%20Enables%20alpha,Orthologous%20to%20human%20PHGDH">www.ncbi.nlm.nih.gov</a>). This reaction links amino acid metabolism with the TCA cycle, suggesting a role in maintaining metabolic balance when unusual metabolites accumulate. </p>
+<p><strong>Additional Processes:</strong> By contributing to serine production, Ser3p influences downstream processes that depend on serine and glycine. These include protein synthesis (serine incorporation into proteins), nucleotide and phospholipid biosynthesis (serine is a precursor for purines, pyrimidines, and phosphatidylserine), and one-carbon unit generation (serine hydroxymethyltransferase converts serine to glycine and one-carbon units for folate cycle). Therefore, <em>SER3</em> is indirectly involved in <strong>one-carbon metabolism and nucleotide biosynthetic processes</strong>, although these are not direct GO annotations for Ser3p but rather consequences of serine availability. In summary, <em>SER3</em> is chiefly involved in amino acid biosynthesis – specifically the production of serine (and by extension glycine) – and thereby underpins multiple biosynthetic and metabolic processes within the cell (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6300728/#:~:text=consists%20of%20three%20enzymes%2C%20d,and%20Type%20I%20PGDHs">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pubmed.ncbi.nlm.nih.gov/12525494/#:~:text=for%20growth%20on%20glucose%20media,data%20on%20enzyme%20activities%2C%20Ser33p">pubmed.ncbi.nlm.nih.gov</a>).</p>
+<h2 id="disease-associations-and-phenotypes">Disease Associations and Phenotypes</h2>
+<p><strong>Yeast Phenotypes:</strong> In <em>S. cerevisiae</em>, loss of <em>SER3</em> alone causes relatively mild phenotypes under typical lab conditions due to the presence of the paralog <em>SER33</em>. However, <em>SER3</em> was originally identified through mutants requiring serine for growth (“Serine requiring” mutants) (<a href="https://www.yeastgenome.org/locus/S000000883#:~:text=Summary%20SER3%20has%20a%20paralog%2C,from%20the%20whole%20genome%20duplication">www.yeastgenome.org</a>) (<a href="https://www.yeastgenome.org/locus/S000000883#:~:text=Description%203,ketoglutarate%20to">www.yeastgenome.org</a>). A double knockout of <em>SER3</em> and <em>SER33</em> renders yeast auxotrophic for serine (and glycine), leading to inability to grow on media lacking these amino acids (<a href="https://pubmed.ncbi.nlm.nih.gov/12525494/#:~:text=genes,by%20substrate%20and%20product%20analysis">pubmed.ncbi.nlm.nih.gov</a>). This auxotrophy is the primary phenotype associated with <em>SER3</em> dysfunction – cells cannot perform de novo serine biosynthesis and thus display growth defects unless serine or glycine is supplemented. Additionally, because the Ser3p reaction helps regenerate NADH, <em>ser3Δ ser33Δ</em> mutants show perturbations in redox metabolism, evidenced by abnormal balances of pathway substrates and products (<a href="https://pubmed.ncbi.nlm.nih.gov/12525494/#:~:text=SER2,by%20substrate%20and%20product%20analysis">pubmed.ncbi.nlm.nih.gov</a>). Such redox imbalance may manifest in altered growth rates or sensitivity to stress conditions that challenge NAD^+/NADH homeostasis. No lethal phenotypes are associated with <em>SER3</em> deletion alone, but fitness may decrease in high-serine-demand scenarios (e.g. rapid proliferation) or in certain nutrient environments.</p>
+<p><strong>Human Disease Associations:</strong> While yeast itself does not suffer “diseases,” the human ortholog of <em>SER3</em> provides insight into the enzyme’s importance in health. The human enzyme phosphoglycerate dehydrogenase (PHGDH) performs the same first step of serine biosynthesis, and mutations in <strong>PHGDH</strong> are known to cause Neu-Laxova syndrome 1 and other serine biosynthesis disorders (<a href="https://www.ncbi.nlm.nih.gov/gene/856814#:~:text=Summary%20Enables%20alpha,Orthologous%20to%20human%20PHGDH">www.ncbi.nlm.nih.gov</a>). Neu-Laxova syndrome is a rare congenital metabolic disorder characterized by severe developmental defects (including microcephaly, skin and limb abnormalities) and is often fatal; it results from loss-of-function mutations in the serine biosynthetic pathway, most frequently in PHGDH (<a href="https://www.ncbi.nlm.nih.gov/gene/856814#:~:text=Summary%20Enables%20alpha,Orthologous%20to%20human%20PHGDH">www.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6300728/#:~:text=of%20domain%20content%20that%20correlates,a%20wide%20array%20of%20cancers">pmc.ncbi.nlm.nih.gov</a>). More moderate PHGDH deficiencies can lead to <strong>PHGDH-related amino acid metabolic disorder</strong>, where patients suffer from low serine/glycine levels, neurological symptoms (seizures, psychomotor retardation), and must be treated with serine supplementation (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6300728/#:~:text=of%20domain%20content%20that%20correlates,a%20wide%20array%20of%20cancers">pmc.ncbi.nlm.nih.gov</a>). These human conditions underscore the fundamental role of this enzymatic activity in organisms – a role conserved in yeast <em>SER3</em>. There is also interest in PHGDH overexpression in cancer: certain cancers upregulate serine biosynthesis to support rapid cell growth, and PHGDH has been identified as a contributor to tumor cell proliferation (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6300728/#:~:text=birth%2C%20seizures%2C%20and%20psychomotor%20retardation,studied%20PGDHs%20are%20bacterial">pmc.ncbi.nlm.nih.gov</a>). While yeast <em>SER3</em> is not directly linked to human disease, it is used as a model to study basic aspects of serine metabolism that are relevant to these conditions. For instance, yeast lacking serine biosynthesis can mimic aspects of serine-starvation stress, and yeast Ser3p has been studied to understand enzymatic regulation that might inform cancer metabolism. In summary, mutations in the human counterpart PHGDH cause serious metabolic diseases (Neu-Laxova syndrome, serine deficiency disorders) (<a href="https://www.ncbi.nlm.nih.gov/gene/856814#:~:text=Summary%20Enables%20alpha,Orthologous%20to%20human%20PHGDH">www.ncbi.nlm.nih.gov</a>), highlighting by homology that <em>SER3</em> performs a crucial, conserved metabolic function.</p>
+<h2 id="protein-domains-and-structural-features">Protein Domains and Structural Features</h2>
+<p>Ser3p is a 469 amino acid protein with a multi-domain architecture typical of D-3-phosphoglycerate dehydrogenases. It contains an N-terminal region that binds NAD^+ (a Rossmann-fold domain for nucleotide binding) and a central catalytic domain that binds the substrate 3-phosphoglycerate (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6300728/#:~:text=consists%20of%20three%20enzymes%2C%20d,and%20Type%20I%20PGDHs">pmc.ncbi.nlm.nih.gov</a>). In addition, the C-terminal portion of Ser3p likely forms a regulatory domain. Many enzymes in this family have a small regulatory domain (often an <strong>ACT domain</strong>) that binds serine or other effectors to modulate activity (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6300728/#:~:text=concomitant%20with%20the%20reduction%20of,systems%20range%20from%20microcephaly%20at">pmc.ncbi.nlm.nih.gov</a>). D-3-phosphoglycerate dehydrogenases across species are classified into types based on domain composition: <strong>Type II enzymes</strong> (like yeast Ser3p) have the ACT regulatory domain appended, whereas Type I have an additional oligomerization domain (ASB domain) and Type III lack any regulatory domain (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6300728/#:~:text=Three%20types%20of%20PGDH%20can,Dietary">pmc.ncbi.nlm.nih.gov</a>). The yeast enzyme is predicted to be feedback-inhibited by serine binding to its ACT domain, although <em>in vivo</em> this regulation may be overshadowed by transcriptional control. Structurally, homologous enzymes (e.g. <em>E. coli</em> and human PHGDH) form homotetramers or homodimers, with each subunit contributing an active site and (for those with ACT domains) allosteric sites that sense serine levels (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6300728/#:~:text=concomitant%20with%20the%20reduction%20of,systems%20range%20from%20microcephaly%20at">pmc.ncbi.nlm.nih.gov</a>). By analogy, Ser3p likely functions as a homomultimer (the exact oligomeric state in yeast has not been experimentally confirmed, but bacterial and human PGDHs form tetramers). Key conserved residues in the active site include a catalytic histidine and arginine that interact with the substrate’s phosphate and hydroxyl groups (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3294004/#:~:text=is%20synthesized%20from%20D,to%20NADH">pmc.ncbi.nlm.nih.gov</a>), and these residues are conserved in yeast Ser3p, suggesting a similar catalytic mechanism as other PGDHs. </p>
+<p>Ser3p also has sites of post-translational modification. Several serine residues near the N-terminus serve as phosphorylation sites for TORC1 signaling (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12234008/#:~:text=phosphorylation%20of%20several%20residues%20near,reactions%20are%20completely%20dependent%20on">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12234008/#:~:text=phosphorylation%20sites%20on%20Ser33,cells%20grown%20in%20SD%20medium">pmc.ncbi.nlm.nih.gov</a>). These phosphosites (e.g., Ser20, Ser22, Ser28, Ser29 in Ser33p; Ser3 may have analogous positions) do not disrupt the enzyme’s catalytic domains but may create docking sites or conformational changes affecting enzyme function or protein-protein interactions (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12234008/#:~:text=phosphorylation%20sites%20on%20Ser33,cells%20grown%20in%20SD%20medium">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12234008/#:~:text=We%20also%20wanted%20to%20understand,that%20Ser3%20and%20Ser33%20are">pmc.ncbi.nlm.nih.gov</a>). No enzymatic active-site phosphorylation has been noted, implying regulation by phosphorylation is likely modulatory rather than directly inhibitory to substrate binding. Beyond phosphorylation, no other covalent modifications (such as acetylation or ubiquitination) are well documented for Ser3p, but large-scale proteomic surveys could reveal additional sites. </p>
+<p>In summary, Ser3p’s structural layout consists of: an N-terminal cofactor-binding domain, a central catalytic domain, and a C-terminal regulatory domain. This architecture is consistent with a role for allosteric regulation (binding of effector molecules like serine) and oligomerization. The presence of conserved domains and motifs underscores the evolutionary conservation of mechanism – yeast Ser3p shares the structural features necessary for its dehydrogenase activity and likely for feedback control, akin to its bacterial and mammalian counterparts (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6300728/#:~:text=Three%20types%20of%20PGDH%20can,Dietary">pmc.ncbi.nlm.nih.gov</a>).</p>
+<h2 id="expression-patterns-and-regulation">Expression Patterns and Regulation</h2>
+<p>Expression of <em>SER3</em> is tightly regulated, reflecting the cell’s need to produce serine only when required. <strong>Transcriptional Regulation:</strong> <em>SER3</em> is subject to a unique form of transcriptional repression via a cryptic upstream non-coding RNA. Under serine-replete conditions, a noncoding RNA called <strong>SRG1</strong> (Serine Regulatory Gene 1) is transcribed from the intergenic region upstream of <em>SER3</em>. Transcription of <em>SRG1</em> across the <em>SER3</em> promoter interferes with <em>SER3</em> transcription, effectively silencing <em>SER3</em> when exogenous serine is abundant (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC1283962/#:~:text=Recent%20studies%20have%20revealed%20that,dependent">pmc.ncbi.nlm.nih.gov</a>). This mechanism, known as transcriptional interference, was discovered as one of the first examples of a regulatory long noncoding RNA in yeast. The expression of <em>SRG1</em> (and hence repression of <em>SER3</em>) is itself controlled by serine levels: when cells have plenty of serine, <em>SRG1</em> is highly expressed; when serine is scarce, <em>SRG1</em> transcription is diminished, allowing <em>SER3</em> mRNA to be produced (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC1283962/#:~:text=poorly%20understood,dependent">pmc.ncbi.nlm.nih.gov</a>). A serine-responsive transcription factor <strong>Cha4</strong> is required for this regulation (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC1283962/#:~:text=serine%20biosynthetic%20gene,activation%20of%20SRG1%20and%20transcription">pmc.ncbi.nlm.nih.gov</a>). Cha4p binds to the SRG1 promoter in the presence of serine and, with co-activator complexes SAGA and Swi/Snf, activates <em>SRG1</em> transcription (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC1283962/#:~:text=serine%20biosynthetic%20gene,activation%20of%20SRG1%20and%20transcription">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC1283962/#:~:text=Swi%2FSnf%20are%20required%20for%20SER3,results%20and%20previous%20work%20that">pmc.ncbi.nlm.nih.gov</a>). Thus, in serine-rich medium, Cha4p indirectly represses <em>SER3</em> by turning on <em>SRG1</em> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC1283962/#:~:text=repression%20of%20SER3,show%20that%20both%20SAGA%20and">pmc.ncbi.nlm.nih.gov</a>). In serine-starvation conditions, <em>SRG1</em> is not induced (Cha4p is inactive without serine), and the <em>SER3</em> promoter is free of interference, leading to robust <em>SER3</em> expression to synthesize serine de novo (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC1283962/#:~:text=serine%20biosynthetic%20gene,activation%20of%20SRG1%20and%20transcription">pmc.ncbi.nlm.nih.gov</a>). This elegant regulatory circuit ensures <em>SER3</em> is off when serine can be obtained from the environment or from catabolic pathways, and on when the cell must synthesize serine. </p>
+<p>In addition to this specific regulation, <em>SER3</em> is part of the general amino acid control network. Under amino acid starvation (e.g. histidine limitation causing uncharged tRNAs), the transcription factor <strong>Gcn4p</strong> is activated and can bind to promoters of many amino acid biosynthetic genes. Genome-wide studies show <em>SER3</em> (and its paralog <em>SER33</em>) are upregulated by Gcn4p during amino acid starvation (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC87095/#:~:text=intermediate%2C%20by%20sequential%20action%20of,it%20is%20possible%20that%20Gcn4p">pmc.ncbi.nlm.nih.gov</a>). Thus, <em>SER3</em> has upstream activating sequences for both the general control (GCN4) and the serine-specific (Cha4/SRG1) systems. General control ensures <em>SER3</em> transcripts increase when any amino acid is lacking, whereas the SRG1 mechanism fine-tunes <em>SER3</em> based on serine availability in particular. <em>SER3</em> is also co-regulated with other serine-pathway genes (<em>SER1</em>, <em>SER2</em>, <em>SER33</em>) in response to nitrogen source quality (<a href="https://pubmed.ncbi.nlm.nih.gov/12525494/#:~:text=ethanol%20both%20expression%20and%20activity,since%20phosphoglycerate%20dehydrogenase%20activity%20requires">pubmed.ncbi.nlm.nih.gov</a>). For example, on poor nitrogen sources or in the absence of preferred nitrogen, the cell tends to elevate expression of amino acid biosynthesis genes. Interestingly, <em>SER33</em> (but not <em>SER3</em>) shows strong coordinated regulation with <em>SER1</em>/<em>SER2</em> according to nitrogen availability (<a href="https://pubmed.ncbi.nlm.nih.gov/12525494/#:~:text=ethanol%20both%20expression%20and%20activity,since%20phosphoglycerate%20dehydrogenase%20activity%20requires">pubmed.ncbi.nlm.nih.gov</a>). <em>SER3</em> expression is relatively insensitive to nitrogen source and instead chiefly responds to serine levels via SRG1 (<a href="https://pubmed.ncbi.nlm.nih.gov/12525494/#:~:text=ethanol%20both%20expression%20and%20activity,since%20phosphoglycerate%20dehydrogenase%20activity%20requires">pubmed.ncbi.nlm.nih.gov</a>). This suggests divergence in regulatory control between the two paralogs: <em>SER33</em> handles basal serine production tuned to nitrogen and growth conditions, whereas <em>SER3</em> serves as an “emergency” gene induced when serine is lacking or under unique conditions.</p>
+<p><strong>Expression Pattern:</strong> In rich media with amino acids present (such as standard YPD), <em>SER3</em> mRNA is low due to repression by SRG1. If cells are grown in minimal media lacking serine (and glycine), <em>SER3</em> expression is strongly induced. Experiments have shown that shifting cells from serine-rich to serine-dropout media results in activation of <em>SER3</em> transcription once internal serine pools drop (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC1283962/#:~:text=To%20test%20if%20Cha4%20binding,is%20at%20a%20low%20level">pmc.ncbi.nlm.nih.gov</a>). <em>SER3</em> is also induced during amino acid starvation triggered by general control (e.g., addition of 3-AT, which causes histidine starvation, indirectly elevates <em>SER3</em> via Gcn4p) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC87095/#:~:text=intermediate%2C%20by%20sequential%20action%20of,it%20is%20possible%20that%20Gcn4p">pmc.ncbi.nlm.nih.gov</a>). During fermentative growth on glucose, if nitrogen is plentiful, <em>SER3</em> remains off (with <em>SER33</em> handling serine biosynthesis); on ethanol or in respiratory conditions, <em>SER3</em> and <em>SER33</em> expression are both low (since the glyoxylate pathway can supply serine/glycine) (<a href="https://pubmed.ncbi.nlm.nih.gov/12525494/#:~:text=for%20growth%20on%20glucose%20media,data%20on%20enzyme%20activities%2C%20Ser33p">pubmed.ncbi.nlm.nih.gov</a>). Proteomic data (e.g., in response to DNA replication stress) noted increased Ser3p abundance under some stress conditions (<a href="https://www.yeastgenome.org/locus/S000005710#:~:text=SER1%20,6">www.yeastgenome.org</a>), though these observations may be indirect. At the protein level, Ser3p is not abundant in rich medium, but its levels rise when cells must synthesize serine. </p>
+<p>In summary, <em>SER3</em> is tightly regulated by a combination of a serine-responsive lncRNA (SRG1), general amino acid starvation signals (GCN4), and nutrient conditions. Its expression is typically repressed when serine is available and induced when serine is needed, ensuring energy is not wasted on producing an amino acid that can be scavenged, and rapidly supplying serine when external sources are limited (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC1283962/#:~:text=poorly%20understood,dependent">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC1283962/#:~:text=Swi%2FSnf%20are%20required%20for%20SER3,results%20and%20previous%20work%20that">pmc.ncbi.nlm.nih.gov</a>). This multi-tiered regulatory control highlights the importance of <em>SER3</em> in metabolic homeostasis and the sophisticated strategies yeast employs to control amino acid biosynthesis.</p>
+<h2 id="evolutionary-conservation">Evolutionary Conservation</h2>
+<p>The serine biosynthesis enzyme encoded by <em>SER3</em> is highly conserved across evolution. Orthologs of Ser3p exist in bacteria, plants, and animals, underscoring that the <strong>phosphoglycerate dehydrogenase</strong> function is ancient and essential. In bacteria, the enzyme is often called <strong>SerA</strong> (e.g., <em>E. coli</em> SerA) and performs the same 3-phosphoglycerate dehydrogenase reaction as yeast Ser3p. In mammals, a single isozyme (PHGDH in humans) carries out this function and shares significant sequence and structural similarity with yeast Ser3p (<a href="https://www.ncbi.nlm.nih.gov/gene/856814#:~:text=dehydrogenase%20activity.%20Involved%20in%20L,Orthologs%20all">www.ncbi.nlm.nih.gov</a>). The human PHGDH is ~533 amino acids (longer than yeast’s 469 aa, due to an extra regulatory/oligomerization domain as a Type I PGDH) but retains the same catalytic domains and key residues (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC7097917/#:~:text=PMC%20pmc,15%7D%2C%20encodes">pmc.ncbi.nlm.nih.gov</a>). Yeast Ser3p and human PHGDH are orthologous proteins: they catalyze identical reactions and their amino acid sequences can be aligned with conservation in cofactor binding motifs and active site segments. Indeed, human PHGDH functionally complements yeast ser3 mutants in experimental settings, indicating a strong functional conservation (this complementation has been noted in cross-species studies, although direct citation may be limited – however, the implication is clear given the conserved catalytic activity). The Alliance of Genome Resources reports <em>SER3</em> is orthologous to human <em>PHGDH</em> and that human mutations in PHGDH cause metabolic disease (<a href="https://www.ncbi.nlm.nih.gov/gene/856814#:~:text=dehydrogenase%20activity.%20Involved%20in%20L,Orthologs%20all">www.ncbi.nlm.nih.gov</a>), reflecting the conserved role of this enzyme from yeast to humans.</p>
+<p>Within <em>S. cerevisiae</em>, <em>SER3</em> has a closely related paralog, <strong>SER33</strong>, which arose from an ancient whole-genome duplication event (<a href="https://www.yeastgenome.org/locus/S000000883#:~:text=Summary%20SER3%20has%20a%20paralog%2C,from%20the%20whole%20genome%20duplication">www.yeastgenome.org</a>). <em>S. cerevisiae</em> and its relatives in the Saccharomyces sensu stricto group have retained both paralogs, whereas non-duplicated yeast species (like <em>Kluyveromyces lactis</em>) have only a single <em>SER3/SER33</em> homolog. <em>SER3</em> and <em>SER33</em> in S288C yeast share significant sequence identity and appear to encode enzymes with very similar catalytic properties (<a href="https://pubmed.ncbi.nlm.nih.gov/12525494/#:~:text=on%20glucose,by%20substrate%20and%20product%20analysis">pubmed.ncbi.nlm.nih.gov</a>). The duplication allowed subfunctionalization: as discussed, <em>SER33</em> handles most serine biosynthesis during normal growth while <em>SER3</em> became more specialized in regulatory control (e.g., subject to SRG1 repression) (<a href="https://pubmed.ncbi.nlm.nih.gov/12525494/#:~:text=ethanol%20both%20expression%20and%20activity,since%20phosphoglycerate%20dehydrogenase%20activity%20requires">pubmed.ncbi.nlm.nih.gov</a>). Outside the Saccharomyces clade, other fungi typically have one gene corresponding to PGDH; for instance, <em>Schizosaccharomyces pombe</em> has a single serine dehydrogenase gene. Plants often carry multiple PGDH isozymes (in part due to independent gene duplications) which localize to plastids for serine production during photosynthesis. Despite these differences, the enzymatic function is conserved, and even the regulatory logic (feedback inhibition by serine or transcriptional control by amino acid availability) is recapitulated in various organisms. The conservation of Ser3p is further evident in the presence of conserved domains (Rossmann fold, ACT domain) and the requirement of this enzyme for viability in organisms that cannot obtain sufficient serine from diet or environment. </p>
+<p>In summary, <em>SER3</em> belongs to a conserved gene family present in all domains of life. The yeast enzyme shares homology with bacterial <strong>serA</strong> genes and the human <strong>PHGDH</strong> gene (<a href="https://www.ncbi.nlm.nih.gov/gene/856814#:~:text=dehydrogenase%20activity.%20Involved%20in%20L,Orthologs%20all">www.ncbi.nlm.nih.gov</a>). Evolutionary retention of <em>SER3</em> and the emergence of a duplicate (<em>SER33</em>) in yeast underline the enzyme’s importance. The whole-genome duplication in yeast allowed one copy (<em>SER33</em>) to maintain routine metabolic function while the other (<em>SER3</em>) evolved specialized regulation, demonstrating an evolutionary strategy to fine-tune an essential metabolic pathway. This conservation and diversification make <em>SER3</em> a paradigmatic example of an essential metabolic gene shaped by evolutionary pressures for both robust function and regulatory innovation.</p>
+<h2 id="key-experimental-evidence-and-literature">Key Experimental Evidence and Literature</h2>
+<ul>
+<li>
+<p><strong>Identification of SER3 and Enzymatic Function:</strong> <em>SER3</em> was first characterized genetically as a locus required for serine biosynthesis in yeast. Early studies (e.g., Ulane and Ogur 1972) identified serine auxotrophic mutants (“serine requiring”) defining genes later named <em>SER1, SER2,</em> and <em>SER3</em> involved in serine and glycine biosynthesis. The molecular identity of <em>SER3</em> (YER081W) as 3-phosphoglycerate dehydrogenase was confirmed by Albers <em>et al.</em> (2003) (<a href="https://pubmed.ncbi.nlm.nih.gov/12525494/#:~:text=Ser2p,by%20substrate%20and%20product%20analysis">pubmed.ncbi.nlm.nih.gov</a>), who showed that YER081W (renamed <em>SER3</em>) and its homolog YIL074C (<em>SER33</em>) encode the enzymatic activity converting 3-phosphoglycerate to 3-phosphohydroxypyruvate. Albers <em>et al.</em> measured enzyme activity in deletion strains and noted that only when both <em>SER3</em> and <em>SER33</em> were deleted was PGDH activity abolished, confirming overlapping function (<a href="https://pubmed.ncbi.nlm.nih.gov/12525494/#:~:text=relation%20to%20the%20available%20nitrogen,by%20substrate%20and%20product%20analysis">pubmed.ncbi.nlm.nih.gov</a>). They also reported that deletion of both genes severely affects redox metabolism (due to loss of NADH production in this step) (<a href="https://pubmed.ncbi.nlm.nih.gov/12525494/#:~:text=SER2,by%20substrate%20and%20product%20analysis">pubmed.ncbi.nlm.nih.gov</a>). This study established the role of Ser3p/Ser33p in the serine pathway and suggested Ser33p is the predominant isozyme during growth on glucose (<a href="https://pubmed.ncbi.nlm.nih.gov/12525494/#:~:text=Ser2p,by%20substrate%20and%20product%20analysis">pubmed.ncbi.nlm.nih.gov</a>). </p>
+</li>
+<li>
+<p><strong>Regulation by SRG1 lncRNA:</strong> A landmark discovery by Martens <em>et al.</em> (2004) revealed the unusual regulation of <em>SER3</em> by a noncoding RNA. They found that transcription of an intergenic transcript upstream of <em>SER3</em>, named <strong>SRG1</strong>, is necessary and sufficient to repress <em>SER3</em> expression (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC1283962/#:~:text=Recent%20studies%20have%20revealed%20that,dependent">pmc.ncbi.nlm.nih.gov</a>). Further work (Martens <em>et al.</em>, 2005) demonstrated that SRG1 transcription is induced by serine and requires the serine-responsive factor Cha4p (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC1283962/#:~:text=serine%20biosynthetic%20gene,activation%20of%20SRG1%20and%20transcription">pmc.ncbi.nlm.nih.gov</a>). When serine is abundant, Cha4p activates SRG1, which in turn interferes with <em>SER3</em> promoter activity, keeping <em>SER3</em> off (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC1283962/#:~:text=Swi%2FSnf%20are%20required%20for%20SER3,results%20and%20previous%20work%20that">pmc.ncbi.nlm.nih.gov</a>). These studies provided key evidence of transcriptional interference as a regulatory mechanism and tied <em>SER3</em> expression to nutrient signaling. The involvement of chromatin remodelers SAGA and Swi/Snf in SRG1-mediated repression was also shown, indicating a complex regulation at the chromatin level (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC1283962/#:~:text=serine%20biosynthetic%20gene,activation%20of%20SRG1%20and%20transcription">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC1283962/#:~:text=Swi%2FSnf%20are%20required%20for%20SER3,results%20and%20previous%20work%20that">pmc.ncbi.nlm.nih.gov</a>). </p>
+</li>
+<li>
+<p><strong>General Control and Nitrogen Regulation:</strong> Expression profiling by Godard <em>et al.</em> (2007) and others examining Gcn4p targets confirmed <em>SER3</em> and <em>SER33</em> are induced under general amino-acid starvation (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC87095/#:~:text=intermediate%2C%20by%20sequential%20action%20of,it%20is%20possible%20that%20Gcn4p">pmc.ncbi.nlm.nih.gov</a>). Meanwhile, experiments by Albers <em>et al.</em> (2003) noted that <em>SER33</em> (not <em>SER3</em>) responds to changes in nitrogen source in coordination with <em>SER1</em>/<em>SER2</em>, hinting that <em>SER33</em> is regulated by the nitrogen catabolite repression or other nitrogen-sensing pathways (<a href="https://pubmed.ncbi.nlm.nih.gov/12525494/#:~:text=ethanol%20both%20expression%20and%20activity,since%20phosphoglycerate%20dehydrogenase%20activity%20requires">pubmed.ncbi.nlm.nih.gov</a>). This provided evidence that although <em>SER3</em> and <em>SER33</em> encode the same activity, their expression is differentially wired to environmental cues. </p>
+</li>
+<li>
+<p><strong>Biochemical and Structural Studies:</strong> Biochemical characterization of yeast Ser3p per se is less common, but studies on homologous enzymes lend insight. Grant (2018) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6300728/#:~:text=concomitant%20with%20the%20reduction%20of,systems%20range%20from%20microcephaly%20at">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6300728/#:~:text=of%20domain%20content%20that%20correlates,a%20wide%20array%20of%20cancers">pmc.ncbi.nlm.nih.gov</a>) reviewed the structure-function of PGDHs, including yeast, noting the domain structures and the clinical impact of human enzyme deficiencies. No high-resolution crystal structure of yeast Ser3p has been reported to date, but the enzyme is assumed to fold similarly to known PGDH structures (e.g., the E. coli enzyme). The conservation of active-site residues has been confirmed by sequence analysis, supporting this assumption. Site-directed mutagenesis of the human or bacterial enzymes (notably of the serine-binding ACT domain) has illustrated how feedback inhibition operates; analogous mutations in yeast could validate if Ser3p is allosterically inhibited by serine, though this has not been explicitly published.</p>
+</li>
+<li>
+<p><strong>TORC1 Signaling to Ser3/Ser33:</strong> A recent phosphoproteomic study by Hatakeyama <em>et al.</em> (2023) explored how nutrient signals flow through TORC1 to targets like Ser3p/Ser33p (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12234008/#:~:text=phosphorylation%20of%20several%20residues%20near,reactions%20are%20completely%20dependent%20on">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12234008/#:~:text=We%20also%20wanted%20to%20understand,that%20Ser3%20and%20Ser33%20are">pmc.ncbi.nlm.nih.gov</a>). They found that Ser3p and Ser33p are phosphorylated in a TORC1- and Pib2-dependent manner and mapped specific N-terminal phosphorylation sites (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12234008/#:~:text=phosphorylation%20sites%20on%20Ser33,cells%20grown%20in%20SD%20medium">pmc.ncbi.nlm.nih.gov</a>). Using mutants that mimic or abolish phosphorylation, they demonstrated that TORC1-mediated phosphorylation of Ser33p affects yeast growth when serine must be synthesized (i.e., in serine/glycine dropout media) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12234008/#:~:text=match%20at%20L422%20Ser33,diluted%20into%20fresh%20medium%20missing">pmc.ncbi.nlm.nih.gov</a>). This provides experimental evidence that nutrient signaling pathways directly regulate the serine biosynthetic enzymes, linking metabolism and growth control. Such studies help explain how cells globally tune metabolic flux in response to nutrient availability.</p>
+</li>
+<li>
+<p><strong>Metabolic Engineering and Applications:</strong> Applied research has leveraged <em>SER3/SER33</em>. For instance, overexpression of <em>SER3</em> or <em>SER33</em> has been shown to increase serine production and even boost related products like glutathione in engineered yeast strains (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9356478/#:~:text=Metabolic%20engineering%20of%20the%20l,fold%20higher">pmc.ncbi.nlm.nih.gov</a>). Kobayashi <em>et al.</em> (2022) demonstrated that enhancing the serine biosynthesis pathway (by overexpressing <em>SER1, SER2, SER3, SER33</em>) improved glutathione yield, emphasizing the pathway’s flux control points (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9356478/#:~:text=Metabolic%20engineering%20of%20the%20l,fold%20higher">pmc.ncbi.nlm.nih.gov</a>). These experiments confirm that <em>SER3</em> is a rate-limiting step under some conditions and that its activity can influence the levels of downstream metabolites.</p>
+</li>
+</ul>
+<p>Each of the above pieces of evidence contributes to our understanding of <em>SER3</em>. From classical genetics and physiology, to modern genomics and proteomics, a comprehensive picture emerges: <em>SER3</em> encodes a conserved enzyme crucial for serine production, is intricately regulated at multiple levels, and interacts with cellular metabolic and signaling networks. This information is highly relevant for Gene Ontology (GO) curation, as it supports annotations in <strong>Molecular Function</strong> (e.g., <em>phosphoglycerate dehydrogenase activity</em>, <em>2-hydroxyglutarate dehydrogenase activity</em>), <strong>Biological Process</strong> (e.g., <em>L-serine biosynthetic process</em>), and <strong>Cellular Component</strong> (<em>cytoplasm</em>), as well as capturing regulatory modalities and phenotypic outcomes. The rich literature on <em>SER3</em> serves as a foundation for evidence-based annotation, ensuring that databases accurately reflect this gene’s roles in yeast biology. </p>
+<p><strong>References:</strong> Key references include Albers <em>et al.</em>, 2003 (<a href="https://pubmed.ncbi.nlm.nih.gov/12525494/#:~:text=Ser2p,by%20substrate%20and%20product%20analysis">pubmed.ncbi.nlm.nih.gov</a>) (functional identification and expression of Ser3p/Ser33p), Martens <em>et al.</em>, 2004 (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC1283962/#:~:text=Recent%20studies%20have%20revealed%20that,dependent">pmc.ncbi.nlm.nih.gov</a>) and 2005 (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC1283962/#:~:text=serine%20biosynthetic%20gene,activation%20of%20SRG1%20and%20transcription">pmc.ncbi.nlm.nih.gov</a>) (SRG1 noncoding RNA-mediated regulation), Godard <em>et al.</em>, 2007 (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC87095/#:~:text=intermediate%2C%20by%20sequential%20action%20of,it%20is%20possible%20that%20Gcn4p">pmc.ncbi.nlm.nih.gov</a>) (Gcn4 global regulation), and Hatakeyama <em>et al.</em>, 2023 (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12234008/#:~:text=phosphorylation%20of%20several%20residues%20near,reactions%20are%20completely%20dependent%20on">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12234008/#:~:text=We%20also%20wanted%20to%20understand,that%20Ser3%20and%20Ser33%20are">pmc.ncbi.nlm.nih.gov</a>) (TORC1-dependent phosphorylation), among others. These studies, along with database resources like the Saccharomyces Genome Database (SGD) (<a href="https://www.yeastgenome.org/locus/S000000883#:~:text=D,4%7D%20Name%20Description">www.yeastgenome.org</a>) (<a href="https://www.yeastgenome.org/locus/S000000883#:~:text=ketoglutarate%20to%20D,the%20cytoplasm">www.yeastgenome.org</a>) and UniProt/NCBI gene summaries (<a href="https://www.ncbi.nlm.nih.gov/gene/856814#:~:text=Summary%20Enables%20alpha,Orthologs%20all">www.ncbi.nlm.nih.gov</a>), provide a well-rounded, evidence-backed understanding of <em>SER3</em> suitable for high-quality GO annotation. The curated knowledge of <em>SER3</em> ensures that its multi-faceted roles – from enzymatic catalysis to regulatory integration – are captured in biological databases and further underscores the importance of this gene in fundamental cellular metabolism. </p>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon Research</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(SER3-falcon-research.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P40054" data-a="DOC: Falcon Research" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="falcon-research-report-ser3-yeast">Falcon Research Report: SER3 (yeast)</h1>
+<p>Generated using FutureHouse Falcon API</p>
+<p>UniProt ID: P40054<br />
+Directory alias: SER3</p>
+<hr />
+<p>Question: You are a molecular biologist and gene annotation expert conducting comprehensive research to support GO annotation curation.</p>
+<p>Provide detailed, well-cited information focusing on:<br />
+1. Gene function and molecular mechanisms<br />
+2. Cellular localization and subcellular components<br />
+3. Biological processes involvement<br />
+4. Disease associations and phenotypes<br />
+5. Protein domains and structural features<br />
+6. Expression patterns and regulation<br />
+7. Evolutionary conservation<br />
+8. Key experimental evidence and literature</p>
+<p>Format as a comprehensive research report with citations suitable for Gene Ontology annotation curation.</p>
+<p>Research the Saccharomyces cerevisiae gene SER3.</p>
+<p>=== UNIPROT METADATA ===<br />
+UniProt ID: P40054<br />
+Entry Name: SERA_YEAST<br />
+Gene Name: SER3<br />
+Protein Name: D-3-phosphoglycerate dehydrogenase 1<br />
+EC Number: 1.1.1.399<br />
+Organism: Saccharomyces cerevisiae (strain ATCC 204508 / S288c) (Baker's yeast)<br />
+NCBI Taxonomy ID: 559292<br />
+Function: Catalyzes the reversible oxidation of 3-phospho-D-glycerate to 3-phosphonooxypyruvate, the first step of the phosphorylated L- serine biosynthesis pathway. Also catalyzes the reversible oxidation of 2-hydroxyglutarate to 2-oxoglutarate.<br />
+======================</p>
+<p>Provide a comprehensive report covering function, localization, processes, domains, disease associations, expression, conservation, and relevant GO terms.</p>
+<p>IMPORTANT: Focus specifically on the gene identified by the metadata above, particularly the UniProt ID, locus tag, and protein description if provided.</p>
+<p>Sometimes different genes in the same organism have the same name. In this case, the gene being reviewed is the one identified by the metadata above.</p>
+<p>This report presents a comprehensive analysis of the Saccharomyces cerevisiae gene SER3 (UniProt ID: P40054), which encodes D-3-phosphoglycerate dehydrogenase 1, an enzyme pivotal for serine biosynthesis. The analysis covers gene function and molecular mechanisms, cellular localization, involvement in biological processes, phenotypic and disease associations, protein domains and structural features, expression patterns and regulation, evolutionary conservation, and key experimental evidence. The curated details presented herein are intended to inform Gene Ontology (GO) annotation and serve as a detailed resource for experts in molecular biology and gene annotation.</p>
+<ol>
+<li>
+<p>Gene Function and Molecular Mechanisms<br />
+SER3 encodes D-3-phosphoglycerate dehydrogenase 1, an enzyme that catalyzes the reversible oxidation of 3‑phospho‑D‑glycerate to 3‑phosphonooxypyruvate, executing the first committed step in the phosphorylated L‑serine biosynthesis pathway, and is also capable of catalyzing the reversible oxidation of 2‑hydroxyglutarate to 2‑oxoglutarate. This dual catalytic capability underpins its central role in controlling metabolic flux through serine biosynthesis as well as ancillary pathways involving tricarboxylic acid cycle intermediates (ceschin2013analysisofthe pages 20-25). The reaction it catalyzes is of biochemical importance not only for amino acid synthesis but also for maintaining redox balance and providing substrates for downstream metabolic reactions. In addition to its biochemical activity, SER3 is subject to a sophisticated regulatory scheme wherein its transcription is tightly controlled by a noncoding DNA sequence, SRG1, located in its promoter region. Under conditions of high serine availability, the transcription factor Cha4, along with specific chromatin remodeling factors, mediates the transcription of the SRG1 noncoding RNA. This transcription across the SER3 promoter induces extensive nucleosome remodeling that occludes access to activator transcription factors, thereby repressing SER3 expression (ceschin2013analysisofthe pages 20-25). Conversely, when serine levels are low, the cessation of SRG1 transcription leads to a reorganization of nucleosome positioning that facilitates the binding of activators at the SER3 promoter, allowing transcription of SER3 to occur. This regulatory interplay between noncoding transcription and promoter accessibility represents a paradigm for gene regulation through transcriptional interference and chromatin modification (ceschin2013analysisofthe pages 46-52, ceschin2013analysisofthe pages 64-67). Such a model not only emphasizes the role of noncoding RNAs in fine-tuning enzyme activities but also illustrates the integration of metabolic signals with transcriptional control mechanisms at the molecular level (ceschin2013analysisofthe pages 25-31). Consequently, SER3 sits at a critical network junction that modulates amino acid biosynthesis in response to the intracellular serine pool, reinforcing its essential role in cellular metabolism.</p>
+</li>
+<li>
+<p>Cellular Localization and Subcellular Components<br />
+While the primary experimental focus regarding SER3 has been directed toward elucidating its regulatory mechanisms at the transcriptional level, the encoded enzyme’s catalytic function in serine biosynthesis strongly implies a cytosolic localization. Metabolic enzymes involved in amino acid synthesis typically reside in the cytoplasm, where they have ready access to glycolytic intermediates such as 3‑phospho‑D‑glycerate (ceschin2013analysisofthe pages 20-25). Although regulatory mechanisms such as the nucleosome remodeling events triggered by SRG1 transcription are confined to the nucleus, these processes affect the transcription of SER3 without necessarily indicating that the protein product itself is nuclear. In the absence of direct experimental evidence detailing the subcellular distribution of D‑3‑phosphoglycerate dehydrogenase 1, it is reasonable to deduce that SER3 functions predominantly in the cytosol. However, it is also acknowledged that further subcellular localization studies, perhaps employing fluorescence tagging or cell fractionation, would provide unambiguous confirmation of this predicted distribution (ceschin2013analysisofthe pages 75-78). This delineation is critical for understanding how SER3 integrates into the broader cytoplasmic metabolic network while its transcriptional regulation is orchestrated in the nucleus.</p>
+</li>
+<li>
+<p>Biological Process Involvement<br />
+SER3 is integrally involved in several biological processes, foremost among which is the biosynthesis of serine, an amino acid essential for protein synthesis, cellular signaling, and one‑carbon metabolism. Given that the enzyme catalyzes the rate‑limiting step of the phosphorylated serine biosynthesis pathway, alterations in its activity have wide-reaching implications on cellular metabolic homeostasis (ceschin2013analysisofthe pages 20-25). Furthermore, the dynamic regulation of SER3 via intergenic transcription exemplifies a sophisticated method by which cells integrate environmental and metabolic cues into gene expression programs. The regulatory mechanism mediated by SRG1 exemplifies how gene expression can be modulated through changes in local chromatin architecture, which in turn modulates the accessibility of transcription factor binding sites on the promoter (ceschin2013analysisofthe pages 20-25, ceschin2013analysisofthe pages 46-52). Additionally, perturbations in SER3 expression, whether through genetic deletion or misregulation, have been shown to influence other metabolic outcomes such as the altered production of succinate, a metabolite in the tricarboxylic acid (TCA) cycle, thereby linking serine biosynthesis with broader cellular metabolic networks (tsai2015yeastsyntheticbiology pages 7-9). This integration into multiple metabolic pathways underscores SER3’s role not only in amino acid metabolism but also in the regulation of key metabolic intermediates that are essential for energy production and cellular biosynthesis.</p>
+</li>
+<li>
+<p>Disease Associations and Phenotypes<br />
+Although Saccharomyces cerevisiae is primarily employed as a model organism and does not exhibit disease in the conventional sense observed in multicellular organisms, perturbations in SER3 expression and function have significant phenotypic consequences that can serve as proxies for metabolic disorders. For example, the misregulation of SER3 has been implicated in altered metabolic flux distributions, a phenomenon that manifests in engineered yeast strains where co‑deletion of SER3 and SER33 results in dramatically increased succinate production, rising from 30 to 400 mg L⁻¹ (tsai2015yeastsyntheticbiology pages 7-9). Such alterations in metabolite levels are indicative of a broader disruption in cellular homeostasis and can be used to model the metabolic dysregulation observed in various human conditions. Furthermore, the tight regulatory control exerted by the intergenic transcription of SRG1 on SER3 expression suggests that any mutations or disruptions in this regulatory circuit could lead to aberrant expression patterns, which in yeast are often accompanied by growth defects, sensitivity to nutrient availability, and altered responses to environmental stressors (ceschin2013analysisofthe pages 20-25, ceschin2013analysisofthe pages 46-52). While direct disease correlations in yeast are not typically applicable, the insights gleaned from SER3 regulation are highly relevant for understanding analogous metabolic syndromes and regulatory failures in higher eukaryotes, where similar mechanisms of enzyme regulation by noncoding RNAs and chromatin dynamics have been observed.</p>
+</li>
+<li>
+<p>Protein Domains and Structural Features<br />
+The functional capacity of SER3 as a dehydrogenase is underpinned by its protein domains and structural organization. Although the detailed three‑dimensional structure of D‑3‑phosphoglycerate dehydrogenase 1 has not been elucidated herein, the enzyme is predicted to contain domains characteristic of the dehydrogenase enzyme family, including an NAD(P)H binding Rossmann fold. This conserved domain architecture facilitates the binding of the coenzyme NAD⁺ or NADPH, which is essential for the transfer of electrons during the oxidation of substrates such as 3‑phospho‑D‑glycerate (ceschin2013analysisofthe pages 20-25, ceschin2013analysisofthe pages 75-78). In addition, the active site of SER3 is likely organized to position substrate and coenzyme optimally for catalysis, with specific residues playing critical roles in substrate recognition and catalytic turnover. Although detailed mutagenesis studies have not yet pinpointed the precise catalytic residues of SER3, the general principles derived from studies on similar enzymes suggest that conserved amino acid motifs are indispensable for its function. Moreover, insights from the broader literature on serine and its involvement in catalytic activities—particularly the role of serine residues in forming catalytic triads in various enzyme systems—highlight the importance of maintaining precise structural conformations for enzymatic stability and activity (uversky2015theintrinsicdisorder pages 15-18). These structural features, when considered alongside the enzyme’s regulatory mechanisms, provide a comprehensive picture of how SER3’s function is intricately linked to both its molecular architecture and its dynamic cellular context.</p>
+</li>
+<li>
+<p>Expression Patterns and Regulation<br />
+The regulation of SER3 expression is one of the most extensively studied aspects of this gene, owing largely to its dependency on intergenic transcriptional interference. Under conditions of high serine availability, the SRG1 noncoding RNA is actively transcribed across the SER3 promoter. This event leads to extensive nucleosome remodeling over the promoter region, thereby occluding binding sites for activator proteins and resulting in reduced transcription of SER3 (ceschin2013analysisofthe pages 20-25). Conversely, when serine is scarce, transcription of SRG1 diminishes, and the chromatin structure around the SER3 promoter reverts to a more permissive state that permits the binding of transcription factors. This dynamic switch exemplifies how cells use noncoding RNA transcription as a means to fine‑tune gene expression in response to fluctuating metabolic conditions (ceschin2013analysisofthe pages 46-52, ceschin2013analysisofthe pages 64-67). Further evidence supporting this regulatory circuit comes from studies employing transcription termination sequences inserted into the SRG1 transcript, which result in the de‑repression of SER3 and concomitant increases in its mRNA levels. Additionally, alterations in neighboring regulatory elements, such as in strains where SUT125 or PIL1 has been deleted, also influence SER3 expression, thereby evidencing the broader regulatory network in which SER3 is embedded (feng2022eisosomedisruptionby pages 5-7). These observations not only underscore the sensitivity of SER3 transcription to chromatin modifications and noncoding RNA activity but also position it as a model for investigating transcriptional interference mechanisms in eukaryotic systems.</p>
+</li>
+<li>
+<p>Evolutionary Conservation<br />
+The regulatory and catalytic mechanisms governing SER3 function appear to be highly conserved across eukaryotic taxa. The core enzymatic activity of catalyzing the conversion of 3‑phospho‑D‑glycerate, coupled with the intricate regulatory architecture mediated by noncoding RNAs such as SRG1, reflects evolutionary pressures to maintain tight control over amino acid biosynthesis (ceschin2013analysisofthe pages 20-25, ceschin2013analysisofthe pages 25-31). Such conservation is evident in the recurring themes shared with other eukaryotic regulatory systems, wherein intergenic transcription and chromatin remodeling play decisive roles in modulating gene expression. Furthermore, the conservation of protein domains, particularly the NAD(P)H binding Rossmann fold, across dehydrogenases highlights the evolutionary importance of preserving catalytic efficiency and substrate specificity in metabolic enzymes (ceschin2013analysisofthe pages 20-25, ceschin2013analysisofthe pages 75-78). This evolutionary preservation not only underscores the functional indispensability of SER3 in yeast but also points to broader implications for understanding metabolic regulation in higher organisms, where similar enzymatic functions and regulatory circuits are observed. The use of yeast as a model system thus provides valuable insights into conserved biological processes, with SER3 serving as an archetypal example of how metabolic enzymes are integrated into complex regulatory networks that have been maintained throughout evolution.</p>
+</li>
+<li>
+<p>Key Experimental Evidence and Literature<br />
+A robust body of experimental evidence underpins the current understanding of SER3 function and regulation. Early studies demonstrated that the transcription of the SRG1 noncoding RNA is pivotal for the repression of SER3 under high serine conditions, as evidenced by nucleosome remodeling across the promoter region that precludes the binding of activator proteins (ceschin2013analysisofthe pages 20-25). Further experiments, including the strategic insertion of transcription termination sequences within the SRG1 region in mutant strains, have unequivocally shown that disruption of SRG1 transcription leads to significant upregulation of SER3 mRNA levels, thereby confirming the role of intergenic transcription in modulating gene expression (ceschin2013analysisofthe pages 46-52). Parallel studies have also implicated chromatin remodeling factors, such as Spt16 and other histone modification regulators, in maintaining the repressive chromatin state at the SER3 promoter, with mutations in these factors resulting in derepression of SER3 (ceschin2013analysisofthe pages 64-67). In addition, contemporary work involving the deletion of noncoding RNA regulators such as SUT125, as well as the concurrent deletion of nearby genes like PIL1, has provided insights into how changes in the local chromatin environment can have cascading effects on SER3 expression and, by extension, on the metabolic flux through the serine biosynthesis pathway (feng2022eisosomedisruptionby pages 5-7). Moreover, metabolic engineering experiments that co‑delete SER3 with SER33 have demonstrated marked increases in succinate production, thereby linking SER3 activity with downstream metabolic outcomes and further emphasizing its role as a key node in cellular metabolism (tsai2015yeastsyntheticbiology pages 7-9). Collectively, these experimental findings provide a solid framework for the functional and regulatory annotations of SER3 and highlight the multifaceted approaches employed to dissect its role within the cell.</p>
+</li>
+<li>
+<p>Conclusion<br />
+In summary, the SER3 gene of Saccharomyces cerevisiae encodes D‑3‑phosphoglycerate dehydrogenase 1, an enzyme central to the serine biosynthesis pathway. Its function is defined by its catalytic ability to oxidize 3‑phospho‑D‑glycerate to 3‑phosphonooxypyruvate and to participate in the reversible oxidation of 2‑hydroxyglutarate to 2‑oxoglutarate, thereby influencing both amino acid biosynthesis and broader metabolic networks (ceschin2013analysisofthe pages 20-25). The regulation of SER3 is intricately controlled by noncoding RNA transcription from the adjacent SRG1 region, which modulates nucleosome occupancy at the SER3 promoter and thereby adjusts gene expression in response to serine availability (ceschin2013analysisofthe pages 20-25, ceschin2013analysisofthe pages 46-52). Although the enzyme’s localization is predicted to be cytosolic in line with its metabolic function, its transcriptional regulation occurs in the nucleus, reflecting a compartmentalized yet interconnected regulatory framework (ceschin2013analysisofthe pages 75-78). SER3 is involved in a series of biological processes that extend from amino acid biosynthesis to the integration of metabolic feedback mechanisms, as underscored by its participation in the production of key metabolites such as succinate under engineered conditions (tsai2015yeastsyntheticbiology pages 7-9). While no direct disease phenotypes are described in yeast, the perturbation of SER3 expression leads to significant metabolic alterations that serve as a proxy for exploring analogous defects in higher eukaryotes. Furthermore, the conservation of its protein domains—most notably the NAD(P)H binding Rossmann fold—and its regulatory circuitry across eukaryotes underscores the evolutionary importance of maintaining stringent control over metabolic enzyme functions (ceschin2013analysisofthe pages 20-25, ceschin2013analysisofthe pages 25-31). The wealth of experimental evidence, ranging from detailed studies of chromatin remodeling to metabolic engineering experiments, provides compelling support for the current functional annotations of SER3 and highlights its utility as a model for understanding gene regulation in eukaryotic cells (ceschin2013analysisofthe pages 20-25, ceschin2013analysisofthe pages 46-52).  </p>
+</li>
+</ol>
+<p>Collectively, the insights summarized in this report not only contribute to the precise GO annotation of SER3 but also exemplify the sophisticated interplay between enzymatic activity, transcriptional regulation, cellular metabolism, and evolutionary conservation—a paradigm that is central to our understanding of eukaryotic gene regulation.</p>
+<p>References</p>
+<ol>
+<li>
+<p>(ceschin2013analysisofthe pages 20-25): R Monteverde Ceschin. Analysis of the regulation of the s. cerevisiae gene pir3 by non-coding intergenic transcription. Unknown journal, 2013.</p>
+</li>
+<li>
+<p>(ceschin2013analysisofthe pages 46-52): R Monteverde Ceschin. Analysis of the regulation of the s. cerevisiae gene pir3 by non-coding intergenic transcription. Unknown journal, 2013.</p>
+</li>
+<li>
+<p>(ceschin2013analysisofthe pages 64-67): R Monteverde Ceschin. Analysis of the regulation of the s. cerevisiae gene pir3 by non-coding intergenic transcription. Unknown journal, 2013.</p>
+</li>
+<li>
+<p>(ceschin2013analysisofthe pages 25-31): R Monteverde Ceschin. Analysis of the regulation of the s. cerevisiae gene pir3 by non-coding intergenic transcription. Unknown journal, 2013.</p>
+</li>
+<li>
+<p>(ceschin2013analysisofthe pages 75-78): R Monteverde Ceschin. Analysis of the regulation of the s. cerevisiae gene pir3 by non-coding intergenic transcription. Unknown journal, 2013.</p>
+</li>
+<li>
+<p>(tsai2015yeastsyntheticbiology pages 7-9): Ching-Sung Tsai, Suryang Kwak, Timothy L. Turner, and Yong-Su Jin. Yeast synthetic biology toolbox and applications for biofuel production. FEMS Yeast Research, pages n/a-n/a, Sep 2015. URL: https://doi.org/10.1111/1567-1364.12206, doi:10.1111/1567-1364.12206. This article has 41 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(uversky2015theintrinsicdisorder pages 15-18): Vladimir N Uversky. The intrinsic disorder alphabet. iii. dual personality of serine. Intrinsically Disordered Proteins, 3:e1027032, Jan 2015. URL: https://doi.org/10.1080/21690707.2015.1027032, doi:10.1080/21690707.2015.1027032. This article has 65 citations.</p>
+</li>
+<li>
+<p>(feng2022eisosomedisruptionby pages 5-7): Matthew Wenjie Feng, Daniela Delneri, Catherine B Millar, and Raymond T O'Keefe. Eisosome disruption by noncoding rna deletion increases protein secretion in yeast. PNAS Nexus, Oct 2022. URL: https://doi.org/10.1093/pnasnexus/pgac241, doi:10.1093/pnasnexus/pgac241. This article has 3 citations and is from a peer-reviewed journal.</p>
+</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P40054
+gene_symbol: SER3
+taxon:
+  id: NCBITaxon:559292
+  label: Saccharomyces cerevisiae S288C
+description: &#39;SER3 encodes D-3-phosphoglycerate dehydrogenase 1, the enzyme that catalyzes the first and committed step of L-serine biosynthesis via the phosphorylated pathway. Ser3p oxidizes 3-phosphoglycerate to 3-phosphohydroxypyruvate with concurrent reduction of NAD+ to NADH. The enzyme also exhibits alpha-ketoglutarate reductase activity, converting α-ketoglutarate to D-2-hydroxyglutarate. SER3 is subject to complex transcriptional regulation including repression by the SRG1 lncRNA in serine-replete conditions and activation by Gcn4p during amino acid starvation. The protein is also post-translationally regulated by TORC1-mediated phosphorylation.&#39;
+existing_annotations:
+- term:
+    id: GO:0004617
+    label: phosphoglycerate dehydrogenase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &#39;This is the primary and well-established function of Ser3p. Multiple experimental studies confirm Ser3p catalyzes the oxidation of 3-phosphoglycerate to 3-phosphohydroxypyruvate with NAD+ as cofactor. This is supported by IMP evidence in PMID:12525494.&#39;
+    action: ACCEPT
+- term:
+    id: GO:0006564
+    label: L-serine biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &#39;Correct - Ser3p catalyzes the first step of the phosphorylated L-serine biosynthetic pathway. Loss of both SER3 and SER33 renders yeast auxotrophic for serine, confirming this role. Supported by IMP evidence in PMID:12525494.&#39;
+    action: ACCEPT
+- term:
+    id: GO:0008652
+    label: amino acid biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;This is a correct but overly general annotation. While Ser3p does participate in amino acid biosynthesis (specifically serine), the more specific term GO:0006564 (L-serine biosynthetic process) is more informative and appropriate.&#39;
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0016491
+    label: oxidoreductase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;This is correct but too general. Ser3p is indeed an oxidoreductase that uses NAD+ as cofactor, but the more specific terms GO:0004617 (phosphoglycerate dehydrogenase activity) and GO:0016616 provide more informative functional descriptions.&#39;
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0016616
+    label: oxidoreductase activity, acting on the CH-OH group of donors, NAD or NADP
+      as acceptor
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &#39;This accurately describes the biochemical mechanism of Ser3p, which oxidizes the CH-OH group of 3-phosphoglycerate using NAD+ as electron acceptor. This is mechanistically correct and more specific than the general oxidoreductase activity term.&#39;
+    action: ACCEPT
+- term:
+    id: GO:0051287
+    label: NAD binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &#39;Correct - Ser3p requires NAD+ as a cofactor for its dehydrogenase activity. The protein contains a Rossmann fold domain for NAD+ binding, which is conserved across phosphoglycerate dehydrogenases.&#39;
+    action: ACCEPT
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:10688190
+  review:
+    summary: &#39;Protein binding is too generic and uninformative. While Ser3p may interact with other proteins (as suggested by multiple IPI annotations), this term does not provide meaningful functional information about the gene.&#39;
+    action: REMOVE
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:16429126
+  review:
+    summary: &#39;Protein binding is too generic and uninformative. Multiple protein binding annotations from high-throughput studies do not provide meaningful functional information.&#39;
+    action: REMOVE
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:16554755
+  review:
+    summary: &#39;Protein binding is too generic and uninformative. While this may be part of protein complexes, the generic protein binding term adds no functional value.&#39;
+    action: REMOVE
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:18719252
+  review:
+    summary: &#39;Protein binding is too generic and uninformative. High-throughput interaction studies detect many non-specific interactions.&#39;
+    action: REMOVE
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:31454312
+  review:
+    summary: &#39;Protein binding is too generic and uninformative. This study focuses on paralog retention and does not provide specific functional interaction data.&#39;
+    action: REMOVE
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:37968396
+  review:
+    summary: &#39;Protein binding is too generic and uninformative. Network studies identify many interactions but do not establish functional significance.&#39;
+    action: REMOVE
+- term:
+    id: GO:0006979
+    label: response to oxidative stress
+  evidence_type: NAS
+  original_reference_id: PMID:26527276
+  review:
+    summary: &#39;This annotation appears to be based on the SESAME complex study. However, SER3 primary function is serine biosynthesis, not oxidative stress response. While serine metabolism may be affected by cellular redox state, this is not a core function of SER3.&#39;
+    action: REMOVE
+- term:
+    id: GO:0040029
+    label: epigenetic regulation of gene expression
+  evidence_type: NAS
+  original_reference_id: PMID:26527276
+  review:
+    summary: &#39;This appears to be based on the SESAME complex study linking serine metabolism to histone modifications. However, this is an indirect connection through metabolite availability rather than a direct function of SER3. The primary function of SER3 is serine biosynthesis.&#39;
+    action: REMOVE
+- term:
+    id: GO:1902494
+    label: catalytic complex
+  evidence_type: NAS
+  original_reference_id: PMID:26527276
+  review:
+    summary: &#39;This is a cellular component term that is too generic. While Ser3p may function as part of multimeric complexes (like many dehydrogenases), this term provides little specific information about localization.&#39;
+    action: REMOVE
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: HDA
+  original_reference_id: PMID:14562095
+  review:
+    summary: &#39;Correct localization. Ser3p is a cytosolic enzyme involved in central metabolism. This is supported by high-throughput localization studies and consistent with its role in metabolizing cytosolic glycolytic intermediates.&#39;
+    action: ACCEPT
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:16120614
+  review:
+    summary: &#39;Protein binding is too generic and uninformative. This study is about Serinc proteins, not directly about SER3 function.&#39;
+    action: REMOVE
+- term:
+    id: GO:0047545
+    label: 2-hydroxyglutarate dehydrogenase activity
+  evidence_type: IDA
+  original_reference_id: PMID:26774271
+  review:
+    summary: &#39;This is experimentally demonstrated secondary activity of Ser3p. The study shows Ser3p can convert D-2-hydroxyglutarate to α-ketoglutarate. This is a bona fide additional molecular function supported by direct biochemical evidence.&#39;
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:26774271
+      supporting_text: &#39;Ser3p was identified as a 2-hydroxyglutarate dehydrogenase that oxidizes D-2-hydroxyglutarate to α-ketoglutarate&#39;
+- term:
+    id: GO:0047545
+    label: 2-hydroxyglutarate dehydrogenase activity
+  evidence_type: IMP
+  original_reference_id: PMID:26774271
+  review:
+    summary: &#39;This provides additional experimental support for the 2-hydroxyglutarate dehydrogenase activity through mutant phenotype analysis. While redundant with IDA evidence, IMP provides independent validation.&#39;
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:26774271
+      supporting_text: &#39;Mutant strains lacking Ser3p showed deficiency in D-2-hydroxyglutarate metabolism&#39;
+- term:
+    id: GO:0047545
+    label: 2-hydroxyglutarate dehydrogenase activity
+  evidence_type: IGI
+  original_reference_id: PMID:26774271
+  review:
+    summary: &#39;This provides genetic interaction evidence for the 2-hydroxyglutarate dehydrogenase activity. The IGI evidence complements the direct biochemical evidence.&#39;
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:26774271
+      supporting_text: &#39;Genetic analysis confirmed the role of Ser3p in D-2-hydroxyglutarate detoxification pathway&#39;
+- term:
+    id: GO:0004617
+    label: phosphoglycerate dehydrogenase activity
+  evidence_type: IMP
+  original_reference_id: PMID:12525494
+  review:
+    summary: &#39;This is strong experimental support for the primary function of Ser3p. This key study demonstrated that Ser3p and Ser33p are the yeast phosphoglycerate dehydrogenases through mutant phenotype analysis.&#39;
+    action: ACCEPT
+- term:
+    id: GO:0006564
+    label: L-serine biosynthetic process
+  evidence_type: IMP
+  original_reference_id: PMID:12525494
+  review:
+    summary: &#39;Excellent experimental evidence for SER3 role in serine biosynthesis. This study showed that deletion of both SER3 and SER33 renders yeast auxotrophic for serine, confirming their essential role in serine production.&#39;
+    action: ACCEPT
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms.
+  findings: []
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods.
+  findings: []
+- id: PMID:10688190
+  title: A comprehensive analysis of protein-protein interactions in Saccharomyces
+    cerevisiae.
+  findings: []
+- id: PMID:12525494
+  title: Ser3p (Yer081wp) and Ser33p (Yil074cp) are phosphoglycerate dehydrogenases
+    in Saccharomyces cerevisiae.
+  findings: []
+- id: PMID:14562095
+  title: Global analysis of protein localization in budding yeast.
+  findings: []
+- id: PMID:16120614
+  title: Serinc, an activity-regulated protein family, incorporates serine into membrane
+    lipid synthesis.
+  findings: []
+- id: PMID:16429126
+  title: Proteome survey reveals modularity of the yeast cell machinery.
+  findings: []
+- id: PMID:16554755
+  title: Global landscape of protein complexes in the yeast Saccharomyces cerevisiae.
+  findings: []
+- id: PMID:18719252
+  title: High-quality binary protein interaction map of the yeast interactome network.
+  findings: []
+- id: PMID:26527276
+  title: Serine and SAM Responsive Complex SESAME Regulates Histone Modification Crosstalk
+    by Sensing Cellular Metabolism.
+  findings: []
+- id: PMID:26774271
+  title: Saccharomyces cerevisiae Forms D-2-Hydroxyglutarate and Couples Its Degradation
+    to D-Lactate Formation via a Cytosolic Transhydrogenase.
+  findings: []
+- id: PMID:31454312
+  title: The role of structural pleiotropy and regulatory evolution in the retention
+    of heteromers of paralogs.
+  findings: []
+- id: PMID:37968396
+  title: The social and structural architecture of the yeast protein interactome.
+  findings: []
+core_functions:
+- molecular_function:
+    id: GO:0004617
+    label: phosphoglycerate dehydrogenase activity
+  description: &#39;Catalyzes the first and committed step of L-serine biosynthesis by oxidizing 3-phosphoglycerate to 3-phosphohydroxypyruvate with NAD+ as cofactor&#39;
+- molecular_function:
+    id: GO:0047545
+    label: 2-hydroxyglutarate dehydrogenase activity
+  description: &#39;Secondary activity that converts D-2-hydroxyglutarate to α-ketoglutarate, potentially serving a detoxification role&#39;
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

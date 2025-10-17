@@ -1,0 +1,2609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ent-1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>ent-1</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/G5EDJ3" target="_blank" class="term-link">
+                        G5EDJ3
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Caenorhabditis elegans</span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "ent-1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="G5EDJ3" data-a="DESCRIPTION: ENT-1 is an equilibrative nucleoside transporter (..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>ENT-1 is an equilibrative nucleoside transporter (CeENT1) that belongs to the SLC29A/ENT transporter family. It is a multi-pass membrane protein (~445 amino acids with 10-12 predicted transmembrane helices) that transports nucleosides with broad permeant specificity similar to human ENT1. ENT-1 exhibits functional redundancy with ENT-2 (94% amino acid identity), and both transporters are required for proper C. elegans development and reproduction. The protein localizes to plasma membrane and is expressed in intestine, pharynx, and critically in germline cells where it mediates cross-tissue nucleoside coordination. ENT-1 is inhibited by dipyridamole but insensitive to classic mammalian nucleoside transport inhibitors like nitrobenzylthioinosine (NBMPR) and dilazep. Together with ENT-2, it forms a metabolic coupling system where intestinal ENT-2 exports nucleosides to the pseudocoelom and germline ENT-1 imports them, with guanosine transport being particularly critical for fertility.</p>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Proposed New Ontology Terms</h2>
+        
+        <div class="proposed-term">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>redundant nucleoside transporter activity</h3>
+                <span class="vote-buttons" data-g="G5EDJ3" data-a="redundant nucleoside transporter activity" data-r="" data-act="NEW">
+                    <button class="vote-btn" data-v="up" title="Agree this term should be created">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with creating this term">👎</button>
+                </span>
+            </div>
+
+            
+            <p><strong>Definition:</strong> The activity of nucleoside transporters that exhibit functional redundancy, where individual transporter knockdown has no phenotype but combined loss results in developmental defects</p>
+            
+
+            
+            <p><strong>Justification:</strong> ENT-1 and ENT-2 demonstrate a specific type of functional redundancy in nucleoside transport that is important for development but not captured by existing GO terms</p>
+            
+
+            
+
+            
+
+            
+            <p><strong>Supporting Evidence:</strong></p>
+            <ul style="margin-left: 1rem;">
+                
+                <li>
+                    
+                    <a href="https://pubmed.ncbi.nlm.nih.gov/15371014" target="_blank" class="term-link">
+                        PMID:15371014
+                    </a>
+                    
+                    
+                    : Although disruption of ent-1 or ent-2 expression alone had no effect, simultaneous disruption of both genes yielded pronounced developmental defects
+                    
+                </li>
+                
+            </ul>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5EDJ3" data-a="GO:0005886" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ENT-1 is correctly predicted to localize to plasma membrane based on phylogenetic analysis. This is consistent with experimental evidence and the function as a transmembrane nucleoside transporter.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Accurate subcellular localization supported by phylogenetic inference and consistent with experimental evidence. ENT-1 functions as a plasma membrane transporter.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005337" target="_blank" class="term-link">
+                                    GO:0005337
+                                </a>
+                            </span>
+                            <span class="term-label">nucleoside transmembrane transporter activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5EDJ3" data-a="GO:0005337" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core molecular function of ENT-1 accurately captured by phylogenetic inference. ENT-1 is experimentally demonstrated to transport nucleosides with broad permeant specificity.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This represents the primary molecular function of ENT-1 as demonstrated experimentally. The IBA annotation correctly captures the transporter activity.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15371014" target="_blank" class="term-link">
+                                        PMID:15371014
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">These transporters resemble their human counterparts hENT1 and hENT2 in exhibiting similar broad permeant specificities for nucleosides</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005337" target="_blank" class="term-link">
+                                    GO:0005337
+                                </a>
+                            </span>
+                            <span class="term-label">nucleoside transmembrane transporter activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5EDJ3" data-a="GO:0005337" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic annotation based on InterPro domain analysis correctly identifies nucleoside transporter activity. Redundant with IBA annotation but accurate.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Electronic annotation correctly identifies the molecular function, though less specific than the IBA annotation. Both are accurate and supported by experimental evidence.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015858" target="_blank" class="term-link">
+                                    GO:0015858
+                                </a>
+                            </span>
+                            <span class="term-label">nucleoside transport</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5EDJ3" data-a="GO:0015858" data-r="GO_REF:0000117" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic annotation correctly identifies the biological process ENT-1 participates in. This captures the transport function demonstrated experimentally.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Accurate biological process annotation. ENT-1 is experimentally demonstrated to transport nucleosides, which is the core biological process it mediates.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15371014" target="_blank" class="term-link">
+                                        PMID:15371014
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">equilibrative transporters, which we designate CeENT1 and CeENT2 respectively</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="G5EDJ3" data-a="GO:0016020" data-r="GO_REF:0000120" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Very general membrane localization annotation that is accurate but non-specific. The more specific plasma membrane annotation is preferable.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While accurate, this annotation is too general. ENT-1 specifically localizes to plasma membrane, so the more specific term should be used instead.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    plasma membrane
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0022857" target="_blank" class="term-link">
+                                    GO:0022857
+                                </a>
+                            </span>
+                            <span class="term-label">transmembrane transporter activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="G5EDJ3" data-a="GO:0022857" data-r="GO_REF:0000117" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> General transmembrane transporter activity annotation that is accurate but less informative than the specific nucleoside transporter terms.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While correct, this term is too general. The more specific nucleoside transmembrane transporter activity term better describes ENT-1 function.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005337" target="_blank" class="term-link">
+                                    nucleoside transmembrane transporter activity
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1901642" target="_blank" class="term-link">
+                                    GO:1901642
+                                </a>
+                            </span>
+                            <span class="term-label">nucleoside transmembrane transport</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5EDJ3" data-a="GO:1901642" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Specific biological process annotation for nucleoside transmembrane transport which is more precise than the general nucleoside transport term.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a more specific and accurate biological process term that better captures the transmembrane transport nature of ENT-1 function compared to the broader nucleoside transport term.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15371014" target="_blank" class="term-link">
+                                        PMID:15371014
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">encode equilibrative transporters, which we designate CeENT1 and CeENT2</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15371014" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15371014
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Functional redundancy of two nucleoside transporters of the ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5EDJ3" data-a="GO:0005886" data-r="PMID:15371014" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental evidence for plasma membrane localization using GFP reporter constructs. This is the strongest evidence for subcellular localization.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Direct experimental evidence (IDA) for plasma membrane localization is the gold standard. This annotation is strongly supported by experimental data using GFP fusion proteins.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15371014" target="_blank" class="term-link">
+                                        PMID:15371014
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Use of green fluorescent protein reporter constructs indicated that the transporters are present in a limited number of locations</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019953" target="_blank" class="term-link">
+                                    GO:0019953
+                                </a>
+                            </span>
+                            <span class="term-label">sexual reproduction</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/40446206" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:40446206
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cross-tissue coordination between SLC nucleoside transporter...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="G5EDJ3" data-a="GO:0019953" data-r="PMID:40446206" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ENT-1 is directly involved in sexual reproduction through its role in nucleoside supply to the germline. Double knockdown with ENT-2 causes sterility.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Novel annotation based on recent research showing ENT-1 is essential for fertility through germline nucleoside import.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/40446206" target="_blank" class="term-link">
+                                        PMID:40446206
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">ENT-1 and ENT-2 transporters collaboratively maintain guanosine equilibrium among the intestine, pseudocoelom, and germline</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007276" target="_blank" class="term-link">
+                                    GO:0007276
+                                </a>
+                            </span>
+                            <span class="term-label">gamete generation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/40446206" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:40446206
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cross-tissue coordination between SLC nucleoside transporter...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="G5EDJ3" data-a="GO:0007276" data-r="PMID:40446206" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ENT-1 supports gamete generation by importing nucleosides into germline cells for DNA replication during gametogenesis.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Well-supported by experimental evidence showing ENT-1 in germline is required for proper gametogenesis and fertility.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/40446206" target="_blank" class="term-link">
+                                        PMID:40446206
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">ENT-1 facilitates their transportation from the pseudocoelom to the germline</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006163" target="_blank" class="term-link">
+                                    GO:0006163
+                                </a>
+                            </span>
+                            <span class="term-label">purine nucleotide metabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/40446206" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:40446206
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cross-tissue coordination between SLC nucleoside transporter...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="G5EDJ3" data-a="GO:0006163" data-r="PMID:40446206" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ENT-1 is involved in purine nucleotide metabolism by transporting guanosine and other purines into germline cells.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Metabolomic profiling showed ENT-1/ENT-2 knockdown specifically affects purine metabolism with reduced guanosine levels.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/40446206" target="_blank" class="term-link">
+                                        PMID:40446206
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">single-cell transcriptomic and targeted metabolomic profiling revealed that the ENT double knockdown specifically affects genes in the purine biosynthesis pathway and reduces the ratio of guanosine to adenosine levels</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Equilibrative nucleoside transporter that facilitates bidirectional transport of nucleosides across plasma membrane</h3>
+                <span class="vote-buttons" data-g="G5EDJ3" data-a="FUNCTION: Equilibrative nucleoside transporter that facilita..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005337" target="_blank" class="term-link">
+                            nucleoside transmembrane transporter activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1901642" target="_blank" class="term-link">
+                                nucleoside transmembrane transport
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015858" target="_blank" class="term-link">
+                                nucleoside transport
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15371014" target="_blank" class="term-link">
+                                PMID:15371014
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">encode equilibrative transporters, which we designate CeENT1 and CeENT2 respectively</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15371014" target="_blank" class="term-link">
+                                PMID:15371014
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">These transporters resemble their human counterparts hENT1 and hENT2 in exhibiting similar broad permeant specificities for nucleosides</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/40446206" target="_blank" class="term-link">
+                                PMID:40446206
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">ENT-1 facilitates their transportation from the pseudocoelom to the germline</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Mediates cross-tissue nucleoside coordination between soma and germline for reproductive function</h3>
+                <span class="vote-buttons" data-g="G5EDJ3" data-a="FUNCTION: Mediates cross-tissue nucleoside coordination betw..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005337" target="_blank" class="term-link">
+                            nucleoside transmembrane transporter activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019953" target="_blank" class="term-link">
+                                sexual reproduction
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007276" target="_blank" class="term-link">
+                                gamete generation
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/40446206" target="_blank" class="term-link">
+                                PMID:40446206
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">ENT-1 and ENT-2 transporters collaboratively maintain guanosine equilibrium among the intestine, pseudocoelom, and germline</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Imports guanosine and other purines into germline cells as rate-limiting step for fertility</h3>
+                <span class="vote-buttons" data-g="G5EDJ3" data-a="FUNCTION: Imports guanosine and other purines into germline ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005337" target="_blank" class="term-link">
+                            nucleoside transmembrane transporter activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1901642" target="_blank" class="term-link">
+                                nucleoside transmembrane transport
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006163" target="_blank" class="term-link">
+                                purine nucleotide metabolic process
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019953" target="_blank" class="term-link">
+                                sexual reproduction
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/40446206" target="_blank" class="term-link">
+                                PMID:40446206
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">transport of guanosine from somatic tissues to the germline is crucial for sustaining reproduction</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15371014" target="_blank" class="term-link">
+                            PMID:15371014
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Functional redundancy of two nucleoside transporters of the ENT family (CeENT1, CeENT2) required for development of Caenorhabditis elegans.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">ENT-1 (CeENT1) is an equilibrative nucleoside transporter with broad permeant specificity for nucleosides</div>
+                        
+                        <div class="finding-text">"These transporters resemble their human counterparts hENT1 and hENT2 in exhibiting similar broad permeant specificities for nucleosides"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">ENT-1 localizes to plasma membrane in intestine and pharynx tissues</div>
+                        
+                        <div class="finding-text">"Use of green fluorescent protein reporter constructs indicated that the transporters are present in a limited number of locations in the adult, including intestine and pharynx"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">ENT-1 shows functional redundancy with ENT-2 and both are required for proper development</div>
+                        
+                        <div class="finding-text">"Although disruption of ent-1 or ent-2 expression alone had no effect, simultaneous disruption of both genes yielded pronounced developmental defects involving the intestine and vulva"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">ENT-1 and ENT-2 differ in their ability to transport free nucleobases</div>
+                        
+                        <div class="finding-text">"These transporters resemble their human counterparts hENT1 and hENT2 in exhibiting similar broad permeant specificities for nucleosides"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">ENT-1 is inhibited by dipyridamole but insensitive to classic ENT inhibitors</div>
+                        
+                        <div class="finding-text">"They are insensitive to the classic inhibitors of mammalian nucleoside transport, nitrobenzylthioinosine, dilazep and draflazine, but are inhibited by the"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/40446206" target="_blank" class="term-link">
+                            PMID:40446206
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Cross-tissue coordination between SLC nucleoside transporters regulates reproduction in Caenorhabditis elegans</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">ENT-1 localizes to germline cells and functions in nucleoside import from pseudocoelom</div>
+                        
+                        <div class="finding-text">"ENT-1 facilitates their transportation from the pseudocoelom to the germline"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">ENT-1 and ENT-2 form a soma-germline metabolic coupling system for nucleoside transport</div>
+                        
+                        <div class="finding-text">"ENT-2 transports nucleosides from the intestine to the body cavity/pseudocoelom, while ENT-1 facilitates their transportation from the pseudocoelom to the germline"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Guanosine transport by ENT-1 is rate-limiting for fertility</div>
+                        
+                        <div class="finding-text">"guanosine supplementation into the body cavity/pseudocoelom through microinjection rescued the sterility caused by the ENT double knockdown, whereas adenosine microinjection had no effect"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Loss of ENT-1 triggers compensatory upregulation of ENT-2</div>
+                        
+                        <div class="finding-text">"the loss of one transporter leads to the compensatory induction of the other one to mitigate the reduction of nucleoside transport"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">ENT-1/ENT-2 double knockdown causes severe purine pool deficits and transcriptional compensation</div>
+                        
+                        <div class="finding-text">"single-cell transcriptomic and targeted metabolomic profiling revealed that the ENT double knockdown specifically affects genes in the purine biosynthesis pathway and reduces the ratio of guanosine to adenosine levels"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the evolutionary basis for nucleoside transporter redundancy in C. elegans development?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Evolutionary developmental biologists, Comparative genomics specialists, C. elegans developmental biologists</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="G5EDJ3" data-a="Q: What is the evolutionary basis for nucleoside tran..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How do tissue-specific requirements for nucleoside transport contribute to organism-wide nucleotide homeostasis?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Metabolic physiologists, Developmental biochemists, Systems biology researchers</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="G5EDJ3" data-a="Q: How do tissue-specific requirements for nucleoside..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Can C. elegans ENT transporters serve as models for understanding human nucleoside transporter diseases?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Medical geneticists, Pharmacologists, Translational researchers</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="G5EDJ3" data-a="Q: Can C. elegans ENT transporters serve as models fo..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Systematically test transport kinetics for different nucleosides and nucleobases to define precise substrate preferences and compare with mammalian ENT1/ENT2</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: ENT-1 will show broad nucleoside specificity but distinct nucleobase preferences compared to mammalian orthologs</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: Substrate specificity analysis</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="G5EDJ3" data-a="EXPERIMENT: Systematically test transport kinetics for differe..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Use tissue-specific promoters to express ENT-1 in different tissues in double knockout animals to determine which tissues require nucleoside transport for normal development</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Intestinal and pharyngeal expression of ENT-1 will be sufficient to rescue developmental defects in ent-1/ent-2 double knockouts</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: Tissue-specific rescue experiments</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="G5EDJ3" data-a="EXPERIMENT: Use tissue-specific promoters to express ENT-1 in ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Test sensitivity to various nucleoside transport inhibitors to characterize unique pharmacological properties of C. elegans ENT transporters</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: ENT-1 will show distinct inhibitor sensitivity profiles compared to mammalian ENTs, potentially identifying species-specific therapeutic targets</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: Pharmacological profiling</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="G5EDJ3" data-a="EXPERIMENT: Test sensitivity to various nucleoside transport i..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(ent-1-deep-research.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="G5EDJ3" data-a="DOC: Deep Research" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="deep-research-report-ent-1-worm">Deep Research Report: ent-1 (worm)</h1>
+<p>Generated using OpenAI Deep Research API</p>
+<p>UniProt ID: G5EDJ3<br />
+Directory alias: ent-1</p>
+<hr />
+<h1 id="introduction">Introduction</h1>
+<p>The <strong>ent-1</strong> gene in <em>Caenorhabditis elegans</em> encodes an <em>equilibrative nucleoside transporter</em> (CeENT1), a membrane protein involved in moving nucleosides across cell membranes. This gene (sequence tag ZK809.4) is one of seven ENT-family members in <em>C. elegans</em> and is highly similar (94% amino acid identity) to the ent-2 gene, suggesting a recent gene duplication (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12151481/#:~:text=match%20at%20L133%20relatively%20close,relatively%20recent%20gene%20duplication%20event">pmc.ncbi.nlm.nih.gov</a>). Worm ENT proteins are homologous to the human equilibrative nucleoside transporters (hENTs) of the SLC29A family (<a href="https://pubmed.ncbi.nlm.nih.gov/15371014/#:~:text=rationale%20underlying%20the%20multiplicity%20of,of%20green%20fluorescent%20protein%20reporter">pubmed.ncbi.nlm.nih.gov</a>). Below is a comprehensive overview of <strong>ent-1</strong> including its molecular function, localization, biological roles, relevant phenotypes, structural features, expression regulation, evolutionary conservation, and key experimental evidence supporting its annotation.</p>
+<h2 id="gene-function-and-molecular-mechanism">Gene Function and Molecular Mechanism</h2>
+<p>The ent-1 gene product is a facilitative <strong>nucleoside transporter</strong> that enables the uptake and release of nucleosides across cell membranes. Functional characterization studies demonstrated that CeENT1 (ENT-1) can transport a broad range of nucleosides (both purine and pyrimidine) similar to human ENT1/ENT2 (<a href="https://pubmed.ncbi.nlm.nih.gov/15371014/#:~:text=rationale%20underlying%20the%20multiplicity%20of,of%20green%20fluorescent%20protein%20reporter">pubmed.ncbi.nlm.nih.gov</a>). Unlike concentrative transporters, equilibrative nucleoside transporters do not couple to ion gradients; instead, ENT-1 facilitates diffusion down concentration gradients (equilibrative transport). Worm ENT-1 and its paralog ENT-2 share overlapping substrate specificity for nucleosides, yet they differ in transporting free nucleobases (<a href="https://pubmed.ncbi.nlm.nih.gov/15371014/#:~:text=rationale%20underlying%20the%20multiplicity%20of,of%20green%20fluorescent%20protein%20reporter">pubmed.ncbi.nlm.nih.gov</a>). In particular, CeENT1 and CeENT2 resemble hENT1/hENT2 in broad nucleoside permeability, but show differing selectivity for nucleobases (<a href="https://pubmed.ncbi.nlm.nih.gov/15371014/#:~:text=rationale%20underlying%20the%20multiplicity%20of,of%20green%20fluorescent%20protein%20reporter">pubmed.ncbi.nlm.nih.gov</a>), implying one may more efficiently transport nucleobase metabolites than the other. Biochemical assays in heterologous systems confirmed ENT-1’s activity: for example, expressed CeENT1 is insensitive to classic mammalian ENT inhibitors (e.g. NBMPR, dilazep) but is inhibited by dipyridamole (<a href="https://pubmed.ncbi.nlm.nih.gov/15371014/#:~:text=%28ent,Their%20potential%20roles">pubmed.ncbi.nlm.nih.gov</a>), matching the inhibitor profile of equilibrative nucleoside transporters. These findings establish <strong>ENT-1 as a nucleoside transmembrane transporter</strong> (GO:0005337) responsible for <strong>nucleoside transport</strong> across cell membranes (<a href="https://pubmed.ncbi.nlm.nih.gov/15371014/#:~:text=rationale%20underlying%20the%20multiplicity%20of,of%20green%20fluorescent%20protein%20reporter">pubmed.ncbi.nlm.nih.gov</a>) (<a href="https://pubmed.ncbi.nlm.nih.gov/15371014/#:~:text=have%20now%20demonstrated%20that%20the,permeant%20specificities%20for%20nucleosides%2C%20while">pubmed.ncbi.nlm.nih.gov</a>). By mediating nucleoside uptake, ENT-1 plays a key role in nucleotide salvage pathways, providing purine and pyrimidine building blocks for DNA/RNA synthesis in cells that cannot meet demands via de novo synthesis alone.</p>
+<h2 id="cellular-localization-and-subcellular-component">Cellular Localization and Subcellular Component</h2>
+<p>ENT-1 is an <strong>integral membrane protein</strong> localized to the cell plasma membrane. The Uniprot entry (G5EDJ3) predicts ENT-1 is membrane-associated, and functional studies confirm it acts at the cell surface (<a href="https://www.ncbi.nlm.nih.gov/gene?Cmd=DetailsSearch&amp;Db=gene&amp;Term=178339#:~:text=Summary%20Predicted%20to%20enable%20nucleoside,Human%20ortholog%28s%29%20of">www.ncbi.nlm.nih.gov</a>). CRISPR knock-in reporters tagging endogenous ENT-1 with fluorescent proteins showed that <strong>ENT-1 is expressed on the membranes of specific tissues, notably the intestinal cells and the germline</strong> (gonadal) cells in adult worms (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12151481/#:~:text=CRISPR%20knock,intestine%20and%20germline%20in%20the">pmc.ncbi.nlm.nih.gov</a>). In the intestine, ENT-1 is found in the intestinal epithelium (likely at the basolateral membrane facing the body cavity), while in the reproductive system it localizes to germ cells in the gonad (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12151481/#:~:text=CRISPR%20knock,intestine%20and%20germline%20in%20the">pmc.ncbi.nlm.nih.gov</a>). ENT-1 is thereby positioned at the interface between cells and the pseudocoelomic fluid (worm body cavity), consistent with its role in moving metabolites between tissues. The protein’s structure is typical of membrane transporters: ENT-1 spans the membrane multiple times (predicted 10–12 transmembrane helices) forming a channel or carrier pore (<a href="https://tcdb.org/search/result.php?tc=2.A.57#:~:text=TCDB%20%C2%BB%20SEARCH%20The%20generalized,ENT%29%20Family">tcdb.org</a>). No signal peptide or luminal domains are present; instead, both the N- and C-termini face the cytosol, with a large cytosolic loop between transmembrane helices 6 and 7 (a conserved topology among ENT/SLC29 transporters) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5359181/#:~:text=,Sundaram%20et%20al">pmc.ncbi.nlm.nih.gov</a>). This multi-pass membrane architecture places the key ligand-binding sites and gating elements within the membrane, enabling ENT-1 to undergo conformational changes that alternately expose its nucleoside-binding pocket to the extracellular space or the cytosol (<a href="https://tcdb.org/search/result.php?tc=2.A.57#:~:text=TCDB%20%C2%BB%20SEARCH%20The%20generalized,ENT%29%20Family">tcdb.org</a>). In summary, <strong>ENT-1 is a polytopic membrane protein</strong> (approximately 445 amino acids) embedded in the plasma membrane of specific cell types, aligning with Gene Ontology cellular component terms such as <em>integral component of plasma membrane</em> (GO:0005887).</p>
+<h2 id="biological-processes-and-pathways">Biological Processes and Pathways</h2>
+<p><strong>ENT-1 is critically involved in nucleoside homeostasis and inter-tissue metabolite transport</strong>, which in turn impacts key biological processes like development and reproduction. As a nucleoside importer/exporter, ENT-1 participates in the <strong>nucleoside salvage pathway</strong> by transporting preformed nucleosides into cells (GO:0015858 nucleoside transport) that can be phosphorylated into nucleotides for DNA/RNA synthesis. This function is especially important in rapidly dividing or nutrient-dependent cells. Notably, ENT-1 works in concert with its paralog ENT-2 to shuttle nucleosides between the intestine (a nutrient-absorbing tissue) and the germline (where rapid DNA replication occurs during gametogenesis) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12151481/#:~:text=found%20that%20C.%20elegans%20ENT,Their%20synergistic">pmc.ncbi.nlm.nih.gov</a>). A recent study revealed a <strong>novel soma-germline metabolic coupling</strong>: ENT-2 in intestinal cells exports nucleosides (particularly purine nucleosides) into the pseudocoelomic fluid, and ENT-1 on germ cells imports them from the fluid into the germline (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12151481/#:~:text=found%20that%20C.%20elegans%20ENT,Their%20synergistic">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12151481/#:~:text=match%20at%20L482%20germline%20is,1%20in%20the">pmc.ncbi.nlm.nih.gov</a>). This <strong>cell-non-autonomous supply of nucleosides</strong> is pivotal for reproduction – it ensures that developing oocytes and sperm have adequate nucleotides for genome replication. In ent-1 and ent-2 double-knockdown worms, severe deficits in the purine pool were observed in germ cells, accompanied by transcriptional up-regulation of purine biosynthesis genes as a compensatory response (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12151481/#:~:text=match%20at%20L410%20both%20ENT,alterations%20of%20purine%20biosynthesis%20genes">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12151481/#:~:text=match%20at%20L482%20germline%20is,1%20in%20the">pmc.ncbi.nlm.nih.gov</a>). However, this compensation was insufficient: the double disruption dramatically reduced the guanosine (Guan) levels in germ cells and caused sterility, which could be rescued by supplementing guanosine directly to the body cavity (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12151481/#:~:text=mediating%20nucleoside%20coordination%20between%20the,ENT%20double%20knockdown%2C%20whereas%20adenosine">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12151481/#:~:text=match%20at%20L482%20germline%20is,1%20in%20the">pmc.ncbi.nlm.nih.gov</a>). These findings highlight <strong>guanosine transport as a rate-limiting process for fertility</strong>, linking ENT-1 activity to the biological process of reproduction. Consistently, ent-1 (with ent-2) is required for normal brood sizes and reproductive span (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12151481/#:~:text=found%20that%20C.%20elegans%20ENT,Their%20synergistic">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12151481/#:~:text=ENT,together%20to%20regulate%20reproduction">pmc.ncbi.nlm.nih.gov</a>). Beyond reproduction, <strong>ENT-1 is also involved in developmental processes</strong>. When ent-1 function is simultaneously lost with ent-2, worms exhibit pronounced developmental defects and growth arrest (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12151481/#:~:text=adenosine%2C%20and%20inosine,as%20the%20primary%20source%20for">pmc.ncbi.nlm.nih.gov</a>). RNAi of both genes in larvae led to abnormal development of the intestine and vulva structures (<a href="https://pubmed.ncbi.nlm.nih.gov/15371014/#:~:text=match%20at%20L17%20expression,involving%20the%20intestine%20and%20vulva">pubmed.ncbi.nlm.nih.gov</a>), indicating that nucleoside transport is required during organ development (likely by supporting the rapid cell divisions in those tissues). Thus, through its role in salvaging nucleosides, <strong>ENT-1 influences multiple biological processes</strong> including nucleotide biosynthesis, embryonic development, larval growth, and germline development, all of which can be linked to GO terms such as <em>nucleoside transmembrane transport</em>, <em>purine nucleotide biosynthetic process</em>, <em>reproduction</em>, and <em>embryo development</em>. </p>
+<h2 id="disease-associations-and-phenotypic-effects">Disease Associations and Phenotypic Effects</h2>
+<p>In <em>C. elegans</em>, <strong>loss of ent-1 alone causes only subtle phenotypes due to compensation by ent-2</strong>, but combined loss of ent-1 and ent-2 leads to severe defects. Single-gene knockout strains for ent-1 (e.g. ent-1(ok743) null) are viable and generally healthy with no obvious developmental abnormalities (<a href="https://pubmed.ncbi.nlm.nih.gov/15371014/#:~:text=locations%20in%20the%20adult%2C%20including,involving%20the%20intestine%20and%20vulva">pubmed.ncbi.nlm.nih.gov</a>). This lack of phenotype is attributed to functional redundancy: ENT-2 can fulfill much of the nucleoside transport need in the absence of ENT-1 (<a href="https://pubmed.ncbi.nlm.nih.gov/15371014/#:~:text=locations%20in%20the%20adult%2C%20including,involving%20the%20intestine%20and%20vulva">pubmed.ncbi.nlm.nih.gov</a>). However, when <strong>both ent-1 and ent-2 are inactivated, worms become sterile and exhibit stunted growth or developmental arrest</strong>, underscoring their essential, overlapping roles (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12151481/#:~:text=match%20at%20L528%20ENT,In%20this%20study%2C%20we">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12151481/#:~:text=ENT,In%20this%20study%2C%20we">pmc.ncbi.nlm.nih.gov</a>). Double-knockout animals cannot produce progeny and often die or fail to develop past early larval stages (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12151481/#:~:text=adenosine%2C%20and%20inosine,as%20the%20primary%20source%20for">pmc.ncbi.nlm.nih.gov</a>). At the cellular level, germ cells in ent-1;ent-2 deficient worms show cell cycle/meiotic defects consistent with nucleotide starvation, explaining the sterility (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12151481/#:~:text=match%20at%20L482%20germline%20is,1%20in%20the">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12151481/#:~:text=match%20at%20L528%20ENT,In%20this%20study%2C%20we">pmc.ncbi.nlm.nih.gov</a>). These <strong>worm phenotypes</strong> (sterility, developmental arrest, vulval malformation) demonstrate the critical requirement of nucleoside transport for normal physiology. No direct “disease” in <em>C. elegans</em> is associated with ent-1, as worms do not have diseases in the human sense; instead researchers assess phenotypes like fertility and growth. </p>
+<p>In a broader context, the human orthologs of ENT-1 are medically significant. Human <strong>hENT1 (SLC29A1)</strong> is widely expressed and is the major transporter for adenosine and chemotherapy nucleoside drugs. While mutations in SLC29A1 are not known to cause Mendelian diseases, ENT1 levels have clinical importance – for example, low ENT1 expression in tumors is associated with resistance to nucleoside analog drugs (like gemcitabine) and poorer patient outcomes (<a href="https://lookformedical.com/en/web/equilibrative-nucleoside-transport-proteins#:~:text=Web%20lookformedical.com%20%20,are%20specialized%20proteins%20that%20mediate">lookformedical.com</a>). Additionally, another family member SLC29A3 (hENT3) is implicated in a rare histiocytosis syndrome when mutated. These human correlations underscore that <strong>ENT transporters are crucial in pathology and pharmacology</strong>, though in <em>C. elegans</em> the relevance is seen as essential physiological roles rather than disease. The conservation of function allows <em>C. elegans</em> ent-1 to serve as a model for studying nucleoside transporter function and drug responses. In summary, <strong>ent-1 is essential for viability and fertility in worms (in combination with ent-2)</strong>, and by orthology it relates to human ENT1 which has roles in drug uptake and can be a biomarker in diseases like cancer (<a href="https://lookformedical.com/en/web/equilibrative-nucleoside-transport-proteins#:~:text=Web%20lookformedical.com%20%20,are%20specialized%20proteins%20that%20mediate">lookformedical.com</a>).</p>
+<h2 id="protein-domains-and-structural-features">Protein Domains and Structural Features</h2>
+<p>The ENT-1 protein is characterized by <strong>multiple transmembrane domains and conserved motifs typical of equilibrative nucleoside transporters</strong>. It is ~445 amino acids in length (<a href="https://string-db.org/network/6239.ZK809.4a.1#:~:text=%7C%20%20%7C%20ent,0.748">string-db.org</a>) and belongs to the Equilibrative Nucleoside Transporter family (SLC29), which is a member of the major facilitator superfamily (MFS) of transporters (<a href="https://tcdb.org/search/result.php?tc=2.A.57#:~:text=TCDB%20%C2%BB%20SEARCH%20The%20generalized,ENT%29%20Family">tcdb.org</a>) (<a href="https://tcdb.org/search/result.php?tc=2.A.57#:~:text=members%20is%3A%20Nucleoside%20,ENT%29%20Family">tcdb.org</a>). Like other MFS transporters, ENT-1 is predicted to fold into 12 α-helical transmembrane segments arranged into two pseudo-symmetrical halves (each half typically contains 6 TMs) that form a central solute-translocation channel. ENT-1’s topology includes a large intracellular loop between TM6 and TM7 and short extracellular loops, with both N- and C-termini residing in the cytoplasm (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5359181/#:~:text=,Sundaram%20et%20al">pmc.ncbi.nlm.nih.gov</a>). This topology is supported by experimental findings on hENT1 and modeling of related parasite ENTs, which indicate <strong>conserved helix arrangements and gating mechanisms</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3979384/#:~:text=Equilibrative%20nucleoside%20transporters%20of%20the,transporter%20FucP%20and%20have%20identified">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3979384/#:~:text=no%20crystal%20structure%20is%20available,The%20results">pmc.ncbi.nlm.nih.gov</a>). ENT-1 contains sequences corresponding to ENT family signatures, for example a conserved NXXE motif (Asn-x-x-Glu) in one of the transmembrane segments known to be important for nucleoside binding/translocation in hENT1. Additionally, ENT-1 lacks obvious signal peptides or globular domains, consistent with its role as a channel-like transporter. Its primary structure shares significant homology with other ENT family proteins – <em>C. elegans</em> ENT-1 and ENT-2 are 94% identical at the amino acid level (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12151481/#:~:text=match%20at%20L133%20relatively%20close,relatively%20recent%20gene%20duplication%20event">pmc.ncbi.nlm.nih.gov</a>), and both share about 50–60% identity with human ENT1/ENT2, indicating strong conservation of the transporter domain. <strong>Conserved domain analysis</strong> (NCBI’s CDD) identifies ENT-1 as part of the <em>“Equilibrative nucleoside transporter”</em> conserved family (cl15430), reinforcing that it harbors the typical domains required for nucleoside recognition and translocation (<a href="https://www.ncbi.nlm.nih.gov/gene?Cmd=DetailsSearch&amp;Db=gene&amp;Term=178339#:~:text=Summary%20Predicted%20to%20enable%20nucleoside,Human%20ortholog%28s%29%20of">www.ncbi.nlm.nih.gov</a>). In terms of structural features, ENT-1 is predicted to form an inward-open and outward-open state during transport. Computational and mutagenesis studies on ENT homologs (e.g., Leishmania NT1 and human ENT1) have identified helical bundles that act as gates on either side of the membrane (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3979384/#:~:text=for%20treatment%20of%20cancer%2C%20AIDS%2C,The%20results">pmc.ncbi.nlm.nih.gov</a>). By analogy, CeENT-1 likely has similar gating helices that regulate access of nucleosides. No high-resolution structure exists for ENT-1, but AlphaFold and homology models (using bacterial MFS transporters as templates) predict a canonical MFS fold. Therefore, <strong>ENT-1’s protein architecture</strong> can be summarized as an MFS-type transporter with a dozen transmembrane helices and critical conserved residues forming the nucleoside translocation pore and gating structures.</p>
+<h2 id="expression-patterns-and-regulation">Expression Patterns and Regulation</h2>
+<p>The expression of ent-1 in <em>C. elegans</em> is <strong>spatially and temporally regulated</strong>, with highest expression in tissues that demand active nucleoside transport. Reporter gene analyses and fluorescence-tagged endogenous protein have shown that <strong>ent-1 is expressed in the adult intestinal cells and in the germline</strong> (developing oocytes and/or sperm) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12151481/#:~:text=CRISPR%20knock,intestine%20and%20germline%20in%20the">pmc.ncbi.nlm.nih.gov</a>). ENT-1 expression in the intestine is detected in most or all intestinal cells, whereas in the gonad it is present in germ cells throughout the syncytial ovary, ensuring that maturing oocytes are supplied with nucleosides. Some earlier observations also noted ent-1 promoter activity in the pharynx of adult worms (<a href="https://pubmed.ncbi.nlm.nih.gov/15371014/#:~:text=to%20the%20classic%20inhibitors%20of,involving%20the%20intestine%20and%20vulva">pubmed.ncbi.nlm.nih.gov</a>), indicating expression in a subset of cells in the head; the pharyngeal expression might relate to nucleoside transport from ingested bacteria. During development, ent-1 appears to be expressed at lower levels in larvae, which correlates with the fact that single ent-1 mutants develop normally unless ent-2 is also absent. However, when ent-2 is knocked out, <strong>ent-1 expression is up-regulated as a compensatory response</strong>: in ent-2 null mutants, ENT-1 protein levels increase in both the intestine and germline (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12151481/#:~:text=of%20the%20other%20at%20the,Fig%20%20and%20%2027">pmc.ncbi.nlm.nih.gov</a>). Conversely, loss of ent-1 triggers up-regulation of ENT-2 in the intestine and gonadal sheath cells (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12151481/#:~:text=of%20the%20other%20at%20the,Fig%20%20and%20%2027">pmc.ncbi.nlm.nih.gov</a>). This suggests a regulatory feedback mechanism at either the transcriptional or post-transcriptional level, whereby the worm adjusts ENT transporter abundance to maintain nucleoside homeostasis. The ent-1 gene’s transcription is likely constitutive in key tissues, but might be modulated by metabolic cues – for instance, low internal nucleotide levels may induce ent-1 expression to enhance salvage. Indeed, the double knockdown of ent-1 and ent-2 led to activation of purine biosynthetic genes (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12151481/#:~:text=match%20at%20L410%20both%20ENT,alterations%20of%20purine%20biosynthesis%20genes">pmc.ncbi.nlm.nih.gov</a>), implying that normally the presence of ENT-mediated salvage represses de novo synthesis to some extent. No specific transcription factors for ent-1 have been reported, but its expression in germline vs somatic tissues suggests regulation by developmental programs (e.g. germline-specific expression could be controlled by germline-promoting factors). Also, nutrient availability might influence ent-1: worms feeding on nucleoside-rich vs nucleoside-poor bacterial diets could potentially alter ent-1 levels (one study showed ent-1 RNAi effects on reproduction were consistent on both standard and nucleotide-supplemented diets (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12151481/#:~:text=used%20for%20RNAi,S1A%20and%20S1B%20Fig">pmc.ncbi.nlm.nih.gov</a>), indicating diet does not bypass the need for ENT-1). In summary, <strong>ent-1 is expressed in a tissue-specific manner (intestine, gonad, pharynx)</strong> with built-in redundancy with ent-2, and is subject to feedback regulation to ensure a steady supply of nucleosides. Developmentally, its expression in the germline ramps up as worms reach reproductive age (adulthood), aligning with the onset of high nucleotide demand for embryogenesis.</p>
+<h2 id="evolutionary-conservation">Evolutionary Conservation</h2>
+<p>Equilibrative nucleoside transporters are <strong>highly conserved across eukaryotes</strong>, and ent-1 exemplifies this conservation. The <em>C. elegans</em> ent-1 gene is one of several paralogs that arose within nematodes; <em>C. elegans</em> has seven ENT-related genes (ent-1 through ent-7) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12151481/#:~:text=In%20humans%2C%20four%20ENT%20members,1%20to">pmc.ncbi.nlm.nih.gov</a>), compared to only four in humans (hENT1–4), indicating some lineage-specific expansion. The strong sequence identity between worm ENT-1 and ENT-2 (94% amino acid identity (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12151481/#:~:text=match%20at%20L133%20relatively%20close,relatively%20recent%20gene%20duplication%20event">pmc.ncbi.nlm.nih.gov</a>)) suggests a recent gene duplication in the <em>C. elegans</em> lineage, resulting in two nearly redundant transporters. Phylogenetic analyses cluster CeENT1 and CeENT2 closely together and somewhat separate from other worm ENTs (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12151481/#:~:text=In%20humans%2C%20four%20ENT%20members,1%20to">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12151481/#:~:text=relatively%20close%20to%20each%20other,relatively%20recent%20gene%20duplication%20event">pmc.ncbi.nlm.nih.gov</a>). Both are most similar to the <strong>mammalian ENT1/ENT2 clade</strong>, whereas worm ENT-3 to ENT-7 may correspond to other subfamilies (for instance, some might be more divergent or localize to intracellular organelles like hENT3). The fundamental transport mechanism and key residues of ENT proteins have been preserved: for example, yeast have a related transporter (Fun26) that functions in vacuolar nucleoside transport, and protozoan parasites have ENT-like permeases for salvaging host purines (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC2898299/#:~:text=DISCUSSION%20The%20localization%20of%20PfNT2,membranes%20where%20they%20are%20thought">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC2898299/#:~:text=intracellular%20transporters,membranes%20where%20they%20are%20thought">pmc.ncbi.nlm.nih.gov</a>). ENT homologs are even found in some bacteria, as suggested by bioinformatic discovery of ENT-like sequences in prokaryotes (<a href="https://academic.oup.com/mbe/article/19/12/2199/997571#:~:text=Molecular%20Evolution%20of%20the%20Equilibrative,Nieweg%20and%20Bremer%201997">academic.oup.com</a>), underscoring the ancient origin of this protein family. The <em>C. elegans</em> ENT-1 protein shares significant homology to <strong>human SLC29A1 (hENT1)</strong> and SLC29A2 (hENT2): it resembles hENT1 in broad substrate profile and hENT2 in inhibitor sensitivity (<a href="https://pubmed.ncbi.nlm.nih.gov/15371014/#:~:text=%28ent,Their%20potential%20roles">pubmed.ncbi.nlm.nih.gov</a>). Functionally, human ENT1 can substitute for worm ENT-1 to some extent – previous heterologous expression experiments and cross-species comparisons indicate that the transport kinetics of adenosine/uridine are conserved (<a href="https://pubmed.ncbi.nlm.nih.gov/15371014/#:~:text=rationale%20underlying%20the%20multiplicity%20of,of%20green%20fluorescent%20protein%20reporter">pubmed.ncbi.nlm.nih.gov</a>). This evolutionary conservation extends to the physiological role: nucleoside transport via ENT proteins is crucial in organisms from worms to mammals for sustaining nucleotide pools in cells that cannot synthesize all nucleotides de novo. Because of this, ENT-1 in <em>C. elegans</em> can be viewed as an orthologous counterpart of hENT1, making worms a useful model to study nucleoside transporter function and regulation. In evolutionary terms, <strong>ENT-1 has retained the core features of the ENT family over hundreds of millions of years</strong>, highlighting the selective pressure to maintain nucleoside salvage mechanisms. The variations among the ENT family members (e.g., number of genes, subcellular targeting) reflect adaptation to organism-specific needs, but the ent-1 gene’s basic role in equilibrative transport is a conserved and fundamental aspect of nucleotide metabolism.</p>
+<h2 id="key-experimental-evidence-and-literature">Key Experimental Evidence and Literature</h2>
+<p>Multiple lines of experimental evidence support the above understanding of <em>C. elegans</em> ent-1. <strong>Molecular identification and transport assays:</strong> The ent-1 (ZK809.4) open reading frame was initially identified from the worm genome and functionally characterized by Fraser et al. (2004), who cloned ent-1 and ent-2 and demonstrated their nucleoside transporter activity (<a href="https://pubmed.ncbi.nlm.nih.gov/15371014/#:~:text=rationale%20underlying%20the%20multiplicity%20of,of%20green%20fluorescent%20protein%20reporter">pubmed.ncbi.nlm.nih.gov</a>) (<a href="https://pubmed.ncbi.nlm.nih.gov/15371014/#:~:text=vasoactive%20drug%20dipyridamole,involving%20the%20intestine%20and%20vulva">pubmed.ncbi.nlm.nih.gov</a>). Using Xenopus oocyte uptake assays, this study showed ENT-1 transports radiolabeled nucleosides, defining its substrate range and pharmacology (<a href="https://pubmed.ncbi.nlm.nih.gov/15371014/#:~:text=%28ent,Their%20potential%20roles">pubmed.ncbi.nlm.nih.gov</a>). <strong>Genetic interaction and RNAi studies:</strong> The same study and others used RNA interference to knock down ent-1, ent-2, or both, revealing no phenotype for single knockdowns but severe developmental defects for the double, thereby establishing their redundant function in development (<a href="https://pubmed.ncbi.nlm.nih.gov/15371014/#:~:text=locations%20in%20the%20adult%2C%20including,involving%20the%20intestine%20and%20vulva">pubmed.ncbi.nlm.nih.gov</a>) (<a href="https://pubmed.ncbi.nlm.nih.gov/15371014/#:~:text=expression.%20Although%20disruption%20of%20ent,involving%20the%20intestine%20and%20vulva">pubmed.ncbi.nlm.nih.gov</a>). <strong>GFP reporter and CRISPR tagging:</strong> Follow-up research by Guan <em>et al.</em> (2023) created CRISPR knock-in strains tagging ENT-1 with fluorescent proteins, precisely mapping its expression to germline and intestinal cells (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12151481/#:~:text=CRISPR%20knock,intestine%20and%20germline%20in%20the">pmc.ncbi.nlm.nih.gov</a>). This allowed visualization of ENT-1 in vivo and showed adaptive up-regulation when ent-2 is lost (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12151481/#:~:text=of%20the%20other%20at%20the,Fig%20%20and%20%2027">pmc.ncbi.nlm.nih.gov</a>). <strong>Physiological assays for reproduction:</strong> Guan <em>et al.</em> also performed brood size and sterility assays, finding that simultaneous knockdown of ent-1 and ent-2 leads to complete sterility, an effect rescueable by guanosine injection (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12151481/#:~:text=mediating%20nucleoside%20coordination%20between%20the,ENT%20double%20knockdown%2C%20whereas%20adenosine">pmc.ncbi.nlm.nih.gov</a>). They measured nucleoside levels and gene expression changes, linking ENT-1/2 loss to reduced germline guanine nucleotides and activation of compensatory purine synthesis genes (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12151481/#:~:text=match%20at%20L410%20both%20ENT,alterations%20of%20purine%20biosynthesis%20genes">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12151481/#:~:text=match%20at%20L482%20germline%20is,1%20in%20the">pmc.ncbi.nlm.nih.gov</a>). <strong>Biochemical and structural modeling:</strong> Studies on human and protozoan ENT proteins have been extrapolated to worm ENT-1. For instance, Yegutkin <em>et al.</em> (2014) identified gating helices in an ENT via homology modeling (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3979384/#:~:text=for%20treatment%20of%20cancer%2C%20AIDS%2C,The%20results">pmc.ncbi.nlm.nih.gov</a>), providing insight into how ENT-1 might function at the molecular level. No direct structural study on ENT-1 exists, but the AlphaFold model for ENT-1 (available via UniProt/AlphaFold database) predicts a structure consistent with the ENT family. <strong>WormBase and genetic resources:</strong> ent-1 has a defined genetic position (Chromosome IV: 11,653,417–11,655,470) and a deletion allele ent-1(ok743) available from the Caenorhabditis Genetics Center, which has been used in studies of nucleoside transporter function (<a href="https://cgc.umn.edu/gene/ent-1#:~:text=Strain%20%20,Paper_evidence%20WBPaper00041807">cgc.umn.edu</a>). The WormBase database consolidates these findings and curates GO annotations: for example, ent-1 is annotated with <em>nucleoside transmembrane transporter activity</em> and <em>plasma membrane localization</em>, backed by the experiments cited above. </p>
+<p>In conclusion, the <em>C. elegans</em> <strong>ent-1 gene encodes a conserved equilibrative nucleoside transporter</strong> that localizes to cell membranes of the intestine and germline, mediates nucleoside uptake critical for nucleotide biosynthesis, and is functionally redundant with ent-2 to support normal development and fertility (<a href="https://pubmed.ncbi.nlm.nih.gov/15371014/#:~:text=rationale%20underlying%20the%20multiplicity%20of,of%20green%20fluorescent%20protein%20reporter">pubmed.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12151481/#:~:text=found%20that%20C.%20elegans%20ENT,Their%20synergistic">pmc.ncbi.nlm.nih.gov</a>). Its study has provided valuable insights into cell-nonautonomous metabolic regulation and has parallels in human physiology and disease, underscoring the importance of ENT-1 in both basic biology and translational contexts. </p>
+<p><strong>References:</strong> The information above is drawn from well-established studies and databases. Key references include Fraser <em>et al.</em>, 2004 (Biochemical Journal) for initial functional characterization (<a href="https://pubmed.ncbi.nlm.nih.gov/15371014/#:~:text=rationale%20underlying%20the%20multiplicity%20of,of%20green%20fluorescent%20protein%20reporter">pubmed.ncbi.nlm.nih.gov</a>) (<a href="https://pubmed.ncbi.nlm.nih.gov/15371014/#:~:text=vasoactive%20drug%20dipyridamole,involving%20the%20intestine%20and%20vulva">pubmed.ncbi.nlm.nih.gov</a>), Guan <em>et al.</em>, 2023 (PLOS Genetics) for tissue-specific roles in reproduction (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12151481/#:~:text=mediating%20nucleoside%20coordination%20between%20the,ENT%20double%20knockdown%2C%20whereas%20adenosine">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12151481/#:~:text=found%20that%20C.%20elegans%20ENT,Their%20synergistic">pmc.ncbi.nlm.nih.gov</a>), and WormBase/UniProt entries for gene and protein data (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12151481/#:~:text=CRISPR%20knock,intestine%20and%20germline%20in%20the">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://www.ncbi.nlm.nih.gov/gene?Cmd=DetailsSearch&amp;Db=gene&amp;Term=178339#:~:text=Summary%20Predicted%20to%20enable%20nucleoside,Human%20ortholog%28s%29%20of">www.ncbi.nlm.nih.gov</a>). These provide experimental evidence for GO annotations related to nucleoside transport, membrane localization, and biological processes impacted by ent-1.</p>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon Research</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(ent-1-falcon-research.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="G5EDJ3" data-a="DOC: Falcon Research" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="falcon-research-report-ent-1-worm">Falcon Research Report: ent-1 (worm)</h1>
+<p>Generated using FutureHouse Falcon API</p>
+<p>UniProt ID: G5EDJ3<br />
+Directory alias: ent-1</p>
+<hr />
+<p>Question: You are a molecular biologist and gene annotation expert conducting comprehensive research to support GO annotation curation.</p>
+<p>Provide detailed, well-cited information focusing on:<br />
+1. Gene function and molecular mechanisms<br />
+2. Cellular localization and subcellular components<br />
+3. Biological processes involvement<br />
+4. Disease associations and phenotypes<br />
+5. Protein domains and structural features<br />
+6. Expression patterns and regulation<br />
+7. Evolutionary conservation<br />
+8. Key experimental evidence and literature</p>
+<p>Format as a comprehensive research report with citations suitable for Gene Ontology annotation curation.</p>
+<p>Research the Caenorhabditis elegans gene ent-1.</p>
+<p>=== UNIPROT METADATA ===<br />
+UniProt ID: G5EDJ3<br />
+Entry Name: G5EDJ3_CAEEL<br />
+Gene Name: ent-1<br />
+Organism: Caenorhabditis elegans<br />
+NCBI Taxonomy ID: 6239 {ECO:0000313|EMBL:CAA92642.2, ECO:0000313|Proteomes:UP000001940}<br />
+Subcellular Location: Membrane<br />
+======================</p>
+<p>Provide a comprehensive report covering function, localization, processes, domains, disease associations, expression, conservation, and relevant GO terms.</p>
+<p>IMPORTANT: Focus specifically on the gene identified by the metadata above, particularly the UniProt ID, locus tag, and protein description if provided.</p>
+<p>Sometimes different genes in the same organism have the same name. In this case, the gene being reviewed is the one identified by the metadata above.</p>
+<p>This report provides a comprehensive overview of the Caenorhabditis elegans gene ent-1 (UniProt ID: G5EDJ3, Entry Name: G5EDJ3_CAEEL), focusing on its gene function, molecular mechanisms, cellular localization, involvement in biological processes, disease-associated phenotypes, protein domains and structural features, expression patterns, regulatory aspects, evolutionary conservation, and the experimental evidence supporting its annotation. The ent-1 gene encodes the CeENT1 protein, which belongs to the equilibrative nucleoside transporter (ENT) family and plays a central role in mediating sodium-independent nucleoside transport processes critical for cell metabolism and reproduction (guan2025crosstissuecoordinationbetween pages 2-5, appleford2004functionalredundancyof pages 1-2).</p>
+<p>I. Gene Function and Molecular Mechanisms<br />
+CeENT1 functions as an equilibrative transporter that facilitates the bidirectional passage of nucleosides, enabling the uptake and release of substrates such as uridine and guanosine across cellular membranes in a sodium‐independent manner (appleford2004functionalredundancyof pages 1-2, appleford2004functionalredundancyof pages 3-5). At the molecular level, the protein mediates the diffusion of nucleosides along their concentration gradients, which is essential for maintaining nucleotide pools required for DNA replication, RNA synthesis, and overall cell viability (guan2025crosstissuecoordinationbetween pages 2-5, appleford2004functionalredundancyof pages 2-3). Functional studies based on RNA interference (RNAi) experiments indicate that disruption of ent-1 alone does not always produce a severe phenotype due to compensatory activity by the closely related CeENT2; however, simultaneous interference with both transporter functions has been shown to lead to significant developmental defects and reproductive failure (appleford2004functionalredundancyof pages 1-2, appleford2004functionalredundancyof pages 10-11). Moreover, the CeENT1 protein exhibits inhibitor sensitivity to compounds such as dipyridamole, suggesting that its nucleoside transport activity can be modulated pharmacologically, a characteristic that further aligns it with its mammalian homologs (appleford2004functionalredundancyof pages 3-5, young2008humanequilibrativenucleoside pages 10-12). The molecular mechanisms underlying the activity of CeENT1 therefore also involve precise interactions with substrates and inhibitors, which serve to regulate its transport efficiency and, by extension, impact nucleotide salvage pathways critical for cellular metabolism (guan2025crosstissuecoordinationbetween pages 2-5, appleford2004functionalredundancyof pages 1-2).</p>
+<p>II. Cellular Localization and Subcellular Components<br />
+The CeENT1 protein is predominantly localized to the plasma membrane, as indicated by both its UniProt metadata and experimental evidence (appleford2004functionalredundancyof pages 2-3). Detailed expression studies have revealed that CeENT1 is enriched in the intestinal cells and pharyngeal musculature of C. elegans, cell types that are intricately involved in nutrient uptake and energy processing (appleford2004functionalredundancyof pages 3-5, appleford2004functionalredundancyof pages 9-10). In addition to these somatic tissues, CeENT1 is functionally significant in the germline, where its activity is critical for the proper transfer of nucleosides from the surrounding pseudocoelom to developing gametes (guan2025crosstissuecoordinationbetween pages 2-5, guan2025crosstissuecoordinationbetween pages 5-7). This specialized localization supports a role in cross‐tissue communication, where proper nucleoside distribution is essential for supporting rapid nucleotide turnover during development and reproduction (guan2025crosstissuecoordinationbetween pages 2-5, guan2025crosstissuecoordinationbetween pages 12-14).</p>
+<p>III. Biological Processes Involvement<br />
+CeENT1 is implicated in several vital biological processes, foremost among which is its role in nucleoside transport critical for maintaining nucleotide balance within the organism. Experimental evidence has demonstrated that RNAi-mediated knockdown of ent-1 leads to diminished progeny numbers and altered reproductive timing, thereby underscoring its essential contribution to reproductive processes (guan2025crosstissuecoordinationbetween pages 2-5). Specifically, CeENT1 acts in concert with CeENT2 to facilitate the uptake of nucleosides into the germline, ensuring that sufficient nucleotide precursors are available for DNA replication and cell division during gametogenesis (guan2025crosstissuecoordinationbetween pages 10-12, guan2025crosstissuecoordinationbetween pages 5-7). In scenarios where both CeENT1 and CeENT2 are impaired, severe phenotypes emerge, including complete sterility and morphological defects such as a protruding vulva, which are indicative of the critical nature of these transporters in coordinating developmental and reproductive pathways (appleford2004functionalredundancyof pages 1-2, appleford2004functionalredundancyof pages 10-11, appleford2004functionalredundancyof pages 5-6). Additionally, studies have noted that the loss of ENT-1 function can trigger compensatory mechanisms, such as the upregulation of purine biosynthesis pathways, to mitigate reduced nucleoside uptake, thereby reinforcing the centrality of CeENT1 in overall cellular homeostasis (guan2025crosstissuecoordinationbetween pages 10-12, guan2025crosstissuecoordinationbetween pages 12-14).</p>
+<p>IV. Disease Associations and Phenotypes<br />
+Although Caenorhabditis elegans is not a human model for direct disease studies, the significant sequence and functional conservation between CeENT1 and human ENT homologs suggests that defects in nucleoside transport may have broader implications. In the nematode, loss-of-function mutations or RNAi-mediated knockdowns of ent-1 do not act in isolation; rather, they highlight a functional redundancy with CeENT2 that is critical for maintaining reproductive health. When both transporters are compromised, the resultant phenotypes include severe reproductive impairments, such as decreased brood size and complete sterility, demonstrating that CeENT1 is essential for proper developmental progression (guan2025crosstissuecoordinationbetween pages 2-5, appleford2004functionalredundancyof pages 1-2, guan2025crosstissuecoordinationbetween pages 5-7). The manifestation of these phenotypes in C. elegans parallels observations in higher organisms wherein disruptions in nucleoside transport can affect tissue homeostasis and may contribute to disorders related to impaired nucleotide metabolism, thereby providing a valuable model for studying the molecular underpinnings of such conditions (appleford2004functionalredundancyof pages 1-2, young2008humanequilibrativenucleoside pages 10-12).</p>
+<p>V. Protein Domains and Structural Features<br />
+Structurally, CeENT1 is a member of the solute carrier (SLC) transporter superfamily and exhibits the hallmark features of equilibrative nucleoside transporters. It is encoded by a gene that comprises six exons, with the translated protein containing multiple transmembrane helices that facilitate its integration into the plasma membrane (appleford2004functionalredundancyof pages 2-3). These transmembrane domains are critical for forming the channel or pore through which nucleosides are shuttled across the lipid bilayer, and conserved structural motifs within these regions have been linked to substrate binding and transport activity (appleford2004functionalredundancyof pages 2-3, appleford2004functionalredundancyof pages 3-5). Comparative sequence analyses confirm that CeENT1 shares significant structural similarity with human ENT proteins, revealing conserved residues and potential sites for N-linked glycosylation that may influence protein folding, stability, and function (appleford2004functionalredundancyof pages 6-9, young2008humanequilibrativenucleoside pages 10-12). Furthermore, kinetic studies using heterologous expression systems have demonstrated that CeENT1 has a high transport capacity for specific nucleoside analogs, lending insight into its substrate specificity and the influence of molecular conformation on interaction with inhibitors like dipyridamole (appleford2004functionalredundancyof pages 3-5, young2008humanequilibrativenucleoside pages 10-12).</p>
+<p>VI. Expression Patterns and Regulation<br />
+Investigations into the spatial expression of ent-1 in C. elegans have revealed that CeENT1 is predominantly expressed in tissues integral to nutrient assimilation and reproductive success. Promoter-reporter assays and CRISPR-mediated tagging experiments have consistently shown robust expression in the intestinal epithelium and pharyngeal musculature, as well as in the germline cells where its function is most critical (appleford2004functionalredundancyof pages 3-5, appleford2004functionalredundancyof pages 9-10). The tissue-specific expression pattern indicates that CeENT1 is finely regulated, likely through coordinated transcriptional control mechanisms that ensure optimal nucleoside uptake during periods of high metabolic demand, such as embryogenesis and gametogenesis (guan2025crosstissuecoordinationbetween pages 2-5, guan2025crosstissuecoordinationbetween pages 12-14). Moreover, the presence of feedback regulatory mechanisms has been inferred from studies reporting compensatory upregulation of nucleotide biosynthesis pathways in response to impaired nucleoside transport, suggesting that CeENT1 not only serves as a conduit for nucleosides but also indirectly influences gene expression networks governing cellular metabolism (guan2025crosstissuecoordinationbetween pages 10-12, guan2025crosstissuecoordinationbetween pages 12-14).</p>
+<p>VII. Evolutionary Conservation<br />
+The CeENT1 transporter is evolutionarily conserved across eukaryotic species, and detailed phylogenetic studies have placed it within the ENT 1/2/3 lineage of nucleoside transporters (guan2025crosstissuecoordinationbetween pages 2-5, appleford2004functionalredundancyof pages 1-2, appleford2004functionalredundancyof pages 2-3). C. elegans exhibits a broader repertoire of ENT isoforms—with up to seven identified isoforms, six of which belong to the ENT 1/2/3 lineage—suggesting that gene duplication events have not only provided functional redundancy but may also have allowed for nuanced, tissue-specific roles in nucleoside transport (ashraf2008molecularevolutionof pages 59-63, ashraf2008molecularevolutionofa pages 59-63). The conservation of key transmembrane domains, substrate-binding residues, and overall membrane topology among these isoforms highlights the evolutionary pressure to maintain the essential function of nucleoside transport across diverse biological contexts (ashraf2008molecularevolutionof pages 59-63, ashraf2008molecularevolutionof pages 63-68, ashraf2008molecularevolutionofb pages 63-68). Such evolutionary conservation reinforces the relevance of studying CeENT1 as a model to better understand the mechanistic and regulatory underpinnings of nucleoside transport in more complex organisms, including humans (appleford2004functionalredundancyof pages 1-2, young2008humanequilibrativenucleoside pages 10-12).</p>
+<p>VIII. Key Experimental Evidence and Literature<br />
+A variety of experimental approaches have been employed to elucidate the function and importance of the ent-1 gene. RNA interference studies have been pivotal in demonstrating that silencing ent-1 leads to diminished brood sizes and disrupted reproductive timing, underscoring its essential role in coordinating nucleoside supply during reproduction (guan2025crosstissuecoordinationbetween pages 2-5, appleford2004functionalredundancyof pages 1-2). In addition, CRISPR-Cas9 knockout models have been used to generate mutants lacking ent-1 activity; these models, when combined with concurrent reduction of ent-2 expression, exhibit immediate reproductive failure and severe developmental abnormalities, thereby providing direct evidence for the functional interdependence of these transporters (guan2025crosstissuecoordinationbetween pages 2-5). Electrophysiological and kinetic analyses performed using oocyte expression systems have shed light on the substrate specificity of CeENT1, revealing its high transport capacity for nucleoside analogs and its characteristic inhibitor sensitivity to drugs such as dipyridamole (appleford2004functionalredundancyof pages 3-5, young2008humanequilibrativenucleoside pages 10-12). Furthermore, molecular analyses involving promoter-reporter fusions have mapped the spatial expression of ent-1 to critical tissues like the intestine, pharyngeal musculature, and germline, thereby corroborating its proposed role in nutrient and nucleoside distribution (appleford2004functionalredundancyof pages 9-10, guan2025crosstissuecoordinationbetween pages 5-7). Collectively, these studies provide a robust experimental framework that supports the current understanding of CeENT1 function and validates its inclusion in gene ontology annotations related to nucleoside transport, membrane localization, and reproductive processes (guan2025crosstissuecoordinationbetween pages 2-5, appleford2004functionalredundancyof pages 10-11).</p>
+<p>IX. Implications for Gene Ontology Annotation Curation<br />
+For curators working on Gene Ontology (GO) annotations, the ent-1 gene represents a well-characterized example of a membrane-bound nucleoside transporter with broad implications in nucleotide metabolism and reproductive biology. The documented roles in nucleoside uptake, cross-tissue signaling between somatic and germline compartments, and the essential nature of its function for proper developmental timing and fertility provide multiple facets that can be mapped to relevant GO terms. For instance, GO annotations related to “nucleoside transmembrane transporter activity,” “integral component of membrane,” “reproductive process,” “nucleotide metabolic process,” and “developmental process” can all be supported by the data outlined above (guan2025crosstissuecoordinationbetween pages 2-5, appleford2004functionalredundancyof pages 1-2, appleford2004functionalredundancyof pages 2-3). Additionally, the experimentally confirmed subcellular localization to the plasma membrane, as well as the evolutionary conservation with human ENT family members, further strengthen its annotation under GO terms that pertain to “membrane organization” and “evolutionarily conserved pathways” (appleford2004functionalredundancyof pages 2-3, ashraf2008molecularevolutionof pages 59-63). The interplay between ent-1 and its paralog ent-2 also highlights the importance of considering genetic redundancy and compensatory mechanisms when annotating phenotypic outcomes associated with nucleoside transport deficiency (appleford2004functionalredundancyof pages 1-2, appleford2004functionalredundancyof pages 10-11).</p>
+<p>X. Conclusion<br />
+In summary, the Caenorhabditis elegans ent-1 gene encodes the CeENT1 protein, a key member of the equilibrative nucleoside transporter family that is responsible for mediating sodium-independent nucleoside transport across the plasma membrane. Through its activity, CeENT1 plays an essential role in ensuring the proper distribution of nucleosides necessary for DNA replication, RNA synthesis, and cellular energy metabolism, with particularly critical implications for reproductive processes. Its expression in the intestine, pharyngeal musculature, and germline, combined with functional redundancy alongside CeENT2, underscores a sophisticated regulatory mechanism that ensures nucleotide homeostasis across tissues. The protein’s structural features—comprising multiple transmembrane helices and conserved motifs—underscore its close evolutionary relationship with mammalian nucleoside transporters, further emphasizing its significance as a model system for understanding fundamental aspects of nucleoside transport and potential pharmacological targeting. The extensive experimental evidence, ranging from RNAi knockdown and CRISPR knockout studies to heterologous expression and inhibitor sensitivity assays, has firmly established the biological importance of ent-1 in C. elegans. These insights not only inform the functional annotation of this gene in the context of GO curation but also provide a basis for comparative analyses across species, which may ultimately contribute to a better understanding of disorders related to aberrant nucleoside transport in higher organisms (guan2025crosstissuecoordinationbetween pages 2-5, appleford2004functionalredundancyof pages 1-2, appleford2004functionalredundancyof pages 10-11, appleford2004functionalredundancyof pages 2-3, appleford2004functionalredundancyof pages 3-5, guan2025crosstissuecoordinationbetween pages 10-12, young2008humanequilibrativenucleoside pages 10-12).</p>
+<p>Taken together, the multifaceted role of CeENT1 in nucleoside transport, reproduction, and cellular metabolism, supported by robust experimental data and evolutionary conservation, makes ent-1 a prime candidate for detailed GO annotation. Future research aimed at further characterizing the regulatory networks modulating this transporter, as well as its interactions with other members of the ENT family, will continue to enhance our understanding of its biological significance and provide deeper insights into the molecular mechanisms governing nucleoside homeostasis in diverse organisms (guan2025crosstissuecoordinationbetween pages 2-5, guan2025crosstissuecoordinationbetween pages 12-14).</p>
+<p>References</p>
+<ol>
+<li>
+<p>(guan2025crosstissuecoordinationbetween pages 2-5): Youchen Guan, Yong Yu, Shihong M. Gao, Lang Ding, Qian Zhao, and Meng C. Wang. Cross-tissue coordination between slc nucleoside transporters regulates reproduction in caenorhabditis elegans. PLOS Genetics, 21:e1011425, May 2025. URL: https://doi.org/10.1371/journal.pgen.1011425, doi:10.1371/journal.pgen.1011425. This article has 0 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(appleford2004functionalredundancyof pages 1-2): Peter J. Appleford, Mark Griffiths, Sylvia Y. M. Yao, Amy M. L. Ng, Eugene G. Chomey, R. Elwyn Isaac, David Coates, Ian A. Hope, Carol E. Cass, James D. Young, and Stephen A. Baldwin. Functional redundancy of two nucleoside transporters of the ent family (ceent1, ceent2) required for development of caenorhabditis elegans. Molecular Membrane Biology, 21:247-259, Jul 2004. URL: https://doi.org/10.1080/09687680410001712550, doi:10.1080/09687680410001712550. This article has 21 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(appleford2004functionalredundancyof pages 3-5): Peter J. Appleford, Mark Griffiths, Sylvia Y. M. Yao, Amy M. L. Ng, Eugene G. Chomey, R. Elwyn Isaac, David Coates, Ian A. Hope, Carol E. Cass, James D. Young, and Stephen A. Baldwin. Functional redundancy of two nucleoside transporters of the ent family (ceent1, ceent2) required for development of caenorhabditis elegans. Molecular Membrane Biology, 21:247-259, Jul 2004. URL: https://doi.org/10.1080/09687680410001712550, doi:10.1080/09687680410001712550. This article has 21 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(appleford2004functionalredundancyof pages 2-3): Peter J. Appleford, Mark Griffiths, Sylvia Y. M. Yao, Amy M. L. Ng, Eugene G. Chomey, R. Elwyn Isaac, David Coates, Ian A. Hope, Carol E. Cass, James D. Young, and Stephen A. Baldwin. Functional redundancy of two nucleoside transporters of the ent family (ceent1, ceent2) required for development of caenorhabditis elegans. Molecular Membrane Biology, 21:247-259, Jul 2004. URL: https://doi.org/10.1080/09687680410001712550, doi:10.1080/09687680410001712550. This article has 21 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(appleford2004functionalredundancyof pages 10-11): Peter J. Appleford, Mark Griffiths, Sylvia Y. M. Yao, Amy M. L. Ng, Eugene G. Chomey, R. Elwyn Isaac, David Coates, Ian A. Hope, Carol E. Cass, James D. Young, and Stephen A. Baldwin. Functional redundancy of two nucleoside transporters of the ent family (ceent1, ceent2) required for development of caenorhabditis elegans. Molecular Membrane Biology, 21:247-259, Jul 2004. URL: https://doi.org/10.1080/09687680410001712550, doi:10.1080/09687680410001712550. This article has 21 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(young2008humanequilibrativenucleoside pages 10-12): J. D. Young, S. Y. M. Yao, L. Sun, C. E. Cass, and S. A. Baldwin. Human equilibrative nucleoside transporter (ent) family of nucleoside and nucleobase transporter proteins. Xenobiotica, 38:1021-995, Aug 2008. URL: https://doi.org/10.1080/00498250801927427, doi:10.1080/00498250801927427. This article has 267 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(appleford2004functionalredundancyof pages 9-10): Peter J. Appleford, Mark Griffiths, Sylvia Y. M. Yao, Amy M. L. Ng, Eugene G. Chomey, R. Elwyn Isaac, David Coates, Ian A. Hope, Carol E. Cass, James D. Young, and Stephen A. Baldwin. Functional redundancy of two nucleoside transporters of the ent family (ceent1, ceent2) required for development of caenorhabditis elegans. Molecular Membrane Biology, 21:247-259, Jul 2004. URL: https://doi.org/10.1080/09687680410001712550, doi:10.1080/09687680410001712550. This article has 21 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(guan2025crosstissuecoordinationbetween pages 5-7): Youchen Guan, Yong Yu, Shihong M. Gao, Lang Ding, Qian Zhao, and Meng C. Wang. Cross-tissue coordination between slc nucleoside transporters regulates reproduction in caenorhabditis elegans. PLOS Genetics, 21:e1011425, May 2025. URL: https://doi.org/10.1371/journal.pgen.1011425, doi:10.1371/journal.pgen.1011425. This article has 0 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(guan2025crosstissuecoordinationbetween pages 12-14): Youchen Guan, Yong Yu, Shihong M. Gao, Lang Ding, Qian Zhao, and Meng C. Wang. Cross-tissue coordination between slc nucleoside transporters regulates reproduction in caenorhabditis elegans. PLOS Genetics, 21:e1011425, May 2025. URL: https://doi.org/10.1371/journal.pgen.1011425, doi:10.1371/journal.pgen.1011425. This article has 0 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(guan2025crosstissuecoordinationbetween pages 10-12): Youchen Guan, Yong Yu, Shihong M. Gao, Lang Ding, Qian Zhao, and Meng C. Wang. Cross-tissue coordination between slc nucleoside transporters regulates reproduction in caenorhabditis elegans. PLOS Genetics, 21:e1011425, May 2025. URL: https://doi.org/10.1371/journal.pgen.1011425, doi:10.1371/journal.pgen.1011425. This article has 0 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(appleford2004functionalredundancyof pages 5-6): Peter J. Appleford, Mark Griffiths, Sylvia Y. M. Yao, Amy M. L. Ng, Eugene G. Chomey, R. Elwyn Isaac, David Coates, Ian A. Hope, Carol E. Cass, James D. Young, and Stephen A. Baldwin. Functional redundancy of two nucleoside transporters of the ent family (ceent1, ceent2) required for development of caenorhabditis elegans. Molecular Membrane Biology, 21:247-259, Jul 2004. URL: https://doi.org/10.1080/09687680410001712550, doi:10.1080/09687680410001712550. This article has 21 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(appleford2004functionalredundancyof pages 6-9): Peter J. Appleford, Mark Griffiths, Sylvia Y. M. Yao, Amy M. L. Ng, Eugene G. Chomey, R. Elwyn Isaac, David Coates, Ian A. Hope, Carol E. Cass, James D. Young, and Stephen A. Baldwin. Functional redundancy of two nucleoside transporters of the ent family (ceent1, ceent2) required for development of caenorhabditis elegans. Molecular Membrane Biology, 21:247-259, Jul 2004. URL: https://doi.org/10.1080/09687680410001712550, doi:10.1080/09687680410001712550. This article has 21 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ashraf2008molecularevolutionof pages 59-63): T Ashraf. Molecular evolution of nucleoside transporters. Unknown journal, 2008.</p>
+</li>
+<li>
+<p>(ashraf2008molecularevolutionofa pages 59-63): T Ashraf. Molecular evolution of nucleoside transporters. Unknown journal, 2008.</p>
+</li>
+<li>
+<p>(ashraf2008molecularevolutionof pages 63-68): T Ashraf. Molecular evolution of nucleoside transporters. Unknown journal, 2008.</p>
+</li>
+<li>
+<p>(ashraf2008molecularevolutionofb pages 63-68): T Ashraf. Molecular evolution of nucleoside transporters. Unknown journal, 2008.</p>
+</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: G5EDJ3
+gene_symbol: ent-1
+taxon:
+  id: NCBITaxon:6239
+  label: Caenorhabditis elegans
+description: &#34;ENT-1 is an equilibrative nucleoside transporter (CeENT1) that belongs to the SLC29A/ENT transporter family. It is a multi-pass membrane protein (~445 amino acids with 10-12 predicted transmembrane helices) that transports nucleosides with broad permeant specificity similar to human ENT1. ENT-1 exhibits functional redundancy with ENT-2 (94% amino acid identity), and both transporters are required for proper C. elegans development and reproduction. The protein localizes to plasma membrane and is expressed in intestine, pharynx, and critically in germline cells where it mediates cross-tissue nucleoside coordination. ENT-1 is inhibited by dipyridamole but insensitive to classic mammalian nucleoside transport inhibitors like nitrobenzylthioinosine (NBMPR) and dilazep. Together with ENT-2, it forms a metabolic coupling system where intestinal ENT-2 exports nucleosides to the pseudocoelom and germline ENT-1 imports them, with guanosine transport being particularly critical for fertility.&#34;
+existing_annotations:
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &#39;ENT-1 is correctly predicted to localize to plasma membrane based on phylogenetic analysis. This is consistent with experimental evidence and the function as a transmembrane nucleoside transporter.&#39;
+    action: ACCEPT
+    reason: &#39;Accurate subcellular localization supported by phylogenetic inference and consistent with experimental evidence. ENT-1 functions as a plasma membrane transporter.&#39;
+- term:
+    id: GO:0005337
+    label: nucleoside transmembrane transporter activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &#39;Core molecular function of ENT-1 accurately captured by phylogenetic inference. ENT-1 is experimentally demonstrated to transport nucleosides with broad permeant specificity.&#39;
+    action: ACCEPT
+    reason: &#39;This represents the primary molecular function of ENT-1 as demonstrated experimentally. The IBA annotation correctly captures the transporter activity.&#39;
+    supported_by:
+    - reference_id: PMID:15371014
+      supporting_text: &#39;These transporters resemble their human counterparts hENT1 and hENT2 in exhibiting similar broad permeant specificities for nucleosides&#39;
+- term:
+    id: GO:0005337
+    label: nucleoside transmembrane transporter activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &#39;Electronic annotation based on InterPro domain analysis correctly identifies nucleoside transporter activity. Redundant with IBA annotation but accurate.&#39;
+    action: ACCEPT
+    reason: &#39;Electronic annotation correctly identifies the molecular function, though less specific than the IBA annotation. Both are accurate and supported by experimental evidence.&#39;
+- term:
+    id: GO:0015858
+    label: nucleoside transport
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  review:
+    summary: &#39;Electronic annotation correctly identifies the biological process ENT-1 participates in. This captures the transport function demonstrated experimentally.&#39;
+    action: ACCEPT
+    reason: &#39;Accurate biological process annotation. ENT-1 is experimentally demonstrated to transport nucleosides, which is the core biological process it mediates.&#39;
+    supported_by:
+    - reference_id: PMID:15371014
+      supporting_text: &#39;equilibrative transporters, which we designate CeENT1 and CeENT2 respectively&#39;
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &#39;Very general membrane localization annotation that is accurate but non-specific. The more specific plasma membrane annotation is preferable.&#39;
+    action: MODIFY
+    reason: &#39;While accurate, this annotation is too general. ENT-1 specifically localizes to plasma membrane, so the more specific term should be used instead.&#39;
+    proposed_replacement_terms:
+    - id: GO:0005886
+      label: plasma membrane
+- term:
+    id: GO:0022857
+    label: transmembrane transporter activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  review:
+    summary: &#39;General transmembrane transporter activity annotation that is accurate but less informative than the specific nucleoside transporter terms.&#39;
+    action: MODIFY
+    reason: &#39;While correct, this term is too general. The more specific nucleoside transmembrane transporter activity term better describes ENT-1 function.&#39;
+    proposed_replacement_terms:
+    - id: GO:0005337
+      label: nucleoside transmembrane transporter activity
+- term:
+    id: GO:1901642
+    label: nucleoside transmembrane transport
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &#39;Specific biological process annotation for nucleoside transmembrane transport which is more precise than the general nucleoside transport term.&#39;
+    action: ACCEPT
+    reason: &#39;This is a more specific and accurate biological process term that better captures the transmembrane transport nature of ENT-1 function compared to the broader nucleoside transport term.&#39;
+    supported_by:
+    - reference_id: PMID:15371014
+      supporting_text: &#39;encode equilibrative transporters, which we designate CeENT1 and CeENT2&#39;
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IDA
+  original_reference_id: PMID:15371014
+  review:
+    summary: &#39;Direct experimental evidence for plasma membrane localization using GFP reporter constructs. This is the strongest evidence for subcellular localization.&#39;
+    action: ACCEPT
+    reason: &#39;Direct experimental evidence (IDA) for plasma membrane localization is the gold standard. This annotation is strongly supported by experimental data using GFP fusion proteins.&#39;
+    supported_by:
+    - reference_id: PMID:15371014
+      supporting_text: &#39;Use of green fluorescent protein reporter constructs indicated that the transporters are present in a limited number of locations&#39;
+- term:
+    id: GO:0019953
+    label: sexual reproduction
+  evidence_type: IMP
+  original_reference_id: PMID:40446206
+  review:
+    summary: &#39;ENT-1 is directly involved in sexual reproduction through its role in nucleoside supply to the germline. Double knockdown with ENT-2 causes sterility.&#39;
+    action: NEW
+    reason: &#39;Novel annotation based on recent research showing ENT-1 is essential for fertility through germline nucleoside import.&#39;
+    supported_by:
+    - reference_id: PMID:40446206
+      supporting_text: &#39;ENT-1 and ENT-2 transporters collaboratively maintain guanosine equilibrium among the intestine, pseudocoelom, and germline&#39;
+- term:
+    id: GO:0007276
+    label: gamete generation
+  evidence_type: IMP
+  original_reference_id: PMID:40446206
+  review:
+    summary: &#39;ENT-1 supports gamete generation by importing nucleosides into germline cells for DNA replication during gametogenesis.&#39;
+    action: NEW
+    reason: &#39;Well-supported by experimental evidence showing ENT-1 in germline is required for proper gametogenesis and fertility.&#39;
+    supported_by:
+    - reference_id: PMID:40446206
+      supporting_text: &#39;ENT-1 facilitates their transportation from the pseudocoelom to the germline&#39;
+- term:
+    id: GO:0006163
+    label: purine nucleotide metabolic process
+  evidence_type: IMP
+  original_reference_id: PMID:40446206
+  review:
+    summary: &#39;ENT-1 is involved in purine nucleotide metabolism by transporting guanosine and other purines into germline cells.&#39;
+    action: NEW
+    reason: &#39;Metabolomic profiling showed ENT-1/ENT-2 knockdown specifically affects purine metabolism with reduced guanosine levels.&#39;
+    supported_by:
+    - reference_id: PMID:40446206
+      supporting_text: &#39;single-cell transcriptomic and targeted metabolomic profiling revealed that the ENT double knockdown specifically affects genes in the purine biosynthesis pathway and reduces the ratio of guanosine to adenosine levels&#39;
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms.
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods.
+  findings: []
+- id: PMID:15371014
+  title: Functional redundancy of two nucleoside transporters of the ENT family (CeENT1,
+    CeENT2) required for development of Caenorhabditis elegans.
+  findings:
+  - statement: &#34;ENT-1 (CeENT1) is an equilibrative nucleoside transporter with broad permeant specificity for nucleosides&#34;
+    supporting_text: &#34;These transporters resemble their human counterparts hENT1 and hENT2 in exhibiting similar broad permeant specificities for nucleosides&#34;
+  - statement: &#34;ENT-1 localizes to plasma membrane in intestine and pharynx tissues&#34;
+    supporting_text: &#34;Use of green fluorescent protein reporter constructs indicated that the transporters are present in a limited number of locations in the adult, including intestine and pharynx&#34;
+  - statement: &#34;ENT-1 shows functional redundancy with ENT-2 and both are required for proper development&#34;
+    supporting_text: &#34;Although disruption of ent-1 or ent-2 expression alone had no effect, simultaneous disruption of both genes yielded pronounced developmental defects involving the intestine and vulva&#34;
+  - statement: &#34;ENT-1 and ENT-2 differ in their ability to transport free nucleobases&#34;
+    supporting_text: &#34;These transporters resemble their human counterparts hENT1 and hENT2 in exhibiting similar broad permeant specificities for nucleosides&#34;
+  - statement: &#34;ENT-1 is inhibited by dipyridamole but insensitive to classic ENT inhibitors&#34;
+    supporting_text: &#34;They are insensitive to the classic inhibitors of mammalian nucleoside transport, nitrobenzylthioinosine, dilazep and draflazine, but are inhibited by the&#34;
+- id: PMID:40446206
+  title: Cross-tissue coordination between SLC nucleoside transporters regulates reproduction
+    in Caenorhabditis elegans
+  findings:
+  - statement: &#34;ENT-1 localizes to germline cells and functions in nucleoside import from pseudocoelom&#34;
+    supporting_text: &#34;ENT-1 facilitates their transportation from the pseudocoelom to the germline&#34;
+  - statement: &#34;ENT-1 and ENT-2 form a soma-germline metabolic coupling system for nucleoside transport&#34;
+    supporting_text: &#34;ENT-2 transports nucleosides from the intestine to the body cavity/pseudocoelom, while ENT-1 facilitates their transportation from the pseudocoelom to the germline&#34;
+  - statement: &#34;Guanosine transport by ENT-1 is rate-limiting for fertility&#34;
+    supporting_text: &#34;guanosine supplementation into the body cavity/pseudocoelom through microinjection rescued the sterility caused by the ENT double knockdown, whereas adenosine microinjection had no effect&#34;
+  - statement: &#34;Loss of ENT-1 triggers compensatory upregulation of ENT-2&#34;
+    supporting_text: &#34;the loss of one transporter leads to the compensatory induction of the other one to mitigate the reduction of nucleoside transport&#34;
+  - statement: &#34;ENT-1/ENT-2 double knockdown causes severe purine pool deficits and transcriptional compensation&#34;
+    supporting_text: &#34;single-cell transcriptomic and targeted metabolomic profiling revealed that the ENT double knockdown specifically affects genes in the purine biosynthesis pathway and reduces the ratio of guanosine to adenosine levels&#34;
+core_functions:
+- description: &#34;Equilibrative nucleoside transporter that facilitates bidirectional transport of nucleosides across plasma membrane&#34;
+  molecular_function:
+    id: GO:0005337
+    label: nucleoside transmembrane transporter activity
+  directly_involved_in:
+  - id: GO:1901642
+    label: nucleoside transmembrane transport
+  - id: GO:0015858
+    label: nucleoside transport
+  anatomical_locations:
+  - id: UBERON:0000160
+    label: intestine
+  - id: UBERON:0015232
+    label: nematode pharynx
+  - id: UBERON:0000991
+    label: gonad
+  supported_by:
+  - reference_id: PMID:15371014
+    supporting_text: &#34;encode equilibrative transporters, which we designate CeENT1 and CeENT2 respectively&#34;
+  - reference_id: PMID:15371014
+    supporting_text: &#34;These transporters resemble their human counterparts hENT1 and hENT2 in exhibiting similar broad permeant specificities for nucleosides&#34;
+  - reference_id: PMID:40446206
+    supporting_text: &#34;ENT-1 facilitates their transportation from the pseudocoelom to the germline&#34;
+- description: &#34;Mediates cross-tissue nucleoside coordination between soma and germline for reproductive function&#34;
+  molecular_function:
+    id: GO:0005337
+    label: nucleoside transmembrane transporter activity
+  directly_involved_in:
+  - id: GO:0019953
+    label: sexual reproduction
+  - id: GO:0007276
+    label: gamete generation
+  anatomical_locations:
+  - id: UBERON:0000991
+    label: gonad
+  supported_by:
+  - reference_id: PMID:40446206
+    supporting_text: &#34;ENT-1 and ENT-2 transporters collaboratively maintain guanosine equilibrium among the intestine, pseudocoelom, and germline&#34;
+- description: &#34;Imports guanosine and other purines into germline cells as rate-limiting step for fertility&#34;
+  molecular_function:
+    id: GO:0005337
+    label: nucleoside transmembrane transporter activity
+  directly_involved_in:
+  - id: GO:1901642
+    label: nucleoside transmembrane transport
+  - id: GO:0006163
+    label: purine nucleotide metabolic process
+  - id: GO:0019953
+    label: sexual reproduction
+  anatomical_locations:
+  - id: UBERON:0000991
+    label: gonad
+  supported_by:
+  - reference_id: PMID:40446206
+    supporting_text: &#34;transport of guanosine from somatic tissues to the germline is crucial for sustaining reproduction&#34;
+proposed_new_terms:
+- proposed_name: &#34;redundant nucleoside transporter activity&#34;
+  proposed_definition: &#34;The activity of nucleoside transporters that exhibit functional redundancy, where individual transporter knockdown has no phenotype but combined loss results in developmental defects&#34;
+  justification: &#34;ENT-1 and ENT-2 demonstrate a specific type of functional redundancy in nucleoside transport that is important for development but not captured by existing GO terms&#34;
+  supported_by:
+  - reference_id: PMID:15371014
+    supporting_text: &#34;Although disruption of ent-1 or ent-2 expression alone had no effect, simultaneous disruption of both genes yielded pronounced developmental defects&#34;
+suggested_experiments:
+- experiment_type: &#34;Substrate specificity analysis&#34;
+  description: &#34;Systematically test transport kinetics for different nucleosides and nucleobases to define precise substrate preferences and compare with mammalian ENT1/ENT2&#34;
+  hypothesis: &#34;ENT-1 will show broad nucleoside specificity but distinct nucleobase preferences compared to mammalian orthologs&#34;
+- experiment_type: &#34;Tissue-specific rescue experiments&#34;
+  description: &#34;Use tissue-specific promoters to express ENT-1 in different tissues in double knockout animals to determine which tissues require nucleoside transport for normal development&#34;
+  hypothesis: &#34;Intestinal and pharyngeal expression of ENT-1 will be sufficient to rescue developmental defects in ent-1/ent-2 double knockouts&#34;
+- experiment_type: &#34;Pharmacological profiling&#34;
+  description: &#34;Test sensitivity to various nucleoside transport inhibitors to characterize unique pharmacological properties of C. elegans ENT transporters&#34;
+  hypothesis: &#34;ENT-1 will show distinct inhibitor sensitivity profiles compared to mammalian ENTs, potentially identifying species-specific therapeutic targets&#34;
+suggested_questions:
+- question: &#34;What is the evolutionary basis for nucleoside transporter redundancy in C. elegans development?&#34;
+  experts: [&#34;Evolutionary developmental biologists&#34;, &#34;Comparative genomics specialists&#34;, &#34;C. elegans developmental biologists&#34;]
+- question: &#34;How do tissue-specific requirements for nucleoside transport contribute to organism-wide nucleotide homeostasis?&#34;
+  experts: [&#34;Metabolic physiologists&#34;, &#34;Developmental biochemists&#34;, &#34;Systems biology researchers&#34;]
+- question: &#34;Can C. elegans ENT transporters serve as models for understanding human nucleoside transporter diseases?&#34;
+  experts: [&#34;Medical geneticists&#34;, &#34;Pharmacologists&#34;, &#34;Translational researchers&#34;]
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

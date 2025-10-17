@@ -1,0 +1,3136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PUS3 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>PUS3</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q9BZE2" target="_blank" class="term-link">
+                        Q9BZE2
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Aliases:</span>
+                <div class="aliases">
+                    
+                    <span class="badge">FKSG32</span>
+                    
+                    <span class="badge">DEG1</span>
+                    
+                </div>
+            </div>
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "PUS3";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q9BZE2" data-a="DESCRIPTION: PUS3 encodes a pseudouridine synthase that catalyz..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>PUS3 encodes a pseudouridine synthase that catalyzes the isomerization of uridine to pseudouridine specifically at positions 38 and 39 in the anticodon stem-loop of cytosolic tRNAs. It functions as a stand-alone enzyme that directly binds tRNA without requiring guide RNAs. The protein forms a homodimer through a C-terminal coiled-coil domain and localizes to both nucleus and cytoplasm. PUS3 is critical for neurodevelopment, with biallelic loss-of-function mutations causing an autosomal recessive intellectual disability syndrome (NEDMIGS/MRT55) characterized by global developmental delay, hypotonia, microcephaly, and seizures.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009982" target="_blank" class="term-link">
+                                    GO:0009982
+                                </a>
+                            </span>
+                            <span class="term-label">pseudouridine synthase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BZE2" data-a="GO:0009982" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PUS3 catalyzes pseudouridine formation in tRNA as demonstrated experimentally (PMID:27055666). The IBA annotation is well-supported by evolutionary conservation of this function across the TruA/Pus3 family from bacteria to humans.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation accurately captures PUS3&#39;s core enzymatic function. The protein has been experimentally validated to catalyze the isomerization of uridine to pseudouridine in tRNAs, with loss-of-function mutations abolishing this activity in patient cells.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27055666" target="_blank" class="term-link">
+                                        PMID:27055666
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Consistent with the known role of Pus3 in isomerizing uracil to pseudouridine at positions 38 and 39 in tRNA, we found a significant reduction in this post-transcriptional modification of tRNA in patient cells.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031119" target="_blank" class="term-link">
+                                    GO:0031119
+                                </a>
+                            </span>
+                            <span class="term-label">tRNA pseudouridine synthesis</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BZE2" data-a="GO:0031119" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PUS3 specifically synthesizes pseudouridine in tRNAs at positions 38/39 of the anticodon loop. This function is conserved across the TruA/Pus3 family and experimentally validated.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This accurately describes PUS3&#39;s biological process. The enzyme specifically modifies cytosolic tRNAs, not other RNA types, as confirmed by experimental evidence showing loss of tRNA pseudouridylation in patient cells with PUS3 mutations.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27055666" target="_blank" class="term-link">
+                                        PMID:27055666
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">PUS3 is a member of the highly conserved TruA/Pus3 family of pseudouridylases, which are important for healthy growth in bacteria and yeast...and catalyze pseudouridine formation at specific uridine residues in the anticodon-stem loop of tRNAs</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BZE2" data-a="GO:0005737" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PUS3 localizes to the cytoplasm as confirmed by multiple sources including UniProt curation and expression databases. This is consistent with its role in modifying cytosolic tRNAs.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The cytoplasmic localization is well-supported. PUS3 modifies cytosolic tRNAs and needs to be present where these tRNAs function. The Human Protein Atlas and COMPARTMENTS database confirm cytoplasmic/cytosolic presence.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/PUS3/PUS3-deep-research.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">PUS3 predominantly localizes to the nucleus and the cytoplasm, consistent with its role in modifying tRNAs which are transcribed and processed in the nucleus and function in the cytosol</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BZE2" data-a="GO:0005634" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PUS3 localizes to the nucleus where it likely modifies nascent or pre-tRNAs during their maturation. This dual nuclear-cytoplasmic localization is typical for tRNA modification enzymes.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Nuclear localization is well-supported by UniProt curation and expression data. PUS3 likely acts on tRNAs during their nuclear maturation phase before export to the cytoplasm.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/PUS3/PUS3-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Nucleus {ECO:0000305}.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1990481" target="_blank" class="term-link">
+                                    GO:1990481
+                                </a>
+                            </span>
+                            <span class="term-label">mRNA pseudouridine synthesis</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BZE2" data-a="GO:1990481" data-r="GO_REF:0000033" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Recent high-throughput mapping studies found NO PUS3-dependent pseudouridine sites in mRNAs, indicating PUS3 is specific to tRNA modification and does not modify mRNAs.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation is incorrect based on current evidence. PUS3 specifically modifies tRNAs at positions 38/39 and has no demonstrated activity on mRNAs. Recent comprehensive mapping studies explicitly found no PUS3-dependent pseudouridine sites in mRNAs.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/PUS3/PUS3-deep-research.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Notably, PUS3 activity appears specific to tRNAs; recent high-throughput mapping found no PUS3-dependent pseudouridine sites in mRNAs, linking the enzyme&#39;s function exclusively to tRNA modification</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0160154" target="_blank" class="term-link">
+                                    GO:0160154
+                                </a>
+                            </span>
+                            <span class="term-label">tRNA pseudouridine(38/39) synthase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BZE2" data-a="GO:0160154" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the most specific and accurate molecular function annotation for PUS3, precisely describing its activity at positions 38 and 39 of tRNA anticodon loops.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This highly specific term perfectly captures PUS3&#39;s enzymatic activity. It is more precise than the general pseudouridine synthase term and accurately reflects the specific positions modified by PUS3.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/PUS3/PUS3-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">RecName: Full=tRNA pseudouridine(38/39) synthase; EC=5.4.99.45</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001522" target="_blank" class="term-link">
+                                    GO:0001522
+                                </a>
+                            </span>
+                            <span class="term-label">pseudouridine synthesis</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BZE2" data-a="GO:0001522" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> While PUS3 does synthesize pseudouridine, this term is too general. The more specific term GO:0031119 (tRNA pseudouridine synthesis) better captures PUS3&#39;s specific function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation is technically correct but overly general. PUS3 specifically synthesizes pseudouridine in tRNAs, not in all RNA types. The more specific GO:0031119 provides better functional information.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27055666" target="_blank" class="term-link">
+                                        PMID:27055666
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">PUS3 is a member of the highly conserved TruA/Pus3 family of pseudouridylases...catalyze pseudouridine formation at specific uridine residues in the anticodon-stem loop of tRNAs</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003723" target="_blank" class="term-link">
+                                    GO:0003723
+                                </a>
+                            </span>
+                            <span class="term-label">RNA binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BZE2" data-a="GO:0003723" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> While PUS3 does bind RNA (specifically tRNA), this term is too vague. A more specific term like &#39;tRNA binding&#39; (GO:0000049) would be more informative.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> PUS3 does bind RNA, but specifically binds tRNA substrates as a stand-alone enzyme. The general &#39;RNA binding&#39; term doesn&#39;t convey the specificity of PUS3&#39;s substrate recognition.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000049" target="_blank" class="term-link">
+                                    tRNA binding
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/PUS3/PUS3-deep-research.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">PUS3 is a &#39;stand-alone&#39; pseudouridine synthase, meaning it autonomously binds its RNA substrate without requiring a guide RNA</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BZE2" data-a="GO:0005634" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Duplicate annotation of nuclear localization with different evidence code. The IBA annotation is sufficient.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Although duplicated with the IBA annotation above, both annotations support nuclear localization which is correct for PUS3. Multiple evidence types strengthen this annotation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/PUS3/PUS3-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Nucleus {ECO:0000305}.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008033" target="_blank" class="term-link">
+                                    GO:0008033
+                                </a>
+                            </span>
+                            <span class="term-label">tRNA processing</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BZE2" data-a="GO:0008033" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PUS3 is involved in tRNA processing through its role in post-transcriptional modification. However, the more specific term GO:0031119 (tRNA pseudouridine synthesis) is more informative.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation is correct - pseudouridylation is a type of tRNA processing. PUS3 modifies tRNAs during their maturation, which is part of the broader tRNA processing pathway.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/PUS3/PUS3-deep-research.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">As a tRNA pseudouridine synthase, PUS3 is directly involved in tRNA processing and RNA post-transcriptional modification pathways</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009451" target="_blank" class="term-link">
+                                    GO:0009451
+                                </a>
+                            </span>
+                            <span class="term-label">RNA modification</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BZE2" data-a="GO:0009451" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> While accurate, this term is too general. PUS3 specifically performs tRNA pseudouridylation, and more specific terms are available.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation is correct but overly broad. PUS3 specifically modifies tRNAs by pseudouridylation. More specific terms like GO:0031119 (tRNA pseudouridine synthesis) provide better functional resolution.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27055666" target="_blank" class="term-link">
+                                        PMID:27055666
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">identified a novel homozygous truncating mutation in PUS3 that fully segregates with the intellectual disability phenotype...found a significant reduction in this post-transcriptional modification of tRNA</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009982" target="_blank" class="term-link">
+                                    GO:0009982
+                                </a>
+                            </span>
+                            <span class="term-label">pseudouridine synthase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BZE2" data-a="GO:0009982" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Duplicate of the IBA annotation for the same term. The more specific GO:0160154 (tRNA pseudouridine(38/39) synthase activity) is preferable.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct annotation duplicating the IBA evidence above. Multiple evidence types support this core function. However, GO:0160154 provides more specificity.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27055666" target="_blank" class="term-link">
+                                        PMID:27055666
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Consistent with the known role of Pus3 in isomerizing uracil to pseudouridine at positions 38 and 39 in tRNA</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016853" target="_blank" class="term-link">
+                                    GO:0016853
+                                </a>
+                            </span>
+                            <span class="term-label">isomerase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BZE2" data-a="GO:0016853" data-r="GO_REF:0000043" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> While technically correct (PUS3 is an isomerase), this term is too general. The specific pseudouridine synthase terms are more informative.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation is correct but far too general. PUS3 is specifically a pseudouridine synthase (RNA isomerase EC 5.4.99.45), and more specific terms accurately describe its function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/PUS3/PUS3-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">EC=5.4.99.45...AltName: Full=tRNA-uridine isomerase 3</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031119" target="_blank" class="term-link">
+                                    GO:0031119
+                                </a>
+                            </span>
+                            <span class="term-label">tRNA pseudouridine synthesis</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BZE2" data-a="GO:0031119" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Duplicate annotation with different evidence code. Correctly describes PUS3&#39;s biological process.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct annotation that accurately describes PUS3&#39;s role in tRNA pseudouridylation. Multiple evidence codes strengthen this annotation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27055666" target="_blank" class="term-link">
+                                        PMID:27055666
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">catalyze pseudouridine formation at specific uridine residues in the anticodon-stem loop of tRNAs in all kingdoms of life</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006400" target="_blank" class="term-link">
+                                    GO:0006400
+                                </a>
+                            </span>
+                            <span class="term-label">tRNA modification</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            Reactome:R-HSA-8870289
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BZE2" data-a="GO:0006400" data-r="Reactome:R-HSA-8870289" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PUS3 performs tRNA modification through pseudouridylation at positions 38/39. This Reactome-based annotation is well-curated and accurate.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct annotation from Reactome pathway database. PUS3&#39;s pseudouridylation activity is a specific type of tRNA modification essential for tRNA function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/PUS3/PUS3-deep-research.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">PUS3 is involved in: tRNA modification – specifically pseudouridine formation in tRNAs</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009982" target="_blank" class="term-link">
+                                    GO:0009982
+                                </a>
+                            </span>
+                            <span class="term-label">pseudouridine synthase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27055666" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27055666
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A homozygous truncating mutation in PUS3 expands the role of...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BZE2" data-a="GO:0009982" data-r="PMID:27055666" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental evidence from patient cells showing loss of pseudouridine synthase activity with PUS3 mutations. This is the strongest evidence for this function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation has the strongest experimental support. The cited paper directly demonstrated that PUS3 mutations result in loss of tRNA pseudouridylation in patient cells.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27055666" target="_blank" class="term-link">
+                                        PMID:27055666
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">we found a significant reduction in this post-transcriptional modification of tRNA in patient cells...Since tRNA Phe from LCLs with the Arg435* allele of PUS3 had almost exactly 1 mole/mole less Ψ than control LCLs</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0160154" target="_blank" class="term-link">
+                                    GO:0160154
+                                </a>
+                            </span>
+                            <span class="term-label">tRNA pseudouridine(38/39) synthase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27055666" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27055666
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A homozygous truncating mutation in PUS3 expands the role of...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BZE2" data-a="GO:0160154" data-r="PMID:27055666" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The most specific and accurate molecular function for PUS3, with strong mutant phenotype evidence showing loss of pseudouridine at positions 38/39 in patient tRNAs.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the most precise annotation for PUS3&#39;s molecular function, supported by direct evidence from mutant phenotypes. Patient cells with PUS3 mutations specifically lose pseudouridine at these positions.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27055666" target="_blank" class="term-link">
+                                        PMID:27055666
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Consistent with the known role of Pus3 in isomerizing uracil to pseudouridine at positions 38 and 39 in tRNA, we found a significant reduction in this post-transcriptional modification of tRNA in patient cells</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031119" target="_blank" class="term-link">
+                                    GO:0031119
+                                </a>
+                            </span>
+                            <span class="term-label">tRNA pseudouridine synthesis</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27055666" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27055666
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A homozygous truncating mutation in PUS3 expands the role of...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BZE2" data-a="GO:0031119" data-r="PMID:27055666" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Strong experimental evidence from mutant phenotypes showing loss of tRNA pseudouridylation. This accurately describes PUS3&#39;s biological process.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Well-supported by mutant phenotype data showing that loss of PUS3 function results in decreased tRNA pseudouridylation, confirming its role in this biological process.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27055666" target="_blank" class="term-link">
+                                        PMID:27055666
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">we show that a homozygous truncation mutation in PUS3 segregating with ID results in impaired isomerization of uridine to pseudouridine (Ψ) in patient tRNA</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            Reactome:R-HSA-8870289
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BZE2" data-a="GO:0005829" data-r="Reactome:R-HSA-8870289" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PUS3 localizes to the cytosol where it modifies cytosolic tRNAs. This Reactome-based annotation is consistent with other localization data.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct annotation from curated Reactome pathway. PUS3 acts on cytosolic tRNAs and is detected in the cytosolic fraction, distinguishing it from mitochondrial pseudouridine synthases.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/PUS3/PUS3-deep-research.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">The COMPARTMENTS database (integrating multiple localization evidence) likewise scores PUS3 highest for the cytosol and nucleus (confidence scores 5 and 4, respectively)</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Catalyzes pseudouridine formation at positions 38 and 39 in tRNA anticodon loops as a homodimeric stand-alone enzyme</h3>
+                <span class="vote-buttons" data-g="Q9BZE2" data-a="FUNCTION: Catalyzes pseudouridine formation at positions 38 ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0160154" target="_blank" class="term-link">
+                            tRNA pseudouridine(38/39) synthase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031119" target="_blank" class="term-link">
+                                tRNA pseudouridine synthesis
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006400" target="_blank" class="term-link">
+                                tRNA modification
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008033" target="_blank" class="term-link">
+                                tRNA processing
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                nucleus
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/27055666" target="_blank" class="term-link">
+                            PMID:27055666
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A homozygous truncating mutation in PUS3 expands the role of tRNA modification in normal cognition.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">PUS3 catalyzes pseudouridine formation at positions 38 and 39 in the anticodon stem-loop of tRNAs across all kingdoms of life</div>
+                        
+                        <div class="finding-text">"PUS3 is a member of the highly conserved TruA/Pus3 family of pseudouridylases, which are important for healthy growth in bacteria and yeast ( Bekaert and Rousset 2005 ; Carbone et al. 1991 ; Chang et al. 1971 ; Lecointe et al. 2002 ; Tsui et al. 1991 ), and catalyze pseudouridine formation at specific uridine residues in the anticodon-stem loop of tRNAs in all kingdoms of life"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">A homozygous truncating mutation (Arg435*) in PUS3 causes autosomal recessive intellectual disability syndrome</div>
+                        
+                        <div class="finding-text">"we applied autozygosity mapping and exome sequencing and identified a novel homozygous truncating mutation in PUS3 that fully segregates with the intellectual disability phenotype"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Patient cells with PUS3 mutations show significant reduction in pseudouridine modification at tRNA positions 38 and 39</div>
+                        
+                        <div class="finding-text">"Consistent with the known role of Pus3 in isomerizing uracil to pseudouridine at positions 38 and 39 in tRNA, we found a significant reduction in this post-transcriptional modification of tRNA in patient cells"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The Arg435* mutation nearly completely abolishes PUS3 enzymatic function based on quantitative pseudouridine measurements</div>
+                        
+                        <div class="finding-text">"Since tRNA Phe from LCLs with the Arg435* allele of PUS3 had almost exactly 1 mole/mole less Ψ than control LCLs, we infer that the Arg435* allele nearly completely knocks out PUS3 function due to truncation of the conserved domain and the last 45 amino acids"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Loss of PUS3 activity has significant physiological consequences similar to bacterial and yeast orthologs</div>
+                        
+                        <div class="finding-text">"Lack of PUS3 activity is clearly physiologically consequential. Bacterial truA mutants have significant growth defects ( Chang et al. 1971 ; Tsui et al. 1991 ), while S. cerevisiae pus3Δ mutants are slow growing and temperature-sensitive ( Carbone et al. 1991 ; Lecointe et al. 2002 ), primarily due to reduced function of tRNA Gln(UUG) ( Han et al. 2015 ), and have reduced −1 frameshifting"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The brain shows higher sensitivity to reduced translational efficiency from PUS3 deficiency compared to other organs</div>
+                        
+                        <div class="finding-text">"it is possible that brain-specific phenotype reflects a higher sensitivity to reduced translational efficiency by the brain compared to other organs ( Torres et al. 2014 ). This would be consistent with the finding by us and others that mutations in other genes involved in tRNA modification result in phenotypes with predilection to the brain"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/38996458" target="_blank" class="term-link">
+                            PMID:38996458
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The molecular basis of tRNA selectivity by human pseudouridine synthase 3</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">PUS3 forms a homodimer exclusively through an anti-parallel coiled-coil domain formed by C-terminal helices</div>
+                        
+                        <div class="finding-text">"The dimer interface (∼2,420 Å2) of PUS3 is exclusively formed by an anti-parallel coiled-coil domain, which is formed by a long C-terminal helix (aa 338–369) from each of the PUS3 monomers"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">PUS3 specifically catalyzes pseudouridylation at position 39 in tRNAs without modifying other positions</div>
+                        
+                        <div class="finding-text">"PUS3WT, but not PUS3D118A, converts U39 into Ψ39 in vitro but does not modify uridines in other positions of the tRNAs (Figures 1B and S1D), demonstrating that our purified PUS3WT is functional and displays the expected target specificity"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">PUS3 recognizes tRNAs through two specific contact points - the elbow region and the anticodon stem loop</div>
+                        
+                        <div class="finding-text">"Each tRNA molecule in our structure contacts both PUS3 monomers and is held by the PUS3 dimer at two main contact points: the elbow region (T-arm) and the ASL"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">PUS3 requires both monomer contact points for high-affinity tRNA binding, unlike monomeric PUS1</div>
+                        
+                        <div class="finding-text">"PUS3 fails to bind to the ASL alone, which is consistent with data for the bacterial EcTruA dimer. In contrast, human PUS1, which functions as a monomer, binds to full-length tRNA and ASL with similar affinities"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">PUS3 exclusively modifies tRNAs and does not target mRNAs in human cells</div>
+                        
+                        <div class="finding-text">"we found no evidence in human cells that PUS3 targets other RNA classes than tRNAs, including mRNAs, rRNAs, lncRNA, or small nuclear RNAs (snRNAs)"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">PUS3 can modify intron-containing pre-tRNAs, suggesting it acts before tRNA splicing</div>
+                        
+                        <div class="finding-text">"the structure of human PUS3 with pre-tRNAUCUArg represents the first structural snapshot of a tRNA modifying enzyme bound to an intron-containing tRNA, suggesting that PUS3 acts before the tRNA splicing endonuclease (TSEN) complex"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Pathogenic PUS3 variants fall into two functional classes affecting either protein stability or tRNA binding/modification</div>
+                        
+                        <div class="finding-text">"we characterize two main classes of pathogenic PUS3 variants: those that reduce protein stability and others that cause defects in tRNA binding and/or modification activity"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/36125428" target="_blank" class="term-link">
+                            PMID:36125428
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Destabilization of mutated human PUS3 protein causes intellectual disability</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The Y71C mutation dramatically reduces PUS3 thermostability without affecting tRNA binding or catalytic activity in vitro</div>
+                        
+                        <div class="finding-text">"the purified recombinant PUS3Y71C protein shows similar binding affinities and modification activities as the wild‐type PUS3 enzyme in vitro. However, the Y71C mutation compromises the thermostability of the protein and leads to almost complete depletion of PUS3 protein levels in patient‐derived fibroblasts"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The Y71C mutation causes a 10°C reduction in PUS3 melting temperature</div>
+                        
+                        <div class="finding-text">"the introduction of the Y71C mutation strongly compromises the stability of the PUS3 protein, resulting in a melting temperature that is ~10°C lower than for PUS3WT"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The I299T mutation causes PUS3 protein aggregation</div>
+                        
+                        <div class="finding-text">"the p.Tyr71Cys substitution neither affect tRNA binding nor pseudouridylation activity in vitro, but strongly impair the thermostability profile of PUS3, while the p.Ile299Thr mutation causes protein aggregation"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Patient cells with PUS3 mutations show dramatically reduced Ψ39 levels in multiple tRNAs</div>
+                        
+                        <div class="finding-text">"Our analyses show that the levels of Ψ39 dramatically decreased on all tested tRNA transcripts from the patient samples"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">PUS3 protein levels are severely reduced in patient fibroblasts despite normal mRNA levels</div>
+                        
+                        <div class="finding-text">"the endogenous protein level of PUS3 was significantly reduced in the patient cells... The patients and the healthy controls expressed similar levels of PUS3 mRNAs, showing that the observed drop in protein levels is caused post‐transcriptionally"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/34713961" target="_blank" class="term-link">
+                            PMID:34713961
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">PUS3-related disorder Report of a novel patient and delineation of the phenotypic spectrum</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">PUS3 catalyzes tRNA pseudouridine formation critical for tRNA structure and stability</div>
+                        
+                        <div class="finding-text">"PUS3 encodes the pseudouridylate synthase 3, an enzyme catalyzing the formation of tRNA pseudouridine, which plays a critical role in tRNA structure, function, and stability"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Biallelic PUS3 mutations cause severe intellectual disability with microcephaly and epilepsy</div>
+                        
+                        <div class="finding-text">"Biallelic pathogenic variants of PUS3 have been previously associated with severe intellectual disability, microcephaly, epilepsy, and short stature"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">PUS3 mutations can cause a severe syndromic presentation including organ malformations</div>
+                        
+                        <div class="finding-text">"We identified a novel homozygous PUS3 frameshift variant in a child with facial dysmorphisms, growth failure, microcephaly, retinal dystrophy, cerebellar hypoplasia, congenital heart defect, and right kidney hypoplasia"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        PDB:9ENB
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Human pseudouridine synthase 3 (PUS3 R116A mutant) and two tRNA-Gln</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">PUS3 homodimer structure reveals symmetric binding of two tRNA molecules</div>
+                        
+                        <div class="finding-text">"The cryo-EM structure of human PUS3 bound to two tRNA-Gln molecules at 3.0 Å resolution shows a symmetric homodimer with each tRNA contacting both PUS3 monomers"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Each tRNA is recognized through contacts with the elbow region and anticodon stem loop</div>
+                        
+                        <div class="finding-text">"The elbow region of tRNA is positioned on a platform formed by two helices containing basic residues, while the anticodon stem loop is accommodated by the second PUS3 subunit positioning U39 in the catalytic cleft"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        PDB:9ENC
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Human pseudouridine synthase 3 (PUS3 R116A mutant) and one tRNA-Gln</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">PUS3 can bind a single tRNA molecule in an asymmetric complex</div>
+                        
+                        <div class="finding-text">"6% of the particles corresponded to PUS3 dimers bound to a single tRNA molecule, demonstrating asymmetric binding modes"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        Reactome:R-HSA-8870289
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">PUS3 isomerizes uridine-39 to pseudouridine-39 in tRNA</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(PUS3-deep-research.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9BZE2" data-a="DOC: Deep Research" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="deep-research-report-pus3-human">Deep Research Report: PUS3 (human)</h1>
+<p>Generated using OpenAI Deep Research API</p>
+<hr />
+<h1 id="pus3-human-comprehensive-gene-annotation-report">PUS3 (Human) Comprehensive Gene Annotation Report</h1>
+<h2 id="gene-function-and-molecular-mechanisms">Gene Function and Molecular Mechanisms</h2>
+<p>PUS3 (pseudouridine synthase 3) encodes an enzyme responsible for the post-transcriptional modification of transfer RNA (tRNA) by isomerizing specific uridine bases to pseudouridine (<a href="https://www.ncbi.nlm.nih.gov/gene/83480#:~:text=Summary%20The%20protein%20encoded%20by,25%20other%20tissues%20See%20more">www.ncbi.nlm.nih.gov</a>). In particular, human PUS3 catalyzes the formation of pseudouridine at position 39 (and position 38 in some tRNAs) within the anticodon stem-loop of cytosolic tRNAs (<a href="https://www.ncbi.nlm.nih.gov/gene/83480#:~:text=Summary%20The%20protein%20encoded%20by,25%20other%20tissues%20See%20more">www.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11258540/#:~:text=Pseudouridine%20,and%20achieves%20site%20specificity%20remain">pmc.ncbi.nlm.nih.gov</a>). Pseudouridine (Ψ) is the C5-glycoside isomer of uridine and is the most abundant RNA modification, found in tRNA, rRNA, snRNA, and even mRNA (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11258540/#:~:text=to%20over%20170%20different%20chemical,by%20a%20rotation%20of%20the">pmc.ncbi.nlm.nih.gov</a>). The enzymatic reaction involves cleavage of the N1–C1′ glycosidic bond of uridine and rotation of the base before reattachment to form pseudouridine (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11258540/#:~:text=to%20over%20170%20different%20chemical,by%20a%20rotation%20of%20the">pmc.ncbi.nlm.nih.gov</a>). Like other pseudouridine synthases, PUS3 acts as an <strong>RNA isomerase</strong> (EC 5.4.99.45) that does not require cofactors, instead using a conserved aspartate residue in the active site to catalyze the isomerization via a glycal intermediate (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11258540/#:~:text=exception%20of%20DKC1%20,conserved%20across%20bacteria%20and%20eukaryotes">pmc.ncbi.nlm.nih.gov</a>). This reaction introduces an additional imino hydrogen (at N1) on the nucleoside, enhancing RNA stability and base-pairing capacity (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11258540/#:~:text=to%20over%20170%20different%20chemical,by%20a%20rotation%20of%20the">pmc.ncbi.nlm.nih.gov</a>) (pseudouridine can form an extra hydrogen bond), which in tRNAs helps stabilize the anticodon loop structure (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11258540/#:~:text=tRNA%28Lys%2C3%29%20by%20an%20A%2B,Nucleic%20Acids">pmc.ncbi.nlm.nih.gov</a>). Consistent with this molecular role, patient cells lacking functional PUS3 have significantly reduced pseudouridine levels in their tRNAs (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5152754/#:~:text=mutation%20in%20PUS3%20that%20fully,to%20these%20highly%20conserved%20processes">pmc.ncbi.nlm.nih.gov</a>), underscoring the enzyme’s importance in maintaining normal tRNA structure and function.</p>
+<p>PUS3 is a <strong>“stand-alone” pseudouridine synthase</strong>, meaning it autonomously binds its RNA substrate without requiring a guide RNA or larger ribonucleoprotein complex (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11258540/#:~:text=The%20conversion%20of%20uridines%20to,autonomously%20bind%20target%20RNAs%20and">pmc.ncbi.nlm.nih.gov</a>). It belongs to the <strong>TruA family</strong> of pseudouridine synthases (also known as the Pus3 family in eukaryotes), which generally target uridines in the anticodon arm of tRNAs (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5152754/#:~:text=patient%20tRNA,expand%20the%20list%20of%20tRNA">pmc.ncbi.nlm.nih.gov</a>). Members of this family share a conserved catalytic mechanism and core fold across all domains of life (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11258540/#:~:text=exception%20of%20DKC1%20,conserved%20across%20bacteria%20and%20eukaryotes">pmc.ncbi.nlm.nih.gov</a>). Human PUS3 specifically modifies a broad subset of cytosolic tRNAs at the anticodon loop, introducing Ψ at position 38 and/or 39 depending on the tRNA (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5152754/#:~:text=patient%20tRNA,expand%20the%20list%20of%20tRNA">pmc.ncbi.nlm.nih.gov</a>). This modification is critical for proper tRNA folding and decoding function during translation. Indeed, pseudouridylation of the anticodon loop has been shown to stabilize tRNA structure and can influence codon recognition fidelity (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11258540/#:~:text=tRNA%28Lys%2C3%29%20by%20an%20A%2B,Nucleic%20Acids">pmc.ncbi.nlm.nih.gov</a>). Notably, PUS3 activity appears specific to tRNAs; recent high-throughput mapping found <strong>no PUS3-dependent pseudouridine sites in mRNAs</strong>, linking the enzyme’s function exclusively to tRNA modification and the associated disease phenotype to tRNA defects (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11258540/#:~:text=human%20PUS3%2C%20which%20catalyzes%20the,associated%20human%20diseases%20to%20tRNAs">pmc.ncbi.nlm.nih.gov</a>).</p>
+<h2 id="cellular-localization-and-subcellular-components">Cellular Localization and Subcellular Components</h2>
+<p>PUS3 predominantly localizes to the nucleus and the cytoplasm, consistent with its role in modifying tRNAs which are transcribed and processed in the nucleus and function in the cytosol (<a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=PUS3#:~:text=">www.genecards.org</a>) (<a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=PUS3#:~:text=GO%20ID%20%20,TAS">www.genecards.org</a>). <strong>UniProt</strong> curators annotate PUS3 as a nuclear protein (<a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=PUS3#:~:text=Subcellular%20locations%20from%20UniProtKB%2FSwiss,PUS3%20Gene">www.genecards.org</a>), and Gene Ontology likewise indicates PUS3 is active in the <strong>nucleus (GO:0005634)</strong> and <strong>cytoplasm (GO:0005737)</strong> (<a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=PUS3#:~:text=GO%20ID%20%20,TAS">www.genecards.org</a>). Experimental data from the Human Protein Atlas confirm PUS3 presence in the nucleoplasm and cytosol of human cells (<a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=PUS3#:~:text=Human%20Protein%20Atlas%20">www.genecards.org</a>). The enzyme likely acts on nascent or nuclear pre-tRNAs prior to their export, consistent with many tRNA modification processes occurring co-transcriptionally or during tRNA maturation in the nucleus. PUS3 may also remain associated with tRNAs in the cytosol, given its detection in that compartment (<a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=PUS3#:~:text=Compartment%20%20%7C%20Confidence%20,1">www.genecards.org</a>). The COMPARTMENTS database (integrating multiple localization evidence) likewise scores PUS3 highest for the <strong>cytosol and nucleus</strong> (confidence scores 5 and 4, respectively) (<a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=PUS3#:~:text=Compartment%20%20%7C%20Confidence%20,1">www.genecards.org</a>). There is minimal evidence of PUS3 in other organelles (e.g. trace association with mitochondrion or ER scored as very low confidence) (<a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=PUS3#:~:text=cytosol%20%20,1">www.genecards.org</a>), aligning with the understanding that <strong>PUS3 acts on cytosolic (nuclear-encoded) tRNAs</strong>, and not on mitochondrial tRNAs (mitochondrial tRNA pseudouridylation is performed by distinct enzymes such as PUS1). Overall, PUS3 is a <strong>soluble, non-membrane protein</strong> functioning in the nucleocytoplasmic compartment to ensure tRNAs acquire proper pseudouridine modifications.</p>
+<h2 id="biological-processes-involvement">Biological Processes Involvement</h2>
+<p>As a tRNA pseudouridine synthase, PUS3 is directly involved in <strong>tRNA processing</strong> and RNA post-transcriptional modification pathways. Gene Ontology classifies PUS3 in the biological process of <strong>“tRNA processing” (GO:0008033)</strong>, reflecting its role in the maturation of tRNA molecules (<a href="https://www.proteinatlas.org/ENSG00000110060-PUS3/summary/gene#:~:text=Protein%20function%20%28UniProt%29,i%7D%20tRNA%20processing">www.proteinatlas.org</a>). The specific reaction catalyzed by PUS3 – addition of pseudouridine at the anticodon loop – is a type of <strong>tRNA base modification (tRNA pseudouridylation)</strong>, a sub-process essential for generating functional tRNAs. By catalyzing pseudouridine formation at key positions, PUS3 contributes to the proper folding of tRNAs and stabilization of the anticodon stem-loop (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11258540/#:~:text=tRNA%28Lys%2C3%29%20by%20an%20A%2B,Nucleic%20Acids">pmc.ncbi.nlm.nih.gov</a>). This, in turn, impacts <strong>translation</strong> efficiency and fidelity, as modifications in the anticodon loop can influence codon–anticodon interactions and ribosome binding. Indeed, pseudouridine in tRNA has been shown to stabilize codon-anticodon pairing and support accurate reading of the mRNA codon (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11258540/#:~:text=tRNA%28Lys%2C3%29%20by%20an%20A%2B,Nucleic%20Acids">pmc.ncbi.nlm.nih.gov</a>). Thus, PUS3’s activity is tied to the broader biological process of <strong>protein synthesis</strong>, ensuring the translational machinery has a pool of correctly modified tRNAs.</p>
+<p>Importantly, proper tRNA modification has emerged as critical for certain tissue functions, especially the brain. The discovery that PUS3 mutations cause neurological disease highlights the biological process of <strong>neurodevelopment</strong> being indirectly affected by tRNA modification (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5152754/#:~:text=mutation%20in%20PUS3%20that%20fully,to%20these%20highly%20conserved%20processes">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pubmed.ncbi.nlm.nih.gov/34713961/#:~:text=PUS3%20encodes%20the%20pseudouridylate%20synthase,defect%2C%20and%20right%20kidney%20hypoplasia">pubmed.ncbi.nlm.nih.gov</a>). The brain appears particularly sensitive to disruptions in tRNA modifications, as evidenced by severe intellectual disability resulting from PUS3 loss of function (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5152754/#:~:text=pseudouridine%20at%20positions%2038%20and,to%20these%20highly%20conserved%20processes">pmc.ncbi.nlm.nih.gov</a>). While PUS3’s immediate role is at the molecular level (tRNA maturation), the downstream biological processes influenced include <strong>neuronal development, cognitive function</strong>, and cellular growth. In model organisms, pseudouridine synthases of the PUS3/TruA family are important for healthy growth and viability (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5152754/#:~:text=patient%20tRNA,expand%20the%20list%20of%20tRNA">pmc.ncbi.nlm.nih.gov</a>), indicating that the pseudouridylation of tRNAs is fundamental for normal cell physiology. In summary, PUS3 is involved in: </p>
+<ul>
+<li><strong>tRNA modification</strong> – specifically pseudouridine formation in tRNAs (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5152754/#:~:text=patient%20tRNA,expand%20the%20list%20of%20tRNA">pmc.ncbi.nlm.nih.gov</a>).  </li>
+<li><strong>tRNA processing and maturation</strong> as part of RNA post-transcriptional modification pathways (GO:0008033) (<a href="https://www.proteinatlas.org/ENSG00000110060-PUS3/summary/gene#:~:text=Protein%20function%20%28UniProt%29,i%7D%20tRNA%20processing">www.proteinatlas.org</a>).  </li>
+<li><strong>Translation</strong> – by ensuring tRNAs are properly modified for efficient protein synthesis.  </li>
+<li><strong>Neurodevelopment and cell viability</strong> – as an indirect consequence of its role in maintaining the translation machinery; defects lead to developmental abnormalities (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5152754/#:~:text=mutation%20in%20PUS3%20that%20fully,to%20these%20highly%20conserved%20processes">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pubmed.ncbi.nlm.nih.gov/34713961/#:~:text=PUS3%20encodes%20the%20pseudouridylate%20synthase,defect%2C%20and%20right%20kidney%20hypoplasia">pubmed.ncbi.nlm.nih.gov</a>).</li>
+</ul>
+<h2 id="disease-associations-and-phenotypes">Disease Associations and Phenotypes</h2>
+<p><strong>Biallelic pathogenic variants</strong> in PUS3 cause a rare autosomal recessive neurodevelopmental disorder. This condition is designated <strong>“Neurodevelopmental Disorder with Microcephaly and Gray Sclerae” (NEDMIGS)</strong>, also known as <strong>Mental Retardation, autosomal recessive 55 (MRT55)</strong> in older nomenclature (<a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=PUS3#:~:text=Intellectual%20Disability%20Syndrome%20,27055666%2028454995">www.genecards.org</a>) (<a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=PUS3#:~:text=global%20developmental%20delay%2C%20hypotonia%2C%20profoundly,gene%20represented%20in%20this%20entry">www.genecards.org</a>). The syndrome is characterized by severe global developmental delays and <strong>profound intellectual disability</strong>, often accompanied by <strong>hypotonia</strong> (poor muscle tone) and markedly impaired speech or absent language development (<a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=PUS3#:~:text=global%20developmental%20delay%2C%20hypotonia%2C%20profoundly,gene%20represented%20in%20this%20entry">www.genecards.org</a>). Affected children frequently present with <strong>microcephaly</strong> (small head/brain size) that can be mild to moderate, and many exhibit <strong>seizures/epilepsy</strong> starting in infancy or childhood (<a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=PUS3#:~:text=global%20developmental%20delay%2C%20hypotonia%2C%20profoundly,gene%20represented%20in%20this%20entry">www.genecards.org</a>) (<a href="https://pubmed.ncbi.nlm.nih.gov/34713961/#:~:text=PUS3%20encodes%20the%20pseudouridylate%20synthase,defect%2C%20and%20right%20kidney%20hypoplasia">pubmed.ncbi.nlm.nih.gov</a>). A distinctive but variably present feature is <strong>gray sclerae</strong>, referring to abnormal bluish-gray coloration of the whites of the eyes due to underlying connective tissue differences (<a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=PUS3#:~:text=global%20developmental%20delay%2C%20hypotonia%2C%20profoundly,gene%20represented%20in%20this%20entry">www.genecards.org</a>). This ocular finding, along with other pigmentary anomalies such as extensive dermal melanocytosis (bluish skin patches), was noted in the original cases and gives the disorder its name (<a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=PUS3#:~:text=%2A%20Severe%20Growth%20Deficiency,With%20Microcephaly%20And%20Grey%20Sclerae">www.genecards.org</a>).</p>
+<p>Beyond the core neurological phenotype, <strong>multisystem developmental abnormalities</strong> have been reported in some patients with PUS3 mutations. Common associated features include <strong>short stature or growth deficiency</strong>, and variable dysmorphic facial features (<a href="https://pubmed.ncbi.nlm.nih.gov/34713961/#:~:text=PUS3%20encodes%20the%20pseudouridylate%20synthase,defect%2C%20and%20right%20kidney%20hypoplasia">pubmed.ncbi.nlm.nih.gov</a>). Some individuals have had <strong>ocular and retinal anomalies</strong> (e.g. retinal dystrophy or visual impairment) and <strong>strabismus</strong>, indicating that eye development can be affected (<a href="https://pubmed.ncbi.nlm.nih.gov/34713961/#:~:text=and%20stability,defect%2C%20and%20right%20kidney%20hypoplasia">pubmed.ncbi.nlm.nih.gov</a>) (<a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=PUS3#:~:text=%2A%20Severe%20Growth%20Deficiency,With%20Microcephaly%20And%20Grey%20Sclerae">www.genecards.org</a>). Structural brain changes such as <strong>cerebellar hypoplasia</strong> have been observed via neuroimaging in at least one case (<a href="https://pubmed.ncbi.nlm.nih.gov/34713961/#:~:text=associated%20with%20severe%20intellectual%20disability%2C,defect%2C%20and%20right%20kidney%20hypoplasia">pubmed.ncbi.nlm.nih.gov</a>), although many patients have unremarkable brain MRI despite severe clinical deficits (<a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10092196/#:~:text=The%20leading%20symptoms%20of%20the,patients%20do%20not%20present%20any">www.ncbi.nlm.nih.gov</a>). Outside the nervous system, there are occasional reports of congenital malformations: for example, a child with a truncating PUS3 mutation was described with a <strong>congenital heart defect</strong> and <strong>kidney hypoplasia</strong> in addition to microcephaly and retinal degeneration (<a href="https://pubmed.ncbi.nlm.nih.gov/34713961/#:~:text=associated%20with%20severe%20intellectual%20disability%2C,defect%2C%20and%20right%20kidney%20hypoplasia">pubmed.ncbi.nlm.nih.gov</a>). However, these visceral anomalies are less consistently seen and might represent the more severe end of the spectrum. Overall, the <strong>consistent phenotype</strong> of PUS3 deficiency is an <em>intellectual disability syndrome with microcephaly, seizures, hypotonia,</em> and <em>growth failure</em>, sometimes accompanied by unique features like grey/blue sclerae and skin melanocytosis (<a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=PUS3#:~:text=%2A%20Severe%20Growth%20Deficiency,With%20Microcephaly%20And%20Grey%20Sclerae">www.genecards.org</a>) (<a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=PUS3#:~:text=global%20developmental%20delay%2C%20hypotonia%2C%20profoundly,gene%20represented%20in%20this%20entry">www.genecards.org</a>).</p>
+<p>At the cellular level, patient-derived cells (such as fibroblasts) show <strong>loss of PUS3 enzyme activity</strong>, evidenced by reduced pseudouridine content in tRNA (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5152754/#:~:text=mutation%20in%20PUS3%20that%20fully,to%20these%20highly%20conserved%20processes">pmc.ncbi.nlm.nih.gov</a>). The consequences of this at the molecular level likely include destabilization of certain tRNAs and translational dysregulation, which are hypothesized to particularly impact rapidly developing tissues like the brain (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5152754/#:~:text=pseudouridine%20at%20positions%2038%20and,to%20these%20highly%20conserved%20processes">pmc.ncbi.nlm.nih.gov</a>). Consistent with this, <em>PUS3-related disorder</em> is one of several recently recognized <strong>tRNA modification syndromes</strong>, where perturbation of tRNA modifications leads to neurodevelopmental disease (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5152754/#:~:text=pseudouridine%20at%20positions%2038%20and,to%20these%20highly%20conserved%20processes">pmc.ncbi.nlm.nih.gov</a>). There is no known association of PUS3 with cancer or adult-onset disorders; the phenotypes manifest early in development due to the gene’s crucial role in basic cellular processes.</p>
+<h2 id="protein-domains-and-structural-features">Protein Domains and Structural Features</h2>
+<p>The PUS3 protein is composed of 481 amino acids and contains a conserved pseudouridine synthase core flanked by unique extensions. <strong>Domain architecture</strong> analyses and structural studies indicate that human PUS3 has a central <strong>TruA-like core domain</strong> (the pseudouridine synthase catalytic domain) that is highly conserved among pseudouridine synthases (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11258540/#:~:text=Human%20PUS3%20harbors%20a%20conserved,type%20%28WT%29%20PUS3">pmc.ncbi.nlm.nih.gov</a>). This core domain contains the active site and the signature fold of the <strong>TruA/PseudoU synthase family</strong> – an α/β fold with a conserved catalytic aspartate residue that performs nucleophilic attack on the uridine base (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11258540/#:~:text=exception%20of%20DKC1%20,conserved%20across%20bacteria%20and%20eukaryotes">pmc.ncbi.nlm.nih.gov</a>). Flanking this core, PUS3 possesses <strong>eukaryote-specific N-terminal and C-terminal extensions</strong> that are absent in simpler bacterial homologs (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11258540/#:~:text=Human%20PUS3%20harbors%20a%20conserved,type%20%28WT%29%20PUS3">pmc.ncbi.nlm.nih.gov</a>). The N-terminal region (approximately residues 1–65) includes a segment annotated as <strong>DUF3373</strong> (domain of unknown function) (<a href="https://www.ncbi.nlm.nih.gov/gene/83480#:~:text=pfam11853%20Location%3A10%20%E2%86%92%2050%20DUF3373%3B,DUF3373">www.ncbi.nlm.nih.gov</a>). Although termed a DUF, this segment is thought to contribute to RNA-binding specificity or stability of the enzyme. The <strong>C-terminal region (residues ~338–481)</strong> is notably important for the protein’s quaternary structure: it forms a long α-helix (around amino acids 338–369) that mediates <strong>homodimerization</strong> of PUS3 (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11258540/#:~:text=match%20at%20L231%20parallel%20coiled,coil">pmc.ncbi.nlm.nih.gov</a>). Two PUS3 monomers interact via this parallel coiled-coil helical motif, assembling into a <strong>homodimeric complex</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11258540/#:~:text=human%20PUS3%2C%20which%20catalyzes%20the,associated%20human%20diseases%20to%20tRNAs">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11258540/#:~:text=match%20at%20L231%20parallel%20coiled,coil">pmc.ncbi.nlm.nih.gov</a>). Dimerization is a conserved feature of TruA family pseudouridine synthases (for example, E. coli TruA is a dimer), and is required for full activity – likely positioning two active sites in proper orientation to modify uridines 38 and 39 on a tRNA simultaneously or to stabilize tRNA binding.</p>
+<p>Structural analyses (including a recent high-resolution cryo-EM structure of human PUS3) confirm that the <strong>core domain</strong> harbors the catalytic cleft and RNA-binding surfaces, while the flexible <strong>terminal extensions enhance substrate selectivity</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11258540/#:~:text=flexible%20loops%2C%20helices%2C%20and%20additional,set%20of%20target%20RNAs%2C%20including">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11258540/#:~:text=Human%20PUS3%20harbors%20a%20conserved,type%20%28WT%29%20PUS3">pmc.ncbi.nlm.nih.gov</a>). The PUS3 dimer presents an extended RNA-binding interface, accommodating the L-shaped tRNA substrate. Notably, the <strong>C-terminal coiled-coil</strong> appears to be a unique adaptation in higher eukaryotes: sequence comparisons show this helical region is conserved in mammalian PUS3 orthologs, whereas bacterial TruA enzymes lack a comparable C-terminal helix (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11258540/#:~:text=parallel%20coiled,coil">pmc.ncbi.nlm.nih.gov</a>). The coiled-coil likely stabilizes the dimer or positions the C-termini for optimal tRNA interaction. In contrast, the <strong>N-terminal extension (DUF3373)</strong> in PUS3 might assist in recognizing specific tRNA features; for example, eukaryotic PUS3 enzymes may use their N-terminus to differentiate subsets of tRNAs, a property under investigation in recent studies. </p>
+<p>In summary, PUS3 is a <strong>monomer of ~54 kDa</strong> that forms a functional <strong>dimer (~108 kDa)</strong>. Each subunit contains: (1) an N-terminal region (unique to eukaryotes) of ~60 amino acids, (2) a <strong>pseudouridine synthase core domain</strong> (~Residues 70–330) that carries out catalysis (<a href="https://www.ncbi.nlm.nih.gov/gene/83480#:~:text=DUF3373%3B%20Protein%20of%20unknown%20function,DUF3373">www.ncbi.nlm.nih.gov</a>), and (3) a C-terminal α-helical extension (~Residues 338–481) that mediates dimerization and possibly additional RNA contacts (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11258540/#:~:text=match%20at%20L231%20parallel%20coiled,coil">pmc.ncbi.nlm.nih.gov</a>). The protein’s <strong>active site</strong> includes the invariant aspartate (by homology, human PUS3’s catalytic Asp is at position 118, as evidenced by mutagenesis studies where D118A abolishes activity) – this Asp residue is necessary for forming the covalent enzyme–RNA intermediate during catalysis (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11258540/#:~:text=Human%20PUS3%20harbors%20a%20conserved,type%20%28WT%29%20PUS3">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11258540/#:~:text=,text%7BGln%7D%7DG_%7B39%7D%20%28tQ_%7BU39G%7D%29.%20Calculated%20K_%7Bd">pmc.ncbi.nlm.nih.gov</a>). Together, these structural features enable PUS3 to specifically bind tRNA and catalyze pseudouridine formation with high precision. The <strong>InterPro/Pfam classification</strong> groups PUS3 in the <strong>PseudoU_synth_1 family (Pfam PF01416)</strong>, reflecting its membership in the pseudouridine synthase I family that also includes E. coli TruA (<a href="https://www.rcsb.org/annotations/9F9Q#:~:text=Chains%20%20,Domain">www.rcsb.org</a>).</p>
+<h2 id="expression-patterns-and-regulation">Expression Patterns and Regulation</h2>
+<p><strong>Baseline Expression:</strong> PUS3 is expressed <strong>ubiquitously</strong> in human tissues, consistent with its role in a fundamental cellular process (tRNA modification). RNA expression profiling (e.g. <strong>GTEx</strong> data) indicates that PUS3 mRNA is present in all examined tissues, with moderate expression levels. For instance, the gene shows an RPKM of ~5 in adult liver and ~3.5 in appendix, with broadly similar expression in at least 25 other tissues (<a href="https://www.ncbi.nlm.nih.gov/gene/83480#:~:text=Summary%20The%20protein%20encoded%20by,25%20other%20tissues%20See%20more">www.ncbi.nlm.nih.gov</a>). This suggests PUS3 is a housekeeping gene, required in most cell types for normal protein synthesis. The Human Protein Atlas likewise classifies PUS3 as expressed in all surveyed tissues (RNA tissue category: “Expressed in all”), and it has evidence at the protein level (<a href="https://www.proteinatlas.org/ENSG00000110060-PUS3/summary/gene#:~:text=UniProt%20Q9BZE2%20%28UniProt%20,i%7D%20Isomerase%20Biological">www.proteinatlas.org</a>). There may be some variation in expression levels: proteomic analyses (HIPED) reported PUS3 protein to be relatively high in <strong>heart tissue</strong> and adipocytes compared to other tissues (<a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=PUS3#:~:text=Protein%20differential%20expression%20in%20normal,from%20HIPED%20for%20PUS3%20Gene">www.genecards.org</a>), though the functional significance of this is not fully clear. Generally, tissues with high rates of protein synthesis or high metabolic activity (such as brain, muscle, heart) would have a greater demand for correctly modified tRNAs, which could explain higher PUS3 expression in those contexts.</p>
+<p><strong>Developmental and Cell-Type Expression:</strong> During development, PUS3 is also widely expressed. Data from LifeMap indicate PUS3 transcripts are present in embryonic tissues including the developing <strong>brain, pituitary gland, gastrointestinal tract (foregut)</strong>, and <strong>eye (retina)</strong> (<a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=PUS3#:~:text=Discovery%20discovery">www.genecards.org</a>). This broad developmental expression aligns with the wide-ranging phenotype of PUS3 deficiency (affecting multiple organs). Notably, PUS3 expression in neural tissues (brain) during development supports the idea that sufficient PUS3 activity is critical for neurodevelopment. In cellular systems, PUS3 mRNA and protein have been detected in numerous cell lines; no cell-type specific isoforms or highly restricted expression have been reported. Immunocytochemistry confirms a nucleocytosolic distribution in diverse cell types (<a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=PUS3#:~:text=Human%20Protein%20Atlas%20">www.genecards.org</a>).</p>
+<p><strong>Regulation:</strong> Currently, there is limited information on specific transcriptional or post-transcriptional regulation of the PUS3 gene. No dedicated transcription factors or regulatory elements unique to PUS3 have been well-characterized. The <strong>GeneHancer</strong> database does list some candidate promoter/enhancer elements near the PUS3 locus (<a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=PUS3#:~:text=GeneHancer%20,citations">www.genecards.org</a>), but their functional impact is unverified. Given its ubiquitous expression, PUS3 is likely controlled by general housekeeping gene promoters. There is no evidence that PUS3 is strongly inducible or regulated by stress conditions (unlike some tRNA-modifying enzymes that respond to nutrient stress, although this has not been shown for PUS3). In patient cells, remaining wild-type allele expression (in carriers) appears sufficient for normal function, and <strong>no dominant-negative effects</strong> have been observed — consistent with a loss-of-function recessive disease mechanism (<a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10092196/#:~:text=The%20leading%20symptoms%20of%20the,patients%20do%20not%20present%20any">www.ncbi.nlm.nih.gov</a>).</p>
+<p>Importantly, <strong>alternative splicing</strong> of PUS3 results in <em>two transcript variants</em> encoding different isoforms (<a href="https://www.ncbi.nlm.nih.gov/gene/83480#:~:text=Summary%20The%20protein%20encoded%20by,provided%20by%20RefSeq%2C%20Dec%202012">www.ncbi.nlm.nih.gov</a>). The major isoform is the full-length 481-residue protein (corresponding to NM_001272, NP_001258914.1), while a minor isoform (NP_112597.4) may lack a portion of the coding sequence (the exact differences are not fully described in RefSeq but could involve N- or C-terminal truncation). Both isoforms include the core catalytic domain, and their enzymatic activity is presumed to be similar, though the shorter isoform might have altered localization or stability if it lacks part of the regulatory termini. The existence of these isoforms suggests potential regulation at the mRNA splicing level, but the functional significance remains unclear. To date, most studies of PUS3 (and all known pathogenic mutations) pertain to the full-length isoform.</p>
+<p>In summary, <strong>PUS3 is constitutively expressed in most human cells</strong>, providing a steady supply of pseudouridine synthase activity for tRNA modification. Its expression pattern reflects its essential cellular role rather than tissue-specific functions. The gene’s regulation appears to be largely housekeeping in nature, and disease-causing mutations typically reduce or eliminate the functional protein rather than mis-regulate its expression.</p>
+<h2 id="evolutionary-conservation">Evolutionary Conservation</h2>
+<p>PUS3 is <strong>highly evolutionarily conserved</strong> across a wide range of organisms, underscoring its fundamental role in RNA biology. Orthologs of human PUS3 can be found in all eukaryotic lineages, and functionally analogous enzymes exist in bacteria and archaea. In fact, PUS3 belongs to the ancient <strong>TruA/Pus3 family of pseudouridine synthases</strong>, which is present in <strong>all domains of life</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5152754/#:~:text=patient%20tRNA,expand%20the%20list%20of%20tRNA">pmc.ncbi.nlm.nih.gov</a>). The E. coli <em>truA</em> gene (tRNA pseudouridine synthase I) was one of the first pseudouridine synthases identified; it modifies uridines in the anticodon loop of bacterial tRNAs and is considered the bacterial counterpart of PUS3. Yeast (<em>Saccharomyces cerevisiae</em>) has a PUS3 ortholog known as <strong>Deg1</strong> (also called Pus3 in some literature), which carries out the same pseudouridylation on cytosolic tRNAs (<a href="https://www.orpha.net/en/disease/gene/PUS3#:~:text=Synonym%28s%29%3A%20FKSG32%2C%20tRNA,38%2F39%29%20synthase%2C%20DEG1">www.orpha.net</a>). These yeast and bacterial enzymes share significant sequence motifs with human PUS3, especially in the catalytic domain, indicating a common origin. The catalytic Asp residue and key sequence motifs (such as the consensus sequence around the active site) are conserved from bacteria to humans (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11258540/#:~:text=exception%20of%20DKC1%20,conserved%20across%20bacteria%20and%20eukaryotes">pmc.ncbi.nlm.nih.gov</a>).</p>
+<p>Functionally, the importance of PUS3 is conserved as well. <strong>Loss of the PUS3 ortholog in model organisms leads to growth and developmental defects</strong>, highlighting its necessity. For example, <em>E. coli</em> truA mutants lacking pseudouridine at tRNA positions 38/39 exhibit reduced fitness, particularly at higher temperatures or stress conditions (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5152754/#:~:text=patient%20tRNA,expand%20the%20list%20of%20tRNA">pmc.ncbi.nlm.nih.gov</a>). In <em>S. cerevisiae</em>, deletion of <em>Deg1</em> is viable but causes cold-sensitive growth phenotypes and defects in tRNA function (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5152754/#:~:text=patient%20tRNA,expand%20the%20list%20of%20tRNA">pmc.ncbi.nlm.nih.gov</a>). Likewise, mouse <em>Pus3</em> is nearly identical to human PUS3 in sequence and is expressed in similar patterns, implying a conserved role in mammals (though a mouse knockout phenotype has not been widely reported in literature, one would predict neurological impairments given the human data). The <strong>sequence identity</strong> between human PUS3 and mouse Pus3 is high (on the order of ~96% amino acid identity (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11258540/#:~:text=parallel%20coiled,coil">pmc.ncbi.nlm.nih.gov</a>) for the core domain, with divergence mostly in the poorly conserved tail regions), reflecting strong evolutionary pressure to maintain this enzyme’s function.</p>
+<p>The <strong>eukaryote-specific extensions</strong> of PUS3 (N- and C-termini) evolved later and are conserved mainly within higher eukaryotic clades. For instance, mammals share the coiled-coil dimerization helix in the C-terminus (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11258540/#:~:text=parallel%20coiled,coil">pmc.ncbi.nlm.nih.gov</a>), whereas in fungi and lower eukaryotes this region is shorter or divergent, yet these proteins still form dimers (possibly through an alternate interface). This suggests that while the core enzymatic function is ancient, some regulatory or structural adaptations have occurred in multicellular organisms, potentially to modulate PUS3 activity, stability, or interactions in more complex cellular contexts.</p>
+<p>Taken together, the <strong>PUS3 gene/protein is evolutionarily conserved from bacteria (TruA) to humans</strong>, indicating that pseudouridine formation in tRNA anticodon loops is a universally critical process (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5152754/#:~:text=patient%20tRNA,expand%20the%20list%20of%20tRNA">pmc.ncbi.nlm.nih.gov</a>). The conservation in sequence and function is so high that cross-species complementation is feasible: a human PUS3 can functionally replace yeast Deg1, for example, to rescue its pseudouridylation function (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5152754/#:~:text=patient%20tRNA,expand%20the%20list%20of%20tRNA">pmc.ncbi.nlm.nih.gov</a>). This evolutionary preservation highlights that <strong>PUS3 performs a fundamental cellular role that has been maintained for billions of years</strong>.</p>
+<h2 id="key-experimental-evidence-and-literature">Key Experimental Evidence and Literature</h2>
+<p>Multiple lines of experimental evidence have elucidated PUS3’s function and its link to disease:</p>
+<ul>
+<li>
+<p><strong>Genetic Discovery (2016):</strong> Shaheen <em>et al.</em> (2016) first implicated PUS3 in human disease by identifying a <strong>homozygous truncating mutation (Arg435*)</strong> in a consanguineous family with syndromic intellectual disability (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5152754/#:~:text=mutation%20in%20PUS3%20that%20fully,to%20these%20highly%20conserved%20processes">pmc.ncbi.nlm.nih.gov</a>). They demonstrated that cells from affected individuals had a significant loss of tRNA pseudouridine modifications, consistent with PUS3 loss-of-function (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5152754/#:~:text=mutation%20in%20PUS3%20that%20fully,to%20these%20highly%20conserved%20processes">pmc.ncbi.nlm.nih.gov</a>). This study established the connection between PUS3 enzymatic activity and normal cognitive development (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5152754/#:~:text=pseudouridine%20at%20positions%2038%20and,to%20these%20highly%20conserved%20processes">pmc.ncbi.nlm.nih.gov</a>). It also highlighted the broader concept that <strong>tRNA modification defects can cause neurodevelopmental disorders</strong>, as the Arg435<em> mutation in PUS3 was shown to segregate perfectly with the intellectual disability phenotype (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5152754/#:~:text=In%20this%20study%2C%20we%20show,29%20Chen%20and%20Patton">pmc.ncbi.nlm.nih.gov</a>). This foundational finding (OMIM: </em>617051*) defined a new autosomal recessive ID syndrome caused by PUS3 mutations.</p>
+</li>
+<li>
+<p><strong>Phenotypic Expansion (2016–2021):</strong> Following the initial report, additional PUS3 variant cases were identified. Froukh <em>et al.</em> (2020) and Nøstvik <em>et al.</em> (2021) described new patients from different populations carrying <strong>biallelic PUS3 mutations</strong> (including missense and splice-site variants), thereby <em>expanding the phenotypic spectrum</em> (<a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=PUS3#:~:text=,107%20%7D">www.genecards.org</a>) (<a href="https://pubmed.ncbi.nlm.nih.gov/34713961/#:~:text=PUS3%20encodes%20the%20pseudouridylate%20synthase,defect%2C%20and%20right%20kidney%20hypoplasia">pubmed.ncbi.nlm.nih.gov</a>). These studies confirmed that <strong>severe intellectual disability with microcephaly</strong> is the consistent outcome of PUS3 loss, while also documenting variable features like seizures, pigmentary abnormalities (gray sclerae), and organ developmental defects (<a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=PUS3#:~:text=,27055666%2028454995%2031444731%2034415064">www.genecards.org</a>) (<a href="https://pubmed.ncbi.nlm.nih.gov/34713961/#:~:text=and%20stability,defect%2C%20and%20right%20kidney%20hypoplasia">pubmed.ncbi.nlm.nih.gov</a>). For instance, Nøstvik <em>et al.</em> 2021 (Clinical Genetics) compiled clinical data on multiple individuals and helped delineate commonalities (global developmental delay, hypotonia, lack of speech) and variability in PUS3-related neurodevelopmental disorder (<a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=PUS3#:~:text=global%20developmental%20delay%2C%20hypotonia%2C%20profoundly,gene%20represented%20in%20this%20entry">www.genecards.org</a>). These works firmly established PUS3 mutations as a recurrent cause of a recognizable syndromic ID condition (sometimes referred to as NEDMIGS or MRT55).</p>
+</li>
+<li>
+<p><strong>Biochemical and Cellular Studies (2022):</strong> Lin <em>et al.</em> (2022, <em>Human Mutation</em>) investigated the <strong>molecular consequences of PUS3 mutations</strong> in patient cells and in vitro. They characterized two missense mutations (e.g. Tyr71Cys and Ile299Thr) found in patients and discovered that these mutations lead to <strong>protein instability and degradation</strong> (<a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10092196/#:~:text=cells%20%28Figure%C2%A02f%29,very%20similar%20to%20other%20two">www.ncbi.nlm.nih.gov</a>). Fibroblasts from patients showed drastically reduced PUS3 protein levels despite normal mRNA levels, indicating that the mutant proteins were misfolded and turned over by the proteasome (<a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10092196/#:~:text=cells%20%28Figure%C2%A02f%29,very%20similar%20to%20other%20two">www.ncbi.nlm.nih.gov</a>). In vitro expression and purification experiments echoed this: the Ile299Thr mutant was less stable and prone to aggregation, explaining the <em>loss-of-function at the protein level</em> (<a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10092196/#:~:text=cells%20%28Figure%C2%A02f%29,very%20similar%20to%20other%20two">www.ncbi.nlm.nih.gov</a>). Moreover, this study directly measured tRNA modifications in patient-derived cells, confirming the <strong>absence of PUS3-catalyzed pseudouridines in multiple tRNAs</strong> from those patients (<a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10092196/#:~:text=match%20at%20L831%203,PUS3%E2%80%90specific%20%CE%A8%20in%20various%20tRNAs">www.ncbi.nlm.nih.gov</a>) (<a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10092196/#:~:text=3,in%20various%20tRNAs">www.ncbi.nlm.nih.gov</a>). Lin <em>et al.</em> also gathered all known PUS3 variants up to that time and confirmed that all were extremely rare in the general population and segregated with disease in families (<a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10092196/#:~:text=the%20loss%20of%20PUS3%20transcript,Phe%7D%20in">www.ncbi.nlm.nih.gov</a>). This provided a clear genotype–phenotype correlation and mechanistic insight: many <strong>disease-causing PUS3 alleles produce an unstable enzyme</strong>, leading to deficient tRNA pseudouridylation and cellular dysfunction.</p>
+</li>
+<li>
+<p><strong>Structural and Mechanistic Insight (2024):</strong> The most detailed mechanistic understanding of PUS3 came from a study by Lin <em>et al.</em> (2024, <em>Molecular Cell</em>), in which researchers solved the structure of human PUS3 (including a catalytically inactive mutant D118A) in complex with tRNA substrates. They revealed that <strong>PUS3 forms a homodimer</strong> and uncovered how it specifically recognizes its tRNA targets (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11258540/#:~:text=human%20PUS3%2C%20which%20catalyzes%20the,associated%20human%20diseases%20to%20tRNAs">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11258540/#:~:text=Human%20PUS3%20harbors%20a%20conserved,type%20%28WT%29%20PUS3">pmc.ncbi.nlm.nih.gov</a>). The structural data, combined with binding assays, showed PUS3’s preferences for certain tRNA sequence/structure features (explaining why it pseudouridinates particular tRNAs at position 39). Notably, they found that <strong>PUS3’s C-terminal coiled-coil dimerization domain is crucial for high-affinity tRNA binding</strong> and that each PUS3 dimer can potentially engage two tRNA molecules (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11258540/#:~:text=Human%20PUS3%20harbors%20a%20conserved,type%20%28WT%29%20PUS3">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11258540/#:~:text=match%20at%20L231%20parallel%20coiled,coil">pmc.ncbi.nlm.nih.gov</a>). Additionally, this work confirmed that PUS3 has no off-target activity on other RNA classes (e.g., no pseudouridylation detected in rRNA or mRNA in PUS3-proficient vs deficient cells) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11258540/#:~:text=human%20PUS3%2C%20which%20catalyzes%20the,associated%20human%20diseases%20to%20tRNAs">pmc.ncbi.nlm.nih.gov</a>). This comprehensive analysis solidified our understanding of PUS3’s catalytic mechanism, substrate selectivity, and the structural basis for its function. It also provided a framework to interpret how different mutations (e.g. ones affecting the core vs the dimerization helix) impact the enzyme’s function – for example, a mutation in the core active site versus one destabilizing the dimer interface could both abrogate activity.</p>
+</li>
+<li>
+<p><strong>Additional References:</strong> Earlier fundamental studies on pseudouridine synthases, predating the identification of human PUS3, also inform our knowledge. Biochemical characterization of <em>E. coli</em> TruA and yeast Deg1 had demonstrated the requirement of a particular aspartate and the dimeric nature of these enzymes (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11258540/#:~:text=,alone%20pseudouridine">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11258540/#:~:text=match%20at%20L1650%20Yokoyama%20S,Google%20Scholar">pmc.ncbi.nlm.nih.gov</a>). Those classical studies, along with more recent reviews (e.g. Charette and Gray 2000 (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11258540/#:~:text=,alone%20pseudouridine">pmc.ncbi.nlm.nih.gov</a>), Rintala-Dempsey &amp; Kothe 2017), provide context that PUS3 operates via the same conserved mechanism as other pseudouridine synthases. Furthermore, clinical genetics databases (ClinVar, DECIPHER) list several pathogenic PUS3 variants, and model organism databases (MGI for mouse, SGD for yeast) note the phenotype of PUS3/Pus3/Deg1 loss in model systems, reinforcing the human findings.</p>
+</li>
+</ul>
+<p>In conclusion, a robust body of evidence – from human genetics and clinical observations to cellular biochemistry and structural biology – converges to explain PUS3’s role. <strong>PUS3 is a tRNA pseudouridine synthase essential for proper neuron development and function</strong>, and when this enzyme is absent or nonfunctional, the resulting cascade of tRNA instability and translational impairment leads to a defined neurodevelopmental syndrome. This gene’s annotations in the Gene Ontology and related databases reflect these findings, ensuring that PUS3 is recognized for its RNA-binding, pseudouridine synthase activity and its involvement in tRNA processing and human disease.</p>
+<h2 id="gene-ontology-annotations-selected-terms">Gene Ontology Annotations (Selected Terms)</h2>
+<ul>
+<li><strong>Molecular Function:</strong> </li>
+<li><em>RNA binding</em> <strong>(GO:0003723)</strong> – PUS3 binds tRNA molecules as part of its function (<a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=PUS3#:~:text=GO%20ID%20%20,IEA">www.genecards.org</a>).  </li>
+<li><em>Pseudouridine synthase activity</em> <strong>(GO:0009982)</strong> – Catalyzes the isomerization of uridine to pseudouridine in RNA (<a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=PUS3#:~:text=GO%3A0003723%20,5%7D%20%20%7C%20tRNA">www.genecards.org</a>).  </li>
+<li>
+<p><em>Isomerase activity</em> <strong>(GO:0016853)</strong> – General enzymatic function category for catalyzing intramolecular rearrangements (<a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=PUS3#:~:text=GO%3A0003723%20,5%7D%20%20%7C%20tRNA">www.genecards.org</a>).</p>
+</li>
+<li>
+<p><strong>Biological Process:</strong> </p>
+</li>
+<li><em>tRNA processing</em> <strong>(GO:0008033)</strong> – Involved in the post-transcriptional processing and modification of tRNAs (pseudouridylation is a tRNA processing step) (<a href="https://www.proteinatlas.org/ENSG00000110060-PUS3/summary/gene#:~:text=Protein%20function%20%28UniProt%29,i%7D%20tRNA%20processing">www.proteinatlas.org</a>).  </li>
+<li><em>tRNA pseudouridine synthesis</em> (GO term specific to pseudouridylation of tRNA; often captured under tRNA modification) – PUS3’s specific role in forming pseudouridine at tRNA position 38/39 (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5152754/#:~:text=patient%20tRNA,expand%20the%20list%20of%20tRNA">pmc.ncbi.nlm.nih.gov</a>).  </li>
+<li>
+<p><em>Translation</em> <strong>(GO:0006412)</strong> (indirectly) – By modifying tRNAs, PUS3 contributes to the fidelity and efficiency of protein translation (this link is inferred from the requirement of proper tRNA function for translation).</p>
+</li>
+<li>
+<p><strong>Cellular Component:</strong> </p>
+</li>
+<li><em>Nucleus</em> <strong>(GO:0005634)</strong> – PUS3 is active in the nucleus, where initial tRNA modification occurs (<a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=PUS3#:~:text=GO%20ID%20%20,TAS">www.genecards.org</a>).  </li>
+<li><em>Cytoplasm</em> <strong>(GO:0005737)</strong> – PUS3 is also present in the cytoplasm, implying it may interact with tRNAs in the cytosol as well (<a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=PUS3#:~:text=GO%3A0005634%20,TAS">www.genecards.org</a>).  </li>
+<li><em>Cytosol</em> <strong>(GO:0005829)</strong> – Detected in the cytosolic fraction of cells (<a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=PUS3#:~:text=GO%3A0005634%20,TAS">www.genecards.org</a>). </li>
+</ul>
+<p>Each of these GO annotations is supported by experimental or sequence-homology evidence (e.g., <strong>EXP</strong>: experiment, <strong>IBA</strong>: inferred from biological ancestor, <strong>TAS</strong>: author statement) from the literature and curation databases (<a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=PUS3#:~:text=GO%3A0003723%20,5%7D%20%20%7C%20tRNA">www.genecards.org</a>) (<a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=PUS3#:~:text=GO%20ID%20%20,TAS">www.genecards.org</a>). These terms collectively summarize PUS3’s role as an <strong>RNA-binding isomerase (pseudouridine synthase)</strong> that operates in the nucleus/cytosol on tRNA substrates, and they align with the phenotypic consequences observed when the gene is disrupted. </p>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q9BZE2
+gene_symbol: PUS3
+aliases:
+  - FKSG32
+  - DEG1
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: PUS3 encodes a pseudouridine synthase that catalyzes the isomerization of uridine to pseudouridine specifically at positions 38 and 39 in the anticodon stem-loop of cytosolic tRNAs. It functions as a stand-alone enzyme that directly binds tRNA without requiring guide RNAs. The protein forms a homodimer through a C-terminal coiled-coil domain and localizes to both nucleus and cytoplasm. PUS3 is critical for neurodevelopment, with biallelic loss-of-function mutations causing an autosomal recessive intellectual disability syndrome (NEDMIGS/MRT55) characterized by global developmental delay, hypotonia, microcephaly, and seizures.
+existing_annotations:
+- term:
+    id: GO:0009982
+    label: pseudouridine synthase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: PUS3 catalyzes pseudouridine formation in tRNA as demonstrated experimentally (PMID:27055666). The IBA annotation is well-supported by evolutionary conservation of this function across the TruA/Pus3 family from bacteria to humans.
+    action: ACCEPT
+    reason: This annotation accurately captures PUS3&#39;s core enzymatic function. The protein has been experimentally validated to catalyze the isomerization of uridine to pseudouridine in tRNAs, with loss-of-function mutations abolishing this activity in patient cells.
+    supported_by:
+      - reference_id: PMID:27055666
+        supporting_text: &#34;Consistent with the known role of Pus3 in isomerizing uracil to pseudouridine at positions 38 and 39 in tRNA, we found a significant reduction in this post-transcriptional modification of tRNA in patient cells.&#34;
+- term:
+    id: GO:0031119
+    label: tRNA pseudouridine synthesis
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: PUS3 specifically synthesizes pseudouridine in tRNAs at positions 38/39 of the anticodon loop. This function is conserved across the TruA/Pus3 family and experimentally validated.
+    action: ACCEPT
+    reason: This accurately describes PUS3&#39;s biological process. The enzyme specifically modifies cytosolic tRNAs, not other RNA types, as confirmed by experimental evidence showing loss of tRNA pseudouridylation in patient cells with PUS3 mutations.
+    supported_by:
+      - reference_id: PMID:27055666
+        supporting_text: &#34;PUS3 is a member of the highly conserved TruA/Pus3 family of pseudouridylases, which are important for healthy growth in bacteria and yeast...and catalyze pseudouridine formation at specific uridine residues in the anticodon-stem loop of tRNAs&#34;
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: PUS3 localizes to the cytoplasm as confirmed by multiple sources including UniProt curation and expression databases. This is consistent with its role in modifying cytosolic tRNAs.
+    action: ACCEPT
+    reason: The cytoplasmic localization is well-supported. PUS3 modifies cytosolic tRNAs and needs to be present where these tRNAs function. The Human Protein Atlas and COMPARTMENTS database confirm cytoplasmic/cytosolic presence.
+    supported_by:
+      - reference_id: file:human/PUS3/PUS3-deep-research.md
+        supporting_text: &#34;PUS3 predominantly localizes to the nucleus and the cytoplasm, consistent with its role in modifying tRNAs which are transcribed and processed in the nucleus and function in the cytosol&#34;
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: PUS3 localizes to the nucleus where it likely modifies nascent or pre-tRNAs during their maturation. This dual nuclear-cytoplasmic localization is typical for tRNA modification enzymes.
+    action: ACCEPT
+    reason: Nuclear localization is well-supported by UniProt curation and expression data. PUS3 likely acts on tRNAs during their nuclear maturation phase before export to the cytoplasm.
+    supported_by:
+      - reference_id: file:human/PUS3/PUS3-uniprot.txt
+        supporting_text: &#34;SUBCELLULAR LOCATION: Nucleus {ECO:0000305}.&#34;
+- term:
+    id: GO:1990481
+    label: mRNA pseudouridine synthesis
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: Recent high-throughput mapping studies found NO PUS3-dependent pseudouridine sites in mRNAs, indicating PUS3 is specific to tRNA modification and does not modify mRNAs.
+    action: REMOVE
+    reason: This annotation is incorrect based on current evidence. PUS3 specifically modifies tRNAs at positions 38/39 and has no demonstrated activity on mRNAs. Recent comprehensive mapping studies explicitly found no PUS3-dependent pseudouridine sites in mRNAs.
+    supported_by:
+      - reference_id: file:human/PUS3/PUS3-deep-research.md
+        supporting_text: &#34;Notably, PUS3 activity appears specific to tRNAs; recent high-throughput mapping found no PUS3-dependent pseudouridine sites in mRNAs, linking the enzyme&#39;s function exclusively to tRNA modification&#34;
+- term:
+    id: GO:0160154
+    label: tRNA pseudouridine(38/39) synthase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: This is the most specific and accurate molecular function annotation for PUS3, precisely describing its activity at positions 38 and 39 of tRNA anticodon loops.
+    action: ACCEPT
+    reason: This highly specific term perfectly captures PUS3&#39;s enzymatic activity. It is more precise than the general pseudouridine synthase term and accurately reflects the specific positions modified by PUS3.
+    supported_by:
+      - reference_id: file:human/PUS3/PUS3-uniprot.txt
+        supporting_text: &#34;RecName: Full=tRNA pseudouridine(38/39) synthase; EC=5.4.99.45&#34;
+- term:
+    id: GO:0001522
+    label: pseudouridine synthesis
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: While PUS3 does synthesize pseudouridine, this term is too general. The more specific term GO:0031119 (tRNA pseudouridine synthesis) better captures PUS3&#39;s specific function.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: This annotation is technically correct but overly general. PUS3 specifically synthesizes pseudouridine in tRNAs, not in all RNA types. The more specific GO:0031119 provides better functional information.
+    supported_by:
+      - reference_id: PMID:27055666
+        supporting_text: &#34;PUS3 is a member of the highly conserved TruA/Pus3 family of pseudouridylases...catalyze pseudouridine formation at specific uridine residues in the anticodon-stem loop of tRNAs&#34;
+- term:
+    id: GO:0003723
+    label: RNA binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: While PUS3 does bind RNA (specifically tRNA), this term is too vague. A more specific term like &#39;tRNA binding&#39; (GO:0000049) would be more informative.
+    action: MODIFY
+    reason: PUS3 does bind RNA, but specifically binds tRNA substrates as a stand-alone enzyme. The general &#39;RNA binding&#39; term doesn&#39;t convey the specificity of PUS3&#39;s substrate recognition.
+    proposed_replacement_terms:
+      - id: GO:0000049
+        label: tRNA binding
+    supported_by:
+      - reference_id: file:human/PUS3/PUS3-deep-research.md
+        supporting_text: &#34;PUS3 is a &#39;stand-alone&#39; pseudouridine synthase, meaning it autonomously binds its RNA substrate without requiring a guide RNA&#34;
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: Duplicate annotation of nuclear localization with different evidence code. The IBA annotation is sufficient.
+    action: ACCEPT
+    reason: Although duplicated with the IBA annotation above, both annotations support nuclear localization which is correct for PUS3. Multiple evidence types strengthen this annotation.
+    supported_by:
+      - reference_id: file:human/PUS3/PUS3-uniprot.txt
+        supporting_text: &#34;SUBCELLULAR LOCATION: Nucleus {ECO:0000305}.&#34;
+- term:
+    id: GO:0008033
+    label: tRNA processing
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: PUS3 is involved in tRNA processing through its role in post-transcriptional modification. However, the more specific term GO:0031119 (tRNA pseudouridine synthesis) is more informative.
+    action: ACCEPT
+    reason: This annotation is correct - pseudouridylation is a type of tRNA processing. PUS3 modifies tRNAs during their maturation, which is part of the broader tRNA processing pathway.
+    supported_by:
+      - reference_id: file:human/PUS3/PUS3-deep-research.md
+        supporting_text: &#34;As a tRNA pseudouridine synthase, PUS3 is directly involved in tRNA processing and RNA post-transcriptional modification pathways&#34;
+- term:
+    id: GO:0009451
+    label: RNA modification
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: While accurate, this term is too general. PUS3 specifically performs tRNA pseudouridylation, and more specific terms are available.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: This annotation is correct but overly broad. PUS3 specifically modifies tRNAs by pseudouridylation. More specific terms like GO:0031119 (tRNA pseudouridine synthesis) provide better functional resolution.
+    supported_by:
+      - reference_id: PMID:27055666
+        supporting_text: &#34;identified a novel homozygous truncating mutation in PUS3 that fully segregates with the intellectual disability phenotype...found a significant reduction in this post-transcriptional modification of tRNA&#34;
+- term:
+    id: GO:0009982
+    label: pseudouridine synthase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: Duplicate of the IBA annotation for the same term. The more specific GO:0160154 (tRNA pseudouridine(38/39) synthase activity) is preferable.
+    action: ACCEPT
+    reason: Correct annotation duplicating the IBA evidence above. Multiple evidence types support this core function. However, GO:0160154 provides more specificity.
+    supported_by:
+      - reference_id: PMID:27055666
+        supporting_text: &#34;Consistent with the known role of Pus3 in isomerizing uracil to pseudouridine at positions 38 and 39 in tRNA&#34;
+- term:
+    id: GO:0016853
+    label: isomerase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: While technically correct (PUS3 is an isomerase), this term is too general. The specific pseudouridine synthase terms are more informative.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: This annotation is correct but far too general. PUS3 is specifically a pseudouridine synthase (RNA isomerase EC 5.4.99.45), and more specific terms accurately describe its function.
+    supported_by:
+      - reference_id: file:human/PUS3/PUS3-uniprot.txt
+        supporting_text: &#34;EC=5.4.99.45...AltName: Full=tRNA-uridine isomerase 3&#34;
+- term:
+    id: GO:0031119
+    label: tRNA pseudouridine synthesis
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: Duplicate annotation with different evidence code. Correctly describes PUS3&#39;s biological process.
+    action: ACCEPT
+    reason: Correct annotation that accurately describes PUS3&#39;s role in tRNA pseudouridylation. Multiple evidence codes strengthen this annotation.
+    supported_by:
+      - reference_id: PMID:27055666
+        supporting_text: &#34;catalyze pseudouridine formation at specific uridine residues in the anticodon-stem loop of tRNAs in all kingdoms of life&#34;
+- term:
+    id: GO:0006400
+    label: tRNA modification
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-8870289
+  review:
+    summary: PUS3 performs tRNA modification through pseudouridylation at positions 38/39. This Reactome-based annotation is well-curated and accurate.
+    action: ACCEPT
+    reason: Correct annotation from Reactome pathway database. PUS3&#39;s pseudouridylation activity is a specific type of tRNA modification essential for tRNA function.
+    supported_by:
+      - reference_id: file:human/PUS3/PUS3-deep-research.md
+        supporting_text: &#34;PUS3 is involved in: tRNA modification – specifically pseudouridine formation in tRNAs&#34;
+- term:
+    id: GO:0009982
+    label: pseudouridine synthase activity
+  evidence_type: EXP
+  original_reference_id: PMID:27055666
+  review:
+    summary: Direct experimental evidence from patient cells showing loss of pseudouridine synthase activity with PUS3 mutations. This is the strongest evidence for this function.
+    action: ACCEPT
+    reason: This annotation has the strongest experimental support. The cited paper directly demonstrated that PUS3 mutations result in loss of tRNA pseudouridylation in patient cells.
+    supported_by:
+      - reference_id: PMID:27055666
+        supporting_text: &#34;we found a significant reduction in this post-transcriptional modification of tRNA in patient cells...Since tRNA Phe from LCLs with the Arg435* allele of PUS3 had almost exactly 1 mole/mole less Ψ than control LCLs&#34;
+- term:
+    id: GO:0160154
+    label: tRNA pseudouridine(38/39) synthase activity
+  evidence_type: IMP
+  original_reference_id: PMID:27055666
+  review:
+    summary: The most specific and accurate molecular function for PUS3, with strong mutant phenotype evidence showing loss of pseudouridine at positions 38/39 in patient tRNAs.
+    action: ACCEPT
+    reason: This is the most precise annotation for PUS3&#39;s molecular function, supported by direct evidence from mutant phenotypes. Patient cells with PUS3 mutations specifically lose pseudouridine at these positions.
+    supported_by:
+      - reference_id: PMID:27055666
+        supporting_text: &#34;Consistent with the known role of Pus3 in isomerizing uracil to pseudouridine at positions 38 and 39 in tRNA, we found a significant reduction in this post-transcriptional modification of tRNA in patient cells&#34;
+- term:
+    id: GO:0031119
+    label: tRNA pseudouridine synthesis
+  evidence_type: IMP
+  original_reference_id: PMID:27055666
+  review:
+    summary: Strong experimental evidence from mutant phenotypes showing loss of tRNA pseudouridylation. This accurately describes PUS3&#39;s biological process.
+    action: ACCEPT
+    reason: Well-supported by mutant phenotype data showing that loss of PUS3 function results in decreased tRNA pseudouridylation, confirming its role in this biological process.
+    supported_by:
+      - reference_id: PMID:27055666
+        supporting_text: &#34;we show that a homozygous truncation mutation in PUS3 segregating with ID results in impaired isomerization of uridine to pseudouridine (Ψ) in patient tRNA&#34;
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-8870289
+  review:
+    summary: PUS3 localizes to the cytosol where it modifies cytosolic tRNAs. This Reactome-based annotation is consistent with other localization data.
+    action: ACCEPT
+    reason: Correct annotation from curated Reactome pathway. PUS3 acts on cytosolic tRNAs and is detected in the cytosolic fraction, distinguishing it from mitochondrial pseudouridine synthases.
+    supported_by:
+      - reference_id: file:human/PUS3/PUS3-deep-research.md
+        supporting_text: &#34;The COMPARTMENTS database (integrating multiple localization evidence) likewise scores PUS3 highest for the cytosol and nucleus (confidence scores 5 and 4, respectively)&#34;
+core_functions:
+  - description: Catalyzes pseudouridine formation at positions 38 and 39 in tRNA anticodon loops as a homodimeric stand-alone enzyme
+    molecular_function:
+      id: GO:0160154
+      label: tRNA pseudouridine(38/39) synthase activity
+    directly_involved_in:
+      - id: GO:0031119
+        label: tRNA pseudouridine synthesis
+      - id: GO:0006400
+        label: tRNA modification
+      - id: GO:0008033
+        label: tRNA processing
+    locations:
+      - id: GO:0005634
+        label: nucleus
+      - id: GO:0005829
+        label: cytosol
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms.
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt.
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods.
+  findings: []
+- id: PMID:27055666
+  title: A homozygous truncating mutation in PUS3 expands the role of tRNA modification
+    in normal cognition.
+  findings:
+    - statement: PUS3 catalyzes pseudouridine formation at positions 38 and 39 in the anticodon stem-loop of tRNAs across all kingdoms of life
+      supporting_text: &#34;PUS3 is a member of the highly conserved TruA/Pus3 family of pseudouridylases, which are important for healthy growth in bacteria and yeast ( Bekaert and Rousset 2005 ; Carbone et al. 1991 ; Chang et al. 1971 ; Lecointe et al. 2002 ; Tsui et al. 1991 ), and catalyze pseudouridine formation at specific uridine residues in the anticodon-stem loop of tRNAs in all kingdoms of life&#34;
+      reference_section_type: INTRODUCTION
+      full_text_unavailable: false
+    - statement: A homozygous truncating mutation (Arg435*) in PUS3 causes autosomal recessive intellectual disability syndrome
+      supporting_text: &#34;we applied autozygosity mapping and exome sequencing and identified a novel homozygous truncating mutation in PUS3 that fully segregates with the intellectual disability phenotype&#34;
+      reference_section_type: ABSTRACT
+      full_text_unavailable: false
+    - statement: Patient cells with PUS3 mutations show significant reduction in pseudouridine modification at tRNA positions 38 and 39
+      supporting_text: &#34;Consistent with the known role of Pus3 in isomerizing uracil to pseudouridine at positions 38 and 39 in tRNA, we found a significant reduction in this post-transcriptional modification of tRNA in patient cells&#34;
+      reference_section_type: ABSTRACT
+      full_text_unavailable: false
+    - statement: The Arg435* mutation nearly completely abolishes PUS3 enzymatic function based on quantitative pseudouridine measurements
+      supporting_text: &#34;Since tRNA Phe from LCLs with the Arg435* allele of PUS3 had almost exactly 1 mole/mole less Ψ than control LCLs, we infer that the Arg435* allele nearly completely knocks out PUS3 function due to truncation of the conserved domain and the last 45 amino acids&#34;
+      reference_section_type: DISCUSSION
+      full_text_unavailable: false
+    - statement: Loss of PUS3 activity has significant physiological consequences similar to bacterial and yeast orthologs
+      supporting_text: &#34;Lack of PUS3 activity is clearly physiologically consequential. Bacterial truA mutants have significant growth defects ( Chang et al. 1971 ; Tsui et al. 1991 ), while S. cerevisiae pus3Δ mutants are slow growing and temperature-sensitive ( Carbone et al. 1991 ; Lecointe et al. 2002 ), primarily due to reduced function of tRNA Gln(UUG) ( Han et al. 2015 ), and have reduced −1 frameshifting&#34;
+      reference_section_type: DISCUSSION
+      full_text_unavailable: false
+    - statement: The brain shows higher sensitivity to reduced translational efficiency from PUS3 deficiency compared to other organs
+      supporting_text: &#34;it is possible that brain-specific phenotype reflects a higher sensitivity to reduced translational efficiency by the brain compared to other organs ( Torres et al. 2014 ). This would be consistent with the finding by us and others that mutations in other genes involved in tRNA modification result in phenotypes with predilection to the brain&#34;
+      reference_section_type: DISCUSSION
+      full_text_unavailable: false
+- id: PMID:38996458
+  title: The molecular basis of tRNA selectivity by human pseudouridine synthase 3
+  findings:
+    - statement: PUS3 forms a homodimer exclusively through an anti-parallel coiled-coil domain formed by C-terminal helices
+      supporting_text: &#34;The dimer interface (∼2,420 Å2) of PUS3 is exclusively formed by an anti-parallel coiled-coil domain, which is formed by a long C-terminal helix (aa 338–369) from each of the PUS3 monomers&#34;
+      full_text_unavailable: false
+    - statement: PUS3 specifically catalyzes pseudouridylation at position 39 in tRNAs without modifying other positions
+      supporting_text: &#34;PUS3WT, but not PUS3D118A, converts U39 into Ψ39 in vitro but does not modify uridines in other positions of the tRNAs (Figures 1B and S1D), demonstrating that our purified PUS3WT is functional and displays the expected target specificity&#34;
+      full_text_unavailable: false
+    - statement: PUS3 recognizes tRNAs through two specific contact points - the elbow region and the anticodon stem loop
+      supporting_text: &#34;Each tRNA molecule in our structure contacts both PUS3 monomers and is held by the PUS3 dimer at two main contact points: the elbow region (T-arm) and the ASL&#34;
+      full_text_unavailable: false
+    - statement: PUS3 requires both monomer contact points for high-affinity tRNA binding, unlike monomeric PUS1
+      supporting_text: &#34;PUS3 fails to bind to the ASL alone, which is consistent with data for the bacterial EcTruA dimer. In contrast, human PUS1, which functions as a monomer, binds to full-length tRNA and ASL with similar affinities&#34;
+      full_text_unavailable: false
+    - statement: PUS3 exclusively modifies tRNAs and does not target mRNAs in human cells
+      supporting_text: &#34;we found no evidence in human cells that PUS3 targets other RNA classes than tRNAs, including mRNAs, rRNAs, lncRNA, or small nuclear RNAs (snRNAs)&#34;
+      full_text_unavailable: false
+    - statement: PUS3 can modify intron-containing pre-tRNAs, suggesting it acts before tRNA splicing
+      supporting_text: &#34;the structure of human PUS3 with pre-tRNAUCUArg represents the first structural snapshot of a tRNA modifying enzyme bound to an intron-containing tRNA, suggesting that PUS3 acts before the tRNA splicing endonuclease (TSEN) complex&#34;
+      full_text_unavailable: false
+    - statement: Pathogenic PUS3 variants fall into two functional classes affecting either protein stability or tRNA binding/modification
+      supporting_text: &#34;we characterize two main classes of pathogenic PUS3 variants: those that reduce protein stability and others that cause defects in tRNA binding and/or modification activity&#34;
+      full_text_unavailable: false
+- id: PMID:36125428
+  title: Destabilization of mutated human PUS3 protein causes intellectual disability
+  findings:
+    - statement: The Y71C mutation dramatically reduces PUS3 thermostability without affecting tRNA binding or catalytic activity in vitro
+      supporting_text: &#34;the purified recombinant PUS3Y71C protein shows similar binding affinities and modification activities as the wild‐type PUS3 enzyme in vitro. However, the Y71C mutation compromises the thermostability of the protein and leads to almost complete depletion of PUS3 protein levels in patient‐derived fibroblasts&#34;
+      full_text_unavailable: false
+    - statement: The Y71C mutation causes a 10°C reduction in PUS3 melting temperature
+      supporting_text: &#34;the introduction of the Y71C mutation strongly compromises the stability of the PUS3 protein, resulting in a melting temperature that is ~10°C lower than for PUS3WT&#34;
+      full_text_unavailable: false
+    - statement: The I299T mutation causes PUS3 protein aggregation
+      supporting_text: &#34;the p.Tyr71Cys substitution neither affect tRNA binding nor pseudouridylation activity in vitro, but strongly impair the thermostability profile of PUS3, while the p.Ile299Thr mutation causes protein aggregation&#34;
+      full_text_unavailable: false
+    - statement: Patient cells with PUS3 mutations show dramatically reduced Ψ39 levels in multiple tRNAs
+      supporting_text: &#34;Our analyses show that the levels of Ψ39 dramatically decreased on all tested tRNA transcripts from the patient samples&#34;
+      full_text_unavailable: false
+    - statement: PUS3 protein levels are severely reduced in patient fibroblasts despite normal mRNA levels
+      supporting_text: &#34;the endogenous protein level of PUS3 was significantly reduced in the patient cells... The patients and the healthy controls expressed similar levels of PUS3 mRNAs, showing that the observed drop in protein levels is caused post‐transcriptionally&#34;
+      full_text_unavailable: false
+- id: PMID:34713961
+  title: PUS3-related disorder Report of a novel patient and delineation of the phenotypic spectrum
+  findings:
+    - statement: PUS3 catalyzes tRNA pseudouridine formation critical for tRNA structure and stability
+      supporting_text: &#34;PUS3 encodes the pseudouridylate synthase 3, an enzyme catalyzing the formation of tRNA pseudouridine, which plays a critical role in tRNA structure, function, and stability&#34;
+      full_text_unavailable: true
+    - statement: Biallelic PUS3 mutations cause severe intellectual disability with microcephaly and epilepsy
+      supporting_text: &#34;Biallelic pathogenic variants of PUS3 have been previously associated with severe intellectual disability, microcephaly, epilepsy, and short stature&#34;
+      full_text_unavailable: true
+    - statement: PUS3 mutations can cause a severe syndromic presentation including organ malformations
+      supporting_text: &#34;We identified a novel homozygous PUS3 frameshift variant in a child with facial dysmorphisms, growth failure, microcephaly, retinal dystrophy, cerebellar hypoplasia, congenital heart defect, and right kidney hypoplasia&#34;
+      full_text_unavailable: true
+- id: PDB:9ENB
+  title: Human pseudouridine synthase 3 (PUS3 R116A mutant) and two tRNA-Gln
+  findings:
+    - statement: PUS3 homodimer structure reveals symmetric binding of two tRNA molecules
+      supporting_text: &#34;The cryo-EM structure of human PUS3 bound to two tRNA-Gln molecules at 3.0 Å resolution shows a symmetric homodimer with each tRNA contacting both PUS3 monomers&#34;
+      full_text_unavailable: false
+    - statement: Each tRNA is recognized through contacts with the elbow region and anticodon stem loop
+      supporting_text: &#34;The elbow region of tRNA is positioned on a platform formed by two helices containing basic residues, while the anticodon stem loop is accommodated by the second PUS3 subunit positioning U39 in the catalytic cleft&#34;
+      full_text_unavailable: false
+- id: PDB:9ENC
+  title: Human pseudouridine synthase 3 (PUS3 R116A mutant) and one tRNA-Gln
+  findings:
+    - statement: PUS3 can bind a single tRNA molecule in an asymmetric complex
+      supporting_text: &#34;6% of the particles corresponded to PUS3 dimers bound to a single tRNA molecule, demonstrating asymmetric binding modes&#34;
+      full_text_unavailable: false
+- id: Reactome:R-HSA-8870289
+  title: PUS3 isomerizes uridine-39 to pseudouridine-39 in tRNA
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+    <div class="section">
+        <div class="pathway-link">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h2 class="section-title">🔗 Related Resources</h2>
+                <span class="vote-buttons" data-g="Q9BZE2" data-a="PATHWAY: PUS3 pathways" data-r="" data-act="PATHWAY">
+                    <button class="vote-btn" data-v="up" title="Pathway visualization is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="Pathway visualization needs improvement">👎</button>
+                </span>
+            </div>
+            <p>
+                <a href="PUS3-pathway.html" target="_blank" class="btn-link">
+                    📊 View Pathway Visualization
+                </a>
+                <span style="color: #666; font-size: 0.9rem; margin-left: 1rem;">
+                    Interactive pathway diagram with detailed annotations
+                </span>
+            </p>
+        </div>
+    </div>
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

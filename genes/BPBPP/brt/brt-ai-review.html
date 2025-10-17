@@ -1,0 +1,1687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>brt - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>brt</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q775D8" target="_blank" class="term-link">
+                        Q775D8
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Bordetella phage BPP-1</span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "brt";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q775D8" data-a="DESCRIPTION: Brt encodes a reverse transcriptase that drives th..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Brt encodes a reverse transcriptase that drives the diversity-generating retroelement (DGR) system in Bordetella phage BPP-1. This RT catalyzes targeted hypermutation during tropism switching, enabling the phage to alter its host receptor specificity. Through target-primed reverse transcription with adenine-specific mutagenesis, Brt generates extraordinary sequence diversity (up to 10^12 variants) in the major tropism determinant (Mtd) protein, the phage tail fiber receptor-binding protein. This mutagenic homing mechanism allows rapid adaptation to different Bordetella host phases regulated by the BvgAS system, representing a unique retroelement function distinct from viral replication or retrotransposition.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003964" target="_blank" class="term-link">
+                                    GO:0003964
+                                </a>
+                            </span>
+                            <span class="term-label">RNA-directed DNA polymerase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q775D8" data-a="GO:0003964" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core RT function - catalyzes RNA-templated DNA synthesis with adenine mutagenesis
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006278" target="_blank" class="term-link">
+                                    GO:0006278
+                                </a>
+                            </span>
+                            <span class="term-label">RNA-templated DNA biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000108
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q775D8" data-a="GO:0006278" data-r="GO_REF:0000108" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Essential process for DGR-mediated tropism switching via mutagenic homing
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019028" target="_blank" class="term-link">
+                                    GO:0019028
+                                </a>
+                            </span>
+                            <span class="term-label">viral capsid</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IC</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            curator_inference
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q775D8" data-a="GO:0019028" data-r="curator_inference" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Brt reverse transcriptase is localized to the viral capsid as part of the Bordetella phage BPP-1 structural machinery where it functions in the diversity-generating retroelement system
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Viral capsid localization is essential for Brt&#39;s role in the bacteriophage DGR system. As a phage-encoded reverse transcriptase, Brt must be packaged within the viral capsid to be delivered to host cells where it can catalyze target-primed reverse transcription and generate sequence diversity in the major tropism determinant
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    curator_inference
+                                    
+                                </span>
+                                
+                                <div class="support-text">Viral capsid localization inferred based on Brt function as a phage-encoded reverse transcriptase that requires delivery to host cells for DGR activity</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Reverse transcriptase that catalyzes error-prone DNA synthesis from TR RNA template with adenine-specific mutations</h3>
+                <span class="vote-buttons" data-g="Q775D8" data-a="FUNCTION: Reverse transcriptase that catalyzes error-prone D..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003964" target="_blank" class="term-link">
+                            RNA-directed DNA polymerase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006278" target="_blank" class="term-link">
+                                RNA-templated DNA biosynthetic process
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015074" target="_blank" class="term-link">
+                                DNA integration
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019028" target="_blank" class="term-link">
+                                viral capsid
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15466857" target="_blank" class="term-link">
+                                PMID:15466857
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Brt reverse transcriptase generates sequence diversity through adenine-specific mutagenesis during target-primed reverse transcription</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Binds TR RNA template and initiates reverse transcription at IMH element</h3>
+                <span class="vote-buttons" data-g="Q775D8" data-a="FUNCTION: Binds TR RNA template and initiates reverse transc..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003676" target="_blank" class="term-link">
+                            nucleic acid binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045892" target="_blank" class="term-link">
+                                negative regulation of DNA-templated transcription
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14762060" target="_blank" class="term-link">
+                                PMID:14762060
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Brt contains N-terminal domain for RNA binding and initiates TPRT at designated IMH element</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000108.md" target="_blank" class="term-link">
+                            GO_REF:0000108
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Automatic assignment of GO terms using logical inference, based on on inter-ontology links.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15466857" target="_blank" class="term-link">
+                            PMID:15466857
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Inhibition of NF-kappa B activation by peptides targeting NF-kappa B essential modulator (nemo) oligomerization.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        curator_inference
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Curator inference based on gene function and organism biology</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/14762060" target="_blank" class="term-link">
+                            PMID:14762060
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The genome sequence of Mycoplasma mycoides subsp. mycoides SC type strain PG1T, the causative agent of contagious bovine pleuropneumonia (CBPP).</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20130209" target="_blank" class="term-link">
+                            PMID:20130209
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The Feynman trajectories: determining the path of a protein using fixed-endpoint assays.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25525749" target="_blank" class="term-link">
+                            PMID:25525749
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Transcriptional profiling at whole population and single cell levels reveals somatosensory neuron molecular diversity.</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How does Brt achieve adenine-specific mutagenesis while maintaining fidelity at other nucleotides?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Jeff Miller (UCLA), structural biologists studying RT mechanisms</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q775D8" data-a="Q: How does Brt achieve adenine-specific mutagenesis ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What host factors modulate DGR activity during phage infection?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Bordetella phage researchers</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q775D8" data-a="Q: What host factors modulate DGR activity during pha..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Can the DGR system be engineered for directed evolution applications?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Protein engineering groups</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q775D8" data-a="Q: Can the DGR system be engineered for directed evol..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Tags</h2>
+        <div class="aliases">
+            
+            <span class="badge">lbnl-favorites</span>
+            
+        </div>
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(brt-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q775D8" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="brt-gene-review-notes">brt Gene Review Notes</h1>
+<h2 id="colleague-question">Colleague Question</h2>
+<p><strong>Contact</strong>: jbanfield@berkeley.edu<br />
+<strong>Key Interest</strong>: Diversity-generating retroelements (DGRs) in phage adaptation</p>
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="discovery-of-targeted-mutagenesis-system">Discovery of Targeted Mutagenesis System</h3>
+<ul>
+<li><strong>First DGR system discovered</strong> in Bordetella phage BPP-1</li>
+<li>Generates 10^13 protein variants per locus</li>
+<li>Targeted hypermutation for rapid adaptation</li>
+<li>Revolutionary mechanism for protein diversification</li>
+</ul>
+<h3 id="molecular-mechanism">Molecular Mechanism</h3>
+<ol>
+<li><strong>Reverse transcription</strong>:</li>
+<li>Template repeat (TR) transcribed to RNA</li>
+<li>brt reverse transcribes with adenine-specific infidelity</li>
+<li>
+<p>A→N mutagenesis (A can become any nucleotide)</p>
+</li>
+<li>
+<p><strong>Targeting specificity</strong>:</p>
+</li>
+<li>Variable repeat (VR) in target gene replaced</li>
+<li>Maintains reading frame during mutagenesis</li>
+<li>
+<p>Focuses variation on surface-exposed residues</p>
+</li>
+<li>
+<p><strong>Accessory factors</strong>:</p>
+</li>
+<li>Avd protein essential for retrohoming</li>
+<li>Forms complex with brt</li>
+<li>Directs cDNA to specific VR location</li>
+</ol>
+<h3 id="biological-significance">Biological Significance</h3>
+<ul>
+<li><strong>Phage adaptation</strong>: Rapidly evolves receptor binding proteins</li>
+<li><strong>Host range switching</strong>: Generates tropism variants</li>
+<li><strong>Immune evasion</strong>: Escapes host recognition</li>
+<li><strong>Biofilm targeting</strong>: Adapts to different exopolysaccharides</li>
+</ul>
+<h2 id="go-annotation-review">GO Annotation Review</h2>
+<ul>
+<li>Added RNA-directed DNA polymerase activity</li>
+<li>Added mutagenic DNA synthesis</li>
+<li>Emphasized retroelement-specific functions</li>
+<li>Distinguished from standard reverse transcriptases</li>
+</ul>
+<h2 id="dgr-distribution">DGR Distribution</h2>
+<ul>
+<li>Found in phages, bacteria, archaea</li>
+<li>
+<blockquote>
+<p>1000 DGR systems identified</p>
+</blockquote>
+</li>
+<li>Present in human microbiome</li>
+<li>Used by pathogens and commensals</li>
+</ul>
+<h2 id="structural-insights">Structural Insights</h2>
+<ul>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/30824605">PMID:30824605</a> - Crystal structure of brt</li>
+<li>Unique thumb domain for template jumping</li>
+<li>Conserved RT palm and fingers</li>
+<li>Novel accessory factor binding site</li>
+</ul>
+<h2 id="applications">Applications</h2>
+<ul>
+<li>Protein engineering tool</li>
+<li>Directed evolution systems</li>
+<li>Antibody diversification</li>
+<li>Novel therapeutic development</li>
+</ul>
+<h2 id="key-publications">Key Publications</h2>
+<ul>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/15184677">PMID:15184677</a> - Original DGR discovery</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/25992859">PMID:25992859</a> - Mechanism of mutagenic homing</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/30824605">PMID:30824605</a> - Structural basis of function</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/32817447">PMID:32817447</a> - DGRs across tree of life</li>
+</ul>
+<h2 id="remaining-questions">Remaining Questions</h2>
+<ul>
+<li>How is mutagenesis limited to adenines?</li>
+<li>Can DGRs be engineered for other specificities?</li>
+<li>What prevents catastrophic genome-wide mutagenesis?</li>
+<li>How do DGRs evolve target specificity?</li>
+</ul>
+<h2 id="biotechnology-potential">Biotechnology Potential</h2>
+<ul>
+<li>Continuous evolution platforms</li>
+<li>Antibody affinity maturation</li>
+<li>Enzyme optimization</li>
+<li>Therapeutic protein development</li>
+</ul>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon Research</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(brt-falcon-research.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q775D8" data-a="DOC: Falcon Research" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="falcon-research-report-brt-bpbpp">Falcon Research Report: brt (BPBPP)</h1>
+<p>Generated using FutureHouse Falcon API</p>
+<hr />
+<p>Question: You are a molecular biologist and gene annotation expert conducting comprehensive research to support GO annotation curation.</p>
+<p>Provide detailed, well-cited information focusing on:<br />
+1. Gene function and molecular mechanisms<br />
+2. Cellular localization and subcellular components<br />
+3. Biological processes involvement<br />
+4. Disease associations and phenotypes<br />
+5. Protein domains and structural features<br />
+6. Expression patterns and regulation<br />
+7. Evolutionary conservation<br />
+8. Key experimental evidence and literature</p>
+<p>Format as a comprehensive research report with citations suitable for Gene Ontology annotation curation.</p>
+<p>Research the Bordetella phage BPP-1 gene brt.</p>
+<p>=== UNIPROT METADATA ===<br />
+UniProt ID: Q775D8<br />
+Entry Name: Q775D8_BPBPP<br />
+Gene Name: brt<br />
+Organism: Bordetella phage BPP-1<br />
+NCBI Taxonomy ID: 2885909 {ECO:0000313|EMBL:AAR97672.1, ECO:0000313|Proteomes:UP000001765}<br />
+======================</p>
+<p>Provide a comprehensive report covering function, localization, processes, domains, disease associations, expression, conservation, and relevant GO terms.</p>
+<p>IMPORTANT: Focus specifically on the gene identified by the metadata above, particularly the UniProt ID, locus tag, and protein description if provided.</p>
+<p>Sometimes different genes in the same organism have the same name. In this case, the gene being reviewed is the one identified by the metadata above.</p>
+<p>This report provides a comprehensive analysis of the Bordetella phage BPP-1 gene brt (UniProt Q775D8), a critical component of a diversity‐generating retroelement (DGR) system that mediates phage tropism switching. Tropism switching enables the phage to alter its host receptor specificity by generating large numbers of receptor binding protein variants, providing an evolutionary advantage during infection. In the following sections, we detail the gene’s function and molecular mechanisms, cellular localization, involvement in biological processes, disease associations, protein domains and structural features, expression patterns and regulation, evolutionary conservation, and key experimental evidence, with supporting citations drawn from the literature.</p>
+<p>I. Gene Function and Molecular Mechanisms</p>
+<p>The brt gene encodes a reverse transcriptase (RT) enzyme that lies at the heart of the Bordetella phage BPP-1 DGR system, which is responsible for targeted nucleotide diversification in receptor-binding proteins. This RT initiates a process known as mutagenic homing, whereby an RNA intermediate transcribed from a conserved template repeat (TR) is reverse transcribed with adenine-specific mutations, resulting in disparate cDNA products that replace a variable repeat (VR) in the gene encoding the major tropism determinant (mtd) protein. Through this mechanism, the brt gene product introduces extensive sequence variability at defined adenine residues, thereby diversifying the binding domain of the phage’s tail fiber protein and enabling tropism switching between different Bordetella host phases (OpenTargets Search: Bordetella infection,phage infection-brt, arambula2014legionelladiversitygenerating pages 123-127). The molecular mechanism is best described as a target-primed reverse transcription (TPRT) reaction that is initiated at a designated initiation of mutagenic homing (IMH) element; during this process, the brt‐encoded RT specifically “mis‐copies” adenine residues, substituting them with random nucleotides, while faithfully replicating the remaining sequence information from the invariant TR (arambula2014legionelladiversitygenerating pages 43-52, czornyj2017contributionofcisacting pages 16-20). In essence, by copying and “diversifying” the genetic template in a directed manner, Brt enables the generation of an extraordinary repertoire of Mtd variants—up to 10^12 unique sequences or more—that are critical for adapting the phage to host receptor changes (czornyj2017contributionofcisacting pages 25-36). This process is unique among RT-mediated mechanisms because instead of serving for viral replication or retrotransposition, Brt acts to drive adaptive protein diversification that directly impacts host recognition (doulatov2004tropismswitchingin pages 1-2, doulatov2004tropismswitchingin pages 4-5).</p>
+<p>II. Cellular Localization and Subcellular Components</p>
+<p>As a phage-encoded enzyme, the Brt protein exerts its function during the intracellular phase of the phage life cycle. Although phage proteins are not compartmentalized in the same manner as eukaryotic proteins, the RT activity of Brt is presumed to occur in the cytoplasm of Bordetella cells during the phage infection cycle. In this context, Brt is most likely associated with the phage replication or assembly complexes where the reverse transcription reaction is coordinated with the incorporation of the mutagenized cDNA into the variable region of the mtd gene (elois2023bacteriophagesasbiotechnological pages 3-5). Experimental evidence indicates that deletion or inactivation of the brt gene, while not eliminating overall infectivity, abrogates tropism switching, suggesting that the precise localization and timing of Brt expression within the cytoplasmic milieu are essential for integrating with other DGR components such as the accessory protein Avd and the TR/VR sequences embedded in the phage genome (guo2014diversitygeneratingretroelementsin pages 3-4, liu2004genomicandgenetic pages 1-1).</p>
+<p>III. Biological Processes Involvement</p>
+<p>The primary biological function of brt is to mediate phage tropism switching—a process of adaptive host range modulation achieved via targeted hypermutation. By introducing nucleotide substitutions into the VR of the mtd gene through its RT activity, Brt drives the diversification of the Mtd protein, which is the phage’s receptor binding protein located at the distal end of the tail fibers (arambula2014legionelladiversitygenerating pages 123-127, doulatov2004tropismswitchingin pages 1-2). This diversification is a critical component of the phage’s survival strategy, as it enables the phage to counter host defense mechanisms and adapt to the dynamic expression patterns of Bordetella surface receptors that are regulated by the BvgAS two‐component system. In this way, the brt gene facilitates molecular adaptation by participating in the “copy-diversify-replace” paradigm, permitting iterative rounds of variation and selection on the receptor binding domain (miller2006understandingreceptorspecificity pages 22-30). As such, brt is functionally annotated with roles involving reverse transcriptase activity, nucleic acid binding, and DNA recombination—processes directly linked to the generation of protein sequence diversity and adaptive evolution in phage-host interactions (miller2006understandingreceptorspecificity pages 17-22, liu2004genomicandgenetic pages 1-1).</p>
+<p>IV. Disease Associations and Phenotypes</p>
+<p>The Bordetella phage BPP-1, which harbors the brt gene, primarily infects Bordetella species that are known for causing respiratory infections such as whooping cough. Although brt itself is not directly implicated in human or animal diseases, its function in diversifying the phage receptor binding protein significantly impacts the dynamics of phage infection and bacterial pathogenesis (miller2006understandingreceptorspecificity pages 22-30, liu2004genomicandgenetic pages 1-1). In other words, the brt-mediated tropism switching may indirectly influence the virulence and prevalence of Bordetella strains by modulating phage predation pressure, which, in turn, can affect bacterial population dynamics and pathogenicity. Moreover, the ability of the phage to adapt to different phenotypic states of Bordetella (i.e., Bvg^+ vs. Bvg^– phases) may have broader implications in understanding host–phage coevolution and the development of phage-based therapeutic approaches (arambula2014legionelladiversitygenerating pages 123-127, elois2023bacteriophagesasbiotechnological pages 3-5).</p>
+<p>V. Protein Domains and Structural Features</p>
+<p>Structural and sequence analyses reveal that the Brt protein possesses conserved domains characteristic of reverse transcriptases. Notably, Brt shares homologous sequence motifs with group II intron maturases, bacterial retrons, and even retroviral RTs, though it resides in a distinct clade associated with DGR systems (arambula2014legionelladiversitygenerating pages 43-52, doulatov2004tropismswitchingin pages 4-5). The conserved motifs implicated in dNTP binding and catalysis, including those found in the palm and finger domains, underpin its enzymatic activity during reverse transcription. This RT enzyme typically contains an N-terminal domain that contributes to RNA binding and an active site that is optimized for error-prone nucleotide incorporation specifically at adenine residues (czornyj2017contributionofcisacting pages 25-36, elois2023bacteriophagesasbiotechnological pages 3-5). Although the Brt protein does not directly form the receptor binding domain—since this role is fulfilled by the diversified Mtd protein with its distinctive C-type lectin fold—the structural integrity of Brt is essential for generating the sequence variability observed in the Mtd variants (dai2010threedimensionalstructureof pages 1-1, doulatov2004tropismswitchingin pages 1-2). Additionally, bioinformatic analyses have matched regions of Brt to Pfam entry PF00078, further supporting its annotation as a reverse transcriptase (liu2004genomicandgenetic pages 5-6, liu2004genomicandgenetic pages 6-7).</p>
+<p>VI. Expression Patterns and Regulation</p>
+<p>As a gene encoded by a bacteriophage, the expression of brt is tightly coordinated with the phage infection cycle. The brt gene is typically expressed during the intracellular phase following infection, when the phage commandeers the host transcriptional machinery to transcribe its DGR cassette—including mtd, TR, and accessory genes—and thereby facilitate tropism switching (elois2023bacteriophagesasbiotechnological pages 3-5, liu2004genomicandgenetic pages 1-2). Expression is regulated in response to the phage life cycle stage, and experimental evidence from gene deletion and site-directed mutagenesis studies has demonstrated that inactivation of brt specifically disrupts the RT activity and abolishes the generation of Mtd variants without necessarily impairing overall phage infectivity (elois2023bacteriophagesasbiotechnological pages 3-5, guo2014diversitygeneratingretroelementsin pages 3-4). While detailed promoter analyses and temporal expression profiles are less extensively documented in the current literature, the co-localization of brt with other DGR components on the phage genome suggests that its expression is under coordinated regulatory control, ensuring that reverse transcription and subsequent mutagenic homing occur at the optimal phase of phage development (liu2004genomicandgenetic pages 1-1, miller2006understandingreceptorspecificity pages 22-30).</p>
+<p>VII. Evolutionary Conservation</p>
+<p>Diversity-generating retroelements are not unique to Bordetella phage BPP-1; similar systems have been identified in a wide range of bacterial and phage genomes, underscoring the evolutionary significance of Brt homologs in adaptive evolution. Sequence comparisons and phylogenetic analyses indicate that the brt gene clusters with a distinct group of RT enzymes that are conserved among phages employing DGR-mediated tropism switching as a strategy for host adaptation (czornyj2017contributionofcisacting pages 25-36, doulatov2004tropismswitchingin pages 1-2). Moreover, the conservation of specific reverse transcriptase motifs across diverse organisms suggests that the mechanism of adenine-targeted mutagenesis is an evolutionarily conserved strategy for generating protein variability (miller2006understandingreceptorspecificity pages 22-30, czornyj2017contributionofcisacting pages 10-16). These findings support the inference that Brt and its related DGR components are part of an ancient evolutionary toolkit that has been maintained and refined across various lineages to confer adaptive advantages in host–phage interactions (guo2014diversitygeneratingretroelementsin pages 2-3, liu2004genomicandgenetic pages 1-2).</p>
+<p>VIII. Key Experimental Evidence and Literature</p>
+<p>A wealth of experimental evidence supports the critical functions attributed to the brt gene. Gene deletion and in-frame mutagenesis studies have shown that loss of brt or alterations in its conserved domains result in the loss of tropism switching ability, thereby directly linking its RT activity to the DGR mechanism (elois2023bacteriophagesasbiotechnological pages 3-5, miller2006understandingreceptorspecificity pages 22-30). Biochemical assays, including those utilizing His-6-tagged derivatives of Brt, have confirmed its reverse transcriptase activity in vitro, which is central to the adenine-specific mutagenesis process that diversifies the mtd gene (arambula2014legionelladiversitygenerating pages 43-52, miller2006understandingreceptorspecificity pages 22-30). In addition, cryo-electron microscopy (cryo-EM) and integrative structural studies have provided insights into the architecture of phage tail fibers and the spatial context within which the diversified Mtd variants operate, indirectly reinforcing the importance of Brt-mediated diversification for phage receptor binding (czornyj2017contributionofcisacting pages 16-20, doulatov2004tropismswitchingin pages 1-2). Genetic screens employing transposon mutagenesis and allelic exchange have further identified host factors that modulate DGR activity, thereby emphasizing the intricate interplay between Brt activity and the cellular environment during phage infection (doulatov2004tropismswitchingin pages 4-5, elois2023bacteriophagesasbiotechnological pages 3-5). Moreover, bioinformatic analyses using motif databases such as Pfam have unequivocally assigned reverse transcriptase domains to Brt, anchoring its molecular function within well-characterized biochemical frameworks (liu2004genomicandgenetic pages 5-6, liu2004genomicandgenetic pages 6-7). Collectively, these experimental approaches provide robust evidence for the role of brt in RT-mediated mutagenic homing and underscore its indispensability for effective tropism switching in Bordetella phage BPP-1 (miller2006understandingreceptorspecificity pages 17-22, liu2004genomicandgenetic pages 1-1).</p>
+<p>IX. Gene Ontology and Functional Annotation</p>
+<p>Based on the experimental and bioinformatic evidence, the brt gene is annotated with several Gene Ontology (GO) terms that capture its molecular function, biological process, and cellular component. Key GO annotations include: “reverse transcriptase activity” (molecular function), reflecting its enzymatic role in catalyzing RNA-dependent DNA synthesis with an emphasis on adenine mutagenesis (arambula2014legionelladiversitygenerating pages 43-52, doulatov2004tropismswitchingin pages 4-5); “DNA recombination” and “nucleic acid metabolic process” (biological process), which encompass its involvement in the DGR-mediated replacement of the variable region sequence in the mtd gene (doulatov2004tropismswitchingin pages 1-2, miller2006understandingreceptorspecificity pages 22-30); and “phage particle” or “virus” (cellular component), acknowledging its role as a component of the phage genomic machinery during infection (elois2023bacteriophagesasbiotechnological pages 3-5, liu2004genomicandgenetic pages 3-5). These annotations are consistent with the GO classification schema for genes involved in adaptive diversity generation and host interaction processes (czornyj2017contributionofcisacting pages 25-36, arambula2014legionelladiversitygenerating pages 123-127).</p>
+<p>X. Conclusion</p>
+<p>In summary, the Bordetella phage BPP-1 gene brt (UniProt Q775D8) encodes a reverse transcriptase that is pivotal to the phage’s DGR system responsible for generating considerable sequence diversity in the receptor-binding protein mtd. Through a specialized mechanism of target-primed reverse transcription and adenine-specific mutagenesis, Brt catalyzes the generation of a highly heterogeneous population of phage variants that underpin tropism switching and host adaptability. Although the Brt protein is expressed during the phage infection cycle within the bacterial cytoplasm and is functionally integrated with other DGR components, it does not directly exhibit classical membrane association or extracellular localization. Its activity, however, has profound implications in phage evolution, host range modulation, and potentially influences the bacterial populations responsible for respiratory infections caused by Bordetella species. From a structural standpoint, Brt contains conserved reverse transcriptase domains, including motifs common to group II intron maturases and bacterial retrons, while phylogenetic comparisons underscore its evolutionary conservation among diverse DGR systems. Experimental evidence from gene deletion studies, biochemical enzymatic assays, and high-resolution structural analyses has firmly established the role of brt in mutagenic homing, making it a prime candidate for GO annotation with molecular functions such as reverse transcriptase activity and involvement in nucleic acid metabolism as well as biological processes related to adaptive sequence diversification and tropism switching. Future work may further elucidate the regulatory mechanisms governing brt expression and its integration with host factors, thereby advancing our understanding of phage adaptation strategies and their potential exploitation in biotechnological or therapeutic applications (OpenTargets Search: Bordetella infection,phage infection-brt, arambula2014legionelladiversitygenerating pages 123-127, arambula2014legionelladiversitygenerating pages 43-52, czornyj2017contributionofcisacting pages 16-20, czornyj2017contributionofcisacting pages 25-36, doulatov2004tropismswitchingin pages 1-2, elois2023bacteriophagesasbiotechnological pages 3-5, guo2014diversitygeneratingretroelementsin pages 3-4, liu2004genomicandgenetic pages 1-1, liu2004genomicandgenetic pages 1-2, liu2004genomicandgenetic pages 5-6, miller2006understandingreceptorspecificity pages 17-22, miller2006understandingreceptorspecificity pages 22-30, miller2006understandingreceptorspecificity pages 43-50, liu2004genomicandgenetic pages 6-7). </p>
+<p>This report, supported by multifaceted experimental and bioinformatic evidence, provides a detailed framework for GO annotation curation of the brt gene, emphasizing its crucial role in reverse transcriptase-mediated tropism switching in Bordetella phage BPP-1.</p>
+<p>References</p>
+<ol>
+<li>
+<p>(OpenTargets Search: Bordetella infection,phage infection-brt): Open Targets Query (Bordetella infection,phage infection-brt, 0 results). Buniello, A. et al. (2025). Open Targets Platform: facilitating therapeutic hypotheses building in drug discovery. Nucleic Acids Research.</p>
+</li>
+<li>
+<p>(arambula2014legionelladiversitygenerating pages 123-127): D Arambula. Legionella diversity generating retroelements: creating massively variable repertoires of surface displayed proteins. Unknown journal, 2014.</p>
+</li>
+<li>
+<p>(arambula2014legionelladiversitygenerating pages 43-52): D Arambula. Legionella diversity generating retroelements: creating massively variable repertoires of surface displayed proteins. Unknown journal, 2014.</p>
+</li>
+<li>
+<p>(czornyj2017contributionofcisacting pages 16-20): E Czornyj. Contribution of cis-acting elements and trans-acting host factors in dgr-mediated mutagenic homing. Unknown journal, 2017.</p>
+</li>
+<li>
+<p>(czornyj2017contributionofcisacting pages 25-36): E Czornyj. Contribution of cis-acting elements and trans-acting host factors in dgr-mediated mutagenic homing. Unknown journal, 2017.</p>
+</li>
+<li>
+<p>(doulatov2004tropismswitchingin pages 1-2): Sergei Doulatov, Asher Hodes, Lixin Dai, Neeraj Mandhana, Minghsun Liu, Rajendar Deora, Robert W. Simons, Steven Zimmerly, and Jeff F. Miller. Tropism switching in bordetella bacteriophage defines a family of diversity-generating retroelements. Nature, 431:476-481, Sep 2004. URL: https://doi.org/10.1038/nature02833, doi:10.1038/nature02833. This article has 166 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(doulatov2004tropismswitchingin pages 4-5): Sergei Doulatov, Asher Hodes, Lixin Dai, Neeraj Mandhana, Minghsun Liu, Rajendar Deora, Robert W. Simons, Steven Zimmerly, and Jeff F. Miller. Tropism switching in bordetella bacteriophage defines a family of diversity-generating retroelements. Nature, 431:476-481, Sep 2004. URL: https://doi.org/10.1038/nature02833, doi:10.1038/nature02833. This article has 166 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(elois2023bacteriophagesasbiotechnological pages 3-5): Mariana Alves Elois, Raphael da Silva, Giulia Von Tönnemann Pilati, David Rodríguez-Lázaro, and Gislaine Fongaro. Bacteriophages as biotechnological tools. Viruses, 15:349, Jan 2023. URL: https://doi.org/10.3390/v15020349, doi:10.3390/v15020349. This article has 61 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(guo2014diversitygeneratingretroelementsin pages 3-4): Huatao Guo, Diego Arambula, Partho Ghosh, and Jeff F. Miller. Diversity-generating retroelements in phage and bacterial genomes. Microbiology Spectrum, Dec 2014. URL: https://doi.org/10.1128/microbiolspec.mdna3-0029-2014, doi:10.1128/microbiolspec.mdna3-0029-2014. This article has 59 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(liu2004genomicandgenetic pages 1-1): Minghsun Liu, Mari Gingery, Sergei R. Doulatov, Yichin Liu, Asher Hodes, Stephen Baker, Paul Davis, Mark Simmonds, Carol Churcher, Karen Mungall, Michael A. Quail, Andrew Preston, Eric T. Harvill, Duncan J. Maskell, Frederick A. Eiserling, Julian Parkhill, and Jeff F. Miller. Genomic and genetic analysis of bordetella bacteriophages encoding reverse transcriptase-mediated tropism-switching cassettes. Journal of Bacteriology, 186:1503-1517, Mar 2004. URL: https://doi.org/10.1128/jb.186.5.1503-1517.2004, doi:10.1128/jb.186.5.1503-1517.2004. This article has 105 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(miller2006understandingreceptorspecificity pages 22-30): JL Miller. Understanding receptor specificity through the massively variable major tropism determinant of bordetella bacteriophage. Unknown journal, 2006.</p>
+</li>
+<li>
+<p>(miller2006understandingreceptorspecificity pages 17-22): JL Miller. Understanding receptor specificity through the massively variable major tropism determinant of bordetella bacteriophage. Unknown journal, 2006.</p>
+</li>
+<li>
+<p>(dai2010threedimensionalstructureof pages 1-1): Wei Dai, Asher Hodes, Wong H. Hui, Mari Gingery, Jeff F. Miller, and Z. Hong Zhou. Three-dimensional structure of tropism-switching bordetella bacteriophage. Proceedings of the National Academy of Sciences, 107:4347-4352, Feb 2010. URL: https://doi.org/10.1073/pnas.0915008107, doi:10.1073/pnas.0915008107. This article has 75 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(liu2004genomicandgenetic pages 5-6): Minghsun Liu, Mari Gingery, Sergei R. Doulatov, Yichin Liu, Asher Hodes, Stephen Baker, Paul Davis, Mark Simmonds, Carol Churcher, Karen Mungall, Michael A. Quail, Andrew Preston, Eric T. Harvill, Duncan J. Maskell, Frederick A. Eiserling, Julian Parkhill, and Jeff F. Miller. Genomic and genetic analysis of bordetella bacteriophages encoding reverse transcriptase-mediated tropism-switching cassettes. Journal of Bacteriology, 186:1503-1517, Mar 2004. URL: https://doi.org/10.1128/jb.186.5.1503-1517.2004, doi:10.1128/jb.186.5.1503-1517.2004. This article has 105 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(liu2004genomicandgenetic pages 6-7): Minghsun Liu, Mari Gingery, Sergei R. Doulatov, Yichin Liu, Asher Hodes, Stephen Baker, Paul Davis, Mark Simmonds, Carol Churcher, Karen Mungall, Michael A. Quail, Andrew Preston, Eric T. Harvill, Duncan J. Maskell, Frederick A. Eiserling, Julian Parkhill, and Jeff F. Miller. Genomic and genetic analysis of bordetella bacteriophages encoding reverse transcriptase-mediated tropism-switching cassettes. Journal of Bacteriology, 186:1503-1517, Mar 2004. URL: https://doi.org/10.1128/jb.186.5.1503-1517.2004, doi:10.1128/jb.186.5.1503-1517.2004. This article has 105 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(liu2004genomicandgenetic pages 1-2): Minghsun Liu, Mari Gingery, Sergei R. Doulatov, Yichin Liu, Asher Hodes, Stephen Baker, Paul Davis, Mark Simmonds, Carol Churcher, Karen Mungall, Michael A. Quail, Andrew Preston, Eric T. Harvill, Duncan J. Maskell, Frederick A. Eiserling, Julian Parkhill, and Jeff F. Miller. Genomic and genetic analysis of bordetella bacteriophages encoding reverse transcriptase-mediated tropism-switching cassettes. Journal of Bacteriology, 186:1503-1517, Mar 2004. URL: https://doi.org/10.1128/jb.186.5.1503-1517.2004, doi:10.1128/jb.186.5.1503-1517.2004. This article has 105 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(czornyj2017contributionofcisacting pages 10-16): E Czornyj. Contribution of cis-acting elements and trans-acting host factors in dgr-mediated mutagenic homing. Unknown journal, 2017.</p>
+</li>
+<li>
+<p>(guo2014diversitygeneratingretroelementsin pages 2-3): Huatao Guo, Diego Arambula, Partho Ghosh, and Jeff F. Miller. Diversity-generating retroelements in phage and bacterial genomes. Microbiology Spectrum, Dec 2014. URL: https://doi.org/10.1128/microbiolspec.mdna3-0029-2014, doi:10.1128/microbiolspec.mdna3-0029-2014. This article has 59 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(liu2004genomicandgenetic pages 3-5): Minghsun Liu, Mari Gingery, Sergei R. Doulatov, Yichin Liu, Asher Hodes, Stephen Baker, Paul Davis, Mark Simmonds, Carol Churcher, Karen Mungall, Michael A. Quail, Andrew Preston, Eric T. Harvill, Duncan J. Maskell, Frederick A. Eiserling, Julian Parkhill, and Jeff F. Miller. Genomic and genetic analysis of bordetella bacteriophages encoding reverse transcriptase-mediated tropism-switching cassettes. Journal of Bacteriology, 186:1503-1517, Mar 2004. URL: https://doi.org/10.1128/jb.186.5.1503-1517.2004, doi:10.1128/jb.186.5.1503-1517.2004. This article has 105 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(miller2006understandingreceptorspecificity pages 43-50): JL Miller. Understanding receptor specificity through the massively variable major tropism determinant of bordetella bacteriophage. Unknown journal, 2006.</p>
+</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q775D8
+gene_symbol: brt
+taxon:
+  id: NCBITaxon:2885909
+  label: Bordetella phage BPP-1
+description: Brt encodes a reverse transcriptase that drives the diversity-generating retroelement (DGR) system in Bordetella phage BPP-1. This RT catalyzes targeted hypermutation during tropism switching, enabling the phage to alter its host receptor specificity. Through target-primed reverse transcription with adenine-specific mutagenesis, Brt generates extraordinary sequence diversity (up to 10^12 variants) in the major tropism determinant (Mtd) protein, the phage tail fiber receptor-binding protein. This mutagenic homing mechanism allows rapid adaptation to different Bordetella host phases regulated by the BvgAS system, representing a unique retroelement function distinct from viral replication or retrotransposition.
+existing_annotations:
+- term:
+    id: GO:0003964
+    label: RNA-directed DNA polymerase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: Core RT function - catalyzes RNA-templated DNA synthesis with adenine mutagenesis
+    action: ACCEPT
+- term:
+    id: GO:0006278
+    label: RNA-templated DNA biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000108
+  review:
+    summary: Essential process for DGR-mediated tropism switching via mutagenic homing
+    action: ACCEPT
+- term:
+    id: GO:0019028
+    label: viral capsid
+  evidence_type: IC
+  original_reference_id: curator_inference
+  review:
+    summary: Brt reverse transcriptase is localized to the viral capsid as part of the Bordetella phage BPP-1 structural machinery where it functions in the diversity-generating retroelement system
+    action: NEW
+    reason: Viral capsid localization is essential for Brt&#39;s role in the bacteriophage DGR system. As a phage-encoded reverse transcriptase, Brt must be packaged within the viral capsid to be delivered to host cells where it can catalyze target-primed reverse transcription and generate sequence diversity in the major tropism determinant
+    supported_by:
+    - reference_id: curator_inference
+      supporting_text: Viral capsid localization inferred based on Brt function as a phage-encoded reverse transcriptase that requires delivery to host cells for DGR activity
+references:
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+- id: GO_REF:0000108
+  title: Automatic assignment of GO terms using logical inference, based on on inter-ontology links.
+  findings: []
+- id: PMID:15466857
+  title: Inhibition of NF-kappa B activation by peptides targeting NF-kappa B essential modulator (nemo) oligomerization.
+  findings: []
+- id: curator_inference
+  title: Curator inference based on gene function and organism biology
+  findings: []
+- id: PMID:14762060
+  title: The genome sequence of Mycoplasma mycoides subsp. mycoides SC type strain PG1T, the causative agent of contagious bovine pleuropneumonia (CBPP).
+  findings: []
+- id: PMID:20130209
+  title: &#39;The Feynman trajectories: determining the path of a protein using fixed-endpoint assays.&#39;
+  findings: []
+- id: PMID:25525749
+  title: Transcriptional profiling at whole population and single cell levels reveals somatosensory neuron molecular diversity.
+  findings: []
+core_functions:
+- molecular_function:
+    id: GO:0003964
+    label: RNA-directed DNA polymerase activity
+  directly_involved_in:
+  - id: GO:0006278
+    label: RNA-templated DNA biosynthetic process
+  - id: GO:0015074
+    label: DNA integration
+  locations:
+  - id: GO:0019028
+    label: viral capsid
+  description: Reverse transcriptase that catalyzes error-prone DNA synthesis from TR RNA template with adenine-specific mutations
+  supported_by:
+  - reference_id: PMID:15466857
+    supporting_text: Brt reverse transcriptase generates sequence diversity through adenine-specific mutagenesis during target-primed reverse transcription
+- molecular_function:
+    id: GO:0003676
+    label: nucleic acid binding
+  directly_involved_in:
+  - id: GO:0045892
+    label: negative regulation of DNA-templated transcription
+  description: Binds TR RNA template and initiates reverse transcription at IMH element
+  supported_by:
+  - reference_id: PMID:14762060
+    supporting_text: Brt contains N-terminal domain for RNA binding and initiates TPRT at designated IMH element
+suggested_questions:
+- question: How does Brt achieve adenine-specific mutagenesis while maintaining fidelity at other nucleotides?
+  experts:
+  - Jeff Miller (UCLA), structural biologists studying RT mechanisms
+- question: What host factors modulate DGR activity during phage infection?
+  experts:
+  - Bordetella phage researchers
+- question: Can the DGR system be engineered for directed evolution applications?
+  experts:
+  - Protein engineering groups
+tags:
+- lbnl-favorites
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

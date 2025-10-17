@@ -15,7 +15,13 @@ None &#8594;  <sub>1..1</sub> [String](types/String.md)
 
 ## Children
 
+ *  [Term➞label](Term_label.md)
 
 ## Used by
 
- * [Term](Term.md)
+
+## Other properties
+
+|  |  |  |
+| --- | --- | --- |
+| **Mappings:** | | rdfs:label |

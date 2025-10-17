@@ -8,7 +8,7 @@ URI: [gene_review:coreFunction__molecular_function](https://w3id.org/ai4curation
 
 ## Domain and Range
 
-None &#8594;  <sub>0..1</sub> [Term](Term.md)
+None &#8594;  <sub>1..1</sub> [Term](Term.md)
 
 ## Parents
 

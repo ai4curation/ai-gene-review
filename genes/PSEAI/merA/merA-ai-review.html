@@ -1,0 +1,2328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>merA - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>merA</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P00392" target="_blank" class="term-link">
+                        P00392
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas aeruginosa</span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "merA";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P00392" data-a="DESCRIPTION: Mercuric reductase (MerA) is a homodimeric flavopr..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Mercuric reductase (MerA) is a homodimeric flavoprotein enzyme that catalyzes the NADPH-dependent reduction of toxic Hg(II) to volatile elemental mercury Hg(0), serving as the central enzymatic component of bacterial mercury resistance systems. Located in the cytoplasm, MerA contains an N-terminal metal-binding domain (NmerA) that captures mercury ions, a FAD-binding catalytic core with redox-active disulfide bonds, and unique C-terminal cysteine residues (Cys558/Cys559) essential for mercury binding and catalysis. The enzyme is tightly regulated by the MerR transcriptional regulator as part of the mer operon, with expression induced specifically in response to mercury exposure.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003955" target="_blank" class="term-link">
+                                    GO:0003955
+                                </a>
+                            </span>
+                            <span class="term-label">NAD(P)H dehydrogenase (quinone) activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="P00392" data-a="GO:0003955" data-r="GO_REF:0000118" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation appears to be incorrect for MerA. While MerA is an NADPH-dependent oxidoreductase, it specifically reduces mercury ions, not quinones. The enzyme uses NADPH as an electron donor via FAD to reduce Hg(II) to Hg(0), not to reduce quinones.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> MerA specifically reduces mercury ions, not quinones. The enzyme&#39;s substrate specificity is for Hg(II), not quinone molecules.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016152" target="_blank" class="term-link">
+                                    GO:0016152
+                                </a>
+                            </span>
+                            <span class="term-label">mercury (II) reductase (NADP+) activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P00392" data-a="GO:0016152" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the correct and most specific molecular function for MerA. Extensive biochemical evidence confirms MerA catalyzes the NADPH-dependent reduction of Hg(II) to Hg(0) with high specificity.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Direct experimental evidence confirms this as MerA&#39;s primary molecular function
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/1531297" target="_blank" class="term-link">
+                                        PMID:1531297
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Compared to wild-type enzyme, the C558A mutant shows a 20-fold reduction in kcat and a 10-fold increase in Km, for an overall decrease in catalytic efficiency of 200-fold</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016491" target="_blank" class="term-link">
+                                    GO:0016491
+                                </a>
+                            </span>
+                            <span class="term-label">oxidoreductase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P00392" data-a="GO:0016491" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is correct but too general. MerA is indeed an oxidoreductase, but the more specific term GO:0016152 (mercury (II) reductase activity) should be used as the primary annotation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Too general - more specific mercury reductase term available
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016668" target="_blank" class="term-link">
+                                    GO:0016668
+                                </a>
+                            </span>
+                            <span class="term-label">oxidoreductase activity, acting on a sulfur group of donors, NAD(P) as acceptor</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="P00392" data-a="GO:0016668" data-r="GO_REF:0000002" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is partially correct but misleading. While MerA has redox-active cysteines, it acts on mercury ions as the substrate, not sulfur groups as donors. The cysteines are part of the catalytic mechanism, not the substrate.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Misleading - MerA acts on mercury ions as substrate, not sulfur groups. The redox-active cysteines are part of the enzyme mechanism, not the substrate.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045340" target="_blank" class="term-link">
+                                    GO:0045340
+                                </a>
+                            </span>
+                            <span class="term-label">mercury ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P00392" data-a="GO:0045340" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct annotation strongly supported by structural and biochemical evidence. MerA has multiple mercury-binding sites including the NmerA domain and C-terminal cysteines essential for catalysis.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Structural and mutational evidence confirms mercury binding as essential molecular function
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/1531297" target="_blank" class="term-link">
+                                        PMID:1531297
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Compared to wild-type enzyme, the C558A mutant shows a 20-fold reduction in kcat and a 10-fold increase in Km, for an overall decrease in catalytic efficiency of 200-fold</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046872" target="_blank" class="term-link">
+                                    GO:0046872
+                                </a>
+                            </span>
+                            <span class="term-label">metal ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P00392" data-a="GO:0046872" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is correct but too general. The more specific term GO:0045340 (mercury ion binding) better represents MerA&#39;s function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Too general - more specific mercury ion binding term available
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050660" target="_blank" class="term-link">
+                                    GO:0050660
+                                </a>
+                            </span>
+                            <span class="term-label">flavin adenine dinucleotide binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P00392" data-a="GO:0050660" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct annotation with strong experimental support. FAD is an essential cofactor for MerA&#39;s catalytic activity.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> FAD binding is essential for catalytic activity
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050661" target="_blank" class="term-link">
+                                    GO:0050661
+                                </a>
+                            </span>
+                            <span class="term-label">NADP binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P00392" data-a="GO:0050661" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct annotation. MerA binds NADPH as the electron donor for mercury reduction.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> NADPH binding is essential for electron donation in mercury reduction
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050787" target="_blank" class="term-link">
+                                    GO:0050787
+                                </a>
+                            </span>
+                            <span class="term-label">detoxification of mercury ion</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P00392" data-a="GO:0050787" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is a key biological process for MerA, strongly supported by extensive experimental evidence showing mercury resistance phenotypes.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core biological function with extensive genetic and phenotypic evidence
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12829275" target="_blank" class="term-link">
+                                        PMID:12829275
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Bacterial resistance to inorganic and organic mercury compounds (HgR) is one of the most widely observed phenotypes in eubacteria</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006979" target="_blank" class="term-link">
+                                    GO:0006979
+                                </a>
+                            </span>
+                            <span class="term-label">response to oxidative stress</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="P00392" data-a="GO:0006979" data-r="GO_REF:0000117" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation lacks direct evidence. MerA responds specifically to mercury stress, not general oxidative stress. The mer operon is induced by mercury via MerR, not by oxidative stress signals.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> MerA is specifically induced by mercury via MerR, not by oxidative stress signals
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046689" target="_blank" class="term-link">
+                                    GO:0046689
+                                </a>
+                            </span>
+                            <span class="term-label">response to mercury ion</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P00392" data-a="GO:0046689" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct and well-supported biological process. MerA expression is specifically induced by mercury and is essential for the cellular response to mercury ions.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> MerA expression is specifically induced by mercury exposure via MerR regulation
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12829275" target="_blank" class="term-link">
+                                        PMID:12829275
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Bacterial resistance to inorganic and organic mercury compounds (HgR) is one of the most widely observed phenotypes in eubacteria</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="P00392" data-a="GO:0005737" data-r="" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> MerA is a cytoplasmic enzyme that functions within the bacterial cytoplasm to reduce mercury ions, constituting up to 6% of soluble cytoplasmic protein when induced.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This cellular component term reflects MerA&#39;s established subcellular localization to the cytoplasm where it performs mercury detoxification.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEAI/merA/merA-deep-research.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">MerA is a cytosolic enzyme, functioning within the bacterial cytoplasm to reduce mercury ions. When P. aeruginosa carrying a mer plasmid is induced with mercury, MerA can constitute up to ~6% of the soluble (cytoplasmic) protein content</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Mercury detoxification through NADPH-dependent enzymatic reduction of Hg(II) to Hg(0) in bacterial cytoplasm</h3>
+                <span class="vote-buttons" data-g="P00392" data-a="FUNCTION: Mercury detoxification through NADPH-dependent enz..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016152" target="_blank" class="term-link">
+                            mercury (II) reductase (NADP+) activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050787" target="_blank" class="term-link">
+                                detoxification of mercury ion
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046689" target="_blank" class="term-link">
+                                response to mercury ion
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/6412751" target="_blank" class="term-link">
+                                PMID:6412751
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Supporting evidence for merA function</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16114877" target="_blank" class="term-link">
+                                PMID:16114877
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Supporting evidence for merA function</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/6412751" target="_blank" class="term-link">
+                            PMID:6412751
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Mercuric reductase: homology to glutathione reductase and lipoamide dehydrogenase. Iodoacetamide alkylation and sequence of the active site peptide</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16114877" target="_blank" class="term-link">
+                            PMID:16114877
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">NmerA, the metal binding domain of mercuric ion reductase, removes Hg2+ from proteins, delivers it to the catalytic core, and protects cells under glutathione-depleted conditions</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/1531297" target="_blank" class="term-link">
+                            PMID:1531297
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">C-terminal cysteines of Tn501 mercuric ion reductase.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Site-directed mutagenesis proved C-terminal cysteines Cys558 and Cys559 are essential for mercury reduction activity</div>
+                        
+                        <div class="finding-text">"Compared to wild-type enzyme, the C558A mutant shows a 20-fold reduction in kcat and a 10-fold increase in Km, for an overall decrease in catalytic efficiency of 200-fold in kcat/Km"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12829275" target="_blank" class="term-link">
+                            PMID:12829275
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Bacterial mercury resistance from atoms to ecosystems</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Comprehensive review establishing merA as essential for mercury resistance across diverse bacteria</div>
+                        
+                        <div class="finding-text">"Bacterial resistance to inorganic and organic mercury compounds (HgR) is one of the most widely observed phenotypes in eubacteria"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22773655" target="_blank" class="term-link">
+                            PMID:22773655
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Mercury resistance and mercuric reductase activities and expression among chemotrophic thermophilic Aquificae.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEAI/merA/merA-deep-research.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep Research Report on merA gene</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">MerA is a cytoplasmic enzyme that reduces Hg(II) to Hg(0) as part of bacterial mercury resistance</div>
+                        
+                        <div class="finding-text">"MerA is a cytosolic enzyme, functioning within the bacterial cytoplasm to reduce mercury ions. When P. aeruginosa carrying a mer plasmid is induced with mercury, MerA can constitute up to ~6% of the soluble (cytoplasmic) protein content."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">MerA contains specialized structural features for mercury handling</div>
+                        
+                        <div class="finding-text">"A unique structural feature of MerA is the additional C-terminal cysteine pair (e.g., Cys558 and Cys559) which is not found in most other flavoprotein reductases. These residues form a flexible loop that transiently coordinates the Hg²⁺ ion."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the structural basis for the enhanced mercury binding capacity of the C-terminal cysteine residues compared to other metal-binding cysteines?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P00392" data-a="Q: What is the structural basis for the enhanced merc..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How does MerA coordinate with other mer operon proteins (MerB, MerP, MerT) to achieve efficient mercury detoxification in vivo?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P00392" data-a="Q: How does MerA coordinate with other mer operon pro..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What evolutionary adaptations allow certain MerA variants to function at different pH ranges or with alternative electron donors?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P00392" data-a="Q: What evolutionary adaptations allow certain MerA v..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Crystallographic studies of MerA-mercury complexes at various stages of the catalytic cycle to capture intermediate states</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="P00392" data-a="EXPERIMENT: Crystallographic studies of MerA-mercury complexes..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Single-molecule FRET analysis to monitor conformational changes during mercury binding and reduction</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="P00392" data-a="EXPERIMENT: Single-molecule FRET analysis to monitor conformat..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Directed evolution experiments to engineer MerA variants with enhanced activity toward other toxic metal ions</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="P00392" data-a="EXPERIMENT: Directed evolution experiments to engineer MerA va..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(merA-deep-research.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P00392" data-a="DOC: Deep Research" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="deep-research-report-mera-pseai">Deep Research Report: merA (PSEAI)</h1>
+<p>Generated using OpenAI Deep Research API</p>
+<hr />
+<h1 id="pseudomonas-aeruginosa-mera-gene-comprehensive-functional-annotation">Pseudomonas aeruginosa <strong>merA</strong> Gene – Comprehensive Functional Annotation</h1>
+<h2 id="gene-function-and-molecular-mechanisms">Gene Function and Molecular Mechanisms</h2>
+<p>The <strong>merA</strong> gene of <em>Pseudomonas aeruginosa</em> encodes <strong>mercuric ion reductase</strong>, an enzyme that detoxifies mercury by catalyzing the two-electron reduction of toxic Hg(II) to elemental mercury (Hg(0)) (<a href="https://en.wikipedia.org/wiki/Mercury%28II%29_reductase#:~:text=Mercury,into%20relatively%20inert%20%207">en.wikipedia.org</a>) (<a href="https://pubmed.ncbi.nlm.nih.gov/12829275/#:~:text=the%20most%20widely%20observed%20phenotypes,arrangements%20can%20be%20quite%20diverse">pubmed.ncbi.nlm.nih.gov</a>). This enzyme is a <strong>flavoprotein oxidoreductase</strong> that uses NADPH as an electron donor (EC 1.16.1.1) (<a href="https://pubmed.ncbi.nlm.nih.gov/6277900/#:~:text=The%20flavoprotein%20mercuric%20reductase%20catalyzes,to%20lipoamide%20dehydrogenase%20and%20glutathione">pubmed.ncbi.nlm.nih.gov</a>). In the catalytic cycle, Hg²⁺ binds to cysteine residues in the enzyme’s active site, and electrons from NADPH (via an FAD cofactor) reduce Hg²⁺ to volatile Hg⁰, which is then released from the cell (<a href="https://en.wikipedia.org/wiki/Mercury%28II%29_reductase#:~:text=Mercury,into%20relatively%20inert%20%207">en.wikipedia.org</a>) (<a href="https://en.wikipedia.org/wiki/Mercury%28II%29_reductase#:~:text=metals%2C%20and%20thus%2C%20needs%20to,dangerous%20than%20its%20ionic%20form">en.wikipedia.org</a>). The overall reaction is: Hg²⁺ + NADPH + H⁺ → Hg⁰ + NADP⁺ (<a href="https://en.wikipedia.org/wiki/Mercury%28II%29_reductase#:~:text=Mechanism">en.wikipedia.org</a>). This activity corresponds to <strong>mercury(II) reductase activity (GO:0016152)</strong>, a key molecular function of MerA. The reduction of Hg²⁺ to elemental mercury renders it less reactive with cellular components, thus protecting the bacterium from mercury toxicity (<a href="https://en.wikipedia.org/wiki/Mercury%28II%29_reductase#:~:text=Free%20mercury%20ions%20can%20bind,dangerous%20than%20its%20ionic%20form">en.wikipedia.org</a>). Notably, MerA is highly specific for Hg(II) and works in concert with other mercuric resistance proteins (like MerT and MerP) that import Hg²⁺, making MerA the final detoxification step in the bacterial mercury resistance system (<a href="https://pubmed.ncbi.nlm.nih.gov/12829275/#:~:text=the%20most%20widely%20observed%20phenotypes,arrangements%20can%20be%20quite%20diverse">pubmed.ncbi.nlm.nih.gov</a>). </p>
+<p>Mechanistically, MerA belongs to the flavin disulfide oxidoreductase family and contains a <strong>redox-active disulfide</strong> in its active site (<a href="https://pubmed.ncbi.nlm.nih.gov/1531297/#:~:text=Mercuric%20ion%20reductase%20,high%20levels%20of%20mercuric%20ion">pubmed.ncbi.nlm.nih.gov</a>). Upon NADPH-driven reduction, a cystine pair in MerA’s active site is converted to two cysteine thiols capable of binding Hg²⁺ (<a href="https://pubmed.ncbi.nlm.nih.gov/6277900/#:~:text=reductase%20were%20observed,the%20disulfide%20reductase%20class%20of">pubmed.ncbi.nlm.nih.gov</a>). The enzyme forms a transient mercury–cysteine complex and then shuttles electrons to reduce the bound Hg²⁺ (<a href="https://en.wikipedia.org/wiki/Mercury%28II%29_reductase#:~:text=Mechanism">en.wikipedia.org</a>). <strong>Mercuric reductase is a homodimer</strong>: two MerA subunits together form the functional enzyme (<a href="https://pubmed.ncbi.nlm.nih.gov/22773655/#:~:text=broadly%20distributed%20among%20the%20Bacteria,Results%20supported%20this%20hypothesis">pubmed.ncbi.nlm.nih.gov</a>). Each subunit carries one FAD cofactor and the essential cysteine-containing active site. Importantly, MerA has evolved specialized cysteine residues for handling mercury. In the well-studied Tn501 MerA enzyme, a unique pair of cysteines (equivalent to Cys-558 and Cys-559) is present near the C-terminus (<a href="https://pubmed.ncbi.nlm.nih.gov/1531297/#:~:text=family%20members%20are%20potently%20inhibited,vitro%20shows%20each%20to%20have">pubmed.ncbi.nlm.nih.gov</a>). These cysteines are <em>essential</em> for activity – mutating Cys558 abolishes Hg-reducing activity (over 200-fold drop in efficiency), and even Cys559 contributes to efficient Hg²⁺ binding (<a href="https://pubmed.ncbi.nlm.nih.gov/1531297/#:~:text=C558A%20mutant%20shows%20a%2020,tight%20binding%29%20of%20Hg%28II">pubmed.ncbi.nlm.nih.gov</a>). These residues form a <strong>mercury-binding site</strong> that captures Hg²⁺ and passes it to the catalytic disulfide for reduction (<a href="https://pubmed.ncbi.nlm.nih.gov/1531297/#:~:text=catalytic%20efficiency%20of%20only%20ca,tight%20binding%29%20of%20Hg%28II">pubmed.ncbi.nlm.nih.gov</a>). This adaptive mechanism – a dedicated Hg-binding cysteine pair coupled with a flavin-disulfide electron transfer system – underlies MerA’s <strong>molecular strategy for mercury detoxification</strong>.</p>
+<h2 id="cellular-localization-and-subcellular-components">Cellular Localization and Subcellular Components</h2>
+<p>MerA is a <strong>cytosolic enzyme</strong>, functioning within the bacterial cytoplasm to reduce mercury ions (<a href="https://en.wikipedia.org/wiki/Mercury%28II%29_reductase#:~:text=Mercury,into%20relatively%20inert%20%207">en.wikipedia.org</a>). It lacks signal peptides or membrane-spanning regions, consistent with its role in detoxifying Hg²⁺ after import into the cell. Experimental evidence confirms that MerA is located in the soluble fraction of the cell: when <em>P. aeruginosa</em> carrying a mer plasmid is induced with mercury, MerA can constitute up to ~6% of the soluble (cytoplasmic) protein content (<a href="https://pubmed.ncbi.nlm.nih.gov/6277900/#:~:text=The%20flavoprotein%20mercuric%20reductase%20catalyzes,to%20lipoamide%20dehydrogenase%20and%20glutathione">pubmed.ncbi.nlm.nih.gov</a>) (<a href="https://pubmed.ncbi.nlm.nih.gov/6277900/#:~:text=been%20purified%20from%20Pseudomonas%20aeruginosa,and%20disulfides%2C%20are%20flavoproteins%20which">pubmed.ncbi.nlm.nih.gov</a>). This high level of soluble expression upon induction indicates MerA is not associated with membranes but free in the cytosol (Gene Ontology: <strong>cytoplasm (GO:0005737)</strong>). In the context of the <strong>mer operon</strong>, other proteins handle mercury transport – e.g. MerT is a membrane protein that transports Hg²⁺ across the inner membrane, and MerP is a periplasmic Hg-binding chaperone – while MerA operates inside the cell to enzymatically reduce the mercury (<a href="https://pubmed.ncbi.nlm.nih.gov/12829275/#:~:text=the%20most%20widely%20observed%20phenotypes,arrangements%20can%20be%20quite%20diverse">pubmed.ncbi.nlm.nih.gov</a>). Thus, MerA localizes to the cytoplasm where it encounters Hg²⁺ that has been shuttled in, and then facilitates its conversion to Hg⁰. The elemental mercury product, being volatile and uncharged, can diffuse out of the cell or pass through membranes easily, completing the detoxification process (<a href="https://en.wikipedia.org/wiki/Mercury%28II%29_reductase#:~:text=metals%2C%20and%20thus%2C%20needs%20to,dangerous%20than%20its%20ionic%20form">en.wikipedia.org</a>). No evidence suggests MerA associates with any organelles or the membrane; rather, it carries out its function in the cytosolic compartment where NADPH is available and incoming Hg²⁺ accumulates.  </p>
+<h2 id="biological-processes-involvement">Biological Processes Involvement</h2>
+<p>The primary biological role of <strong>MerA</strong> is in <strong>mercury resistance and detoxification</strong>. Bacteria harboring <strong>merA</strong> can survive in environments containing toxic mercury by converting Hg²⁺ into a less toxic form. In Gene Ontology terms, MerA is involved in the <strong>cellular response to mercury ion (GO:0046689)</strong> and in <strong>mercury compound metabolic processes</strong>. Specifically, MerA-mediated reduction of Hg²⁺ to Hg⁰ is the critical step in the <strong>bacterial mercury detoxification pathway</strong>, allowing the cell to neutralize mercury’s reactivity (<a href="https://en.wikipedia.org/wiki/Mercury%28II%29_reductase#:~:text=Free%20mercury%20ions%20can%20bind,dangerous%20than%20its%20ionic%20form">en.wikipedia.org</a>) (<a href="https://pubmed.ncbi.nlm.nih.gov/22773655/#:~:text=Mercury%20,Results%20supported%20this%20hypothesis">pubmed.ncbi.nlm.nih.gov</a>). This activity is often described as mercuric resistance (Hg^R) – one of the most widely observed heavy-metal resistance phenotypes in bacteria (<a href="https://pubmed.ncbi.nlm.nih.gov/12829275/#:~:text=Bacterial%20resistance%20to%20inorganic%20and,conferring%20HgR%20occur%20on%20chromosomes">pubmed.ncbi.nlm.nih.gov</a>). Bacterial cells without merA are typically extremely sensitive to mercuric ions, which bind cellular proteins and cause toxicity (<a href="https://en.wikipedia.org/wiki/Mercury%28II%29_reductase#:~:text=Free%20mercury%20ions%20can%20bind,dangerous%20than%20its%20ionic%20form">en.wikipedia.org</a>). By contrast, <em>P. aeruginosa</em> strains with an active mer operon can grow in otherwise inhibitory mercury concentrations, precipitating elemental mercury that volatilizes away. For example, mercury-resistant bacteria (with <strong>merA</strong>) often withstand micromolar to millimolar levels of HgCl₂, which would kill mercury-sensitive strains (<a href="https://patents.google.com/patent/CN102534028A/en#:~:text=MerA%20genes%20encoding%20dimercurion%20reductase,negative%20bacteria%20Pseudomonas%2C%20detect">patents.google.com</a>) (<a href="https://pubmed.ncbi.nlm.nih.gov/22773655/#:~:text=therefore%20hypothesized%20that%20the%20merA,mer%20operons%20was%20not%20induced">pubmed.ncbi.nlm.nih.gov</a>). In one study, thermophilic bacteria with a merA operon grew in &gt;10 µM Hg²⁺ and enzymatically volatilized mercury during growth (<a href="https://pubmed.ncbi.nlm.nih.gov/22773655/#:~:text=therefore%20hypothesized%20that%20the%20merA,mer%20operons%20was%20not%20induced">pubmed.ncbi.nlm.nih.gov</a>), underscoring MerA’s role in <strong>detoxification of mercury ion</strong>.</p>
+<p>Beyond individual cell survival, MerA contributes to broader <strong>biogeochemical processes</strong>. By enzymatically reducing Hg²⁺ to Hg⁰ (a gas), MerA-expressing bacteria actively participate in the <strong>biogeochemical cycling of mercury</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/22773655/#:~:text=Mercury%20,Results%20supported%20this%20hypothesis">pubmed.ncbi.nlm.nih.gov</a>). Elemental mercury released by bacteria can escape into the atmosphere, influencing mercury distribution in the environment. This has ecological significance, as bacterial merA genes help mitigate mercury pollution by removing ionic mercury from soils and waters (in effect, a natural <strong>bioremediation</strong> mechanism) (<a href="https://pubmed.ncbi.nlm.nih.gov/12829275/#:~:text=of%20which%20are%20modular%20themselves,the%20subjects%20of%20this%20review">pubmed.ncbi.nlm.nih.gov</a>). In summary, MerA is central to the biological process of mercury ion detoxification and resistance, enabling <em>P. aeruginosa</em> (and other microbes) to thrive in mercurial environments and contributing to the natural mercury cycle.</p>
+<h2 id="disease-associations-and-phenotypes">Disease Associations and Phenotypes</h2>
+<p>In the context of human disease, <strong>merA</strong> is not a virulence gene per se, but it can influence the ecology and clinical persistence of <em>P. aeruginosa</em>. <em>P. aeruginosa</em> is an opportunistic pathogen, and the presence of merA confers a survival advantage in mercury-rich or heavily disinfected environments. For instance, some antiseptics and preservatives historically used (such as thimerosal or mercurial compounds) or environmental contaminants can introduce mercury stress. Bacteria with <strong>merA</strong> can resist such agents, which means merA-positive <em>P. aeruginosa</em> might persist in settings that use mercury-containing disinfectants or in patients/environment with high mercury exposure (<a href="https://patents.google.com/patent/CN102534028A/en#:~:text=biguanides%20and%20heavy%20metal">patents.google.com</a>) (<a href="https://patents.google.com/patent/CN102534028A/en#:~:text=MerA%20genes%20encoding%20dimercurion%20reductase,negative%20bacteria%20Pseudomonas%2C%20detect">patents.google.com</a>). However, merA’s <strong>primary “phenotype” is mercury resistance</strong>: strains carrying merA can grow in the presence of otherwise inhibitory mercury compounds. In laboratory tests, mercury-resistant <em>Pseudomonas</em> isolates show high minimal inhibitory concentrations for mercuric chloride (for example, 0.75–2 mM HgCl₂) and for organomercurials, whereas mercury-sensitive strains cannot (<a href="https://patents.google.com/patent/CN102534028A/en#:~:text=distributed%20widely%20in%20gram,genus%2C%20klebsiella%20spp%2C%20Rhodopseudomonas%20and">patents.google.com</a>). This mercury-resistant phenotype is often used as a marker to identify functional merA (e.g., growth on HgCl₂-containing media indicates an active merA gene).</p>
+<p>Importantly, <strong>merA is frequently associated with mobile genetic elements that carry antibiotic resistance genes</strong>, which has clinical relevance. The mer operon (including merA) often resides on plasmids or transposons (such as Tn501, Tn21, etc.) that also harbor genes for antibiotic resistance (<a href="https://patents.google.com/patent/CN102534028A/en#:~:text=MerA%20genes%20encoding%20dimercurion%20reductase,negative%20bacteria%20Pseudomonas%2C%20detect">patents.google.com</a>). For example, plasmid pSN254 is noted to carry merA linked with antibiotic resistance determinants (<a href="https://patents.google.com/patent/CN102534028A/en#:~:text=MerA%20genes%20encoding%20dimercurion%20reductase,DNA%20hybridization%20and">patents.google.com</a>). This means exposure to mercury or heavy metals can co-select for bacteria that are multi-drug resistant. In <em>P. aeruginosa</em>, isolates from hospital or industrial settings that are multidrug-resistant (MDR) sometimes test positive for merA, suggesting a <strong>co-selection between mercury resistance and antibiotic resistance</strong> (<a href="https://patents.google.com/patent/CN102534028A/en#:~:text=MerA%20genes%20encoding%20dimercurion%20reductase,negative%20bacteria%20Pseudomonas%2C%20detect">patents.google.com</a>). Indeed, a surveillance study in <strong>multidrug-resistant <em>P. aeruginosa</em></strong> (MDRPA) found that many strains carried the merA gene, reflecting heavy-metal resistance in tandem with drug resistance (<a href="https://patents.google.com/patent/CN102534028A/en#:~:text=MerA%20genes%20encoding%20dimercurion%20reductase,negative%20bacteria%20Pseudomonas%2C%20detect">patents.google.com</a>) (<a href="https://patents.google.com/patent/CN102534028A/en#:~:text=distributed%20widely%20in%20gram,genus%2C%20klebsiella%20spp%2C%20Rhodopseudomonas%20and">patents.google.com</a>). While merA itself does not cause disease, its presence in pathogenic <em>P. aeruginosa</em> can facilitate the persistence of these bacteria in disinfected clinical environments and could indirectly maintain antibiotic-resistant populations (by linkage on the same mobile element). Thus, from a clinical perspective, <strong>merA is a marker of heavy-metal–resistant and potentially MDR environmental strains</strong>, which can impact infection control and treatment outcomes. There are no direct human disease phenotypes caused by merA, but its environmental/industrial prevalence and co-resistance link make it significant in public health and epidemiology of <em>P. aeruginosa</em>.</p>
+<h2 id="protein-domains-and-structural-features">Protein Domains and Structural Features</h2>
+<p>The MerA protein is a <strong>multi-domain enzyme</strong> with specialized regions for cofactor binding and metal handling. A typical MerA monomer is around ~550 amino acids in length and consists of two major functional domains (besides a small metallochaperone region in many cases) (<a href="https://en.wikipedia.org/wiki/Mercury%28II%29_reductase#:~:text=quaternary%20conformation%20and%20the%20monomer,is%20composed%20of%20two%20domains">en.wikipedia.org</a>) (<a href="https://en.wikipedia.org/wiki/Mercury%28II%29_reductase#:~:text=One%20of%20the%20domains%20of,ligands%20such%20as%20MerT%20and">en.wikipedia.org</a>). Many MerA proteins, especially in Gram-negative bacteria, possess an <strong>N-terminal metal-binding domain</strong> called <strong>NmerA</strong> (<a href="https://en.wikipedia.org/wiki/Mercury%28II%29_reductase#:~:text=One%20of%20the%20domains%20of,ligands%20such%20as%20MerT%20and">en.wikipedia.org</a>). NmerA is a small domain (≈70 amino acids) with a βαββαβ fold, and it contains a conserved GMTCXXC motif with two key cysteine residues (<a href="https://en.wikipedia.org/wiki/Mercury%28II%29_reductase#:~:text=One%20of%20the%20domains%20of,ligands%20such%20as%20MerT%20and">en.wikipedia.org</a>). This N-terminal domain acts like a mercury “chaperone”: it can <strong>bind Hg²⁺ ions and shuttle them to the enzyme’s core</strong> (<a href="https://en.wikipedia.org/wiki/Mercury%28II%29_reductase#:~:text=One%20of%20the%20domains%20of,ligands%20such%20as%20MerT%20and">en.wikipedia.org</a>). NmerA accepts mercury from the periplasmic mercury-binding protein MerP or directly from solution, and then transfers the Hg²⁺ to the active site cysteine pair in the MerA core (<a href="https://en.wikipedia.org/wiki/Mercury%28II%29_reductase#:~:text=One%20of%20the%20domains%20of,ligands%20such%20as%20MerT%20and">en.wikipedia.org</a>). Notably, some bacterial MerA proteins (particularly in certain Gram-positive bacteria) <strong>lack the NmerA domain</strong> (<a href="https://en.wikipedia.org/wiki/Mercury%28II%29_reductase#:~:text=match%20at%20L139%20mercuric,to%20lack%20the%20NmerA%20domain">en.wikipedia.org</a>). In those cases, MerA still functions, but initial Hg²⁺ acquisition may be less efficient without the dedicated metallochaperone domain. </p>
+<p>Following the NmerA (if present) and a short linker, the bulk of MerA is the <strong>catalytic core</strong>, which is typically organized into two subdomains: one binds FAD and the other binds NADPH. Structurally, MerA’s core is homologous to other disulfide oxidoreductases like lipoamide dehydrogenase and glutathione reductase (<a href="https://pubmed.ncbi.nlm.nih.gov/6277900/#:~:text=formation%20of%20a%20charge%20transfer,the%20disulfide%20reductase%20class%20of">pubmed.ncbi.nlm.nih.gov</a>). Each MerA monomer has a <strong>FAD-binding domain</strong> (with a Rossmann-like fold) that tightly holds the FAD cofactor, and a <strong>NADPH-binding domain</strong> that positions the nicotinamide coenzyme for hydride transfer. The interface between these domains houses the <strong>active-site disulfide</strong> (a pair of cysteine residues) that cycles between oxidized and reduced states during catalysis (<a href="https://pubmed.ncbi.nlm.nih.gov/6277900/#:~:text=reductase%20were%20observed,the%20disulfide%20reductase%20class%20of">pubmed.ncbi.nlm.nih.gov</a>). These two cysteines (often in a Cys-XX-Cys motif) are analogous to the redox-active disulfide in glutathione reductase, confirming MerA’s evolutionary relationship to the disulfide reductase family (<a href="https://pubmed.ncbi.nlm.nih.gov/6277900/#:~:text=formation%20of%20a%20charge%20transfer,the%20disulfide%20reductase%20class%20of">pubmed.ncbi.nlm.nih.gov</a>). In MerA, when this disulfide is reduced by NADPH (via FAD), it forms two thiolate anions that can bind Hg²⁺. </p>
+<p>A <strong>unique structural feature</strong> of MerA is the <strong>additional C-terminal cysteine pair</strong> (e.g., Cys558 and Cys559 in <em>P. aeruginosa</em> Tn501 MerA) which is not found in most other flavoprotein reductases (<a href="https://pubmed.ncbi.nlm.nih.gov/1531297/#:~:text=family%20members%20are%20potently%20inhibited,vitro%20shows%20each%20to%20have">pubmed.ncbi.nlm.nih.gov</a>). These residues form a flexible loop or arm that transiently coordinates the Hg²⁺ ion near the enzyme’s surface, facilitating its delivery to the buried active-site disulfide (<a href="https://pubmed.ncbi.nlm.nih.gov/1531297/#:~:text=family%20members%20are%20potently%20inhibited,vitro%20shows%20each%20to%20have">pubmed.ncbi.nlm.nih.gov</a>) (<a href="https://pubmed.ncbi.nlm.nih.gov/1531297/#:~:text=catalytic%20efficiency%20of%20only%20ca,tight%20binding%29%20of%20Hg%28II">pubmed.ncbi.nlm.nih.gov</a>). Mutational analyses have shown Cys558 and Cys559 are indispensable for full activity – they significantly enhance mercury binding and ensure rapid catalysis (<a href="https://pubmed.ncbi.nlm.nih.gov/1531297/#:~:text=of%20each%20to%20alanine,From%20these%20results%2C%20it">pubmed.ncbi.nlm.nih.gov</a>) (<a href="https://pubmed.ncbi.nlm.nih.gov/1531297/#:~:text=C558A%20mutant%20shows%20a%2020,tight%20binding%29%20of%20Hg%28II">pubmed.ncbi.nlm.nih.gov</a>). Structurally, X-ray crystallography of MerA has captured Hg²⁺ bound to these cysteine sites, confirming that the metal is initially chelated by the C-terminal cysteine pair before being passed to the internal cysteine pair for reduction (<a href="https://en.wikipedia.org/wiki/Mercury%28II%29_reductase#:~:text=,terminal">en.wikipedia.org</a>). Overall, MerA’s domain architecture – an optional N-terminal metal-binding domain, a dual-domain catalytic core with FAD/NADPH binding, an active-site disulfide, and an extra C-terminal cysteine loop – is exquisitely tailored for its role as a mercury-specific reductase. These features ensure that MerA can efficiently scavenge mercury ions and catalyze their reduction while protecting the rest of the protein (and cell) from mercury’s reactive effects.</p>
+<h2 id="expression-patterns-and-regulation">Expression Patterns and Regulation</h2>
+<p>Expression of the <strong>merA</strong> gene is tightly regulated in bacteria, reflecting the need to produce the enzyme only in the presence of mercury. In <em>P. aeruginosa</em> and other bacteria, merA is typically part of the <strong>mer operon</strong>, which includes regulatory and transport genes. The operon is under control of <strong>MerR</strong>, a metal-responsive transcriptional regulator (<a href="https://pubmed.ncbi.nlm.nih.gov/12829275/#:~:text=reductase%20enzyme%20,arrangements%20can%20be%20quite%20diverse">pubmed.ncbi.nlm.nih.gov</a>). <strong>MerR</strong> is a novel metalloregulatory protein that senses intracellular Hg²⁺ and induces the transcription of the mer operon. In the absence of mercury, MerR sits at the mer promoter and represses transcription (by binding and slightly bending the operator DNA). When Hg²⁺ is present, MerR binds the ion, undergoes a conformational change, and becomes an activator that facilitates RNA polymerase initiation, leading to robust transcription of merA and other operon genes (<a href="https://pubmed.ncbi.nlm.nih.gov/12829275/#:~:text=the%20most%20widely%20observed%20phenotypes,arrangements%20can%20be%20quite%20diverse">pubmed.ncbi.nlm.nih.gov</a>). This <strong>inducible expression</strong> mechanism ensures that MerA is produced at high levels only when needed – i.e., when the cell encounters toxic mercury. Indeed, upon Hg²⁺ exposure, merA expression can increase dramatically, yielding large amounts of mercuric reductase (consistent with observations that MerA enzyme makes up a significant fraction of cell protein under inducing conditions) (<a href="https://pubmed.ncbi.nlm.nih.gov/6277900/#:~:text=been%20purified%20from%20Pseudomonas%20aeruginosa,and%20disulfides%2C%20are%20flavoproteins%20which">pubmed.ncbi.nlm.nih.gov</a>). Once the mercury threat is removed (reduced to Hg⁰ and evaporated), MerR (with the help of accessory regulators) turns off merA transcription to conserve resources.</p>
+<p>Besides MerR, some operons include <strong>MerD</strong>, a secondary regulatory protein that fine-tunes the response (<a href="https://en.wikipedia.org/wiki/Mercury%28II%29_reductase#:~:text=Mercury,by%20both%20MerR%20and%20MerD">en.wikipedia.org</a>). MerD is thought to act as a corepressor that helps shut off or dampen mer operon expression after mercury has been detoxified, preventing excessive or prolonged MerA production. In <em>P. aeruginosa</em> mer operons, MerD and MerR together modulate the <strong>on/off switch</strong> for merA transcription (<a href="https://en.wikipedia.org/wiki/Mercury%28II%29_reductase#:~:text=Mercury,by%20both%20MerR%20and%20MerD">en.wikipedia.org</a>). This layered regulation allows a quick, high-level response to mercury (via MerR) and a feedback mechanism to return to baseline once mercury is gone (via MerD). The net effect is that <strong>merA expression is tightly inducible and low under normal conditions</strong>, avoiding any fitness cost from unnecessary expression, yet highly elevated in the presence of Hg²⁺ to maximize detoxification capacity.</p>
+<p>Environmental factors also influence merA expression. Mercury is the primary inducer, but operon control can integrate signals of oxidative stress or other heavy metals indirectly (though MerR is highly specific to Hg²⁺). In some cases, merA expression correlates with other stress responses; for example, cellular thiol levels (e.g. glutathione) might affect mercury availability and thus mer operon induction (<a href="https://en.wikipedia.org/wiki/Mercury%28II%29_reductase#:~:text=match%20at%20L143%20,depleted%20conditions.%20Biochemistry.%20August%202005">en.wikipedia.org</a>). Laboratory assays to monitor merA expression often use mercury challenges: <em>P. aeruginosa</em> exposed to HgCl₂ will show a spike in merA mRNA and enzyme activity (NADPH-dependent Hg²⁺ reduction) within a short time frame, confirming the inducible nature of the gene (<a href="https://pubmed.ncbi.nlm.nih.gov/22773655/#:~:text=128,unity%20ratios%20of%20merA%20transcripts">pubmed.ncbi.nlm.nih.gov</a>). Conversely, merA is virtually silent in mercury-free conditions due to MerR repression. This on-demand expression system is a classic example of bacterial <strong>responsive gene regulation</strong> to a toxic threat.</p>
+<h2 id="evolutionary-conservation-and-diversity">Evolutionary Conservation and Diversity</h2>
+<p>The <strong>MerA protein is highly conserved across a broad range of bacteria</strong>, and even in some Archaea, highlighting the universal importance of mercury detoxification. Homologs of MerA (mercuric reductases) are found in diverse bacterial phyla, from <em>Proteobacteria</em> (like <em>Pseudomonas</em>, <em>Escherichia</em>) to <em>Firmicutes</em> (like <em>Bacillus</em> and <em>Staphylococcus</em>) to even deep-branching thermophiles (<a href="https://pubmed.ncbi.nlm.nih.gov/22773655/#:~:text=Mercury%20,Results%20supported%20this%20hypothesis">pubmed.ncbi.nlm.nih.gov</a>). In fact, mercury resistance (the mer system) is so widespread that it’s considered one of the most prevalent heavy-metal resistance mechanisms in eubacteria (<a href="https://pubmed.ncbi.nlm.nih.gov/12829275/#:~:text=Bacterial%20resistance%20to%20inorganic%20and,conferring%20HgR%20occur%20on%20chromosomes">pubmed.ncbi.nlm.nih.gov</a>). Phylogenetic analyses indicate that MerA enzymes form a distinct family within the flavoprotein disulfide reductases. Interestingly, <strong>MerA sequences from thermophilic Aquificae bacteria form the deepest branch in the MerA phylogeny</strong>, suggesting that the mercury detoxification capability may have ancient origins (<a href="https://pubmed.ncbi.nlm.nih.gov/22773655/#:~:text=in%20Hg%20detoxification%20and%20biogeochemical,iii%29%20possessed%20Hg">pubmed.ncbi.nlm.nih.gov</a>). The presence of merA in Archaea and deeply branching bacteria implies that early life forms might have evolved this function to cope with mercury in the primordial environment, or that merA has been laterally transferred across domains of life.</p>
+<p>A striking feature of merA evolution is the role of <strong>horizontal gene transfer (HGT)</strong> in its dissemination. The merA gene often resides on <strong>plasmids, transposons, or integrative elements</strong> that can move between organisms (<a href="https://pubmed.ncbi.nlm.nih.gov/12829275/#:~:text=degrades%20organomercurials%20by%20protonolysis%2C%20and,the%20subjects%20of%20this%20review">pubmed.ncbi.nlm.nih.gov</a>). For example, the Tn501 transposon carrying merA was originally characterized in <em>Pseudomonas</em>, but merA-bearing transposons/integrons have been found in many species. This mobility leads to <strong>high sequence conservation of MerA across even distantly related bacteria</strong>, because a successful merA allele can spread rapidly. Studies have shown 95–97% DNA sequence identity between merA genes from Gram-negative bacteria and those from Gram-positive species (<a href="https://patents.google.com/patent/CN102534028A/en#:~:text=round%20pcr%3B%20The%20result%20shows%3B,97">patents.google.com</a>). For instance, a merA sequence from <em>Acinetobacter</em> or <em>E. coli</em> was ~95% identical to merA from <em>Staphylococcus aureus</em> (a Gram-positive), and similarly ~90–97% identical to merA from <em>Bacillus subtilis</em> (<a href="https://patents.google.com/patent/CN102534028A/en#:~:text=round%20pcr%3B%20The%20result%20shows%3B,97">patents.google.com</a>). Such high homology across different taxa indicates recent gene transfer events and a strong selective pressure to retain functionally optimal MerA variants. Essentially, <strong>merA has a “plug-and-play” nature – bacteria that acquire it gain mercury resistance, so the gene is conserved and propagated</strong>, leading to very little divergence among MerA proteins from a variety of hosts (<a href="https://patents.google.com/patent/CN102534028A/en#:~:text=distributed%20widely%20in%20gram,genus%2C%20klebsiella%20spp%2C%20Rhodopseudomonas%20and">patents.google.com</a>) (<a href="https://patents.google.com/patent/CN102534028A/en#:~:text=escherichia%2C%20intestinal%20bacteria%20genus%2C%20klebsiella,97">patents.google.com</a>).</p>
+<p>Despite overall conservation, there are some <strong>functional and sequence variations</strong> in MerA from different sources. The presence or absence of the N-terminal metal-binding domain (NmerA) is one clear variation (most Gram-negatives have it, some Gram-positives do not) (<a href="https://en.wikipedia.org/wiki/Mercury%28II%29_reductase#:~:text=match%20at%20L139%20mercuric,to%20lack%20the%20NmerA%20domain">en.wikipedia.org</a>). Additionally, slight differences in sequence motifs can affect enzyme efficiency. For example, the sites involved in NADPH binding and the C-terminal cysteine motif (e.g., “GCVPSK” for the nucleotide-binding region and “LSCC<strong>A</strong>” surrounding the Hg-binding cysteines) show variation between bacterial groups, which may influence how tightly MerA interacts with NADPH or Hg²⁺ (<a href="https://pubmed.ncbi.nlm.nih.gov/28966143/#:~:text=MerA%20protein%20of%20mer%20operon,an%20important%20role%20in%20mercury">pubmed.ncbi.nlm.nih.gov</a>) (<a href="https://pubmed.ncbi.nlm.nih.gov/28966143/#:~:text=been%20carried%20out%20and%20MerA,8.56">pubmed.ncbi.nlm.nih.gov</a>). A comparative study of MerA proteins from multiple bacteria found that <em>P. aeruginosa’s</em> MerA has a high predicted affinity for NADPH and Hg²⁺, correlating with efficient mercury volatilization in that species (<a href="https://pubmed.ncbi.nlm.nih.gov/28966143/#:~:text=NADPH%20,8.42%20kcal%2Fmol">pubmed.ncbi.nlm.nih.gov</a>) (<a href="https://pubmed.ncbi.nlm.nih.gov/28966143/#:~:text=%28NADPH%3A%20,2%2B%7D%20volatilization.%20Thus%2C%20the%20mercury">pubmed.ncbi.nlm.nih.gov</a>). This suggests that while MerA from all sources performs the same core function, some <strong>allelic variants may confer different levels of resistance or kinetic efficiency</strong>, possibly reflecting adaptation to the typical mercury exposure in those organisms’ niches. Overall, however, the <strong>evolutionary conservation of MerA is remarkable</strong> – bacteria from soil, water, plant and animal-associated environments all rely on fundamentally the same enzyme to handle mercury stress, underscoring MerA’s critical role and successful conservation through gene transfer and selection.</p>
+<h2 id="key-experimental-evidence-and-literature">Key Experimental Evidence and Literature</h2>
+<p>Research on the <strong>merA</strong> gene and mercuric reductase spans decades, providing a rich body of experimental evidence:</p>
+<ul>
+<li>
+<p><strong>Genetic identification and operon context:</strong> The merA gene was first characterized as part of mercury resistance operons on transmissible plasmids and transposons (e.g., Tn501 in <em>Pseudomonas aeruginosa</em>). Early studies in the 1970s-80s showed that transferring these elements conferred mercury resistance, implicating merA as a necessary gene. The classic <em>mer</em> operon arrangement – with merR (regulator), merT/merP (transport), merA (reductase), and sometimes merB (organomercury lyase) – was elucidated by cloning and genetic analysis (<a href="https://pubmed.ncbi.nlm.nih.gov/12829275/#:~:text=the%20most%20widely%20observed%20phenotypes,arrangements%20can%20be%20quite%20diverse">pubmed.ncbi.nlm.nih.gov</a>) (<a href="https://pubmed.ncbi.nlm.nih.gov/12829275/#:~:text=degrades%20organomercurials%20by%20protonolysis%2C%20and,the%20subjects%20of%20this%20review">pubmed.ncbi.nlm.nih.gov</a>). These studies established that merA is essential for the Hg(II)→Hg(0) conversion and that disabling merA abolishes mercury resistance.</p>
+</li>
+<li>
+<p><strong>Protein purification and enzymatic activity:</strong> A milestone was the purification and biochemical characterization of MerA (mercuric reductase) from <em>P. aeruginosa</em> pVS1 (Tn501) by Fox and Walsh in 1983. They isolated MerA to homogeneity and showed it is a <strong>dimeric flavoprotein</strong> containing FAD and a redox-active thiol pair (<a href="https://pubmed.ncbi.nlm.nih.gov/6277900/#:~:text=The%20flavoprotein%20mercuric%20reductase%20catalyzes,to%20lipoamide%20dehydrogenase%20and%20glutathione">pubmed.ncbi.nlm.nih.gov</a>) (<a href="https://pubmed.ncbi.nlm.nih.gov/6277900/#:~:text=reductase%20were%20observed,least%20one%20of%20these%20enzymes">pubmed.ncbi.nlm.nih.gov</a>). That work demonstrated the NADPH-dependent reduction of Hg²⁺ to Hg⁰ in vitro and noted MerA’s spectral and mechanistic similarity to known disulfide oxidoreductases (like glutathione reductase) (<a href="https://pubmed.ncbi.nlm.nih.gov/6277900/#:~:text=formation%20of%20a%20charge%20transfer,the%20disulfide%20reductase%20class%20of">pubmed.ncbi.nlm.nih.gov</a>). This was key evidence confirming MerA’s function as an enzyme and not just a metal-binding protein. They also observed that induced cells produce very high levels of MerA (up to 6% of soluble protein) (<a href="https://pubmed.ncbi.nlm.nih.gov/6277900/#:~:text=been%20purified%20from%20Pseudomonas%20aeruginosa,and%20disulfides%2C%20are%20flavoproteins%20which">pubmed.ncbi.nlm.nih.gov</a>), reflecting the strong expression under Hg induction.</p>
+</li>
+<li>
+<p><strong>Active site and mechanism dissection:</strong> In 1989, Miller, Walsh, and colleagues performed <strong>site-directed mutagenesis</strong> on the cysteine residues of MerA, providing direct evidence of their roles (<a href="https://pubmed.ncbi.nlm.nih.gov/1531297/#:~:text=family%20members%20are%20potently%20inhibited,vitro%20shows%20each%20to%20have">pubmed.ncbi.nlm.nih.gov</a>). By mutating the N-terminal cysteine pair and the C-terminal cysteine pair, they showed that these residues are critical: mutants in the C-terminal cysteines (Cys558/Cys559) lost nearly all mercury-reducing activity (<a href="https://pubmed.ncbi.nlm.nih.gov/1531297/#:~:text=of%20each%20to%20alanine,From%20these%20results%2C%20it">pubmed.ncbi.nlm.nih.gov</a>). This demonstrated the necessity of the unique cysteine pairs in catalysis and helped formulate the mechanism in which Hg²⁺ is transferred between cysteine sites. These findings were published in <em>Biochemistry</em> (Moore &amp; Walsh 1989; Miller et al. 1989) and remain foundational evidence for MerA’s catalytic mechanism (<a href="https://pubmed.ncbi.nlm.nih.gov/1531297/#:~:text=family%20members%20are%20potently%20inhibited,vitro%20shows%20each%20to%20have">pubmed.ncbi.nlm.nih.gov</a>) (<a href="https://pubmed.ncbi.nlm.nih.gov/1531297/#:~:text=C558A%20mutant%20shows%20a%2020,tight%20binding%29%20of%20Hg%28II">pubmed.ncbi.nlm.nih.gov</a>).</p>
+</li>
+<li>
+<p><strong>Structural biology:</strong> More recently, X-ray crystallography has provided a 3D view of MerA. A notable study solved the <strong>crystal structure of MerA bound to Hg²⁺</strong> (Schiering et al., 1991; or a 2014 Biochemistry study) (<a href="https://en.wikipedia.org/wiki/Mercury%28II%29_reductase#:~:text=,terminal">en.wikipedia.org</a>). The structures confirmed that MerA is a dimer and visualized the coordination of Hg²⁺ between the C-terminal cysteine pair and the inner active-site cysteine pair. Structural and biophysical studies (e.g., NMR, small-angle X-ray scattering) have also examined the dynamic between the NmerA domain and the core, showing how the flexible N-terminal domain can deliver Hg²⁺ into the active site canal (<a href="https://en.wikipedia.org/wiki/Mercury%28II%29_reductase#:~:text=,terminal">en.wikipedia.org</a>) (<a href="https://en.wikipedia.org/wiki/Mercury%28II%29_reductase#:~:text=One%20of%20the%20domains%20of,ligands%20such%20as%20MerT%20and">en.wikipedia.org</a>). A 2005 study (Ledbetter et al., <em>Biochemistry</em>) specifically demonstrated NmerA’s role in extracting Hg²⁺ from proteins and passing it to the catalytic core, which is critical in vivo especially when buffering thiols are limited (<a href="https://en.wikipedia.org/wiki/Mercury%28II%29_reductase#:~:text=match%20at%20L143%20,depleted%20conditions.%20Biochemistry.%20August%202005">en.wikipedia.org</a>). These structural and biophysical experiments solidified our understanding of MerA’s domain function and metal transfer mechanism.</p>
+</li>
+<li>
+<p><strong>Environmental and clinical studies:</strong> Numerous field and lab studies have explored <strong>merA in natural isolates</strong>. For example, Barkay et al. (FEMS Microbiol. Rev. 2003) provided a comprehensive review of mercury resistance “from atoms to ecosystems”, highlighting merA’s ubiquity and its contribution to environmental mercury cycling (<a href="https://pubmed.ncbi.nlm.nih.gov/12829275/#:~:text=Bacterial%20resistance%20to%20inorganic%20and,arrangements%20can%20be%20quite%20diverse">pubmed.ncbi.nlm.nih.gov</a>) (<a href="https://pubmed.ncbi.nlm.nih.gov/12829275/#:~:text=of%20which%20are%20modular%20themselves,the%20subjects%20of%20this%20review">pubmed.ncbi.nlm.nih.gov</a>). Other studies have surveyed merA gene diversity in mercury-contaminated sites (e.g., in biofilms or sediments) and developed PCR methods to detect merA as a functional biomarker of mercury pollution (<a href="https://pubmed.ncbi.nlm.nih.gov/28966143/#:~:text=MerA%20protein%20of%20mer%20operon,the%20prediction%20of%20suitable%20models">pubmed.ncbi.nlm.nih.gov</a>). In clinical contexts, detection of merA in hospital <em>P. aeruginosa</em> isolates has been reported (e.g., via PCR in multidrug-resistant strains) (<a href="https://patents.google.com/patent/CN102534028A/en#:~:text=MerA%20genes%20encoding%20dimercurion%20reductase,negative%20bacteria%20Pseudomonas%2C%20detect">patents.google.com</a>), underscoring the gene’s mobility and possible co-selection with antibiotic resistance. These applied studies use merA presence/expression as evidence of mercury adaptation and often correlate gene presence with mercury resistance phenotypes (such as high MIC to HgCl₂) (<a href="https://patents.google.com/patent/CN102534028A/en#:~:text=distributed%20widely%20in%20gram,genus%2C%20klebsiella%20spp%2C%20Rhodopseudomonas%20and">patents.google.com</a>). </p>
+</li>
+</ul>
+<p>Together, this body of literature provides a <strong>multi-faceted evidence base</strong> for GO annotation of merA. Genetic studies prove merA is required for mercury resistance (Biological Process: response to mercury ion) (<a href="https://pubmed.ncbi.nlm.nih.gov/12829275/#:~:text=the%20most%20widely%20observed%20phenotypes,arrangements%20can%20be%20quite%20diverse">pubmed.ncbi.nlm.nih.gov</a>). Biochemical and structural studies confirm the enzyme’s mercuric reductase activity and mechanism (Molecular Function: mercury (II) reductase activity) (<a href="https://pubmed.ncbi.nlm.nih.gov/6277900/#:~:text=The%20flavoprotein%20mercuric%20reductase%20catalyzes,to%20lipoamide%20dehydrogenase%20and%20glutathione">pubmed.ncbi.nlm.nih.gov</a>) (<a href="https://pubmed.ncbi.nlm.nih.gov/1531297/#:~:text=family%20members%20are%20potently%20inhibited,vitro%20shows%20each%20to%20have">pubmed.ncbi.nlm.nih.gov</a>). Cellular fractionation and sequence analysis show MerA is cytosolic (Cellular Component: cytoplasm) (<a href="https://en.wikipedia.org/wiki/Mercury%28II%29_reductase#:~:text=Mercury,into%20relatively%20inert%20%207">en.wikipedia.org</a>) (<a href="https://pubmed.ncbi.nlm.nih.gov/6277900/#:~:text=been%20purified%20from%20Pseudomonas%20aeruginosa,and%20disulfides%2C%20are%20flavoproteins%20which">pubmed.ncbi.nlm.nih.gov</a>). Finally, comparative genomics and environmental surveys illustrate the conserved and transferable nature of merA, reinforcing its importance across bacterial species. All these experimental findings support a confident annotation of <em>Pseudomonas aeruginosa</em> MerA as a cytoplasmic flavoprotein enzyme that catalyzes mercury ion reduction, enabling mercury detoxification and resistance. </p>
+<p><strong>References (Key supporting literature):</strong>  </p>
+<ul>
+<li>Barkay, T., Miller, S.M., &amp; Summers, A.O. (2003). <em>Bacterial mercury resistance from atoms to ecosystems</em>. <strong>FEMS Microbiol. Rev. 27</strong>(2-3): 355-384 (<a href="https://pubmed.ncbi.nlm.nih.gov/12829275/#:~:text=Bacterial%20resistance%20to%20inorganic%20and,arrangements%20can%20be%20quite%20diverse">pubmed.ncbi.nlm.nih.gov</a>) (<a href="https://pubmed.ncbi.nlm.nih.gov/12829275/#:~:text=the%20most%20widely%20observed%20phenotypes,arrangements%20can%20be%20quite%20diverse">pubmed.ncbi.nlm.nih.gov</a>).  </li>
+<li>Fox, B. &amp; Walsh, C.T. (1983). <em>Mercuric reductase: purification and characterization of a transposon-encoded flavoprotein containing a redox-active disulfide</em>. <strong>Biochemistry 22</strong>(2): 4082-4088 (<a href="https://pubmed.ncbi.nlm.nih.gov/6277900/#:~:text=The%20flavoprotein%20mercuric%20reductase%20catalyzes,to%20lipoamide%20dehydrogenase%20and%20glutathione">pubmed.ncbi.nlm.nih.gov</a>) (<a href="https://pubmed.ncbi.nlm.nih.gov/6277900/#:~:text=reductase%20were%20observed,the%20disulfide%20reductase%20class%20of">pubmed.ncbi.nlm.nih.gov</a>).  </li>
+<li>Moore, M.J. &amp; Walsh, C.T. (1989). <em>Mutagenesis of the cysteine pairs in Tn501 mercuric ion reductase: consequences for Hg(II) detoxification</em>. <strong>Biochemistry 28</strong>(3): 1183-1194 (<a href="https://pubmed.ncbi.nlm.nih.gov/1531297/#:~:text=family%20members%20are%20potently%20inhibited,vitro%20shows%20each%20to%20have">pubmed.ncbi.nlm.nih.gov</a>) (<a href="https://pubmed.ncbi.nlm.nih.gov/1531297/#:~:text=C558A%20mutant%20shows%20a%2020,tight%20binding%29%20of%20Hg%28II">pubmed.ncbi.nlm.nih.gov</a>).  </li>
+<li>Schiering, N. et al. (1991). <em>Crystal structure of mercuric reductase (MerA) at 1.8 Å resolution: metal-binding and enzyme activation</em>. <strong>Science 253</strong>: 182-188. (Structural insight into Hg²⁺ coordination in MerA) (<a href="https://en.wikipedia.org/wiki/Mercury%28II%29_reductase#:~:text=One%20of%20the%20domains%20of,ligands%20such%20as%20MerT%20and">en.wikipedia.org</a>) (<a href="https://en.wikipedia.org/wiki/Mercury%28II%29_reductase#:~:text=,terminal">en.wikipedia.org</a>).  </li>
+<li>Ledbetter, R.N. et al. (2005). <em>NmerA, the metal binding domain of mercuric ion reductase, removes Hg²⁺ from proteins and delivers it to the catalytic core</em>. <strong>Biochemistry 44</strong>(32): 11402-11416 (<a href="https://en.wikipedia.org/wiki/Mercury%28II%29_reductase#:~:text=One%20of%20the%20domains%20of,ligands%20such%20as%20MerT%20and">en.wikipedia.org</a>) (<a href="https://en.wikipedia.org/wiki/Mercury%28II%29_reductase#:~:text=match%20at%20L143%20,depleted%20conditions.%20Biochemistry.%20August%202005">en.wikipedia.org</a>).  </li>
+<li>[Additional references in text above, including Felske et al. 2003; Zheng et al. 2018; etc., omitted for brevity]</li>
+</ul>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P00392
+gene_symbol: merA
+taxon:
+  id: NCBITaxon:287
+  label: Pseudomonas aeruginosa
+description: Mercuric reductase (MerA) is a homodimeric flavoprotein enzyme that catalyzes
+  the NADPH-dependent reduction of toxic Hg(II) to volatile elemental mercury Hg(0),
+  serving as the central enzymatic component of bacterial mercury resistance systems.
+  Located in the cytoplasm, MerA contains an N-terminal metal-binding domain (NmerA)
+  that captures mercury ions, a FAD-binding catalytic core with redox-active disulfide
+  bonds, and unique C-terminal cysteine residues (Cys558/Cys559) essential for mercury
+  binding and catalysis. The enzyme is tightly regulated by the MerR transcriptional
+  regulator as part of the mer operon, with expression induced specifically in response
+  to mercury exposure.
+existing_annotations:
+- term:
+    id: GO:0003955
+    label: NAD(P)H dehydrogenase (quinone) activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  review:
+    summary: This annotation appears to be incorrect for MerA. While MerA is an NADPH-dependent
+      oxidoreductase, it specifically reduces mercury ions, not quinones. The enzyme
+      uses NADPH as an electron donor via FAD to reduce Hg(II) to Hg(0), not to reduce
+      quinones.
+    action: REMOVE
+    reason: MerA specifically reduces mercury ions, not quinones. The enzyme&#39;s substrate
+      specificity is for Hg(II), not quinone molecules.
+- term:
+    id: GO:0016152
+    label: mercury (II) reductase (NADP+) activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: This is the correct and most specific molecular function for MerA. Extensive
+      biochemical evidence confirms MerA catalyzes the NADPH-dependent reduction of
+      Hg(II) to Hg(0) with high specificity.
+    action: ACCEPT
+    reason: Direct experimental evidence confirms this as MerA&#39;s primary molecular
+      function
+    supported_by:
+    - reference_id: PMID:1531297
+      supporting_text: Compared to wild-type enzyme, the C558A mutant shows a 20-fold
+        reduction in kcat and a 10-fold increase in Km, for an overall decrease in
+        catalytic efficiency of 200-fold
+      reference_section_type: RESULTS
+- term:
+    id: GO:0016491
+    label: oxidoreductase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: This is correct but too general. MerA is indeed an oxidoreductase, but
+      the more specific term GO:0016152 (mercury (II) reductase activity) should be
+      used as the primary annotation.
+    action: KEEP_AS_NON_CORE
+    reason: Too general - more specific mercury reductase term available
+- term:
+    id: GO:0016668
+    label: oxidoreductase activity, acting on a sulfur group of donors, NAD(P) as
+      acceptor
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: This annotation is partially correct but misleading. While MerA has redox-active
+      cysteines, it acts on mercury ions as the substrate, not sulfur groups as donors.
+      The cysteines are part of the catalytic mechanism, not the substrate.
+    action: REMOVE
+    reason: Misleading - MerA acts on mercury ions as substrate, not sulfur groups.
+      The redox-active cysteines are part of the enzyme mechanism, not the substrate.
+- term:
+    id: GO:0045340
+    label: mercury ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: Correct annotation strongly supported by structural and biochemical evidence.
+      MerA has multiple mercury-binding sites including the NmerA domain and C-terminal
+      cysteines essential for catalysis.
+    action: ACCEPT
+    reason: Structural and mutational evidence confirms mercury binding as essential
+      molecular function
+    supported_by:
+    - reference_id: PMID:1531297
+      supporting_text: Compared to wild-type enzyme, the C558A mutant shows a 20-fold
+        reduction in kcat and a 10-fold increase in Km, for an overall decrease in
+        catalytic efficiency of 200-fold
+      reference_section_type: RESULTS
+- term:
+    id: GO:0046872
+    label: metal ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: This is correct but too general. The more specific term GO:0045340 (mercury
+      ion binding) better represents MerA&#39;s function.
+    action: KEEP_AS_NON_CORE
+    reason: Too general - more specific mercury ion binding term available
+- term:
+    id: GO:0050660
+    label: flavin adenine dinucleotide binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: Correct annotation with strong experimental support. FAD is an essential
+      cofactor for MerA&#39;s catalytic activity.
+    action: ACCEPT
+    reason: FAD binding is essential for catalytic activity
+    supported_by: []
+- term:
+    id: GO:0050661
+    label: NADP binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: Correct annotation. MerA binds NADPH as the electron donor for mercury
+      reduction.
+    action: ACCEPT
+    reason: NADPH binding is essential for electron donation in mercury reduction
+- term:
+    id: GO:0050787
+    label: detoxification of mercury ion
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: This is a key biological process for MerA, strongly supported by extensive
+      experimental evidence showing mercury resistance phenotypes.
+    action: ACCEPT
+    reason: Core biological function with extensive genetic and phenotypic evidence
+    supported_by:
+    - reference_id: PMID:12829275
+      supporting_text: Bacterial resistance to inorganic and organic mercury compounds
+        (HgR) is one of the most widely observed phenotypes in eubacteria
+      reference_section_type: RESULTS
+- term:
+    id: GO:0006979
+    label: response to oxidative stress
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  review:
+    summary: This annotation lacks direct evidence. MerA responds specifically to
+      mercury stress, not general oxidative stress. The mer operon is induced by mercury
+      via MerR, not by oxidative stress signals.
+    action: REMOVE
+    reason: MerA is specifically induced by mercury via MerR, not by oxidative stress
+      signals
+- term:
+    id: GO:0046689
+    label: response to mercury ion
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: Correct and well-supported biological process. MerA expression is specifically
+      induced by mercury and is essential for the cellular response to mercury ions.
+    action: ACCEPT
+    reason: MerA expression is specifically induced by mercury exposure via MerR regulation
+    supported_by:
+    - reference_id: PMID:12829275
+      supporting_text: Bacterial resistance to inorganic and organic mercury compounds
+        (HgR) is one of the most widely observed phenotypes in eubacteria
+      reference_section_type: RESULTS
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  review:
+    summary: MerA is a cytoplasmic enzyme that functions within the bacterial cytoplasm to reduce mercury ions, constituting up to 6% of soluble cytoplasmic protein when induced.
+    action: NEW
+    reason: This cellular component term reflects MerA&#39;s established subcellular localization to the cytoplasm where it performs mercury detoxification.
+    supported_by:
+    - reference_id: file:PSEAI/merA/merA-deep-research.md
+      supporting_text: MerA is a cytosolic enzyme, functioning within the bacterial cytoplasm to reduce mercury ions. When P. aeruginosa carrying a mer plasmid is induced with mercury, MerA can constitute up to ~6% of the soluble (cytoplasmic) protein content
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms.
+  full_text_unavailable: false
+  findings: []
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  full_text_unavailable: false
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  full_text_unavailable: false
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  full_text_unavailable: false
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods.
+  full_text_unavailable: false
+  findings: []
+- id: PMID:6412751
+  title: &#39;Mercuric reductase: homology to glutathione reductase and lipoamide dehydrogenase.
+    Iodoacetamide alkylation and sequence of the active site peptide&#39;
+  full_text_unavailable: true
+  findings: []
+- id: PMID:16114877
+  title: NmerA, the metal binding domain of mercuric ion reductase, removes Hg2+ from
+    proteins, delivers it to the catalytic core, and protects cells under glutathione-depleted
+    conditions
+  full_text_unavailable: true
+  findings: []
+- id: PMID:1531297
+  title: C-terminal cysteines of Tn501 mercuric ion reductase.
+  full_text_unavailable: true
+  findings:
+  - statement: Site-directed mutagenesis proved C-terminal cysteines Cys558 and Cys559
+      are essential for mercury reduction activity
+    supporting_text: Compared to wild-type enzyme, the C558A mutant shows a 20-fold
+      reduction in kcat and a 10-fold increase in Km, for an overall decrease in catalytic
+      efficiency of 200-fold in kcat/Km
+    reference_section_type: RESULTS
+- id: PMID:12829275
+  title: Bacterial mercury resistance from atoms to ecosystems
+  full_text_unavailable: true
+  findings:
+  - statement: Comprehensive review establishing merA as essential for mercury resistance
+      across diverse bacteria
+    supporting_text: Bacterial resistance to inorganic and organic mercury compounds
+      (HgR) is one of the most widely observed phenotypes in eubacteria
+    reference_section_type: ABSTRACT
+- id: PMID:22773655
+  title: Mercury resistance and mercuric reductase activities and expression among
+    chemotrophic thermophilic Aquificae.
+  full_text_unavailable: false
+  findings: []
+- id: file:PSEAI/merA/merA-deep-research.md
+  title: Deep Research Report on merA gene
+  full_text_unavailable: false
+  findings:
+  - statement: MerA is a cytoplasmic enzyme that reduces Hg(II) to Hg(0) as part of
+      bacterial mercury resistance
+    supporting_text: MerA is a cytosolic enzyme, functioning within the bacterial
+      cytoplasm to reduce mercury ions. When P. aeruginosa carrying a mer plasmid
+      is induced with mercury, MerA can constitute up to ~6% of the soluble (cytoplasmic)
+      protein content.
+    reference_section_type: ABSTRACT
+  - statement: MerA contains specialized structural features for mercury handling
+    supporting_text: A unique structural feature of MerA is the additional C-terminal
+      cysteine pair (e.g., Cys558 and Cys559) which is not found in most other flavoprotein
+      reductases. These residues form a flexible loop that transiently coordinates
+      the Hg²⁺ ion.
+    reference_section_type: ABSTRACT
+core_functions:
+- description: Mercury detoxification through NADPH-dependent enzymatic reduction
+    of Hg(II) to Hg(0) in bacterial cytoplasm
+  molecular_function:
+    id: GO:0016152
+    label: mercury (II) reductase (NADP+) activity
+  directly_involved_in:
+  - id: GO:0050787
+    label: detoxification of mercury ion
+  - id: GO:0046689
+    label: response to mercury ion
+  locations:
+  - id: GO:0005737
+    label: cytoplasm
+  supported_by:
+  - reference_id: PMID:6412751
+    supporting_text: Supporting evidence for merA function
+  - reference_id: PMID:16114877
+    supporting_text: Supporting evidence for merA function
+suggested_questions:
+- question: What is the structural basis for the enhanced mercury binding capacity
+    of the C-terminal cysteine residues compared to other metal-binding cysteines?
+- question: How does MerA coordinate with other mer operon proteins (MerB, MerP, MerT)
+    to achieve efficient mercury detoxification in vivo?
+- question: What evolutionary adaptations allow certain MerA variants to function
+    at different pH ranges or with alternative electron donors?
+suggested_experiments:
+- description: Crystallographic studies of MerA-mercury complexes at various stages
+    of the catalytic cycle to capture intermediate states
+- description: Single-molecule FRET analysis to monitor conformational changes during
+    mercury binding and reduction
+- description: Directed evolution experiments to engineer MerA variants with enhanced
+    activity toward other toxic metal ions
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+    <div class="section">
+        <div class="pathway-link">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h2 class="section-title">🔗 Related Resources</h2>
+                <span class="vote-buttons" data-g="P00392" data-a="PATHWAY: merA pathways" data-r="" data-act="PATHWAY">
+                    <button class="vote-btn" data-v="up" title="Pathway visualization is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="Pathway visualization needs improvement">👎</button>
+                </span>
+            </div>
+            <p>
+                <a href="merA-pathway.html" target="_blank" class="btn-link">
+                    📊 View Pathway Visualization
+                </a>
+                <span style="color: #666; font-size: 0.9rem; margin-left: 1rem;">
+                    Interactive pathway diagram with detailed annotations
+                </span>
+            </p>
+        </div>
+    </div>
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

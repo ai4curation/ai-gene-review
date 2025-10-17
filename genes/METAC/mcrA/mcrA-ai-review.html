@@ -1,0 +1,1965 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>mcrA - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>mcrA</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q8THH1" target="_blank" class="term-link">
+                        Q8THH1
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Methanosarcina acetivorans C2A</span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "mcrA";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q8THH1" data-a="DESCRIPTION: mcrA encodes the alpha subunit of methyl-coenzyme ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>mcrA encodes the alpha subunit of methyl-coenzyme M reductase (MCR), the key enzyme catalyzing the final step of methanogenesis in archaea. This enzyme converts methyl-coenzyme M and coenzyme B into methane and a heterodisulfide. The protein forms part of a hexameric complex containing two alpha, two beta, and two gamma chains. It contains a unique nickel-containing prosthetic group (coenzyme F430) essential for catalysis. In methanotrophic archaea, this enzyme can function in reverse for anaerobic methane oxidation. The gene serves as a molecular marker for detecting methanogens and methanotrophs in environmental samples.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8THH1" data-a="GO:0005737" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct localization. MCR is a cytoplasmic enzyme complex as confirmed by UniProt curation.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015948" target="_blank" class="term-link">
+                                    GO:0015948
+                                </a>
+                            </span>
+                            <span class="term-label">methanogenesis</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8THH1" data-a="GO:0015948" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core function annotation. McrA is essential for the final step of methanogenesis, converting methyl-coenzyme M to methane. This is the primary biological process for this gene.
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11932238" target="_blank" class="term-link">
+                                        PMID:11932238
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The genome of Methanosarcina acetivorans reveals extensive metabolic and physiological diversity</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016740" target="_blank" class="term-link">
+                                    GO:0016740
+                                </a>
+                            </span>
+                            <span class="term-label">transferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q8THH1" data-a="GO:0016740" data-r="GO_REF:0000043" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Too general. The specific molecular function is coenzyme-B sulfoethylthiotransferase activity (GO:0050524), which is already annotated.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046872" target="_blank" class="term-link">
+                                    GO:0046872
+                                </a>
+                            </span>
+                            <span class="term-label">metal ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q8THH1" data-a="GO:0046872" data-r="GO_REF:0000043" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Accurate but could be more specific. The protein binds nickel via coenzyme F430, a nickel-containing tetrapyrrole cofactor. Consider using nickel cation binding (GO:0016151) for specificity.
+                        </div>
+                        
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016151" target="_blank" class="term-link">
+                                    nickel cation binding
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050524" target="_blank" class="term-link">
+                                    GO:0050524
+                                </a>
+                            </span>
+                            <span class="term-label">coenzyme-B sulfoethylthiotransferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8THH1" data-a="GO:0050524" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core molecular function. This is the specific catalytic activity of methyl-coenzyme M reductase (EC 2.8.4.1), accurately representing the enzyme function.
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/29743535" target="_blank" class="term-link">
+                                        PMID:29743535
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Identification of a unique radical SAM methyltransferase required for the sp3-C-methylation of an arginine residue of methyl-coenzyme M reductase</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Catalyzes the terminal step of methanogenesis by converting methyl-coenzyme M and coenzyme B to methane and a heterodisulfide</h3>
+                <span class="vote-buttons" data-g="Q8THH1" data-a="FUNCTION: Catalyzes the terminal step of methanogenesis by c..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050524" target="_blank" class="term-link">
+                            coenzyme-B sulfoethylthiotransferase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015948" target="_blank" class="term-link">
+                                methanogenesis
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11932238" target="_blank" class="term-link">
+                                PMID:11932238
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">MCR catalyzes the final step in methanogenesis</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Binds coenzyme F430 (nickel-containing tetrapyrrole) essential for catalytic activity</h3>
+                <span class="vote-buttons" data-g="Q8THH1" data-a="FUNCTION: Binds coenzyme F430 (nickel-containing tetrapyrrol..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016151" target="_blank" class="term-link">
+                            nickel cation binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Forms hexameric MCR complex as alpha subunit (2α2β2γ structure)</h3>
+                <span class="vote-buttons" data-g="Q8THH1" data-a="FUNCTION: Forms hexameric MCR complex as alpha subunit (2α2β..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046983" target="_blank" class="term-link">
+                            protein dimerization activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11932238" target="_blank" class="term-link">
+                                PMID:11932238
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">MCR is a hexamer of two alpha, two beta, and two gamma chains</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11932238" target="_blank" class="term-link">
+                            PMID:11932238
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The genome of M. acetivorans reveals extensive metabolic and physiological diversity.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/29743535" target="_blank" class="term-link">
+                            PMID:29743535
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Identification of a unique Radical SAM methyltransferase required for the sp(3)-C-methylation of an arginine residue of methyl-coenzyme M reductase.</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How do you distinguish mcrA sequences from methanogens versus methanotrophs using sequence features alone?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Environmental microbiologists studying methane cycling, Phylogenetic analysis experts</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q8THH1" data-a="Q: How do you distinguish mcrA sequences from methano..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What sequence or structural features determine whether MCR operates in methanogenesis versus methanotrophy direction?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Structural biologists, Archaeal metabolism experts</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q8THH1" data-a="Q: What sequence or structural features determine whe..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Systematic comparison of mcrA sequences from known methanogens versus ANME archaea to identify discriminating features</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: mcrA sequences from methanotrophs have distinct sequence signatures compared to methanogens</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: Comparative genomics</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q8THH1" data-a="EXPERIMENT: Systematic comparison of mcrA sequences from known..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> In vitro reconstitution experiments testing MCR activity under different redox conditions and with various electron donor/acceptor systems</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Thermodynamic conditions and partner proteins determine MCR directionality</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: Biochemical characterization</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q8THH1" data-a="EXPERIMENT: In vitro reconstitution experiments testing MCR ac..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Tags</h2>
+        <div class="aliases">
+            
+            <span class="badge">lbnl-favorites</span>
+            
+        </div>
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(mcrA-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q8THH1" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="mcra-gene-review-notes">mcrA Gene Review Notes</h1>
+<h2 id="colleague-question">Colleague Question</h2>
+<p><strong>Contact</strong>: sgtringe@lbl.gov<br />
+<strong>Key Issue</strong>: Difficulty distinguishing methanogens vs methanotrophs by sequence alone</p>
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="core-function">Core Function</h3>
+<ul>
+<li>Methyl-coenzyme M reductase catalyzes the <strong>terminal step of methanogenesis</strong></li>
+<li>Converts methyl-CoM + CoB → methane + CoM-S-S-CoB</li>
+<li>Contains unique F430 nickel cofactor essential for catalysis</li>
+</ul>
+<h3 id="methanogen-vs-methanotroph-distinction">Methanogen vs Methanotroph Distinction</h3>
+<p><strong>CRITICAL INSIGHT</strong>: The same enzyme works in REVERSE in methanotrophs!<br />
+- <strong>Methanogens</strong>: Use mcrA for methane production (forward direction)<br />
+- <strong>Methanotrophs (ANME)</strong>: Use mcrA for methane oxidation (reverse direction)<br />
+- Sequence alone is insufficient - need ecological/metabolic context</p>
+<h3 id="distinguishing-features">Distinguishing Features</h3>
+<ol>
+<li><strong>Phylogenetic context</strong>: ANME lineages cluster separately</li>
+<li><strong>Syntrophic partners</strong>: ANME often with sulfate-reducing bacteria</li>
+<li><strong>Environmental context</strong>: Deep sea vs terrestrial/freshwater</li>
+<li><strong>Gene neighborhood</strong>: Look for associated electron transfer proteins</li>
+<li><strong>Isotope signatures</strong>: In environmental samples, δ13C values differ</li>
+</ol>
+<h3 id="evolutionary-significance">Evolutionary Significance</h3>
+<ul>
+<li>Ancient enzyme, possibly predating oxygenic photosynthesis</li>
+<li>Horizontal transfer between archaea documented</li>
+<li>Key player in global carbon cycle and climate regulation</li>
+</ul>
+<h2 id="go-annotation-review">GO Annotation Review</h2>
+<ul>
+<li>Accepted core methanogenesis annotations</li>
+<li>Added note about bidirectional activity</li>
+<li>Emphasized nickel cofactor binding specificity</li>
+</ul>
+<h2 id="references">References</h2>
+<ul>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/9367957">PMID:9367957</a> - Crystal structure revealing F430 cofactor</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/21593753">PMID:21593753</a> - Reverse methanogenesis in ANME archaea</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/23539639">PMID:23539639</a> - Global importance in methane cycling</li>
+</ul>
+<h2 id="remaining-questions">Remaining Questions</h2>
+<ul>
+<li>How do post-translational modifications affect directionality?</li>
+<li>Can mcrA be engineered for industrial methane conversion?</li>
+<li>What determines forward vs reverse operation at molecular level?</li>
+</ul>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon Research</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(mcrA-falcon-research.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q8THH1" data-a="DOC: Falcon Research" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="falcon-research-report-mcra-metac">Falcon Research Report: mcrA (METAC)</h1>
+<p>Generated using FutureHouse Falcon API</p>
+<hr />
+<p>Question: You are a molecular biologist and gene annotation expert conducting comprehensive research to support GO annotation curation.</p>
+<p>Provide detailed, well-cited information focusing on:<br />
+1. Gene function and molecular mechanisms<br />
+2. Cellular localization and subcellular components<br />
+3. Biological processes involvement<br />
+4. Disease associations and phenotypes<br />
+5. Protein domains and structural features<br />
+6. Expression patterns and regulation<br />
+7. Evolutionary conservation<br />
+8. Key experimental evidence and literature</p>
+<p>Format as a comprehensive research report with citations suitable for Gene Ontology annotation curation.</p>
+<p>Research the Methanosarcina acetivorans (strain ATCC 35395 / DSM 2834 / JCM 12185 / C2A) gene mcrA.</p>
+<p>=== UNIPROT METADATA ===<br />
+UniProt ID: Q8THH1<br />
+Entry Name: MCRA_METAC<br />
+Gene Name: mcrA<br />
+Protein Name: Methyl-coenzyme M reductase subunit alpha<br />
+EC Number: 2.8.4.1<br />
+Organism: Methanosarcina acetivorans (strain ATCC 35395 / DSM 2834 / JCM 12185 / C2A)<br />
+NCBI Taxonomy ID: 188937<br />
+Function: Component of the methyl-coenzyme M reductase (MCR) I that catalyzes the reductive cleavage of methyl-coenzyme M (CoM-S-CH3 or 2- (methylthio)ethanesulfonate) using coenzyme B (CoB or 7- mercaptoheptanoylthreonine phosphate) as reductant which results in the production of methane and the mixed heterodisulfide of CoB and CoM (CoM-S-S-CoB). This is the final step in methanogenesis.<br />
+Subcellular Location: Cytoplasm<br />
+Subunit: MCR is a hexamer of two alpha, two beta, and two gamma chains, forming a dimer of heterotrimers.<br />
+======================</p>
+<p>Provide a comprehensive report covering function, localization, processes, domains, disease associations, expression, conservation, and relevant GO terms.</p>
+<p>IMPORTANT: Focus specifically on the gene identified by the metadata above, particularly the UniProt ID, locus tag, and protein description if provided.</p>
+<p>Sometimes different genes in the same organism have the same name. In this case, the gene being reviewed is the one identified by the metadata above.</p>
+<h1 id="comprehensive-characterization-of-the-methanosarcina-acetivorans-mcra-gene-uniprot-q8thh1-functional-biochemical-and-evolutionary-perspectives-for-go-annotation-curation">Comprehensive Characterization of the Methanosarcina acetivorans mcrA Gene (UniProt Q8THH1): Functional, Biochemical, and Evolutionary Perspectives for GO Annotation Curation</h1>
+<h2 id="1-gene-function-and-molecular-mechanisms">1. Gene Function and Molecular Mechanisms</h2>
+<p>The <em>mcrA</em> gene of <em>Methanosarcina acetivorans</em> encodes the alpha subunit of methyl-coenzyme M reductase (MCR), an obligate and essential enzyme for archaeal methane metabolism (EC 2.8.4.1) (evans2019anevolvingview pages 1-4, odili2024investigationsintomethylcoenzyme pages 23-29, odili2024investigationsintomethylcoenzyme pages 29-34, nayak2020functionalinteractionsbetween pages 1-2, gendron2023recombinantexpressionand pages 1-8, odili2024investigationsintomethylcoenzymea pages 23-29). MCR catalyzes the terminal, rate-limiting step of methanogenesis, the reductive conversion of methyl-coenzyme M (CH₃-S-CoM) and coenzyme B (HS-CoB) to methane (CH₄) and the heterodisulfide CoM-S-S-CoB (evans2019anevolvingview pages 1-4, odili2024investigationsintomethylcoenzyme pages 23-29, garcia2022diversityandevolution pages 6-11, gendron2023recombinantexpressionand pages 13-20). The reaction mechanism is highly exergonic (ΔG°′ ≈ -30 kJ/mol) and is reversible (garcia2022diversityandevolution pages 6-11, gendron2023recombinantexpressionand pages 13-20), enabling both methane formation (methanogenesis) and methane consumption via anaerobic oxidation (AOM) in other archaeal lineages (evans2019anevolvingview pages 1-4, garcia2022diversityandevolution pages 6-11, odili2024investigationsintomethylcoenzymea pages 29-34, odili2024investigationsintomethylcoenzyme pages 29-34, odili2024investigationsintomethylcoenzyme pages 23-29).</p>
+<h3 id="enzyme-mechanism">Enzyme Mechanism</h3>
+<p>Functionally, the MCR alpha subunit (McrA) is part of the catalytic core. Each heterohexameric enzyme complex (α₂β₂γ₂) encompasses two active sites, each housing a non-covalently bound coenzyme F430, a nickel tetrapyrrole that is indispensable for C–H bond activation in methane (odili2024investigationsintomethylcoenzyme pages 23-29, gendron2023recombinantexpressionand pages 13-20, garcia2022diversityandevolution pages 6-11, odili2024investigationsintomethylcoenzymea pages 47-52, odili2024investigationsintomethylcoenzyme pages 83-87). The active enzyme contains Ni in the +1 oxidation state (Ni(I)), which—via a radical mechanism—enables homolytic cleavage of the methyl-sulfur bond of CH₃-S-CoM, generating a methyl radical that ultimately combines with HS-CoB to form methane (odili2024investigationsintomethylcoenzyme pages 23-29, gendron2023recombinantexpressionanda pages 20-28, garcia2022diversityandevolution pages 6-11, gendron2023recombinantexpressionand pages 13-20, odili2024investigationsintomethylcoenzyme pages 29-34).</p>
+<p>MCR demonstrates "half-of-the-sites" reactivity (only one active site is functional at a time, akin to a two-stroke engine), maximizing energetic efficiency and likely reducing the risk of inadvertent side reactions with highly reactive radical intermediates (gendron2023recombinantexpressionand pages 20-28, gendron2023recombinantexpressionanda pages 20-28, gendron2023recombinantexpressionand pages 13-20). Furthermore, this enzymatic process is highly oxygen-sensitive due to the extreme redox potential of F430 (Ni(I)/Ni(II) couple below -600 mV), necessitating anaerobic environments for proper function and activation (shao2022expressionofdivergent pages 1-2, shao2022expressionofdivergent pages 2-3).</p>
+<h3 id="accessory-proteins-complexes-and-post-translational-modifications">Accessory Proteins, Complexes, and Post-Translational Modifications</h3>
+<p>The <em>mcrA</em> gene is part of a five-gene operon cluster (mcrBDCGA) encoding core structural (McrA, McrB, McrG) and accessory (McrD, McrC) proteins essential for enzyme assembly and activation (gendron2023recombinantexpressionanda pages 1-8, gendron2023recombinantexpressionand pages 1-8, gendron2023recombinantexpressionand pages 8-13, odili2024investigationsintomethylcoenzyme pages 23-29, gendron2023recombinantexpressionanda pages 28-35). McrD and McrC are required for proper insertion of coenzyme F430 and enzyme activation, respectively (gendron2023recombinantexpressionand pages 1-8, odili2024investigationsintomethylcoenzymea pages 29-34). McrD acts as a chaperone, associating with F430-lacking MCR and assisting in cofactor insertion, while McrC is involved in forming functional activation complexes (gendron2023recombinantexpressionand pages 70-74, odili2024investigationsintomethylcoenzyme pages 47-52, odili2024investigationsintomethylcoenzymea pages 29-34, gendron2023recombinantexpressionand pages 52-56, gendron2023recombinantexpressionand pages 13-20).</p>
+<p>The McrA subunit is notable for its extensive and unusual post-translational modifications (PTMs), particularly near and within the active site. The core conserved PTMs across MCRs include:<br />
+- <strong>1-N-Methylhistidine</strong><br />
+- <strong>Thioglycine</strong><br />
+Species-specific modifications in <em>M. acetivorans</em> include:<br />
+- <strong>S-Methylcysteine (Cys472)</strong><br />
+- <strong>5-(S)-Methylarginine</strong><br />
+- <strong>2-(S)-Methylglutamine</strong><br />
+- <strong>Didehydroaspartate</strong> (nayak2020functionalinteractionsbetween pages 1-2, nayak2020functionalinteractionsbetween pages 3-5, odili2024investigationsintomethylcoenzyme pages 47-52, odili2024investigationsintomethylcoenzymea pages 29-34, odili2024investigationsintomethylcoenzymea pages 47-52, odili2024investigationsintomethylcoenzyme pages 83-87, odili2024investigationsintomethylcoenzyme pages 23-29, odili2024investigationsintomethylcoenzymea pages 83-87, gendron2023recombinantexpressionanda pages 20-28)</p>
+<p>Specific gene products mediate these modifications; for example:<br />
+- <em>mcmA</em> encodes the SAM-dependent methyltransferase for S-methylcysteine (nayak2020functionalinteractionsbetween pages 1-2, nayak2020functionalinteractionsbetween pages 3-5, odili2024investigationsintomethylcoenzyme pages 83-87).<br />
+- <em>mm1</em> (a tfuA-associated ycaO homolog) is responsible for thioglycine modification (nayak2020functionalinteractionsbetween pages 1-2, odili2024investigationsintomethylcoenzymea pages 29-34, odili2024investigationsintomethylcoenzymea pages 47-52, odili2024investigationsintomethylcoenzyme pages 29-34).<br />
+- <em>mmp10</em> (mmpX) directs 5-(S)-methylarginine modification (lyu2020posttranslationalmethylationof pages 1-2, lyu2020posttranslationalmethylationof pages 12-13, odili2024investigationsintomethylcoenzyme pages 83-87).</p>
+<p>Genetic studies via CRISPR/Cas9 and mutagenesis confirmed that loss of specific PTMs can significantly impair enzyme stability, catalytic efficiency, thermal adaptation, and cell growth, even when not abolishing catalytic competence (nayak2020functionalinteractionsbetween pages 1-2, nayak2020functionalinteractionsbetween pages 3-5, odili2024investigationsintomethylcoenzymea pages 29-34, lyu2020posttranslationalmethylationof pages 1-2, lyu2020posttranslationalmethylationof pages 12-13). Some PTMs (notably thioglycine and S-methylcysteine) are essential for thermal adaptation, evidenced by mutants’ failure to thrive at elevated temperatures (nayak2020functionalinteractionsbetween pages 1-2, odili2024investigationsintomethylcoenzymea pages 29-34).</p>
+<h2 id="2-cellular-localization-and-subcellular-components">2. Cellular Localization and Subcellular Components</h2>
+<p>MCR functions exclusively in the cytoplasm of strictly anaerobic methanogenic archaea (odili2024investigationsintomethylcoenzyme pages 23-29, odili2024investigationsintomethylcoenzymea pages 23-29, evans2019anevolvingview pages 1-4, gendron2023recombinantexpressionand pages 1-8). The enzyme assembles as a heterohexameric complex (α₂β₂γ₂), where two McrA subunits form the core of each catalytic center, closely interacting with one McrB and one McrG subunit (odili2024investigationsintomethylcoenzyme pages 23-29, gendron2023recombinantexpressionand pages 13-20, odili2024investigationsintomethylcoenzymea pages 83-87).</p>
+<p>Each holoenzyme binds two coenzyme F430 molecules, each residing deep within a 30–50 Å channel that restricts access to the active site, a feature that likely contributes to selectivity and protection from bulk solvent (odili2024investigationsintomethylcoenzyme pages 23-29, gendron2023recombinantexpressionand pages 13-20, odili2024investigationsintomethylcoenzymea pages 83-87, gendron2023recombinantexpressionanda pages 13-20, gendron2023recombinantexpressionanda pages 20-28). No signal peptides or membrane targeting motifs are present; MCR and McrA are strictly cytoplasmic.</p>
+<p>Recent studies using affinity purification and proteomics in <em>M. acetivorans</em> confirmed exclusive cytoplasmic localization of functional MCR complexes (nayak2018genetictechniquesfor pages 20-25, li2005proteomeofmethanosarcina pages 11-13). There is no evidence for compartmentalization within specialized organelles or association with membrane-bound structures.</p>
+<h2 id="3-biological-processes-involvement">3. Biological Processes Involvement</h2>
+<h3 id="central-role-in-methanogenesis">Central Role in Methanogenesis</h3>
+<p>McrA is foundational to methanogenic metabolism and energy conservation:<br />
+- <strong>Final step of methanogenesis:</strong> The enzyme catalyzes the reductive cleavage of the methyl group from methyl-coenzyme M, a bottlenecked and rate-limiting step in methane generation (evans2019anevolvingview pages 1-4, nayak2020functionalinteractionsbetween pages 1-2, odili2024investigationsintomethylcoenzyme pages 23-29, evans2019anevolvingview pages 22-26, gendron2023recombinantexpressionand pages 13-20).<br />
+- <strong>Multiple methanogenic pathways:</strong> <em>M. acetivorans</em> utilizes all known methanogenic routes—including hydrogenotrophic, aceticlastic, methylotrophic, and H2-dependent methylotrophic methanogenesis (evans2019anevolvingview pages 1-4, evans2019anevolvingview pages 22-26). Proteomic studies confirm MCR expression during growth on both acetate and methanol, spanning diverse metabolic conditions (li2005proteomeofmethanosarcina pages 11-13, evans2019anevolvingview pages 1-4).<br />
+- <strong>Anaerobic Oxidation of Methane (AOM):</strong> Homologs function in reverse in anaerobic methanotrophic archaea (ANME), which oxidize methane utilizing MCR as the entry point reaction (odili2024investigationsintomethylcoenzyme pages 23-29, garcia2022diversityandevolution pages 6-11, odili2024investigationsintomethylcoenzymea pages 29-34, odili2024investigationsintomethylcoenzyme pages 29-34, odili2024investigationsintomethylcoenzymea pages 83-87, gendron2023recombinantexpressionanda pages 13-20).</p>
+<h3 id="other-carbon-cycle-roles">Other Carbon Cycle Roles</h3>
+<p>By enabling methane formation and oxidation, McrA is central to global carbon cycling, representing a key step in the transformation of reduced carbon back to the atmosphere and contributing to climate regulation (evans2019anevolvingview pages 1-4, gendron2023recombinantexpressionand pages 13-20, gendron2023recombinantexpressionand pages 1-8, odili2024investigationsintomethylcoenzyme pages 23-29).</p>
+<h2 id="4-disease-associations-and-phenotypes">4. Disease Associations and Phenotypes</h2>
+<p>No direct human or animal disease associations have been reported for the mcrA gene itself, as strictly anaerobic methanogenic archaea do not cause disease. However, <em>mcrA</em> has considerable indirect significance in:<br />
+- <strong>Greenhouse gas emissions:</strong> McrA activity underpins biogenic methane release, contributing to anthropogenic climate change due to methane’s high global warming potential (gendron2023recombinantexpressionand pages 1-8, odili2024investigationsintomethylcoenzymea pages 23-29, odili2024investigationsintomethylcoenzyme pages 47-52, gendron2023recombinantexpressionand pages 13-20).<br />
+- <strong>Biotechnological phenotypes:</strong> Genetic manipulation of mcrA (via CRISPR/Cas9 or markerless deletion) in <em>M. acetivorans</em> and other methanogens has demonstrated that PTM-deficient mutants display pronounced temperature sensitivity, impaired growth rates, and reduced methane formation (nayak2020functionalinteractionsbetween pages 1-2, nayak2020functionalinteractionsbetween pages 3-5, odili2024investigationsintomethylcoenzymea pages 29-34, lyu2020posttranslationalmethylationof pages 1-2, lyu2020posttranslationalmethylationof pages 12-13).<br />
+- <strong>Industrial implications:</strong> Engineered expression of <em>mcrA</em> or altered MCR complexes opens avenues for methane bioconversion and greenhouse gas mitigation (gendron2023recombinantexpressionand pages 1-8, gendron2023recombinantexpressionand pages 8-13).</p>
+<h2 id="5-protein-domains-and-structural-features">5. Protein Domains and Structural Features</h2>
+<h3 id="domain-organization-and-fold">Domain Organization and Fold</h3>
+<p>McrA is a ~55 kDa protein, forming two copies per holoenzyme (odili2024investigationsintomethylcoenzyme pages 23-29, gendron2023recombinantexpressionand pages 13-20, odili2024investigationsintomethylcoenzymea pages 23-29). Each subunit displays a multidomain architecture contributing to a deep, narrow substrate channel toward the active site, which contains the F430 cofactor—essential for catalysis (odili2024investigationsintomethylcoenzyme pages 23-29, odili2024investigationsintomethylcoenzymea pages 83-87, odili2024investigationsintomethylcoenzymea pages 23-29). The three-dimensional fold of McrA is highly conserved among methanogens, and high-resolution structures (1.65 Å) illustrate the nearness of post-translational modifications to the F430-coordinating residues (nayak2020functionalinteractionsbetween pages 1-2, nayak2020functionalinteractionsbetween pages 3-5, odili2024investigationsintomethylcoenzyme pages 23-29, odili2024investigationsintomethylcoenzyme pages 83-87).</p>
+<h3 id="post-translational-modifications">Post-Translational Modifications</h3>
+<p>Several PTMs occur adjacent to or within the active site, including:<br />
+- <strong>1-N-methylhistidine</strong><br />
+- <strong>Thioglycine</strong><br />
+- <strong>5-(S)-methylarginine</strong><br />
+- <strong>S-methylcysteine</strong><br />
+- <strong>2-(S)-methylglutamine</strong><br />
+- <strong>Didehydroaspartate</strong> (nayak2020functionalinteractionsbetween pages 1-2, nayak2020functionalinteractionsbetween pages 3-5, odili2024investigationsintomethylcoenzymea pages 29-34, odili2024investigationsintomethylcoenzymea pages 83-87, odili2024investigationsintomethylcoenzyme pages 83-87, odili2024investigationsintomethylcoenzymea pages 47-52, odili2024investigationsintomethylcoenzyme pages 47-52, odili2024investigationsintomethylcoenzyme pages 23-29, gendron2023recombinantexpressionanda pages 20-28)</p>
+<p>Genes for PTM installation include <em>mm1/ycaO/tfuA</em> (thioglycine), <em>mcmA</em> (S-methylcysteine), <em>mmp10/mmpX</em> (5-(S)-methylarginine), and potentially <em>mtxX</em> (for methylhistidine, under investigation) (nayak2020functionalinteractionsbetween pages 1-2, nayak2020functionalinteractionsbetween pages 3-5, odili2024investigationsintomethylcoenzymea pages 47-52, odili2024investigationsintomethylcoenzyme pages 83-87, lyu2020posttranslationalmethylationof pages 1-2).</p>
+<p>Crystal structures of PTM-deficient mutants reveal minimal perturbation of the static structure, yet functional studies indicate significant roles in tuning thermal stability and catalytic rates, particularly under stress (nayak2020functionalinteractionsbetween pages 1-2, nayak2020functionalinteractionsbetween pages 3-5, odili2024investigationsintomethylcoenzyme pages 23-29).</p>
+<h3 id="cofactor-interactions">Cofactor Interactions</h3>
+<ul>
+<li><strong>F430 Integration:</strong> McrA provides the primary ligand environment for the F430 cofactor, binding deeply within the active site pocket and mediating the required redox chemistry (odili2024investigationsintomethylcoenzyme pages 23-29, gendron2023recombinantexpressionand pages 13-20, odili2024investigationsintomethylcoenzyme pages 39-47).</li>
+<li><strong>Active Site Channel:</strong> 30–50 Å substrate channel restricts access to F430, limiting reactivity to the proper substrate and minimizing solvent exposure (odili2024investigationsintomethylcoenzyme pages 23-29, gendron2023recombinantexpressionand pages 13-20).</li>
+</ul>
+<h3 id="isozymesvariability">Isozymes/Variability</h3>
+<ul>
+<li>M. acetivorans* MCR is categorized within “Methanosarcinales/Methanosarcinaceae” MCRs, with both structural and phylogenetic separation from types I–III (gendron2023recombinantexpressionand pages 20-28, odili2024investigationsintomethylcoenzyme pages 23-29).</li>
+</ul>
+<h2 id="6-expression-patterns-and-regulation">6. Expression Patterns and Regulation</h2>
+<h3 id="constitutive-and-substrate-responsive-expression">Constitutive and Substrate-Responsive Expression</h3>
+<ul>
+<li><strong>Expression Systems:</strong> McrA is robustly expressed in <em>M. acetivorans</em> during growth on both acetate and methanol, two distinct methanogenic substrates, confirming its role in both aceticlastic and methylotrophic methanogenesis (li2005proteomeofmethanosarcina pages 11-13).</li>
+<li><strong>Regulation:</strong> While basic mcrA expression appears constitutive under methanogenic conditions, gene regulation is modulated by factors including substrate availability (methanol, acetate, H₂), electron acceptors, and environmental cues such as pH and temperature (gendron2023recombinantexpressionanda pages 28-35, odili2024investigationsintomethylcoenzyme pages 23-29, odili2024investigationsintomethylcoenzymea pages 23-29).</li>
+</ul>
+<h3 id="experimental-evidence-for-transcriptional-and-translational-control">Experimental Evidence for Transcriptional and Translational Control</h3>
+<ul>
+<li><strong>Proteomics:</strong> Global proteomic profiling confirms that <em>mcrA</em>, together with associated <em>mcrB</em> and <em>mcrG</em>, is co-expressed and assembled into active complexes under multiple growth conditions (li2005proteomeofmethanosarcina pages 11-13).</li>
+<li><strong>Operon Structure:</strong> The mcrBDCGA operon architecture supports coordinated, polycistronic expression and tight co-regulation of MCR complex components (odili2024investigationsintomethylcoenzyme pages 23-29, gendron2023recombinantexpressionand pages 13-20, gendron2023recombinantexpressionand pages 1-8, gendron2023recombinantexpressionanda pages 28-35, odili2024investigationsintomethylcoenzymea pages 23-29).</li>
+<li><strong>PTM Regulation:</strong> Expression of genes encoding PTM enzymes (e.g., <em>mcmA</em>, <em>mm1</em>, <em>mmp10</em>) is required for mature, fully functional McrA production (nayak2020functionalinteractionsbetween pages 1-2, nayak2020functionalinteractionsbetween pages 3-5, odili2024investigationsintomethylcoenzymea pages 29-34).</li>
+</ul>
+<h3 id="heterologous-expression">Heterologous Expression</h3>
+<ul>
+<li>Efforts to express McrA and holo-MCR in heterologous hosts (e.g., <em>Escherichia coli</em>, <em>Methanococcus maripaludis</em>) have been challenged by insolubility, instability, and poor cofactor (F430) incorporation, highlighting the requirement for archaeal-specific assembly factors and anaerobic conditions; optimal tag location, co-expression of F430 biosynthetic enzymes, and maintenance of strict anaerobiosis improved yields but full assembly remains elusive outside native hosts (gendron2023recombinantexpressionanda pages 52-56, odili2024investigationsintomethylcoenzyme pages 126-132, odili2024investigationsintomethylcoenzymea pages 126-132, odili2024investigationsintomethylcoenzymea pages 76-83, odili2024investigationsintomethylcoenzymea pages 23-29, shao2022expressionofdivergent pages 2-3).</li>
+</ul>
+<h2 id="7-evolutionary-conservation">7. Evolutionary Conservation</h2>
+<h3 id="phylogenetic-distribution">Phylogenetic Distribution</h3>
+<p>The <em>mcrA</em> gene is highly conserved across all methanogenic archaea and many anaerobic methanotrophic lineages (including ANME groups), underlining its essential and ancient evolutionary origin (evans2019anevolvingview pages 9-12, evans2019anevolvingview pages 1-4, odili2024investigationsintomethylcoenzymea pages 29-34, gendron2023recombinantexpressionand pages 1-8, gendron2023recombinantexpressionanda pages 1-8, garcia2022diversityandevolution pages 6-11, odili2024investigationsintomethylcoenzyme pages 23-29, gendron2023recombinantexpressionand pages 13-20).</p>
+<ul>
+<li><strong>Ancient Origin:</strong> Evidence supports vertical descent from a common archaeal ancestor, though extensive horizontal gene transfer, duplications, and neofunctionalization events have shaped the current landscape (evans2019anevolvingview pages 9-12).</li>
+<li><strong>Functional Diversification:</strong> Recent discoveries of mcrA homologs (MCR-like proteins) in Bathyarchaeota, Verstraetearchaeota, and various alkane-oxidizing archaea (e.g., <em>Ca. Syntrophoarchaeum</em>) reveal that the catalytic scaffold is adapted to different substrate specificities (methane, short- and long-chain alkanes) via cofactor and active site modifications (evans2019anevolvingview pages 7-9, gendron2023recombinantexpressionanda pages 35-39, gendron2023recombinantexpressionanda pages 28-35, garcia2022diversityandevolution pages 6-11).</li>
+</ul>
+<h3 id="use-as-a-phylogenetic-marker">Use as a Phylogenetic Marker</h3>
+<p>Due to its sequence conservation and functional specificity, <em>mcrA</em> is a gold-standard phylogenetic marker for identifying and classifying methanogenic and methane-oxidizing archaeal taxa in environmental samples by PCR and metagenomics (evans2019anevolvingview pages 22-26, odili2024investigationsintomethylcoenzyme pages 29-34, evans2019anevolvingview pages 7-9, nayak2020functionalinteractionsbetween pages 1-2).</p>
+<h3 id="evolution-of-the-mcr-gene-cluster">Evolution of the mcr Gene Cluster</h3>
+<p>Highly conserved <em>mcrBDCGA</em> operon architecture is observed across Methanosarcinales and most Euryarchaeota, with exceptions and reduced gene clusters (e.g., ANME-1 types with mcrBGA arrangement and missing accessory proteins) reflecting lineage-specific adaptations (odili2024investigationsintomethylcoenzyme pages 47-52, gendron2023recombinantexpressionand pages 28-35, gendron2023recombinantexpressionanda pages 1-8, gendron2023recombinantexpressionand pages 1-8, odili2024investigationsintomethylcoenzyme pages 23-29, gendron2023recombinantexpressionand pages 13-20).</p>
+<h2 id="8-key-experimental-evidence-and-literature">8. Key Experimental Evidence and Literature</h2>
+<h3 id="structurefunction-studies">Structure–Function Studies</h3>
+<p>Crystal structures of <em>M. acetivorans</em> McrA and full MCR reveal near-atomic detail of the enzyme’s configuration, PTM localization, and cofactor coordination (odili2024investigationsintomethylcoenzyme pages 23-29, nayak2020functionalinteractionsbetween pages 1-2, nayak2020functionalinteractionsbetween pages 3-5, odili2024investigationsintomethylcoenzymea pages 23-29, gendron2023recombinantexpressionand pages 13-20, odili2024investigationsintomethylcoenzyme pages 39-47). Mutagenesis (CRISPR/Cas9, markerless deletions) and mass spectrometry confirmed the impact, dynamics, and necessity of key PTMs and their biosynthetic gene products (nayak2020functionalinteractionsbetween pages 1-2, nayak2020functionalinteractionsbetween pages 3-5, lyu2020posttranslationalmethylationof pages 1-2, lyu2020posttranslationalmethylationof pages 12-13, odili2024investigationsintomethylcoenzyme pages 83-87, odili2024investigationsintomethylcoenzymea pages 47-52).</p>
+<h3 id="biochemical-and-genetic-manipulation">Biochemical and Genetic Manipulation</h3>
+<p>Robust in vivo protocols have been established for gene disruption, affinity tagging, and protein purification using N- or C-terminal fusions—most successfully at the N-terminus of mcrG (gamma subunit) to avoid interfering with F430 binding in McrA (nayak2018genetictechniquesfor pages 20-25, odili2024investigationsintomethylcoenzymea pages 23-29, gendron2023recombinantexpressionanda pages 52-56, odili2024investigationsintomethylcoenzymea pages 47-52).</p>
+<p>Biochemical activity assays demonstrate that PTM-deficient McrA, while capable of assembling into complete MCR complexes, typically show reduced methane production rates and/or impaired growth under stress, confirming functional importance beyond simple structural conservation (nayak2020functionalinteractionsbetween pages 1-2, nayak2020functionalinteractionsbetween pages 3-5, lyu2020posttranslationalmethylationof pages 1-2, lyu2020posttranslationalmethylationof pages 12-13).</p>
+<h3 id="heterologous-expression_1">Heterologous Expression</h3>
+<p>MCR has been heterologously expressed in <em>Methanococcus maripaludis</em> and <em>Methanosarcina acetivorans</em> for both native and divergent (ANME) McrA-containing complexes, providing proof-of-principle for recombinant MCR biosynthesis, albeit with lower F430 occupancy and significant challenges for full activity (shao2022expressionofdivergent pages 2-3, gendron2023recombinantexpressionanda pages 52-56, odili2024investigationsintomethylcoenzyme pages 126-132, gendron2023recombinantexpressionand pages 13-20, gendron2023recombinantexpressionanda pages 13-20).</p>
+<h3 id="regulatory-and-transcriptomic-evidence">Regulatory and Transcriptomic Evidence</h3>
+<p>Proteome and transcriptome studies validate constitutive and substrate-inducible expression of mcrA under a variety of metabolic states; detailed regulatory elements remain under investigation, particularly in response to environmental stressors and substrate flux (li2005proteomeofmethanosarcina pages 11-13, evans2019anevolvingview pages 1-4).</p>
+<h3 id="evolutionary-and-metagenomic-approaches">Evolutionary and Metagenomic Approaches</h3>
+<p>Extensive environmental surveys using <em>mcrA</em> as a barcode confirm its ubiquity in methanogenic and methanotrophic Archaea, association with environmental methane flux, and its utility for tracking microbial community structure and dynamics in natural and engineered ecosystems (evans2019anevolvingview pages 7-9, odili2024investigationsintomethylcoenzyme pages 29-34, odili2024investigationsintomethylcoenzymea pages 29-34, evans2019anevolvingview pages 22-26, evans2019anevolvingview pages 9-12, evans2019anevolvingview pages 1-4).</p>
+<hr />
+<h2 id="go-annotation-summary-evidence-codes-refer-to-sources-above">GO Annotation Summary (Evidence Codes Refer to Sources Above)</h2>
+<ul>
+<li>
+<p><strong>GO:0015948 ~ methane biosynthetic process</strong><br />
+  McrA catalyzes the terminal step in methane biosynthesis from methyl-coenzyme M (evans2019anevolvingview pages 1-4, nayak2020functionalinteractionsbetween pages 1-2, odili2024investigationsintomethylcoenzyme pages 23-29, garcia2022diversityandevolution pages 6-11, odili2024investigationsintomethylcoenzymea pages 23-29, evans2019anevolvingview pages 22-26).</p>
+</li>
+<li>
+<p><strong>GO:0000287 ~ magnesium ion binding (by analogy: metal ion binding)/GO:0046872 ~ metal ion binding</strong><br />
+  Binds nickel via coenzyme F430 as catalytic cofactor; structural studies confirm direct nickel ligation (odili2024investigationsintomethylcoenzyme pages 23-29, odili2024investigationsintomethylcoenzyme pages 39-47).</p>
+</li>
+<li>
+<p><strong>GO:0030176 ~ integral component of the cytoplasm</strong><br />
+  Exclusively cytoplasmic, with no evidence for membrane localization (odili2024investigationsintomethylcoenzymea pages 23-29, li2005proteomeofmethanosarcina pages 11-13, nayak2018genetictechniquesfor pages 20-25).</p>
+</li>
+<li>
+<p><strong>GO:0018496 ~ methyl-coenzyme M reductase activity</strong><br />
+  Enzyme catalyzes reduction of methyl-coenzyme M and coenzyme B to methane and heterodisulfide (evans2019anevolvingview pages 1-4, odili2024investigationsintomethylcoenzyme pages 23-29, gendron2023recombinantexpressionand pages 13-20, garcia2022diversityandevolution pages 6-11, nayak2020functionalinteractionsbetween pages 1-2).</p>
+</li>
+<li>
+<p><strong>GO:0042710 ~ methane biosynthetic process, hydrogenotrophic; GO:0019386 ~ acetic acid catabolic process to methane</strong><br />
+  Functions in both hydrogenotrophic and aceticlastic methanogenesis pathways as confirmed by gene expression and proteomics during growth on multiple substrates (evans2019anevolvingview pages 1-4, li2005proteomeofmethanosarcina pages 11-13, evans2019anevolvingview pages 22-26).</p>
+</li>
+<li>
+<p><strong>GO:0044439 ~ cell component (cytoplasmic part)</strong><br />
+  Each MCR complex, including McrA, assembles and operates within the cytoplasm (odili2024investigationsintomethylcoenzyme pages 23-29, odili2024investigationsintomethylcoenzymea pages 23-29).</p>
+</li>
+<li>
+<p><strong>GO:0039709 ~ methane oxidation, anaerobic (reverse methanogenesis/GO:0045602)</strong><br />
+  McrA homologs demonstrated to catalyze anaerobic methane oxidation in ANME lineages and reversibility experimentally established (odili2024investigationsintomethylcoenzymea pages 29-34, evans2019anevolvingview pages 1-4, garcia2022diversityandevolution pages 6-11).</p>
+</li>
+</ul>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p>The mcrA gene (Q8THH1) of <em>Methanosarcina acetivorans</em> encodes the MCR alpha subunit, an essential, highly conserved, and functionally specialized enzyme component central to methanogenesis and anaerobic methane oxidation. It is uniquely cytoplasmic, forms the core of a structurally and mechanistically sophisticated metalloenzyme, exhibits complex and interdependent post-translational modifications, and is a strict indicator of archaeal methane metabolism. Its criticality for global carbon cycling, its role as a phylogenetic marker, and its emerging importance for biotechnological innovation are reinforced by extensive genetic, structural, biochemical, and evolutionary evidence spanning decades of research (evans2019anevolvingview pages 1-4, odili2024investigationsintomethylcoenzyme pages 23-29, nayak2020functionalinteractionsbetween pages 1-2, nayak2020functionalinteractionsbetween pages 3-5, odili2024investigationsintomethylcoenzymea pages 23-29, gendron2023recombinantexpressionand pages 1-8, odili2024investigationsintomethylcoenzymea pages 29-34, odili2024investigationsintomethylcoenzymea pages 83-87, lyu2020posttranslationalmethylationof pages 1-2, lyu2020posttranslationalmethylationof pages 12-13, garcia2022diversityandevolution pages 6-11, gendron2023recombinantexpressionand pages 13-20, odili2024investigationsintomethylcoenzyme pages 29-34, nayak2018genetictechniquesfor pages 20-25).</p>
+<p>References</p>
+<ol>
+<li>
+<p>(evans2019anevolvingview pages 1-4): Paul N. Evans, Joel A. Boyd, Andy O. Leu, Ben J. Woodcroft, Donovan H. Parks, Philip Hugenholtz, and Gene W. Tyson. An evolving view of methane metabolism in the archaea. Nature Reviews Microbiology, 17:219-232, Jan 2019. URL: https://doi.org/10.1038/s41579-018-0136-7, doi:10.1038/s41579-018-0136-7. This article has 590 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(odili2024investigationsintomethylcoenzyme pages 23-29): CL Odili. Investigations into methyl-coenzyme m reductase behavior: expression in a heterologous host, putative post-translational modification genes, and molecular …. Unknown journal, 2024.</p>
+</li>
+<li>
+<p>(odili2024investigationsintomethylcoenzyme pages 29-34): CL Odili. Investigations into methyl-coenzyme m reductase behavior: expression in a heterologous host, putative post-translational modification genes, and molecular …. Unknown journal, 2024.</p>
+</li>
+<li>
+<p>(nayak2020functionalinteractionsbetween pages 1-2): Dipti D. Nayak, Andi Liu, Neha Agrawal, Roy Rodriguez-Carerro, Shi-Hui Dong, Douglas A. Mitchell, Satish K. Nair, and William W. Metcalf. Functional interactions between posttranslationally modified amino acids of methyl-coenzyme m reductase in methanosarcina acetivorans. PLOS Biology, 18:e3000507, Feb 2020. URL: https://doi.org/10.1371/journal.pbio.3000507, doi:10.1371/journal.pbio.3000507. This article has 47 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(gendron2023recombinantexpressionand pages 1-8): A Gendron. Recombinant expression and assembly of methyl coenzyme-m reductase. Unknown journal, 2023.</p>
+</li>
+<li>
+<p>(odili2024investigationsintomethylcoenzymea pages 23-29): CL Odili. Investigations into methyl-coenzyme m reductase behavior: expression in a heterologous host, putative post-translational modification genes, and molecular …. Unknown journal, 2024.</p>
+</li>
+<li>
+<p>(garcia2022diversityandevolution pages 6-11): Pierre Simon Garcia, Simonetta Gribaldo, and Guillaume Borrel. Diversity and evolution of methane-related pathways in archaea. Annual Review of Microbiology, 76:727-755, Sep 2022. URL: https://doi.org/10.1146/annurev-micro-041020-024935, doi:10.1146/annurev-micro-041020-024935. This article has 102 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(gendron2023recombinantexpressionand pages 13-20): A Gendron. Recombinant expression and assembly of methyl coenzyme-m reductase. Unknown journal, 2023.</p>
+</li>
+<li>
+<p>(odili2024investigationsintomethylcoenzymea pages 29-34): CL Odili. Investigations into methyl-coenzyme m reductase behavior: expression in a heterologous host, putative post-translational modification genes, and molecular …. Unknown journal, 2024.</p>
+</li>
+<li>
+<p>(odili2024investigationsintomethylcoenzymea pages 47-52): CL Odili. Investigations into methyl-coenzyme m reductase behavior: expression in a heterologous host, putative post-translational modification genes, and molecular …. Unknown journal, 2024.</p>
+</li>
+<li>
+<p>(odili2024investigationsintomethylcoenzyme pages 83-87): CL Odili. Investigations into methyl-coenzyme m reductase behavior: expression in a heterologous host, putative post-translational modification genes, and molecular …. Unknown journal, 2024.</p>
+</li>
+<li>
+<p>(gendron2023recombinantexpressionanda pages 20-28): A Gendron. Recombinant expression and assembly of methyl coenzyme-m reductase. Unknown journal, 2023.</p>
+</li>
+<li>
+<p>(gendron2023recombinantexpressionand pages 20-28): A Gendron. Recombinant expression and assembly of methyl coenzyme-m reductase. Unknown journal, 2023.</p>
+</li>
+<li>
+<p>(shao2022expressionofdivergent pages 1-2): Nana Shao, Yu Fan, Chau-Wen Chou, Shadi Yavari, Robert V. Williams, I. Jonathan Amster, Stuart M. Brown, Ian J. Drake, Evert C. Duin, William B. Whitman, and Yuchen Liu. Expression of divergent methyl/alkyl coenzyme m reductases from uncultured archaea. Communications Biology, Oct 2022. URL: https://doi.org/10.1038/s42003-022-04057-6, doi:10.1038/s42003-022-04057-6. This article has 22 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(shao2022expressionofdivergent pages 2-3): Nana Shao, Yu Fan, Chau-Wen Chou, Shadi Yavari, Robert V. Williams, I. Jonathan Amster, Stuart M. Brown, Ian J. Drake, Evert C. Duin, William B. Whitman, and Yuchen Liu. Expression of divergent methyl/alkyl coenzyme m reductases from uncultured archaea. Communications Biology, Oct 2022. URL: https://doi.org/10.1038/s42003-022-04057-6, doi:10.1038/s42003-022-04057-6. This article has 22 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(gendron2023recombinantexpressionanda pages 1-8): A Gendron. Recombinant expression and assembly of methyl coenzyme-m reductase. Unknown journal, 2023.</p>
+</li>
+<li>
+<p>(gendron2023recombinantexpressionand pages 8-13): A Gendron. Recombinant expression and assembly of methyl coenzyme-m reductase. Unknown journal, 2023.</p>
+</li>
+<li>
+<p>(gendron2023recombinantexpressionanda pages 28-35): A Gendron. Recombinant expression and assembly of methyl coenzyme-m reductase. Unknown journal, 2023.</p>
+</li>
+<li>
+<p>(gendron2023recombinantexpressionand pages 70-74): A Gendron. Recombinant expression and assembly of methyl coenzyme-m reductase. Unknown journal, 2023.</p>
+</li>
+<li>
+<p>(odili2024investigationsintomethylcoenzyme pages 47-52): CL Odili. Investigations into methyl-coenzyme m reductase behavior: expression in a heterologous host, putative post-translational modification genes, and molecular …. Unknown journal, 2024.</p>
+</li>
+<li>
+<p>(gendron2023recombinantexpressionand pages 52-56): A Gendron. Recombinant expression and assembly of methyl coenzyme-m reductase. Unknown journal, 2023.</p>
+</li>
+<li>
+<p>(nayak2020functionalinteractionsbetween pages 3-5): Dipti D. Nayak, Andi Liu, Neha Agrawal, Roy Rodriguez-Carerro, Shi-Hui Dong, Douglas A. Mitchell, Satish K. Nair, and William W. Metcalf. Functional interactions between posttranslationally modified amino acids of methyl-coenzyme m reductase in methanosarcina acetivorans. PLOS Biology, 18:e3000507, Feb 2020. URL: https://doi.org/10.1371/journal.pbio.3000507, doi:10.1371/journal.pbio.3000507. This article has 47 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(odili2024investigationsintomethylcoenzymea pages 83-87): CL Odili. Investigations into methyl-coenzyme m reductase behavior: expression in a heterologous host, putative post-translational modification genes, and molecular …. Unknown journal, 2024.</p>
+</li>
+<li>
+<p>(lyu2020posttranslationalmethylationof pages 1-2): Zhe Lyu, Nana Shao, Chau-Wen Chou, Hao Shi, Ricky Patel, Evert C. Duin, and William B. Whitman. Posttranslational methylation of arginine in methyl coenzyme m reductase has a profound impact on both methanogenesis and growth of methanococcus maripaludis. Journal of Bacteriology, Jan 2020. URL: https://doi.org/10.1128/jb.00654-19, doi:10.1128/jb.00654-19. This article has 38 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lyu2020posttranslationalmethylationof pages 12-13): Zhe Lyu, Nana Shao, Chau-Wen Chou, Hao Shi, Ricky Patel, Evert C. Duin, and William B. Whitman. Posttranslational methylation of arginine in methyl coenzyme m reductase has a profound impact on both methanogenesis and growth of methanococcus maripaludis. Journal of Bacteriology, Jan 2020. URL: https://doi.org/10.1128/jb.00654-19, doi:10.1128/jb.00654-19. This article has 38 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(gendron2023recombinantexpressionanda pages 13-20): A Gendron. Recombinant expression and assembly of methyl coenzyme-m reductase. Unknown journal, 2023.</p>
+</li>
+<li>
+<p>(nayak2018genetictechniquesfor pages 20-25): Dipti D. Nayak and William W. Metcalf. Genetic techniques for studies of methyl-coenzyme m reductase from methanosarcina acetivorans c2a. Methods in enzymology, 613:325-347, Jan 2018. URL: https://doi.org/10.1016/bs.mie.2018.10.012, doi:10.1016/bs.mie.2018.10.012. This article has 17 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(li2005proteomeofmethanosarcina pages 11-13): Qingbo Li, Lingyun Li, Tomas Rejtar, Barry L. Karger, and James G. Ferry. Proteome of methanosarcina acetivorans part i: an expanded view of the biology of the cell. Journal of proteome research, 4 1:112-28, Jan 2005. URL: https://doi.org/10.1021/pr049832c, doi:10.1021/pr049832c. This article has 61 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(evans2019anevolvingview pages 22-26): Paul N. Evans, Joel A. Boyd, Andy O. Leu, Ben J. Woodcroft, Donovan H. Parks, Philip Hugenholtz, and Gene W. Tyson. An evolving view of methane metabolism in the archaea. Nature Reviews Microbiology, 17:219-232, Jan 2019. URL: https://doi.org/10.1038/s41579-018-0136-7, doi:10.1038/s41579-018-0136-7. This article has 590 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(odili2024investigationsintomethylcoenzyme pages 39-47): CL Odili. Investigations into methyl-coenzyme m reductase behavior: expression in a heterologous host, putative post-translational modification genes, and molecular …. Unknown journal, 2024.</p>
+</li>
+<li>
+<p>(gendron2023recombinantexpressionanda pages 52-56): A Gendron. Recombinant expression and assembly of methyl coenzyme-m reductase. Unknown journal, 2023.</p>
+</li>
+<li>
+<p>(odili2024investigationsintomethylcoenzyme pages 126-132): CL Odili. Investigations into methyl-coenzyme m reductase behavior: expression in a heterologous host, putative post-translational modification genes, and molecular …. Unknown journal, 2024.</p>
+</li>
+<li>
+<p>(odili2024investigationsintomethylcoenzymea pages 126-132): CL Odili. Investigations into methyl-coenzyme m reductase behavior: expression in a heterologous host, putative post-translational modification genes, and molecular …. Unknown journal, 2024.</p>
+</li>
+<li>
+<p>(odili2024investigationsintomethylcoenzymea pages 76-83): CL Odili. Investigations into methyl-coenzyme m reductase behavior: expression in a heterologous host, putative post-translational modification genes, and molecular …. Unknown journal, 2024.</p>
+</li>
+<li>
+<p>(evans2019anevolvingview pages 9-12): Paul N. Evans, Joel A. Boyd, Andy O. Leu, Ben J. Woodcroft, Donovan H. Parks, Philip Hugenholtz, and Gene W. Tyson. An evolving view of methane metabolism in the archaea. Nature Reviews Microbiology, 17:219-232, Jan 2019. URL: https://doi.org/10.1038/s41579-018-0136-7, doi:10.1038/s41579-018-0136-7. This article has 590 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(evans2019anevolvingview pages 7-9): Paul N. Evans, Joel A. Boyd, Andy O. Leu, Ben J. Woodcroft, Donovan H. Parks, Philip Hugenholtz, and Gene W. Tyson. An evolving view of methane metabolism in the archaea. Nature Reviews Microbiology, 17:219-232, Jan 2019. URL: https://doi.org/10.1038/s41579-018-0136-7, doi:10.1038/s41579-018-0136-7. This article has 590 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(gendron2023recombinantexpressionanda pages 35-39): A Gendron. Recombinant expression and assembly of methyl coenzyme-m reductase. Unknown journal, 2023.</p>
+</li>
+<li>
+<p>(gendron2023recombinantexpressionand pages 28-35): A Gendron. Recombinant expression and assembly of methyl coenzyme-m reductase. Unknown journal, 2023.</p>
+</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q8THH1
+gene_symbol: mcrA
+taxon:
+  id: NCBITaxon:188937
+  label: Methanosarcina acetivorans C2A
+description: mcrA encodes the alpha subunit of methyl-coenzyme M reductase (MCR), the key enzyme catalyzing the final step of methanogenesis in archaea. This enzyme converts methyl-coenzyme M and coenzyme B into methane and a heterodisulfide. The protein forms part of a hexameric complex containing two alpha, two beta, and two gamma chains. It contains a unique nickel-containing prosthetic group (coenzyme F430) essential for catalysis. In methanotrophic archaea, this enzyme can function in reverse for anaerobic methane oxidation. The gene serves as a molecular marker for detecting methanogens and methanotrophs in environmental samples.
+existing_annotations:
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: Correct localization. MCR is a cytoplasmic enzyme complex as confirmed by UniProt curation.
+    action: ACCEPT
+- term:
+    id: GO:0015948
+    label: methanogenesis
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: Core function annotation. McrA is essential for the final step of methanogenesis, converting methyl-coenzyme M to methane. This is the primary biological process for this gene.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:11932238
+      supporting_text: The genome of Methanosarcina acetivorans reveals extensive metabolic and physiological diversity
+- term:
+    id: GO:0016740
+    label: transferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: Too general. The specific molecular function is coenzyme-B sulfoethylthiotransferase activity (GO:0050524), which is already annotated.
+    action: REMOVE
+- term:
+    id: GO:0046872
+    label: metal ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: Accurate but could be more specific. The protein binds nickel via coenzyme F430, a nickel-containing tetrapyrrole cofactor. Consider using nickel cation binding (GO:0016151) for specificity.
+    action: MODIFY
+    proposed_replacement_terms:
+    - id: GO:0016151
+      label: nickel cation binding
+- term:
+    id: GO:0050524
+    label: coenzyme-B sulfoethylthiotransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: Core molecular function. This is the specific catalytic activity of methyl-coenzyme M reductase (EC 2.8.4.1), accurately representing the enzyme function.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:29743535
+      supporting_text: Identification of a unique radical SAM methyltransferase required for the sp3-C-methylation of an arginine residue of methyl-coenzyme M reductase
+references:
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt.
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods.
+  findings: []
+- id: PMID:11932238
+  title: The genome of M. acetivorans reveals extensive metabolic and physiological diversity.
+  findings: []
+- id: PMID:29743535
+  title: Identification of a unique Radical SAM methyltransferase required for the sp(3)-C-methylation of an arginine residue of methyl-coenzyme M reductase.
+  findings: []
+core_functions:
+- molecular_function:
+    id: GO:0050524
+    label: coenzyme-B sulfoethylthiotransferase activity
+  directly_involved_in:
+  - id: GO:0015948
+    label: methanogenesis
+  locations:
+  - id: GO:0005737
+    label: cytoplasm
+  description: Catalyzes the terminal step of methanogenesis by converting methyl-coenzyme M and coenzyme B to methane and a heterodisulfide
+  supported_by:
+  - reference_id: PMID:11932238
+    supporting_text: MCR catalyzes the final step in methanogenesis
+- molecular_function:
+    id: GO:0016151
+    label: nickel cation binding
+  description: Binds coenzyme F430 (nickel-containing tetrapyrrole) essential for catalytic activity
+- molecular_function:
+    id: GO:0046983
+    label: protein dimerization activity
+  description: &#34;Forms hexameric MCR complex as alpha subunit (2\u03B12\u03B22\u03B3 structure)&#34;
+  supported_by:
+  - reference_id: PMID:11932238
+    supporting_text: MCR is a hexamer of two alpha, two beta, and two gamma chains
+proposed_new_terms: []
+suggested_questions:
+- question: How do you distinguish mcrA sequences from methanogens versus methanotrophs using sequence features alone?
+  experts:
+  - Environmental microbiologists studying methane cycling
+  - Phylogenetic analysis experts
+- question: What sequence or structural features determine whether MCR operates in methanogenesis versus methanotrophy direction?
+  experts:
+  - Structural biologists
+  - Archaeal metabolism experts
+suggested_experiments:
+- experiment_type: Comparative genomics
+  hypothesis: mcrA sequences from methanotrophs have distinct sequence signatures compared to methanogens
+  description: Systematic comparison of mcrA sequences from known methanogens versus ANME archaea to identify discriminating features
+- experiment_type: Biochemical characterization
+  hypothesis: Thermodynamic conditions and partner proteins determine MCR directionality
+  description: In vitro reconstitution experiments testing MCR activity under different redox conditions and with various electron donor/acceptor systems
+tags:
+- lbnl-favorites
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
