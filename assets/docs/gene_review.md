@@ -1,5 +1,5 @@
 
-# gene_curation
+# gene_review
 
 
 **metamodel version:** 1.7.0
@@ -24,6 +24,7 @@ Schema for gene curation Top level entity is a GeneReview, which is about a sing
  * [Review](Review.md) - A review of an existing annotation.
  * [SupportingTextInReference](SupportingTextInReference.md) - A supporting text in a reference.
  * [Term](Term.md) - A term in a specific ontology
+ * [TermMapping](TermMapping.md) - A mapping between the proposed term and an equivalent term in another ontology
 
 ### Mixins
 
@@ -53,15 +54,21 @@ Schema for gene curation Top level entity is a GeneReview, which is about a sing
  * [full_text_unavailable](full_text_unavailable.md) - Whether the full text is unavailable
  * [gene_symbol](gene_symbol.md) - Symbol of the gene
  * [id](id.md)
+     * [Term➞id](Term_id.md) - An OBO CURIE for a term in GO, CL, CHEBI, etc.
  * [is_invalid](is_invalid.md) - Whether the reference is invalid (e.g., retracted or replaced)
  * [label](label.md) - Human readable name of the entity
+     * [Term➞label](Term_label.md) - the term name
  * [negated](negated.md) - Whether the term is negated
  * [ontology](ontology.md) - Ontology of the term. E.g `go`, `cl`, `hp`
  * [original_reference_id](original_reference_id.md) - ID of the original reference
  * [predicate](predicate.md) - Predicate of the extension
+     * [AnnotationExtension➞predicate](AnnotationExtension_predicate.md)
+ * [product_type](product_type.md) - Type of gene product (protein, ncRNA, etc.)
  * [➞justification](proposedOntologyTerm__justification.md) - Justification for why this term is needed
  * [➞proposed_definition](proposedOntologyTerm__proposed_definition.md) - Proposed definition for the new term
+ * [➞proposed_mappings](proposedOntologyTerm__proposed_mappings.md) - Proposed mappings to equivalent terms in other ontologies
  * [➞proposed_name](proposedOntologyTerm__proposed_name.md) - Proposed name for the new term
+ * [➞proposed_parent](proposedOntologyTerm__proposed_parent.md) - Proposed parent term in the ontology hierarchy
  * [➞supported_by](proposedOntologyTerm__supported_by.md)
  * [proposed_new_terms](proposed_new_terms.md) - Proposed new ontology terms that should exist but don't
  * [proposed_replacement_terms](proposed_replacement_terms.md) - Proposed replacement terms
@@ -71,6 +78,7 @@ Schema for gene curation Top level entity is a GeneReview, which is about a sing
  * [reference_id](reference_id.md)
  * [reference_section_type](reference_section_type.md) - Type of section in the reference (e.g., 'ABSTRACT', 'METHODS', 'RESULTS', 'DISCUSSION')
  * [references](references.md)
+ * [retired](retired.md) - Whether the annotation is retired or replaced
  * [review](review.md) - Review of the gene
  * [statement](statement.md) - Concise statement describing an aspect of the gene
  * [suggested_experiments](suggested_experiments.md)
@@ -79,9 +87,12 @@ Schema for gene curation Top level entity is a GeneReview, which is about a sing
  * [supported_by](supported_by.md)
  * [supporting_entities](supporting_entities.md) - IDs of the supporting entities
  * [supporting_text](supporting_text.md) - Supporting text from the publication. This should be exact substrings. Different substrings can be broken up by '...'s. These substrings will be checked against the actual text of the paper. If editorialization is necessary, put this in square brackets (this is not checked). For example, you can say '...[CFAP300 shows] transport within cilia is IFT dependent...'
+ * [tags](tags.md) - Tags associated with the gene for categorization and organization
  * [taxon](taxon.md)
  * [term](term.md) - Term to be annotated
      * [ExistingAnnotation➞term](ExistingAnnotation_term.md)
+ * [➞predicate](termMapping__predicate.md) - Mapping predicate (e.g., 'skos:exactMatch', 'skos:closeMatch', 'skos:broadMatch', 'skos:narrowMatch')
+ * [➞target_term](termMapping__target_term.md) - The target term in another ontology
  * [title](title.md) - Title of the entity
 
 ### Enums
@@ -94,6 +105,8 @@ Schema for gene curation Top level entity is a GeneReview, which is about a sing
  * [GOProteinContainingComplexEnum](GOProteinContainingComplexEnum.md) - A protein-containing complex term in the GO ontology
  * [GOTermEnum](GOTermEnum.md) - A term in the GO ontology
  * [ManuscriptSection](ManuscriptSection.md) - Sections of a scientific manuscript or publication
+ * [ProductTypeEnum](ProductTypeEnum.md) - Type of gene product
+ * [ROTermEnum](ROTermEnum.md) - A term in the relation ontology
 
 ### Subsets
 

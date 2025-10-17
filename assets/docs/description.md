@@ -20,3 +20,9 @@ None &#8594;  <sub>0..1</sub> [String](types/String.md)
 
  * [GeneReview](GeneReview.md)
  * [Term](Term.md)
+
+## Other properties
+
+|  |  |  |
+| --- | --- | --- |
+| **Mappings:** | | dcterms:description |

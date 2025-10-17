@@ -1,0 +1,2376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>acsD - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>acsD</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q07341" target="_blank" class="term-link">
+                        Q07341
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Neomoorella thermoacetica</span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "acsD";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q07341" data-a="DESCRIPTION: The small subunit of the corrinoid iron-sulfur pro..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>The small subunit of the corrinoid iron-sulfur protein (CFeSP), which acts as a methyl group carrier in the Wood-Ljungdahl pathway for CO2 fixation. AcsD binds a corrinoid (B12 derivative) cofactor and receives methyl groups from methyltetrahydrofolate methyltransferase (AcsE), subsequently transferring them to acetyl-CoA synthase (AcsB) for acetyl-CoA biosynthesis. Forms a heterohexamer complex with AcsC (large subunit) and AcsE.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006730" target="_blank" class="term-link">
+                                    GO:0006730
+                                </a>
+                            </span>
+                            <span class="term-label">one-carbon metabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q07341" data-a="GO:0006730" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> AcsD is directly involved in one-carbon metabolism through the Wood-Ljungdahl pathway, serving as a methyl group carrier that transfers C1 units from methyltetrahydrofolate to acetyl-CoA synthase. The crystal structure [PMID:22419154] and biochemical studies demonstrate its essential role in methyl transfer reactions using a corrinoid cofactor.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation accurately captures a core function of AcsD. The protein specifically handles one-carbon units (methyl groups) as part of the Wood-Ljungdahl pathway, transferring them from 5-methyl-H4folate to acetyl-CoA synthase via its corrinoid cofactor. This is well-supported by structural and biochemical evidence from PMID:22419154.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22419154" target="_blank" class="term-link">
+                                        PMID:22419154
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">CFeSP then delivers the methyl group to the Ni2Fe4S4 active site metallocluster (A-cluster) of acetyl-CoA synthase (ACS), where it becomes the methyl of acetyl CoA</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22419154" target="_blank" class="term-link">
+                                        PMID:22419154
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">For both MetH and CFeSP/MeTr, methyltetrahydrofolate (CH3-H4folate) is the methyl donor, and a protein-bound B12 derivative (cobalamin for MetH and 5′-methoxybenzimidazolyl cobamide for CFeSP) is the methyl carrier.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015977" target="_blank" class="term-link">
+                                    GO:0015977
+                                </a>
+                            </span>
+                            <span class="term-label">carbon fixation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q07341" data-a="GO:0015977" data-r="GO_REF:0000043" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> AcsD is essential for carbon fixation via the Wood-Ljungdahl pathway, which fixes CO2 into acetyl-CoA. However, the more specific term GO:0030634 (carbon fixation by acetyl-CoA pathway) would better represent its precise function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While AcsD is indeed involved in carbon fixation, the generic term GO:0015977 is too broad. The protein specifically functions in the Wood-Ljungdahl (reductive acetyl-CoA) pathway, a specific type of carbon fixation. The more precise term GO:0030634 (carbon fixation by acetyl-CoA pathway) better captures this specificity.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030634" target="_blank" class="term-link">
+                                    carbon fixation by acetyl-CoA pathway
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22419154" target="_blank" class="term-link">
+                                        PMID:22419154
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Acetogenic bacteria, including M. thermoacetica, use CFeSP and MeTr together to catalyze methyltransfer in the Wood-Ljungdahl carbon fixation pathway for growth on CO2 as the sole carbon source</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031419" target="_blank" class="term-link">
+                                    GO:0031419
+                                </a>
+                            </span>
+                            <span class="term-label">cobalamin binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q07341" data-a="GO:0031419" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> AcsD binds a corrinoid (B12 derivative) cofactor containing cobalt, which is essential for its methyl transfer function. Crystal structures [PMID:22419154] directly visualize the bound 5′-methoxybenzimidazolyl cobamide cofactor in the protein.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation is accurate and represents a core molecular function of AcsD. The protein contains a corrinoid-binding domain that specifically binds a B12 derivative (5′-methoxybenzimidazolyl cobamide in M. thermoacetica). This binding is essential for the methyl transfer activity and is directly observed in crystal structures.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22419154" target="_blank" class="term-link">
+                                        PMID:22419154
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">a protein-bound B12 derivative (cobalamin for MetH and 5′-methoxybenzimidazolyl cobamide for CFeSP) is the methyl carrier</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22419154" target="_blank" class="term-link">
+                                        PMID:22419154
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">electron density for the B12 cofactors is unambiguous (Supplementary Fig. 20), and density is also clear in several helical regions, including those near B12</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22419154" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22419154
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Visualizing molecular juggling within a B12-dependent methyl...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q07341" data-a="GO:0005515" data-r="PMID:22419154" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> While AcsD does interact with AcsC (forming heterohexamer) and AcsE (methyltransferase), the generic &#34;protein binding&#34; term is uninformative. More specific terms describing the functional complex formation would be more appropriate.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The term &#34;protein binding&#34; is too vague and uninformative. AcsD forms specific functional complexes: it heterodimerizes with AcsC to form the corrinoid iron-sulfur protein, and this complex then associates with AcsE (methyltransferase) to form a ~220 kDa complex. A more specific term like &#34;protein heterodimerization activity&#34; (GO:0046982) or noting its participation in the &#34;acetyl-CoA decarbonylase/synthase complex&#34; (GO:0044672) would be more informative.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046982" target="_blank" class="term-link">
+                                    protein heterodimerization activity
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22419154" target="_blank" class="term-link">
+                                        PMID:22419154
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Two CFeSPs are present in the complex, each containing two subunits. The small subunit (35 kDa) is a TIM barrel which acts as the B12 &#34;cap&#34; in the ChCFeSP structure9, while the large subunit (48 kDa) has three domains</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22419154" target="_blank" class="term-link">
+                                        PMID:22419154
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">In the ~220 kDa CFeSP/MeTr assembly (Fig. 1), the MeTr homodimer lies in the centre, with one CFeSP bound on either side</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015977" target="_blank" class="term-link">
+                                    GO:0015977
+                                </a>
+                            </span>
+                            <span class="term-label">carbon fixation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22419154" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22419154
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Visualizing molecular juggling within a B12-dependent methyl...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q07341" data-a="GO:0015977" data-r="PMID:22419154" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental evidence from PMID:22419154 demonstrates AcsD’s essential role in CO2 fixation via the Wood-Ljungdahl pathway. However, the more specific term GO:0030634 (carbon fixation by acetyl-CoA pathway) would better represent the specific pathway.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While the IDA evidence strongly supports carbon fixation activity, the generic GO:0015977 term is too broad. The experimental evidence specifically demonstrates function in the Wood-Ljungdahl (reductive acetyl-CoA) pathway. GO:0030634 (carbon fixation by acetyl-CoA pathway) more accurately describes the specific type of carbon fixation demonstrated in the structural and biochemical studies.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030634" target="_blank" class="term-link">
+                                    carbon fixation by acetyl-CoA pathway
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22419154" target="_blank" class="term-link">
+                                        PMID:22419154
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Importantly, absorption features disappear when light is passed through the solution surrounding the crystals, indicating that spectra represent protein in crystals and not protein that may have been liberated into the solution. Collectively, these data demonstrate enzymatic transfer of the CH3-H4folate methyl group to CFeSP-bound B12</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22419154" target="_blank" class="term-link">
+                                        PMID:22419154
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Acetogenic bacteria, including M. thermoacetica, use CFeSP and MeTr together to catalyze methyltransfer in the Wood-Ljungdahl carbon fixation pathway for growth on CO2 as the sole carbon source</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q07341" data-a="GO:0005737" data-r="" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> AcsD functions in the cytoplasm as part of the Wood-Ljungdahl pathway for CO2 fixation in acetogenic bacteria.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This cellular component term reflects AcsD&#39;s location where it operates as part of the cytoplasmic carbon fixation machinery.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22419154" target="_blank" class="term-link">
+                                        PMID:22419154
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Acetogenic bacteria use CFeSP and MeTr together to catalyze methyltransfer in the Wood-Ljungdahl carbon fixation pathway, operating as cytoplasmic enzymes</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042084" target="_blank" class="term-link">
+                                    GO:0042084
+                                </a>
+                            </span>
+                            <span class="term-label">5-methyltetrahydrofolate-dependent methyltransferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q07341" data-a="GO:0042084" data-r="" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> AcsD receives methyl groups from 5-methyltetrahydrofolate via its corrinoid cofactor and transfers them to acetyl-CoA synthase.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This molecular function term captures AcsD&#39;s specific methyltransferase activity that uses 5-methyltetrahydrofolate as the methyl donor via its bound corrinoid cofactor.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22419154" target="_blank" class="term-link">
+                                        PMID:22419154
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">For both MetH and CFeSP/MeTr, methyltetrahydrofolate (CH3-H4folate) is the methyl donor, and a protein-bound B12 derivative is the methyl carrier</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22419154" target="_blank" class="term-link">
+                                        PMID:22419154
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">CFeSP then delivers the methyl group to the Ni2Fe4S4 active site metallocluster (A-cluster) of acetyl-CoA synthase</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044672" target="_blank" class="term-link">
+                                    GO:0044672
+                                </a>
+                            </span>
+                            <span class="term-label">acetyl-CoA decarbonylase/synthase-carbon monoxide dehydrogenase complex</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q07341" data-a="GO:0044672" data-r="" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> AcsD functions as part of the larger Wood-Ljungdahl pathway complex that includes acetyl-CoA synthase and other components.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This cellular component term reflects AcsD&#39;s participation in the multi-enzyme complex responsible for CO2 fixation via the acetyl-CoA pathway.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22419154" target="_blank" class="term-link">
+                                        PMID:22419154
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">In the ~220 kDa CFeSP/MeTr assembly, the MeTr homodimer lies in the centre, with one CFeSP bound on either side, forming part of the acetyl-CoA pathway complex</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22419154" target="_blank" class="term-link">
+                                        PMID:22419154
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">CFeSP delivers the methyl group to the Ni2Fe4S4 active site metallocluster (A-cluster) of acetyl-CoA synthase (ACS), indicating functional complex formation</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/ols/search?q=TEMP:CFeSP_complex" target="_blank" class="term-link">
+                                    TEMP:CFeSP_complex
+                                </a>
+                            </span>
+                            <span class="term-label">corrinoid iron-sulfur protein heterodimer (with AcsC)</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q07341" data-a="TEMP:CFeSP_complex" data-r="" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> AcsD forms a heterodimeric corrinoid iron-sulfur protein (CFeSP) complex with AcsC, where AcsD serves as the small subunit.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This cellular component term describes the specific heterodimeric complex that AcsD forms with AcsC, which is essential for its function in methyl transfer.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22419154" target="_blank" class="term-link">
+                                        PMID:22419154
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Two CFeSPs are present in the complex, each containing two subunits. The small subunit (35 kDa) is a TIM barrel which acts as the B12 &#34;cap&#34;, while the large subunit (48 kDa) has three domains</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030634" target="_blank" class="term-link">
+                                    GO:0030634
+                                </a>
+                            </span>
+                            <span class="term-label">carbon fixation by acetyl-CoA pathway</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q07341" data-a="GO:0030634" data-r="" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> AcsD is essential for carbon fixation via the Wood-Ljungdahl (reductive acetyl-CoA) pathway, which fixes CO2 into acetyl-CoA.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This biological process term captures AcsD&#39;s specific role in the Wood-Ljungdahl pathway, a particular type of carbon fixation that was missing from existing annotations.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22419154" target="_blank" class="term-link">
+                                        PMID:22419154
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Acetogenic bacteria, including M. thermoacetica, use CFeSP and MeTr together to catalyze methyltransfer in the Wood-Ljungdahl carbon fixation pathway for growth on CO2 as the sole carbon source</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22419154" target="_blank" class="term-link">
+                                        PMID:22419154
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">CFeSP then delivers the methyl group to the Ni2Fe4S4 active site metallocluster (A-cluster) of acetyl-CoA synthase (ACS), where it becomes the methyl of acetyl CoA</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Receives and carries methyl groups from 5-methyltetrahydrofolate via bound corrinoid cofactor</h3>
+                <span class="vote-buttons" data-g="Q07341" data-a="FUNCTION: Receives and carries methyl groups from 5-methylte..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042084" target="_blank" class="term-link">
+                            5-methyltetrahydrofolate-dependent methyltransferase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030634" target="_blank" class="term-link">
+                                carbon fixation by acetyl-CoA pathway
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006730" target="_blank" class="term-link">
+                                one-carbon metabolic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044672" target="_blank" class="term-link">
+                            acetyl-CoA decarbonylase/synthase-carbon monoxide dehydrogenase complex
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Substrates:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:20612" target="_blank" class="term-link">
+                                5-methyltetrahydrofolate
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22419154" target="_blank" class="term-link">
+                                PMID:22419154
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">For both MetH and CFeSP/MeTr, methyltetrahydrofolate (CH3-H4folate) is the methyl donor, and a protein-bound B12 derivative (cobalamin for MetH and 5′-methoxybenzimidazolyl cobamide for CFeSP) is the methyl carrier.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22419154" target="_blank" class="term-link">
+                                PMID:22419154
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">CFeSP then delivers the methyl group to the Ni2Fe4S4 active site metallocluster (A-cluster) of acetyl-CoA synthase (ACS), where it becomes the methyl of acetyl CoA</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Binds and maintains corrinoid cofactor in appropriate oxidation state for methyl transfer</h3>
+                <span class="vote-buttons" data-g="Q07341" data-a="FUNCTION: Binds and maintains corrinoid cofactor in appropri..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031419" target="_blank" class="term-link">
+                            cobalamin binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030634" target="_blank" class="term-link">
+                                carbon fixation by acetyl-CoA pathway
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/ols/search?q=TEMP:CFeSP_complex" target="_blank" class="term-link">
+                            corrinoid iron-sulfur protein heterodimer (with AcsC)
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22419154" target="_blank" class="term-link">
+                                PMID:22419154
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">a protein-bound B12 derivative (cobalamin for MetH and 5′-methoxybenzimidazolyl cobamide for CFeSP) is the methyl carrier</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22419154" target="_blank" class="term-link">
+                                PMID:22419154
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Two CFeSPs are present in the complex, each containing two subunits. The small subunit (35 kDa) is a TIM barrel which acts as the B12 &#34;cap&#34; in the ChCFeSP structure9, while the large subunit (48 kDa) has three domains</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22419154" target="_blank" class="term-link">
+                            PMID:22419154
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Visualizing molecular juggling within a B12-dependent methyltransferase complex.</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How does AcsD coordinate methyl transfer between the corrinoid cofactor and the nickel center of acetyl-CoA synthase?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q07341" data-a="Q: How does AcsD coordinate methyl transfer between t..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What structural features of AcsD enable protection of the highly reactive methylcob(III)alamin intermediate from side reactions?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q07341" data-a="Q: What structural features of AcsD enable protection..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How does the AcsD/AcsC complex regulate methyl transfer rates in response to cellular energy and carbon status?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q07341" data-a="Q: How does the AcsD/AcsC complex regulate methyl tra..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> EPR and ENDOR spectroscopy to characterize transient radical intermediates during methyl transfer reactions</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q07341" data-a="EXPERIMENT: EPR and ENDOR spectroscopy to characterize transie..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Stopped-flow kinetics with fluorescent corrinoid analogs to measure methyl transfer rates between AcsD and partner proteins</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q07341" data-a="EXPERIMENT: Stopped-flow kinetics with fluorescent corrinoid a..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Hydrogen-deuterium exchange MS to map conformational changes in AcsD during the catalytic cycle</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q07341" data-a="EXPERIMENT: Hydrogen-deuterium exchange MS to map conformation..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(acsD-deep-research.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q07341" data-a="DOC: Deep Research" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="deep-research-report-acsd-mooth">Deep Research Report: acsD (MOOTH)</h1>
+<p>Generated using OpenAI Deep Research API</p>
+<hr />
+<h1 id="introduction">Introduction</h1>
+<p>The <strong>acsD gene</strong> of <em>Moorella thermoacetica</em> (formerly <em>Clostridium thermoaceticum</em>) encodes the small subunit of the <strong>corrinoid iron–sulfur protein (CFeSP)</strong>, a key enzyme component in this bacterium’s Wood–Ljungdahl pathway (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC2575129/#:~:text=Abbreviations%20are%20as%20follows%3A%20cooC%3A,COG1908%29%3B%20clp">pmc.ncbi.nlm.nih.gov</a>). <em>M. thermoacetica</em> is a model homoacetogenic bacterium widely studied for its ability to <strong>fix CO₂ (and CO) into acetate</strong> via the reductive acetyl-CoA pathway (Wood–Ljungdahl pathway) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC2575129/#:~:text=This%20paper%20describes%20the%20genome,Methanogenic">pmc.ncbi.nlm.nih.gov</a>). This pathway enables growth on one-carbon substrates (H₂/CO₂ or CO) and produces acetate as the primary product (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC2575129/#:~:text=thermoaceticum,a%20wide%20variety%20of%20carbon">pmc.ncbi.nlm.nih.gov</a>). Below, we provide a comprehensive overview of AcsD, including its molecular function, cellular role, biological processes, structural features, regulation, evolutionary conservation, and supporting experimental evidence, with an emphasis on information relevant to Gene Ontology (GO) curation.</p>
+<h2 id="function-and-molecular-mechanism">Function and Molecular Mechanism</h2>
+<p><strong>AcsD</strong> is the small (≈33 kDa) subunit of the heterodimeric corrinoid/iron–sulfur protein (CFeSP) and functions as a <strong>methyl group carrier</strong> in the reductive acetyl-CoA (Wood–Ljungdahl) pathway (<a href="https://bf2i-artsymbiocyc.insa-lyon.fr/META/NEW-IMAGE?object=CPLX-2&amp;type=ENZYME#:~:text=The%20corrinoid%2Firon,The%20protein%20was%20first%20purified">bf2i-artsymbiocyc.insa-lyon.fr</a>). It binds a corrinoid (cobalamin derivative) cofactor containing cobalt, which can cycle between oxidation states to accept and donate methyl groups. In the <strong>acetyl-CoA synthesis reaction</strong>, AcsD (as part of CFeSP) receives a methyl group from 5-methyltetrahydrofolate (via the methyltransferase AcsE) and carries a methyl–Co(III)–corrinoid moiety (<a href="https://pubmed.ncbi.nlm.nih.gov/10206956/#:~:text=This%20paper%20focuses%20on%20how,I%29%20escapes%20from%20the">pubmed.ncbi.nlm.nih.gov</a>). This methyl group is then transferred to the nickel–iron–sulfur center of acetyl-CoA synthase (the AcsB subunit of the CODH/ACS complex), where it combines with a carbonyl group (from CO) and CoA to form acetyl-CoA (<a href="https://pubmed.ncbi.nlm.nih.gov/10206956/#:~:text=This%20paper%20focuses%20on%20how,I%29%20escapes%20from%20the">pubmed.ncbi.nlm.nih.gov</a>). This methyl transfer is an <strong>essential step in the Wood–Ljungdahl pathway</strong> of anaerobic CO/CO₂ fixation (<a href="https://pubmed.ncbi.nlm.nih.gov/10206956/#:~:text=This%20paper%20focuses%20on%20how,I%29%20escapes%20from%20the">pubmed.ncbi.nlm.nih.gov</a>). Mechanistically, the transfer follows an S<sub>N</sub>2-like pathway, meaning the methyl group is directly attacked by the Ni-based active site of AcsB (<a href="https://pubmed.ncbi.nlm.nih.gov/10206956/#:~:text=This%20paper%20focuses%20on%20how,I%29%20escapes%20from%20the">pubmed.ncbi.nlm.nih.gov</a>). Importantly, the cobalt center of the corrinoid must be in the reduced Co(I) state to accept a methyl group; after each catalytic cycle, the cobalt can become oxidized to Co(II), which is catalytically inactive (<a href="https://pubmed.ncbi.nlm.nih.gov/10206956/#:~:text=convincing%20evidence%20that%20oxidative%20inactivation,reductants%20to%20the%20cobalt%20center">pubmed.ncbi.nlm.nih.gov</a>). An ATP-dependent “reductive activation” system (an auxiliary enzyme in the cell) regenerates Co(I) by transferring electrons, and <strong>AcsD’s partner subunit (AcsC)</strong> houses a [4Fe–4S] cluster that serves as an electron conduit to reduce the cobalt center (<a href="https://pubmed.ncbi.nlm.nih.gov/10206956/#:~:text=catalytic%20cycle%20one%20in%20every,reductants%20to%20the%20cobalt%20center">pubmed.ncbi.nlm.nih.gov</a>). The [4Fe–4S] cluster itself is not directly involved in methyl transfer chemistry but is crucial for delivering electrons from physiological reductants to the corrinoid, reactivating the Co(I) state (<a href="https://pubmed.ncbi.nlm.nih.gov/10206956/#:~:text=catalytic%20cycle%20one%20in%20every,reductants%20to%20the%20cobalt%20center">pubmed.ncbi.nlm.nih.gov</a>). Thus, AcsD works in concert with its large subunit and other enzyme components to <strong>shuttle one-carbon units and electrons</strong> needed for acetyl-CoA synthesis. In summary, <strong>AcsD’s molecular function</strong> is to bind a cobamide cofactor and transiently carry a methyl group for transfer to acetyl-CoA synthase, <strong>acting as a methyl-cobalamin carrier</strong> in this pathway (GO:0031418: cobalamin binding; GO:0016740: one-carbon group transferase activity, <em>associated</em>). </p>
+<h2 id="cellular-localization-and-complex-association">Cellular Localization and Complex Association</h2>
+<p>Within the cell, AcsD is located in the <strong>cytoplasm</strong>, as part of a multi-enzyme complex responsible for acetyl-CoA synthesis. <em>M. thermoacetica</em> is a Gram-positive anaerobe, so all Wood–Ljungdahl pathway reactions occur in the cytosol. AcsD (CFeSP small subunit) and AcsC (CFeSP large subunit) form a tight <strong>αβ heterodimer</strong> (the CFeSP itself) (<a href="https://bf2i-artsymbiocyc.insa-lyon.fr/META/NEW-IMAGE?object=CPLX-2&amp;type=ENZYME#:~:text=The%20corrinoid%2Firon,The%20protein%20was%20first%20purified">bf2i-artsymbiocyc.insa-lyon.fr</a>). This CFeSP interacts functionally with the <strong>carbon monoxide dehydrogenase/acetyl-CoA synthase (CODH/ACS) complex</strong>, which in acetogens consists of multiple subunits (analogous to the five-polypeptide acetyl-CoA decarbonylase/synthase complex of methanogens) (<a href="https://www.yeastgenome.org/go/GO%3A0044672#:~:text=acetyl,S%20bonds">www.yeastgenome.org</a>). In <em>M. thermoacetica</em>, the CFeSP is not covalently bound to CODH/ACS, but it transiently docks with the CODH/ACS enzyme to deliver the methyl group and receive electrons for cobalt reactivation (<a href="https://pubmed.ncbi.nlm.nih.gov/10206956/#:~:text=This%20paper%20focuses%20on%20how,I%29%20escapes%20from%20the">pubmed.ncbi.nlm.nih.gov</a>) (<a href="https://pubmed.ncbi.nlm.nih.gov/10206956/#:~:text=catalytic%20cycle%20one%20in%20every,reductants%20to%20the%20cobalt%20center">pubmed.ncbi.nlm.nih.gov</a>). Crystallographic evidence shows that the <strong>corrinoid protein and its partner methyltransferase form a large complex</strong> (~220 kDa) during methyl transfer reactions (<a href="https://www.rcsb.org/structure/4DJD#:~:text=X,movement%20within%20the%20large%20enzyme">www.rcsb.org</a>). Specifically, the CFeSP (AcsC–AcsD) and the methyltetrahydrofolate methyltransferase (AcsE) can associate into a functional complex that positions the corrinoid cofactor in proximity to the methyl donor (5-methyl-THF) and then to the CODH/ACS enzyme (<a href="https://www.rcsb.org/structure/4DJD#:~:text=X,movement%20within%20the%20large%20enzyme">www.rcsb.org</a>) (<a href="https://www.rcsb.org/structure/4DJD#:~:text=all%20protein%20modules%20required%20for,movements%20of%20proteins%20in%20a">www.rcsb.org</a>). This indicates that AcsD operates as part of a <strong>modular enzyme assembly</strong> in the cytosol (GO:0044672: acetyl-CoA decarbonylase/synthase complex; GO:0005737: cytoplasm).</p>
+<h2 id="biological-processes-involvement">Biological Processes Involvement</h2>
+<p>AcsD is indispensable for the <strong>Wood–Ljungdahl pathway</strong>, also known as the reductive acetyl-CoA pathway, which is the central <strong>CO₂-fixation route</strong> in <em>M. thermoacetica</em> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC2575129/#:~:text=thermoaceticum,a%20wide%20variety%20of%20carbon">pmc.ncbi.nlm.nih.gov</a>). Through this pathway, two molecules of CO₂ (or CO and CO₂) are reduced and combined to form acetyl-CoA, which can then be converted to acetate or used in biomass synthesis (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC93538/#:~:text=Acetogenic%20bacteria%20are%20strict%20anaerobes,27">pmc.ncbi.nlm.nih.gov</a>). AcsD specifically enables the methylation step in this pathway, effectively linking the “Eastern branch” of the pathway (folate-dependent C1 reduction to a methyl group) with the “Western branch” (CO₂ reduction to CO and acetyl-CoA assembly) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC93538/#:~:text=be%20cleaved%2C%20yielding%20acetate%2C%20CoA%2C,27">pmc.ncbi.nlm.nih.gov</a>). By carrying the methyl group, AcsD helps generate <strong>acetyl-CoA from CO₂</strong>, which is subsequently converted to acetate by phosphotransacetylase and acetate kinase, yielding ATP. Thus, AcsD participates in <strong>autotrophic growth on H₂/CO₂ or CO</strong> by facilitating carbon fixation via the acetyl-CoA pathway (GO:0030634: carbon fixation by acetyl-CoA pathway) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC2575129/#:~:text=thermoaceticum,a%20wide%20variety%20of%20carbon">pmc.ncbi.nlm.nih.gov</a>). In heterotrophic growth (e.g. on sugars), <em>M. thermoacetica</em> still uses the Wood–Ljungdahl pathway to dispose of reducing equivalents, meaning AcsD is also active in fermentation of organic substrates to acetate (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC93538/#:~:text=C,no%20effect%20on%20the%20specific">pmc.ncbi.nlm.nih.gov</a>). The presence and activity of AcsD (and the entire acs gene cluster) define the homoacetogenic phenotype: organisms with this pathway convert a variety of substrates into acetate as a primary product (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC2575129/#:~:text=have%20a%20highly%20diverse%20metabolic,and%20electron%20donors%20and%20acceptors">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC2575129/#:~:text=Thermoanaerobacter%20tengcongensis%20%28Bao%20et%20al,the%20core%20genes%20of%20the">pmc.ncbi.nlm.nih.gov</a>). In broader terms, AcsD is involved in <strong>one-carbon metabolism</strong> and <strong>acetyl-CoA biosynthesis</strong> from inorganic carbon (GO:0006085: acetyl-CoA biosynthetic process). This activity contributes to ecological processes like carbon cycling and energy conservation in anaerobes. Notably, acetogenic bacteria like <em>M. thermoacetica</em> play a role in certain ecosystems (e.g. animal gastrointestinal tracts) by consuming H₂ and CO₂ and producing acetate, a process in which AcsD is a key enzyme participant (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC2575129/#:~:text=%28Chassard%20and%20Bernalier,and%20since%20the">pmc.ncbi.nlm.nih.gov</a>). There are <strong>no known disease associations</strong> for acsD, as <em>M. thermoacetica</em> is non-pathogenic; instead, its “phenotype” is a metabolic one – i.e. the ability to carry out acetogenesis. In various animal gut microbiomes (ruminants, termites, etc.), acetogens with the acsD-containing pathway provide acetate that can be a beneficial nutrient for the host and compete with methanogens for substrates (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC2575129/#:~:text=%28Chassard%20and%20Bernalier,and%20since%20the">pmc.ncbi.nlm.nih.gov</a>). Thus, while acsD does not relate to human disease, it is central to the <strong>acetogenic metabolic process</strong> and can influence microbial community metabolism.</p>
+<h2 id="protein-domains-and-structural-features">Protein Domains and Structural Features</h2>
+<p><strong>AcsD (CFeSP small subunit)</strong> is a corrinoid-binding protein that contains the <strong>binding pocket for a cobamide (cobalamin) cofactor</strong>. Sequence analyses indicate that AcsD harbors conserved motifs typical of corrinoid-dependent enzymes, including a cobalt-coordinating histidine residue (a hallmark that directly binds the corrinoid’s cobalt). The protein’s structure has been determined as part of the CFeSP: it is predominantly α/β and forms a compact domain that clamps around the <strong>corrinoid</strong> cofactor (<a href="https://www.rcsb.org/structure/4DJD#:~:text=all%20protein%20modules%20required%20for,movements%20of%20proteins%20in%20a">www.rcsb.org</a>). The <strong>large subunit, AcsC</strong>, provides a [4Fe–4S] cluster, and together the α (AcsD) and β (AcsC) subunits form a complete corrinoid/Fe-S protein with one corrinoid and one iron–sulfur cluster per αβ dimer (<a href="https://bf2i-artsymbiocyc.insa-lyon.fr/META/NEW-IMAGE?object=CPLX-2&amp;type=ENZYME#:~:text=The%20corrinoid%2Firon,The%20protein%20was%20first%20purified">bf2i-artsymbiocyc.insa-lyon.fr</a>). Interestingly, although the <strong>corrinoid-binding residues lie within AcsD</strong>, the presence of AcsC is required to form a stable holoprotein that can tightly bind the corrinoid (<a href="https://bf2i-artsymbiocyc.insa-lyon.fr/META/NEW-IMAGE?object=CPLX-2&amp;type=ENZYME#:~:text=per%20mol%20of%20an%20%CE%B1%CE%B2,who%20also%20expressed%20it">bf2i-artsymbiocyc.insa-lyon.fr</a>). AcsC contributes additional domains – including the Fe–S-binding domain – and likely helps orient AcsD’s corrinoid pocket for catalysis (<a href="https://bf2i-artsymbiocyc.insa-lyon.fr/META/NEW-IMAGE?object=CPLX-2&amp;type=ENZYME#:~:text=fixation,2%7D%20fixation%20by%20anaerobic">bf2i-artsymbiocyc.insa-lyon.fr</a>). The <strong>holo-CFeSP</strong> has a molecular weight of ~88 kDa (33 kDa AcsD + 55 kDa AcsC) and contains one cobalt (in corrinoid) and one [4Fe–4S] cluster (<a href="https://bf2i-artsymbiocyc.insa-lyon.fr/META/NEW-IMAGE?object=CPLX-2&amp;type=ENZYME#:~:text=The%20corrinoid%2Firon,The%20protein%20was%20first%20purified">bf2i-artsymbiocyc.insa-lyon.fr</a>). Structurally, the CFeSP has been crystallized in complex with its methyltransferase (AcsE) and folate, revealing that the protein undergoes significant <strong>conformational changes</strong> during methyl transfer (<a href="https://www.rcsb.org/structure/4DJD#:~:text=all%20protein%20modules%20required%20for,movements%20of%20proteins%20in%20a">www.rcsb.org</a>). Notably, the X-ray crystal structures (2.4 Å resolution) of the <em>M. thermoacetica</em> CFeSP–MeTr complex captured the <strong>B₁₂ cofactor in multiple positions</strong> (between a “resting” site and the active site), illustrating how the protein’s domains move to deliver the corrinoid to the methyl donor and then to the acceptor (<a href="https://www.rcsb.org/structure/4DJD#:~:text=all%20protein%20modules%20required%20for,explain%20why%20such%20an%20elaborate">www.rcsb.org</a>). These structures showed that a large <strong>protein rearrangement (“molecular juggling”)</strong> is required to shield and reposition the corrinoid cofactor during catalysis (<a href="https://www.rcsb.org/structure/4DJD#:~:text=all%20protein%20modules%20required%20for,explain%20why%20such%20an%20elaborate">www.rcsb.org</a>). A flexible linker region (proline-rich, in AcsC) allows the small subunit AcsD to swing the corrinoid between different protein partners (the MeTr enzyme and the ACS active site) (<a href="https://www.rcsb.org/structure/4DJD#:~:text=all%20protein%20modules%20required%20for,movements%20of%20proteins%20in%20a">www.rcsb.org</a>). Key <strong>domains</strong> identified by homology/InterPro include a cobalamin-binding domain (in AcsD) and an iron–sulfur ferredoxin-like domain (in AcsC) that work in tandem. The protein complex as a whole belongs to the <strong>corrinoid/iron–sulfur protein family</strong> (Pfam PF03599) and AcsD specifically corresponds to the smaller corrinoid-binding subunit (UniProt Q07341) (<a href="https://bf2i-artsymbiocyc.insa-lyon.fr/META/NEW-IMAGE?object=CPLX-2&amp;type=ENZYME#:~:text=Synonyms%3A%20AcsD%3B%20corrinoid%2FFe,%CE%B1%20subunit">bf2i-artsymbiocyc.insa-lyon.fr</a>). In summary, AcsD’s structure is tailored to <strong>bind the B₁₂ cofactor</strong> and present it for methyl transfer, highlighting features such as the cobalt-binding site and interface with AcsC, while its partnership with AcsC provides the redox-active [4Fe–4S] cluster necessary for maintaining the cofactor in the correct state (<a href="https://bf2i-artsymbiocyc.insa-lyon.fr/META/NEW-IMAGE?object=CPLX-2&amp;type=ENZYME#:~:text=fixation,2%7D%20fixation%20by%20anaerobic">bf2i-artsymbiocyc.insa-lyon.fr</a>). <em>(GO:0031418: cobalamin binding; GO:0051536: iron–sulfur cluster binding, </em><em>for CFeSP complex</em><em>).</em> </p>
+<h2 id="expression-patterns-and-regulation">Expression Patterns and Regulation</h2>
+<p>The acsD gene resides in the <strong>acs operon (acsA-E)</strong>, a cluster of core Wood–Ljungdahl pathway genes that are co-transcribed and co-regulated (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC2575129/#:~:text=genes%20encoding%20homologs%20of%20the,to%20grow%20as%20an%20acetogen">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC2575129/#:~:text=Abbreviations%20are%20as%20follows%3A%20cooC%3A,COG1908%29%3B%20clp">pmc.ncbi.nlm.nih.gov</a>). Expression of acsD is tightly linked to the metabolic state of the cell. Under autotrophic conditions (growth on H₂ + CO₂ or CO), the <strong>acs genes are highly expressed</strong>, as the Wood–Ljungdahl pathway is active to fix carbon and generate energy. Conversely, in the presence of alternative electron acceptors like nitrate, <em>M. thermoacetica</em> down-regulates the acetyl-CoA pathway. Specifically, adding nitrate to cultures causes a significant decrease in the levels of the CFeSP protein: Western blot analysis showed the CFeSP subunits (including AcsD) drop to ~40% of their normal level in nitrate-grown cells (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC93538/#:~:text=activity%20paralleled%20a%20decrease%20in,fold%20decrease">pmc.ncbi.nlm.nih.gov</a>). Nitrate-supplemented cultures had 5-fold lower CO-oxidizing activity and correspondingly lower CODH/ACS and CFeSP protein content (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC93538/#:~:text=Nitrate%20has%20been%20shown%20to,levels%20of%20CODH%20in%20nitrate">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC93538/#:~:text=activity%20paralleled%20a%20decrease%20in,fold%20decrease">pmc.ncbi.nlm.nih.gov</a>). This indicates a <strong>repression of acsD (and associated genes)</strong> under nitrate respiration conditions. Indeed, transcriptional analyses confirmed that nitrate exerts a <strong>transcriptional repression</strong> on Wood–Ljungdahl pathway genes, while simultaneously inducing nitrate respiration genes (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC93538/#:~:text=corrinoid%20iron,Ljungdahl%20pathway">pmc.ncbi.nlm.nih.gov</a>). In contrast, the presence of CO₂ (as a carbon source/electron acceptor) appears to <strong>induce expression</strong> of the acs operon, ensuring the pathway is active when needed (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC93538/#:~:text=thermoaceticum,and%20repress%20nitrate%20reductase%20activity">pmc.ncbi.nlm.nih.gov</a>). Regulation is therefore adaptive: <em>M. thermoacetica</em> prioritizes energetically favorable electron acceptors (like nitrate) over CO₂, and when nitrate is available, the cell suppresses the acetyl-CoA pathway to avoid wasteful operation (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC93538/#:~:text=thermoaceticum,and%20repress%20nitrate%20reductase%20activity">pmc.ncbi.nlm.nih.gov</a>). Aside from electron acceptors, other environmental factors (e.g. carbon source) can influence acsD expression; for instance, during heterotrophic growth on glucose, the Wood–Ljungdahl pathway still operates to re-assimilate CO₂ produced in metabolism, so acsD is expressed to allow disposal of reducing equivalents as acetate (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC93538/#:~:text=C,no%20effect%20on%20the%20specific">pmc.ncbi.nlm.nih.gov</a>). Genetic manipulation studies are limited (due to difficulties in acetogen genetics), but <strong>acsD is believed to be essential</strong> – deletion or inactivation would block acetyl-CoA synthesis from C1 units, preventing autotrophic growth. Heterologous expression has demonstrated that the acsD and acsC genes can be expressed in <em>E. coli</em> and reconstituted to form an active corrinoid enzyme (<a href="https://bf2i-artsymbiocyc.insa-lyon.fr/META/NEW-IMAGE?object=CPLX-2&amp;type=ENZYME#:~:text=binding%20protein%20,expressed%20it%20in%20Escherichia%20coli">bf2i-artsymbiocyc.insa-lyon.fr</a>), indicating that transcription and translation of acsD yield a functional protein given the right cofactor availability. In summary, <strong>acsD expression is highest during acetogenic growth</strong> and is attenuated when alternative metabolic modes are engaged, pointing to a coordinated regulation of the Wood–Ljungdahl pathway genes in response to environmental conditions (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC93538/#:~:text=corrinoid%20iron,Ljungdahl%20pathway">pmc.ncbi.nlm.nih.gov</a>).</p>
+<h2 id="evolutionary-conservation">Evolutionary Conservation</h2>
+<p>The AcsD protein and the acsD gene are highly conserved among <strong>acetogenic bacteria</strong> and other organisms that utilize the acetyl-CoA pathway. Comparative genomic analyses show that acsD is almost invariably found <strong>in conjunction with the other Wood–Ljungdahl pathway genes</strong> (e.g. acsA, acsB, acsC, acsE) and is absent in organisms that lack this pathway (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC2575129/#:~:text=genomes%20that%20also%20have%20acetyl,Ljungdahl%20pathway%20genes">pmc.ncbi.nlm.nih.gov</a>). In a broad survey, only genomes containing the acetyl-CoA synthase (ACS, AcsB) also contained homologs of the CFeSP subunits (AcsC and AcsD); conversely, no genome lacking ACS was found to have acsD (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC2575129/#:~:text=genomes%20that%20also%20have%20acetyl,Ljungdahl%20pathway%20genes">pmc.ncbi.nlm.nih.gov</a>). This strict <strong>co-occurrence pattern</strong> suggests that AcsD’s function is dedicated to the acetyl-CoA pathway and it has not been repurposed for other metabolic processes (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC2575129/#:~:text=genomes%20that%20also%20have%20acetyl,Ljungdahl%20pathway%20genes">pmc.ncbi.nlm.nih.gov</a>). The acsD gene is present in diverse anaerobes: aside from <em>M. thermoacetica</em> (a Firmicute), it appears in other <strong>homoacetogenic Firmicutes</strong> (e.g. <em>Acetobacterium woodii</em>, <em>Clostridium ljungdahlii</em>), in some <strong>Deltaproteobacteria</strong> (such as <em>Syntrophobacter fumaroxidans</em> or <em>Desulfovibrio</em> species that can fix CO₂ via acetyl-CoA), and in certain <strong>Dehalococcoidia</strong> (e.g. <em>Dehalococcoides</em> sp., which harbor partial Wood–Ljungdahl pathways) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC2575129/#:~:text=The%20Wood,fumaroxidans%20and%20Candidatus%20Desulfococcus%20oleovorans">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC2575129/#:~:text=of%20the%20pathway%20%28Figure%202%29,located%20in%20the%20acs%20gene">pmc.ncbi.nlm.nih.gov</a>). The gene is typically clustered with other pathway genes, though the operon arrangements can vary by lineage (some have additional genes inserted or missing, as noted in comparative genomics) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC2575129/#:~:text=The%20Wood,fumaroxidans%20and%20Candidatus%20Desulfococcus%20oleovorans">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC2575129/#:~:text=of%20the%20pathway%20%28Figure%202%29,located%20in%20the%20acs%20gene">pmc.ncbi.nlm.nih.gov</a>). Interestingly, in a few organisms the functionality of AcsD is retained in a <strong>fusion protein</strong>: for example, one report noted a fusion between a methylene-tetrahydrofolate reductase and a corrinoid protein small subunit (mthfr–acsD fusion), indicating a single polypeptide that links folate metabolism with the corrinoid protein (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC2575129/#:~:text=dehydrogenase%3B%20gcvH%3A%20glycine%20cleavage%20system,COG3383">pmc.ncbi.nlm.nih.gov</a>). This suggests modular evolution and possible gene fusion events in certain lineages, although the separated form (as in <em>M. thermoacetica</em>) is more common. The strong conservation of AcsD and its universal pairing with ACS underscores that it performs a <strong>highly conserved biochemical function</strong> across these species (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC2575129/#:~:text=genomes%20that%20also%20have%20acetyl,Ljungdahl%20pathway%20genes">pmc.ncbi.nlm.nih.gov</a>). In methanogenic archaea, an analogous role is played by subunits of the acetyl-CoA decarbonylase/synthase (ACDS) complex – these archaea have a five-subunit complex in which two subunits correspond functionally to AcsC/AcsD (often called CdhC and CdhD) participating in the reverse reaction (acetate oxidation to CO₂ and methane) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC2575129/#:~:text=co,CoA%20synthase%20and%20other%20Wood">pmc.ncbi.nlm.nih.gov</a>). Thus, from an evolutionary perspective, AcsD (or its functional analogs) is an <strong>ancestral enzyme component</strong> in one-carbon metabolism, conserved from bacteria to some archaea that use the acetyl-CoA pathway. The distribution of acsD across distantly related microbes, and its absence in non-acetogens, implies that the entire pathway (including acsD) may have been transferred horizontally as a unit to confer autotrophic CO₂-fixing ability (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC2575129/#:~:text=Since%20acetogenesis%20is%20a%20physiological,homologs%20in%20any%20of%20the">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC2575129/#:~:text=genes%20encoding%20homologs%20of%20the,to%20grow%20as%20an%20acetogen">pmc.ncbi.nlm.nih.gov</a>). In summary, AcsD is <strong>evolutionarily conserved among acetogenic bacteria</strong> and tightly associated with the presence of the Wood–Ljungdahl pathway, reflecting its indispensable role in that metabolism.</p>
+<h2 id="key-experimental-evidence-and-literature">Key Experimental Evidence and Literature</h2>
+<p>The function of AcsD and the CFeSP has been elucidated through decades of biochemical and genetic studies on <em>M. thermoacetica</em> and related organisms. <strong>Purification and characterization</strong> of the CFeSP were first achieved in the 1980s – Hu <em>et al.</em> (1984) isolated the protein from <em>C. thermoaceticum</em>, confirming it contained a corrinoid (with cobalt) and iron–sulfur cluster cofactors (<a href="https://bf2i-artsymbiocyc.insa-lyon.fr/META/NEW-IMAGE?object=CPLX-2&amp;type=ENZYME#:~:text=transfer%20function,expressed%20it%20in%20Escherichia%20coli">bf2i-artsymbiocyc.insa-lyon.fr</a>). Spectroscopic analyses (Mössbauer, EPR) by Ragsdale and colleagues in 1987 further confirmed the presence of a [4Fe–4S] center and its redox interaction with the cobalt in the corrinoid (<a href="https://bf2i-artsymbiocyc.insa-lyon.fr/META/NEW-IMAGE?object=CPLX-2&amp;type=ENZYME#:~:text=fixation,2%7D%20fixation%20by%20anaerobic">bf2i-artsymbiocyc.insa-lyon.fr</a>) (<a href="https://bf2i-artsymbiocyc.insa-lyon.fr/META/NEW-IMAGE?object=CPLX-2&amp;type=ENZYME#:~:text=transfer%20function,expressed%20it%20in%20Escherichia%20coli">bf2i-artsymbiocyc.insa-lyon.fr</a>). The <strong>genes encoding CFeSP (acsD and acsC)</strong> were cloned as part of the acs operon in <em>C. thermoaceticum</em> by Roberts <em>et al.</em> (1989) (<a href="https://bf2i-artsymbiocyc.insa-lyon.fr/META/NEW-IMAGE?object=CPLX-2&amp;type=ENZYME#:~:text=binding%20protein%20,expressed%20it%20in%20Escherichia%20coli">bf2i-artsymbiocyc.insa-lyon.fr</a>). This pioneering work identified the clustering of CODH (acsA), ACS (acsB), CFeSP (acsC, acsD), and MeTr (acsE) genes (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC93538/#:~:text=be%20cleaved%2C%20yielding%20acetate%2C%20CoA%2C,27">pmc.ncbi.nlm.nih.gov</a>), establishing the genetic basis of the Wood–Ljungdahl pathway. The acsD gene was sequenced in the early 1990s (Lu <em>et al.</em>, 1993), revealing the amino acid sequence and allowing expression in <em>E. coli</em> (<a href="https://bf2i-artsymbiocyc.insa-lyon.fr/META/NEW-IMAGE?object=CPLX-2&amp;type=ENZYME#:~:text=binding%20protein%20,expressed%20it%20in%20Escherichia%20coli">bf2i-artsymbiocyc.insa-lyon.fr</a>). <strong>Recombinant AcsC/AcsD</strong> produced in <em>E. coli</em> was successfully reconstituted with the corrinoid and [Fe–S] cofactors to restore full activity (<a href="https://bf2i-artsymbiocyc.insa-lyon.fr/META/NEW-IMAGE?object=CPLX-2&amp;type=ENZYME#:~:text=binding%20protein%20,expressed%20it%20in%20Escherichia%20coli">bf2i-artsymbiocyc.insa-lyon.fr</a>), underscoring that the gene sequence indeed encodes a functional corrinoid protein. Functional assays and rapid kinetics (e.g. by Ragsdale’s group) provided insight into the <strong>mechanism of methyl transfer</strong>: a seminal study by Menon &amp; Ragsdale (1998) and Kumar <em>et al.</em> (1999) demonstrated that the methyl transfer from Me–Co(III)–CFeSP to ACS is an S<sub>N</sub>2-like nucleophilic attack and that the [4Fe–4S] cluster is required for reductive activation of the corrinoid (<a href="https://pubmed.ncbi.nlm.nih.gov/10206956/#:~:text=This%20paper%20focuses%20on%20how,I%29%20escapes%20from%20the">pubmed.ncbi.nlm.nih.gov</a>) (<a href="https://pubmed.ncbi.nlm.nih.gov/10206956/#:~:text=catalytic%20cycle%20one%20in%20every,reductants%20to%20the%20cobalt%20center">pubmed.ncbi.nlm.nih.gov</a>). These studies showed that when the cobalt on AcsD becomes oxidized (Co(II)), the [4Fe–4S] cluster (along with ATP and an external reductant) is needed to reduce it back to Co(I) (<a href="https://pubmed.ncbi.nlm.nih.gov/10206956/#:~:text=catalytic%20cycle%20one%20in%20every,reductants%20to%20the%20cobalt%20center">pubmed.ncbi.nlm.nih.gov</a>). The requirement of an ATP-dependent activating enzyme for CFeSP was also demonstrated (e.g. by Svetlitchnyi <em>et al.</em>, 2004, identifying an activator protein in acetogens), highlighting a crucial regulatory aspect of AcsD function. The ultimate <strong>structural proof</strong> of AcsD’s role came with X-ray crystallography: Kung <em>et al.</em> (2012) solved the crystal structures of the <em>M. thermoacetica</em> CFeSP in complex with its methyltransferase (MeTr) and folate (<a href="https://www.rcsb.org/structure/4DJD#:~:text=X,movement%20within%20the%20large%20enzyme">www.rcsb.org</a>). This work, published in <em>Nature</em>, provided a 3D visualization of <em>M. thermoacetica</em> AcsD (and AcsC) with the corrinoid cofactor and captured snapshots of the <strong>B₁₂ cofactor in transit</strong> between protein modules (<a href="https://www.rcsb.org/structure/4DJD#:~:text=all%20protein%20modules%20required%20for,explain%20why%20such%20an%20elaborate">www.rcsb.org</a>). The structures not only confirmed the domain architecture of AcsD (corrinoid-binding) and AcsC (Fe–S-binding), but also showed how the proteins undergo large conformational changes to protect and reposition the reactive methyl-cobalamin intermediate (<a href="https://www.rcsb.org/structure/4DJD#:~:text=all%20protein%20modules%20required%20for,explain%20why%20such%20an%20elaborate">www.rcsb.org</a>). In tandem with <strong>in crystallo spectroscopy</strong>, these structural studies confirmed that the complex was catalytically active even in the crystal and exhibited one of the largest protein conformational movements observed in a crystal lattice (<a href="https://www.rcsb.org/structure/4DJD#:~:text=and%20identification%20of%20the%20trajectory,simple%2C%20yet%20biologically%20essential%20reaction">www.rcsb.org</a>). Additional evidence for AcsD’s function has come from mutational analysis (e.g. altering the cobalt-binding histidine abrogates methyl transfer) and from cross-species complementation (expressing <em>M. thermoacetica</em> CFeSP genes in other bacteria restores acetyl-CoA synthesis capability). Collectively, a rich body of literature – including enzyme assays, protein purification, spectroscopy, gene cloning/sequencing, structural biology, and regulatory studies – supports our current understanding of AcsD. This evidence base establishes that AcsD is the <strong>corrinoid-dependent methyl carrier</strong> at the heart of acetyl-CoA biosynthesis in acetogens, validating its assigned GO functions and its crucial role in microbial one-carbon metabolism (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC2575129/#:~:text=genomes%20that%20also%20have%20acetyl,Ljungdahl%20pathway%20genes">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC93538/#:~:text=be%20cleaved%2C%20yielding%20acetate%2C%20CoA%2C,27">pmc.ncbi.nlm.nih.gov</a>).</p>
+<h2 id="gene-ontology-go-annotations">Gene Ontology (GO) Annotations</h2>
+<ul>
+<li><strong>Molecular Function:</strong> <em>cobalamin binding</em> <strong>(GO:0031418)</strong> – AcsD binds a corrinoid (cobalamin) cofactor (<a href="https://bf2i-artsymbiocyc.insa-lyon.fr/META/NEW-IMAGE?object=CPLX-2&amp;type=ENZYME#:~:text=fixation,2%7D%20fixation%20by%20anaerobic">bf2i-artsymbiocyc.insa-lyon.fr</a>); <em>one-carbon group transferase activity</em> (methyltransferase activity, cobalamin-dependent; e.g. GO:0016740 – by association as part of the methyltransferase system).  </li>
+<li><strong>Biological Process:</strong> <em>carbon fixation via acetyl-CoA pathway</em> <strong>(GO:0030634)</strong> – involvement in CO₂ fixation to acetyl-CoA (Wood–Ljungdahl pathway) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC2575129/#:~:text=thermoaceticum,a%20wide%20variety%20of%20carbon">pmc.ncbi.nlm.nih.gov</a>); <em>acetyl-CoA biosynthetic process</em> <strong>(GO:0006085)</strong> – contributes to the formation of acetyl-CoA from one-carbon units.  </li>
+<li><strong>Cellular Component:</strong> <em>acetyl-CoA decarbonylase/synthase complex</em> <strong>(GO:0044672)</strong> – component of the CODH/ACS enzyme system for acetyl-CoA synthesis (<a href="https://www.yeastgenome.org/go/GO%3A0044672#:~:text=acetyl,S%20bonds">www.yeastgenome.org</a>); <em>cytoplasm</em> <strong>(GO:0005737)</strong> – localized in the cytosol where the acetyl-CoA pathway enzymes reside.  </li>
+</ul>
+<p>Each of these GO terms reflects an aspect of AcsD’s role: binding a cobalt-containing cofactor, participating in one-carbon metabolic processes (CO₂ fixation and acetogenesis), and residing in the cytosolic enzyme complex that produces acetyl-CoA. The comprehensive experimental evidence summarized above underpins these functional and contextual annotations, ensuring accurate curation of AcsD in Gene Ontology. (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC2575129/#:~:text=genomes%20that%20also%20have%20acetyl,Ljungdahl%20pathway%20genes">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC2575129/#:~:text=thermoaceticum,a%20wide%20variety%20of%20carbon">pmc.ncbi.nlm.nih.gov</a>)</p>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q07341
+gene_symbol: acsD
+taxon:
+  id: NCBITaxon:1525
+  label: Neomoorella thermoacetica
+description: The small subunit of the corrinoid iron-sulfur protein (CFeSP), which
+  acts as a methyl group carrier in the Wood-Ljungdahl pathway for CO2 fixation. AcsD
+  binds a corrinoid (B12 derivative) cofactor and receives methyl groups from methyltetrahydrofolate
+  methyltransferase (AcsE), subsequently transferring them to acetyl-CoA synthase
+  (AcsB) for acetyl-CoA biosynthesis. Forms a heterohexamer complex with AcsC (large
+  subunit) and AcsE.
+existing_annotations:
+- term:
+    id: GO:0006730
+    label: one-carbon metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: AcsD is directly involved in one-carbon metabolism through the Wood-Ljungdahl
+      pathway, serving as a methyl group carrier that transfers C1 units from methyltetrahydrofolate
+      to acetyl-CoA synthase. The crystal structure [PMID:22419154] and biochemical
+      studies demonstrate its essential role in methyl transfer reactions using a
+      corrinoid cofactor.
+    action: ACCEPT
+    reason: This annotation accurately captures a core function of AcsD. The protein
+      specifically handles one-carbon units (methyl groups) as part of the Wood-Ljungdahl
+      pathway, transferring them from 5-methyl-H4folate to acetyl-CoA synthase via
+      its corrinoid cofactor. This is well-supported by structural and biochemical
+      evidence from PMID:22419154.
+    supported_by:
+    - reference_id: PMID:22419154
+      supporting_text: CFeSP then delivers the methyl group to the Ni2Fe4S4 active
+        site metallocluster (A-cluster) of acetyl-CoA synthase (ACS), where it becomes
+        the methyl of acetyl CoA
+    - reference_id: PMID:22419154
+      supporting_text: For both MetH and CFeSP/MeTr, methyltetrahydrofolate (CH3-H4folate)
+        is the methyl donor, and a protein-bound B12 derivative (cobalamin for MetH
+        and 5′-methoxybenzimidazolyl cobamide for CFeSP) is the methyl carrier.
+- term:
+    id: GO:0015977
+    label: carbon fixation
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: AcsD is essential for carbon fixation via the Wood-Ljungdahl pathway,
+      which fixes CO2 into acetyl-CoA. However, the more specific term GO:0030634
+      (carbon fixation by acetyl-CoA pathway) would better represent its precise function.
+    action: MODIFY
+    reason: While AcsD is indeed involved in carbon fixation, the generic term GO:0015977
+      is too broad. The protein specifically functions in the Wood-Ljungdahl (reductive
+      acetyl-CoA) pathway, a specific type of carbon fixation. The more precise term
+      GO:0030634 (carbon fixation by acetyl-CoA pathway) better captures this specificity.
+    proposed_replacement_terms:
+    - id: GO:0030634
+      label: carbon fixation by acetyl-CoA pathway
+    supported_by:
+    - reference_id: PMID:22419154
+      supporting_text: Acetogenic bacteria, including M. thermoacetica, use CFeSP
+        and MeTr together to catalyze methyltransfer in the Wood-Ljungdahl carbon
+        fixation pathway for growth on CO2 as the sole carbon source
+- term:
+    id: GO:0031419
+    label: cobalamin binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: AcsD binds a corrinoid (B12 derivative) cofactor containing cobalt, which
+      is essential for its methyl transfer function. Crystal structures [PMID:22419154]
+      directly visualize the bound 5′-methoxybenzimidazolyl cobamide cofactor in the
+      protein.
+    action: ACCEPT
+    reason: This annotation is accurate and represents a core molecular function of
+      AcsD. The protein contains a corrinoid-binding domain that specifically binds
+      a B12 derivative (5′-methoxybenzimidazolyl cobamide in M. thermoacetica). This
+      binding is essential for the methyl transfer activity and is directly observed
+      in crystal structures.
+    supported_by:
+    - reference_id: PMID:22419154
+      supporting_text: a protein-bound B12 derivative (cobalamin for MetH and 5′-methoxybenzimidazolyl
+        cobamide for CFeSP) is the methyl carrier
+    - reference_id: PMID:22419154
+      supporting_text: electron density for the B12 cofactors is unambiguous (Supplementary
+        Fig. 20), and density is also clear in several helical regions, including
+        those near B12
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:22419154
+  review:
+    summary: While AcsD does interact with AcsC (forming heterohexamer) and AcsE (methyltransferase),
+      the generic &#34;protein binding&#34; term is uninformative. More specific terms describing
+      the functional complex formation would be more appropriate.
+    action: MODIFY
+    reason: &#39;The term &#34;protein binding&#34; is too vague and uninformative. AcsD forms
+      specific functional complexes: it heterodimerizes with AcsC to form the corrinoid
+      iron-sulfur protein, and this complex then associates with AcsE (methyltransferase)
+      to form a ~220 kDa complex. A more specific term like &#34;protein heterodimerization
+      activity&#34; (GO:0046982) or noting its participation in the &#34;acetyl-CoA decarbonylase/synthase
+      complex&#34; (GO:0044672) would be more informative.&#39;
+    proposed_replacement_terms:
+    - id: GO:0046982
+      label: protein heterodimerization activity
+    additional_reference_ids:
+    - PMID:22419154
+    supported_by:
+    - reference_id: PMID:22419154
+      supporting_text: Two CFeSPs are present in the complex, each containing two
+        subunits. The small subunit (35 kDa) is a TIM barrel which acts as the B12
+        &#34;cap&#34; in the ChCFeSP structure9, while the large subunit (48 kDa) has three
+        domains
+    - reference_id: PMID:22419154
+      supporting_text: In the ~220 kDa CFeSP/MeTr assembly (Fig. 1), the MeTr homodimer
+        lies in the centre, with one CFeSP bound on either side
+- term:
+    id: GO:0015977
+    label: carbon fixation
+  evidence_type: IDA
+  original_reference_id: PMID:22419154
+  review:
+    summary: Direct experimental evidence from PMID:22419154 demonstrates AcsD’s essential
+      role in CO2 fixation via the Wood-Ljungdahl pathway. However, the more specific
+      term GO:0030634 (carbon fixation by acetyl-CoA pathway) would better represent
+      the specific pathway.
+    action: MODIFY
+    reason: While the IDA evidence strongly supports carbon fixation activity, the
+      generic GO:0015977 term is too broad. The experimental evidence specifically
+      demonstrates function in the Wood-Ljungdahl (reductive acetyl-CoA) pathway.
+      GO:0030634 (carbon fixation by acetyl-CoA pathway) more accurately describes
+      the specific type of carbon fixation demonstrated in the structural and biochemical
+      studies.
+    proposed_replacement_terms:
+    - id: GO:0030634
+      label: carbon fixation by acetyl-CoA pathway
+    supported_by:
+    - reference_id: PMID:22419154
+      supporting_text: Importantly, absorption features disappear when light is passed
+        through the solution surrounding the crystals, indicating that spectra represent
+        protein in crystals and not protein that may have been liberated into the
+        solution. Collectively, these data demonstrate enzymatic transfer of the CH3-H4folate
+        methyl group to CFeSP-bound B12
+    - reference_id: PMID:22419154
+      supporting_text: Acetogenic bacteria, including M. thermoacetica, use CFeSP
+        and MeTr together to catalyze methyltransfer in the Wood-Ljungdahl carbon
+        fixation pathway for growth on CO2 as the sole carbon source
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  review:
+    summary: AcsD functions in the cytoplasm as part of the Wood-Ljungdahl pathway for CO2 fixation in acetogenic bacteria.
+    action: NEW
+    reason: This cellular component term reflects AcsD&#39;s location where it operates as part of the cytoplasmic carbon fixation machinery.
+    supported_by:
+    - reference_id: PMID:22419154
+      supporting_text: Acetogenic bacteria use CFeSP and MeTr together to catalyze methyltransfer in the Wood-Ljungdahl carbon fixation pathway, operating as cytoplasmic enzymes
+- term:
+    id: GO:0042084
+    label: 5-methyltetrahydrofolate-dependent methyltransferase activity
+  evidence_type: IEA
+  review:
+    summary: AcsD receives methyl groups from 5-methyltetrahydrofolate via its corrinoid cofactor and transfers them to acetyl-CoA synthase.
+    action: NEW
+    reason: This molecular function term captures AcsD&#39;s specific methyltransferase activity that uses 5-methyltetrahydrofolate as the methyl donor via its bound corrinoid cofactor.
+    supported_by:
+    - reference_id: PMID:22419154
+      supporting_text: For both MetH and CFeSP/MeTr, methyltetrahydrofolate (CH3-H4folate) is the methyl donor, and a protein-bound B12 derivative is the methyl carrier
+    - reference_id: PMID:22419154
+      supporting_text: CFeSP then delivers the methyl group to the Ni2Fe4S4 active site metallocluster (A-cluster) of acetyl-CoA synthase
+- term:
+    id: GO:0044672
+    label: acetyl-CoA decarbonylase/synthase-carbon monoxide dehydrogenase complex
+  evidence_type: IEA
+  review:
+    summary: AcsD functions as part of the larger Wood-Ljungdahl pathway complex that includes acetyl-CoA synthase and other components.
+    action: NEW
+    reason: This cellular component term reflects AcsD&#39;s participation in the multi-enzyme complex responsible for CO2 fixation via the acetyl-CoA pathway.
+    supported_by:
+    - reference_id: PMID:22419154
+      supporting_text: In the ~220 kDa CFeSP/MeTr assembly, the MeTr homodimer lies in the centre, with one CFeSP bound on either side, forming part of the acetyl-CoA pathway complex
+    - reference_id: PMID:22419154
+      supporting_text: CFeSP delivers the methyl group to the Ni2Fe4S4 active site metallocluster (A-cluster) of acetyl-CoA synthase (ACS), indicating functional complex formation
+- term:
+    id: TEMP:CFeSP_complex
+    label: corrinoid iron-sulfur protein heterodimer (with AcsC)
+    description: A heterodimeric complex formed by AcsC (large subunit) and AcsD (small subunit) that contains a corrinoid cofactor and iron-sulfur clusters, functioning as part of the Wood-Ljungdahl pathway for carbon fixation
+  evidence_type: IEA
+  review:
+    summary: AcsD forms a heterodimeric corrinoid iron-sulfur protein (CFeSP) complex with AcsC, where AcsD serves as the small subunit.
+    action: NEW
+    reason: This cellular component term describes the specific heterodimeric complex that AcsD forms with AcsC, which is essential for its function in methyl transfer.
+    supported_by:
+    - reference_id: PMID:22419154
+      supporting_text: Two CFeSPs are present in the complex, each containing two subunits. The small subunit (35 kDa) is a TIM barrel which acts as the B12 &#34;cap&#34;, while the large subunit (48 kDa) has three domains
+- term:
+    id: GO:0030634
+    label: carbon fixation by acetyl-CoA pathway
+  evidence_type: IEA
+  review:
+    summary: AcsD is essential for carbon fixation via the Wood-Ljungdahl (reductive acetyl-CoA) pathway, which fixes CO2 into acetyl-CoA.
+    action: NEW
+    reason: This biological process term captures AcsD&#39;s specific role in the Wood-Ljungdahl pathway, a particular type of carbon fixation that was missing from existing annotations.
+    supported_by:
+    - reference_id: PMID:22419154
+      supporting_text: Acetogenic bacteria, including M. thermoacetica, use CFeSP and MeTr together to catalyze methyltransfer in the Wood-Ljungdahl carbon fixation pathway for growth on CO2 as the sole carbon source
+    - reference_id: PMID:22419154
+      supporting_text: CFeSP then delivers the methyl group to the Ni2Fe4S4 active site metallocluster (A-cluster) of acetyl-CoA synthase (ACS), where it becomes the methyl of acetyl CoA
+core_functions:
+- description: Receives and carries methyl groups from 5-methyltetrahydrofolate via
+    bound corrinoid cofactor
+  supported_by:
+  - reference_id: PMID:22419154
+    supporting_text: For both MetH and CFeSP/MeTr, methyltetrahydrofolate (CH3-H4folate)
+      is the methyl donor, and a protein-bound B12 derivative (cobalamin for MetH
+      and 5′-methoxybenzimidazolyl cobamide for CFeSP) is the methyl carrier.
+  - reference_id: PMID:22419154
+    supporting_text: CFeSP then delivers the methyl group to the Ni2Fe4S4 active site
+      metallocluster (A-cluster) of acetyl-CoA synthase (ACS), where it becomes the
+      methyl of acetyl CoA
+  molecular_function:
+    id: GO:0042084
+    label: 5-methyltetrahydrofolate-dependent methyltransferase activity
+  directly_involved_in:
+  - id: GO:0030634
+    label: carbon fixation by acetyl-CoA pathway
+  - id: GO:0006730
+    label: one-carbon metabolic process
+  locations:
+  - id: GO:0005737
+    label: cytoplasm
+  in_complex:
+    id: GO:0044672
+    label: acetyl-CoA decarbonylase/synthase-carbon monoxide dehydrogenase complex
+  substrates:
+  - id: CHEBI:20612
+    label: 5-methyltetrahydrofolate
+- description: Binds and maintains corrinoid cofactor in appropriate oxidation state
+    for methyl transfer
+  supported_by:
+  - reference_id: PMID:22419154
+    supporting_text: a protein-bound B12 derivative (cobalamin for MetH and 5′-methoxybenzimidazolyl
+      cobamide for CFeSP) is the methyl carrier
+  - reference_id: PMID:22419154
+    supporting_text: Two CFeSPs are present in the complex, each containing two subunits.
+      The small subunit (35 kDa) is a TIM barrel which acts as the B12 &#34;cap&#34; in the
+      ChCFeSP structure9, while the large subunit (48 kDa) has three domains
+  molecular_function:
+    id: GO:0031419
+    label: cobalamin binding
+  directly_involved_in:
+  - id: GO:0030634
+    label: carbon fixation by acetyl-CoA pathway
+  locations:
+  - id: GO:0005737
+    label: cytoplasm
+  in_complex:
+    id: TEMP:CFeSP_complex
+    label: corrinoid iron-sulfur protein heterodimer (with AcsC)
+    description: The heterodimeric corrinoid iron-sulfur protein complex formed by
+      AcsD (small subunit) and AcsC (large subunit), containing one corrinoid cofactor
+      and one [4Fe-4S] cluster
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms.
+  findings: []
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+- id: PMID:22419154
+  title: Visualizing molecular juggling within a B12-dependent methyltransferase complex.
+  findings: []
+suggested_questions:
+- question: How does AcsD coordinate methyl transfer between the corrinoid cofactor
+    and the nickel center of acetyl-CoA synthase?
+- question: What structural features of AcsD enable protection of the highly reactive
+    methylcob(III)alamin intermediate from side reactions?
+- question: How does the AcsD/AcsC complex regulate methyl transfer rates in response
+    to cellular energy and carbon status?
+suggested_experiments:
+- description: EPR and ENDOR spectroscopy to characterize transient radical intermediates
+    during methyl transfer reactions
+- description: Stopped-flow kinetics with fluorescent corrinoid analogs to measure
+    methyl transfer rates between AcsD and partner proteins
+- description: Hydrogen-deuterium exchange MS to map conformational changes in AcsD
+    during the catalytic cycle
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+    <div class="section">
+        <div class="pathway-link">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h2 class="section-title">🔗 Related Resources</h2>
+                <span class="vote-buttons" data-g="Q07341" data-a="PATHWAY: acsD pathways" data-r="" data-act="PATHWAY">
+                    <button class="vote-btn" data-v="up" title="Pathway visualization is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="Pathway visualization needs improvement">👎</button>
+                </span>
+            </div>
+            <p>
+                <a href="acsD-pathway.html" target="_blank" class="btn-link">
+                    📊 View Pathway Visualization
+                </a>
+                <span style="color: #666; font-size: 0.9rem; margin-left: 1rem;">
+                    Interactive pathway diagram with detailed annotations
+                </span>
+            </p>
+        </div>
+    </div>
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

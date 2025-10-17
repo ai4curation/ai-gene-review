@@ -1,0 +1,2608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>fibrolase - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>fibrolase</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P28891" target="_blank" class="term-link">
+                        P28891
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Agkistrodon contortrix contortrix</span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "fibrolase";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P28891" data-a="DESCRIPTION: Fibrolase is a non-hemorrhagic snake venom zinc me..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Fibrolase is a non-hemorrhagic snake venom zinc metalloproteinase (EC 3.4.24.72) from southern copperhead (Agkistrodon contortrix contortrix) that exhibits direct fibrinolytic activity. Unlike plasminogen activators, it directly cleaves fibrin and fibrinogen at specific X-Leu bonds without requiring plasminogen activation, making it a unique fibrinolytic enzyme. As a venom component, it functions as a toxin that disrupts hemostasis in envenomated prey by dissolving blood clots. The enzyme requires zinc for catalytic activity and was developed into a recombinant therapeutic (alfimeprase) for clinical applications, though phase III trials were ultimately unsuccessful.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035821" target="_blank" class="term-link">
+                                    GO:0035821
+                                </a>
+                            </span>
+                            <span class="term-label">modulation of process of another organism</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000108
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P28891" data-a="GO:0035821" data-r="GO_REF:0000108" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation correctly identifies fibrolase&#39;s role in inter-organism interaction through venom. As a venom component, fibrolase directly affects hemostasis in prey/victim organisms by degrading fibrin/fibrinogen, thus modulating coagulation processes in the target organism.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Fibrolase is a venom metalloproteinase that directly affects another organism&#39;s physiology by disrupting hemostasis through fibrinolytic activity. This is a core function as it represents the primary biological role of this venom component [PMID:1898066, PMID:1304358].
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/1898066" target="_blank" class="term-link">
+                                        PMID:1898066
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The enzyme exhibits direct fibrinolytic activity and does not activate plasminogen. In vitro studies revealed that fibrolase dissolves clots made either from purified fibrinogen or from whole blood.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/1304358" target="_blank" class="term-link">
+                                        PMID:1304358
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">This is the first report of the sequence of a direct-acting, nonhemorrhagic fibrinolytic enzyme found in snake venom.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004222" target="_blank" class="term-link">
+                                    GO:0004222
+                                </a>
+                            </span>
+                            <span class="term-label">metalloendopeptidase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P28891" data-a="GO:0004222" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation correctly identifies the molecular function as a metalloendopeptidase. Fibrolase is classified as EC 3.4.24.72, a zinc metalloproteinase that cleaves peptide bonds in fibrin/fibrinogen. The term accurately captures the enzymatic mechanism.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The term accurately describes the core catalytic activity - fibrolase is indeed a zinc-dependent metalloendopeptidase (EC 3.4.24.72) that hydrolyzes internal peptide bonds. This is supported by extensive biochemical characterization showing zinc dependency and specific cleavage patterns [PMID:1898066].
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/1898066" target="_blank" class="term-link">
+                                        PMID:1898066
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">the enzyme is a metalloproteinase since it is inhibited by EDTA, o-phenanthroline and tetraethylenepentamine (a specific zinc chelator). Metal analysis revealed 1 mol of zinc/mol of protein.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/1898066" target="_blank" class="term-link">
+                                        PMID:1898066
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Study of cleavage site preference of the fibrinolytic enzyme using the oxidized B chain of insulin revealed that specificity is similar to other snake venom metalloproteinases with cleavage primarily directed to an X-Leu bond.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P28891" data-a="GO:0005576" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct annotation - fibrolase is a secreted venom protein found in the extracellular space after envenomation. The protein is secreted from venom glands and acts extracellularly on fibrin/fibrinogen substrates.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Fibrolase is definitively a secreted protein that functions in the extracellular environment. It is produced by venom glands and secreted as part of the venom to act on extracellular targets (fibrin/fibrinogen in blood) [PMID:1304358, PMID:1898066].
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/1304358" target="_blank" class="term-link">
+                                        PMID:1304358
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">fibrolase, a fibrinolytic enzyme from southern copperhead (Agkistrodon contortrix contortrix) venom</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/1898066" target="_blank" class="term-link">
+                                        PMID:1898066
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">A fibrinolytic enzyme present in Agkistrodon contortrix contortrix (southern copperhead) venom has been purified</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="P28891" data-a="GO:0005886" data-r="GO_REF:0000118" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is incorrect. Fibrolase is a secreted venom protein that acts in the extracellular space, not a plasma membrane-associated protein. There is no evidence for membrane localization.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Fibrolase is a secreted soluble enzyme that functions in the extracellular environment (blood plasma) after envenomation. It has no transmembrane domains or membrane-association motifs, and all functional studies show it acting as a soluble enzyme on soluble or fibrin-bound substrates. The UniProt entry clearly states it is &#34;Secreted&#34; with no membrane association [PMID:1304358, PMID:1898066].
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/1898066" target="_blank" class="term-link">
+                                        PMID:1898066
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The enzyme, fibrolase, has a molecular weight of 23,000-24,000 and an isoelectric point of pH 6.8. It is composed of approximately 200 amino acids</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/1304358" target="_blank" class="term-link">
+                                        PMID:1304358
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Fibrolase is composed of 203 residues in a single polypeptide chain with a molecular weight of 22,891</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006508" target="_blank" class="term-link">
+                                    GO:0006508
+                                </a>
+                            </span>
+                            <span class="term-label">proteolysis</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P28891" data-a="GO:0006508" data-r="GO_REF:0000120" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but could be more specific. Fibrolase performs proteolysis specifically on fibrin/fibrinogen substrates. A more specific term like &#39;venom-mediated fibrinolysis&#39; (GO:0044484) would better capture the biological context.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While proteolysis is correct, it&#39;s too general for this specialized venom enzyme. Fibrolase specifically performs fibrinolytic proteolysis as part of venom action. The term &#39;venom-mediated fibrinolysis&#39; (GO:0044484) more accurately describes the biological process [PMID:1898066].
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044484" target="_blank" class="term-link">
+                                    venom-mediated fibrinolysis
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/1898066" target="_blank" class="term-link">
+                                        PMID:1898066
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The enzyme exhibits direct fibrinolytic activity and does not activate plasminogen. In vitro studies revealed that fibrolase dissolves clots made either from purified fibrinogen or from whole blood.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/1304358" target="_blank" class="term-link">
+                                        PMID:1304358
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">a direct-acting, nonhemorrhagic fibrinolytic enzyme found in snake venom</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008233" target="_blank" class="term-link">
+                                    GO:0008233
+                                </a>
+                            </span>
+                            <span class="term-label">peptidase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="P28891" data-a="GO:0008233" data-r="GO_REF:0000043" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This term is correct but too general. Fibrolase is specifically a metalloendopeptidase with defined substrate specificity, not just any peptidase.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This overly broad term adds no information beyond the more specific &#39;metalloendopeptidase activity&#39; (GO:0004222) already present. The general peptidase activity is redundant with the more specific metallopeptidase annotations and doesn&#39;t capture the enzyme&#39;s specific catalytic mechanism or substrate specificity [PMID:1898066].
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/1898066" target="_blank" class="term-link">
+                                        PMID:1898066
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">the enzyme is a metalloproteinase since it is inhibited by EDTA, o-phenanthroline and tetraethylenepentamine (a specific zinc chelator)</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008237" target="_blank" class="term-link">
+                                    GO:0008237
+                                </a>
+                            </span>
+                            <span class="term-label">metallopeptidase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="P28891" data-a="GO:0008237" data-r="GO_REF:0000120" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct annotation that captures the metal-dependent peptidase activity. However, this is somewhat redundant with the more specific &#39;metalloendopeptidase activity&#39; (GO:0004222) annotation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This term is redundant with the more specific &#39;metalloendopeptidase activity&#39; (GO:0004222) which better describes the enzyme&#39;s function. Metalloendopeptidase is a child term of metallopeptidase, so keeping both is unnecessary. The more specific term provides more information about the cleavage pattern (internal bonds) [PMID:1898066].
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/1898066" target="_blank" class="term-link">
+                                        PMID:1898066
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Study of cleavage site preference of the fibrinolytic enzyme using the oxidized B chain of insulin revealed that specificity is similar to other snake venom metalloproteinases with cleavage primarily directed to an X-Leu bond.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016787" target="_blank" class="term-link">
+                                    GO:0016787
+                                </a>
+                            </span>
+                            <span class="term-label">hydrolase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="P28891" data-a="GO:0016787" data-r="GO_REF:0000043" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This extremely broad term is technically correct but uninformative. Fibrolase has much more specific annotations that describe its actual function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is an overly general parent term that provides no useful information beyond the specific metalloendopeptidase activity already annotated. Hydrolase activity is an ancestor of peptidase activity, which itself is an ancestor of metalloendopeptidase activity. Keeping this broad term adds no value [PMID:1898066].
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/1898066" target="_blank" class="term-link">
+                                        PMID:1898066
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">the enzyme is a metalloproteinase</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046872" target="_blank" class="term-link">
+                                    GO:0046872
+                                </a>
+                            </span>
+                            <span class="term-label">metal ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P28891" data-a="GO:0046872" data-r="GO_REF:0000043" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but could be more specific. Fibrolase specifically binds zinc ions, not just any metal ion. The more specific term &#39;zinc ion binding&#39; (GO:0008270) would be more accurate.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While metal ion binding is correct, fibrolase specifically requires zinc for catalytic activity. Metal analysis confirmed 1 mol of zinc per mol of protein, and the enzyme is inhibited by zinc-specific chelators. The term &#39;zinc ion binding&#39; (GO:0008270) more precisely describes this molecular function [PMID:1898066].
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008270" target="_blank" class="term-link">
+                                    zinc ion binding
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/1898066" target="_blank" class="term-link">
+                                        PMID:1898066
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Metal analysis revealed 1 mol of zinc/mol of protein</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/1898066" target="_blank" class="term-link">
+                                        PMID:1898066
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">the enzyme is a metalloproteinase since it is inhibited by EDTA, o-phenanthroline and tetraethylenepentamine (a specific zinc chelator)</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0090729" target="_blank" class="term-link">
+                                    GO:0090729
+                                </a>
+                            </span>
+                            <span class="term-label">toxin activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P28891" data-a="GO:0090729" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct annotation. Fibrolase is a venom toxin that disrupts hemostasis in envenomated organisms through its fibrinolytic activity, representing a key component of copperhead venom&#39;s toxic effects.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Fibrolase is indeed a toxin - it&#39;s a venom component that causes pathological effects in envenomated organisms by disrupting normal hemostasis through direct fibrinolysis. This is a core function as it represents the protein&#39;s primary biological role in the context of envenomation [PMID:1304358, PMID:1898066].
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/1304358" target="_blank" class="term-link">
+                                        PMID:1304358
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">fibrolase, a fibrinolytic enzyme from southern copperhead (Agkistrodon contortrix contortrix) venom</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/1898066" target="_blank" class="term-link">
+                                        PMID:1898066
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">A fibrinolytic enzyme present in Agkistrodon contortrix contortrix (southern copperhead) venom</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044484" target="_blank" class="term-link">
+                                    GO:0044484
+                                </a>
+                            </span>
+                            <span class="term-label">venom-mediated fibrinolysis</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="P28891" data-a="GO:0044484" data-r="" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core function of fibrolase in venom-mediated fibrinolysis
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Fibrolase specifically performs fibrinolytic proteolysis as part of venom action to dissolve blood clots. This biological process is core to its function but was missing from existing annotations.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/1898066" target="_blank" class="term-link">
+                                        PMID:1898066
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">A fibrinolytic enzyme present in Agkistrodon contortrix contortrix (southern copperhead) venom</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Zinc metalloendopeptidase that directly cleaves fibrin and fibrinogen at X-Leu bonds to dissolve blood clots</h3>
+                <span class="vote-buttons" data-g="P28891" data-a="FUNCTION: Zinc metalloendopeptidase that directly cleaves fi..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004222" target="_blank" class="term-link">
+                            metalloendopeptidase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044484" target="_blank" class="term-link">
+                                venom-mediated fibrinolysis
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                extracellular region
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Substrates:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:5054" target="_blank" class="term-link">
+                                Fibrin
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005577" target="_blank" class="term-link">
+                                fibrinogen complex
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+            </div>
+
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Acts as a venom toxin that modulates hemostasis in envenomated organisms</h3>
+                <span class="vote-buttons" data-g="P28891" data-a="FUNCTION: Acts as a venom toxin that modulates hemostasis in..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0090729" target="_blank" class="term-link">
+                            toxin activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035821" target="_blank" class="term-link">
+                                modulation of process of another organism
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                extracellular region
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000108.md" target="_blank" class="term-link">
+                            GO_REF:0000108
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Automatic assignment of GO terms using logical inference, based on on inter-ontology links.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/1898066" target="_blank" class="term-link">
+                            PMID:1898066
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Purification and characterization of a fibrinolytic enzyme from venom of the southern copperhead snake (Agkistrodon contortrix contortrix).</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Fibrolase is a zinc metalloproteinase containing 1 mol of zinc per mol of protein</div>
+                        
+                        <div class="finding-text">"However, the enzyme is a metalloproteinase since it is inhibited by EDTA, o-phenanthroline and tetraethylenepentamine (a specific zinc chelator). Metal analysis revealed 1 mol of zinc/mol of protein."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Fibrolase exhibits substrate specificity similar to other snake venom metalloproteinases with preference for X-Leu bonds</div>
+                        
+                        <div class="finding-text">"Study of cleavage site preference of the fibrinolytic enzyme using the oxidized B chain of insulin revealed that specificity is similar to other snake venom metalloproteinases with cleavage primarily directed to an X-Leu bond."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Fibrolase exhibits direct fibrinolytic activity without activating plasminogen</div>
+                        
+                        <div class="finding-text">"The enzyme exhibits direct fibrinolytic activity and does not activate plasminogen. In vitro studies revealed that fibrolase dissolves clots made either from purified fibrinogen or from whole blood."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Fibrolase has molecular weight of 23,000-24,000 Da and isoelectric point of pH 6.8</div>
+                        
+                        <div class="finding-text">"The enzyme, fibrolase, has a molecular weight of 23,000-24,000 and an isoelectric point of pH 6.8."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Fibrolase is composed of approximately 200 amino acids with blocked NH2-terminus and contains little or no carbohydrate</div>
+                        
+                        <div class="finding-text">"It is composed of approximately 200 amino acids, possesses a blocked NH2-terminus and contains little or no carbohydrate."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Unlike some other venom fibrinolytic metalloproteinases, fibrolase exhibits little or no hemorrhagic activity</div>
+                        
+                        <div class="finding-text">"Interestingly, unlike some other venom fibrinolytic metalloproteinases, fibrolase exhibits little if any hemorrhagic activity."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Fibrolase is not inhibited by serine protease inhibitors but is specifically inhibited by metal chelators</div>
+                        
+                        <div class="finding-text">"The enzyme shows no activity against a series of chromogenic p-nitroanilide substrates and is not inhibited by diisopropylfluorophosphate, soybean trypsin inhibitor, Trasylol, or p-chloromercuribenzoate. However, the enzyme is a metalloproteinase since it is inhibited by EDTA, o-phenanthroline and tetraethylenepentamine (a specific zinc chelator)."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/1304358" target="_blank" class="term-link">
+                            PMID:1304358
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Amino acid sequence of fibrolase, a direct-acting fibrinolytic enzyme from Agkistrodon contortrix contortrix venom.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Fibrolase is the first sequenced direct-acting, nonhemorrhagic fibrinolytic enzyme from snake venom</div>
+                        
+                        <div class="finding-text">"This is the first report of the sequence of a direct-acting, nonhemorrhagic fibrinolytic enzyme found in snake venom."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Fibrolase consists of 203 amino acid residues in a single polypeptide chain with molecular weight of 22,891 Da</div>
+                        
+                        <div class="finding-text">"Fibrolase is composed of 203 residues in a single polypeptide chain with a molecular weight of 22,891, as determined by the sequence."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Fibrolase has a blocked amino-terminus with a pyroglutamic acid residue</div>
+                        
+                        <div class="finding-text">"The amino-terminus is blocked by a cyclized glutamine (pyroglutamic acid) residue, and the sequence of this region of the molecule was determined by mass spectrometry."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Fibrolase shows sequence homology to hemorrhagic snake venom metalloproteinases</div>
+                        
+                        <div class="finding-text">"Its sequence is homologous to the sequence of the hemorrhagic toxin Ht-d of Crotalus atrox venom and with the sequences of two metalloproteinases from Trimeresurus flavoviridis venom."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Fibrolase contains six cysteine residues involved in three disulfide bonds with specific connectivity pattern</div>
+                        
+                        <div class="finding-text">"All six cysteine residues in fibrolase are involved in disulfide bonds. A disulfide bond between cysteine-118 and cysteine-198 has been established and bonds between cysteines-158/165 and between cysteines-160/192 are inferred from the homology to Ht-d."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Fibrolase has predominantly beta-sheet secondary structure with minimal alpha-helix content</div>
+                        
+                        <div class="finding-text">"Secondary structure prediction reveals a very low percentage of alpha-helix (4%), but much greater beta-structure (39.5%)."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Fibrolase lacks asparagine-linked glycosylation sites</div>
+                        
+                        <div class="finding-text">"Analysis of the sequence reveals the absence of asparagine-linked glycosylation sites defined by the consensus sequence: asparagine-X-serine/threonine."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Fibrolase exhibits microheterogeneity at the amino-terminus and at specific residue positions</div>
+                        
+                        <div class="finding-text">"Microheterogeneity in the sequence was found at both the amino-terminus and at residues 189 and 192."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How does fibrolase achieve substrate specificity for fibrin and other extracellular matrix proteins?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P28891" data-a="Q: How does fibrolase achieve substrate specificity f..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What role does fibrolase play in venom composition and prey immobilization?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P28891" data-a="Q: What role does fibrolase play in venom composition..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How has fibrolase evolved to optimize its proteolytic activity in different environmental conditions?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P28891" data-a="Q: How has fibrolase evolved to optimize its proteoly..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What are the structural features that determine fibrolase enzymatic activity and stability?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P28891" data-a="Q: What are the structural features that determine fi..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Enzyme kinetics analysis to characterize fibrolase substrate specificity and catalytic parameters</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="P28891" data-a="EXPERIMENT: Enzyme kinetics analysis to characterize fibrolase..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Structural determination using X-ray crystallography to understand the molecular basis of fibrolase activity</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="P28891" data-a="EXPERIMENT: Structural determination using X-ray crystallograp..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Venom composition analysis to study fibrolase expression and co-expressed proteins</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="P28891" data-a="EXPERIMENT: Venom composition analysis to study fibrolase expr..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Phylogenetic analysis of fibrolase evolution across different snake species</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="P28891" data-a="EXPERIMENT: Phylogenetic analysis of fibrolase evolution acros..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(fibrolase-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P28891" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="fibrolase-research-notes">Fibrolase Research Notes</h1>
+<h2 id="overview">Overview</h2>
+<p>Fibrolase is a snake venom metalloproteinase (SVMP) from Agkistrodon contortrix contortrix (southern copperhead) venom that exhibits direct fibrinolytic activity. This protein has been extensively studied for its potential as a therapeutic fibrinolytic agent and was developed into a recombinant analog called alfimeprase for clinical applications.</p>
+<h2 id="core-function-and-mechanism">Core Function and Mechanism</h2>
+<h3 id="metalloproteinase-activity">Metalloproteinase Activity</h3>
+<p>Fibrolase is a zinc metalloproteinase that belongs to the venom metalloproteinase (M12B) family, P-I subfamily <a href="https://pubmed.ncbi.nlm.nih.gov/1304358" title="Fibrolase is composed of 203 residues in a single polypeptide chain with a molecular weight of 22,891, as determined by the sequence. Its sequence is homologous to the sequence of the hemorrhagic toxin Ht-d of Crotalus atrox venom and with the sequences of two metalloproteinases from Trimeresurus flavoviridis venom">PMID:1304358</a>. The enzyme requires zinc for its catalytic activity and structural integrity <a href="https://pubmed.ncbi.nlm.nih.gov/1898066" title="the enzyme is a metalloproteinase since it is inhibited by EDTA, o-phenanthroline and tetraethylenepentamine (a specific zinc chelator). Metal analysis revealed 1 mol of zinc/mol of protein">PMID:1898066</a>.</p>
+<h3 id="direct-fibrinolytic-mechanism">Direct Fibrinolytic Mechanism</h3>
+<p>Unlike many other fibrinolytic agents, fibrolase exhibits direct fibrinolytic activity and does not require activation of plasminogen <a href="https://pubmed.ncbi.nlm.nih.gov/1898066" title="The enzyme exhibits direct fibrinolytic activity and does not activate plasminogen. In vitro studies revealed that fibrolase dissolves clots made either from purified fibrinogen or from whole blood">PMID:1898066</a>. This direct action makes it particularly attractive as a therapeutic agent because it bypasses the complex plasminogen activation cascade.</p>
+<h2 id="specific-fibrinolytic-activity">Specific Fibrinolytic Activity</h2>
+<h3 id="cleavage-specificity">Cleavage Specificity</h3>
+<p>Fibrolase demonstrates specific cleavage preferences characteristic of snake venom metalloproteinases. The enzyme shows preferential cleavage at X-Leu bonds <a href="https://pubmed.ncbi.nlm.nih.gov/1898066" title="Study of cleavage site preference of the fibrinolytic enzyme using the oxidized B chain of insulin revealed that specificity is similar to other snake venom metalloproteinases with cleavage primarily directed to an X-Leu bond">PMID:1898066</a>. Specific cleavage sites include 14-Ala-|-Leu-15 in insulin B chain and 413-Lys-|-Leu-414 in the alpha-chain of fibrinogen.</p>
+<h3 id="non-hemorrhagic-properties">Non-hemorrhagic Properties</h3>
+<p>A remarkable feature of fibrolase is its lack of hemorrhagic activity, which distinguishes it from many other snake venom metalloproteinases <a href="https://pubmed.ncbi.nlm.nih.gov/1898066" title="Interestingly, unlike some other venom fibrinolytic metalloproteinases, fibrolase exhibits little if any hemorrhagic activity">PMID:1898066</a>. This property makes it more suitable for therapeutic applications as it reduces the risk of bleeding complications.</p>
+<h3 id="selective-activity-profile">Selective Activity Profile</h3>
+<p>Fibrolase shows no activity against a series of chromogenic p-nitroanilide substrates, indicating its selective substrate specificity <a href="https://pubmed.ncbi.nlm.nih.gov/1898066" title="The enzyme shows no activity against a series of chromogenic p-nitroanilide substrates">PMID:1898066</a>.</p>
+<h2 id="clinical-applications-alfimeprase">Clinical Applications (Alfimeprase)</h2>
+<h3 id="recombinant-development">Recombinant Development</h3>
+<p>Alfimeprase is a recombinant analog of fibrolase that was developed for clinical use <a href="https://pubmed.ncbi.nlm.nih.gov/11369866" title="The disulfide structure of alfimeprase, a recombinant analog of fibrolase, was experimentally determined">PMID:11369866</a>. This recombinant version maintains the fibrinolytic properties of the native enzyme while being produced in a controlled manufacturing environment.</p>
+<h3 id="clinical-indications">Clinical Indications</h3>
+<p>Alfimeprase was investigated as a treatment for various thrombotic conditions <a href="https://pubmed.ncbi.nlm.nih.gov/18632486" title="Alfimeprase, a recombinant fibrinolytic zinc metalloprotease, has shown promising clinical utility in blood clot lysis in patients with CVC occlusions and peripheral arterial occlusions">PMID:18632486</a>. The agent received orphan drug designation from both the FDA and the European Medicines Agency for evaluation in acute peripheral arterial occlusions <a href="https://pubmed.ncbi.nlm.nih.gov/18632486" title="Based on the encouraging data, alfimeprase has received orphan drug designation from the Food and Drug Administration and the Committee for Orphan Medicinal Products of the European Medicines Agency for the evaluation of acute peripheral arterial occlusions as a potential indication">PMID:18632486</a>.</p>
+<h3 id="central-venous-catheter-occlusion">Central Venous Catheter Occlusion</h3>
+<p>One of the primary clinical applications studied was the treatment of central venous catheter (CVC) occlusions, which are common in cancer patients receiving chemotherapy <a href="https://pubmed.ncbi.nlm.nih.gov/18632486" title="Central venous catheter (CVC) occlusion occurs frequently and remains a significant clinical problem in patients with cancer receiving infusional or intravenous chemotherapy">PMID:18632486</a>. Alfimeprase showed promise in dissolving these occlusive clots.</p>
+<h3 id="clinical-trial-outcomes">Clinical Trial Outcomes</h3>
+<p>Despite initial promise, alfimeprase ultimately failed phase III clinical trials for the treatment of arterial occlusive disease and acute ischemic stroke. This represents a significant setback in the translation of this snake venom-derived therapeutic from bench to bedside.</p>
+<h2 id="substrate-specificity">Substrate Specificity</h2>
+<h3 id="primary-substrates">Primary Substrates</h3>
+<p>The primary physiological substrate for fibrolase is fibrin/fibrinogen, where it cleaves specific peptide bonds to dissolve blood clots <a href="https://pubmed.ncbi.nlm.nih.gov/1898066" title="In vitro studies revealed that fibrolase dissolves clots made either from purified fibrinogen or from whole blood">PMID:1898066</a>. The enzyme can act on both purified fibrinogen and whole blood clots, demonstrating its effectiveness in complex biological environments.</p>
+<h3 id="cleavage-pattern-analysis">Cleavage Pattern Analysis</h3>
+<p>Detailed analysis using insulin B chain as a model substrate revealed the enzyme's preference for leucine at the P1' position (the amino acid immediately C-terminal to the cleavage site) <a href="https://pubmed.ncbi.nlm.nih.gov/1898066" title="Study of cleavage site preference of the fibrinolytic enzyme using the oxidized B chain of insulin revealed that specificity is similar to other snake venom metalloproteinases with cleavage primarily directed to an X-Leu bond">PMID:1898066</a>.</p>
+<h2 id="structural-features">Structural Features</h2>
+<h3 id="primary-structure">Primary Structure</h3>
+<p>Fibrolase is composed of 203 amino acid residues in a single polypeptide chain with a calculated molecular weight of 22,891 Da <a href="https://pubmed.ncbi.nlm.nih.gov/1304358" title="Fibrolase is composed of 203 residues in a single polypeptide chain with a molecular weight of 22,891, as determined by the sequence">PMID:1304358</a>. The N-terminus is blocked by a cyclized glutamine (pyroglutamic acid) residue <a href="https://pubmed.ncbi.nlm.nih.gov/1304358" title="The amino-terminus is blocked by a cyclized glutamine (pyroglutamic acid) residue">PMID:1304358</a>.</p>
+<h3 id="disulfide-bond-pattern">Disulfide Bond Pattern</h3>
+<p>The protein contains six cysteine residues that form three disulfide bonds critical for structural stability <a href="https://pubmed.ncbi.nlm.nih.gov/1304358" title="All six cysteine residues in fibrolase are involved in disulfide bonds">PMID:1304358</a>. The disulfide connectivity was definitively established for the recombinant analog alfimeprase as Cys-116/196, Cys-156/180, and Cys-158/163 <a href="https://pubmed.ncbi.nlm.nih.gov/11369866" title="The three disulfide bonds were determined to be Cys-116/196, Cys-156 /180, and Cys-158/163 with the residue number system of alfimeprase">PMID:11369866</a>.</p>
+<h3 id="secondary-structure-prediction">Secondary Structure Prediction</h3>
+<p>Structural analysis reveals that fibrolase has very low alpha-helical content (4%) but significant beta-structure (39.5%) <a href="https://pubmed.ncbi.nlm.nih.gov/1304358" title="Secondary structure prediction reveals a very low percentage of alpha-helix (4%), but much greater beta-structure (39.5%)">PMID:1304358</a>. This structural composition is consistent with its classification as a metalloproteinase.</p>
+<h3 id="glycosylation-status">Glycosylation Status</h3>
+<p>The protein contains little or no carbohydrate and lacks asparagine-linked glycosylation sites <a href="https://pubmed.ncbi.nlm.nih.gov/1898066" title="contains little or no carbohydrate">PMID:1898066</a>. Analysis revealed the absence of consensus N-glycosylation sequences (asparagine-X-serine/threonine) <a href="https://pubmed.ncbi.nlm.nih.gov/1304358" title="Analysis of the sequence reveals the absence of asparagine-linked glycosylation sites defined by the consensus sequence: asparagine-X-serine/threonine">PMID:1304358</a>.</p>
+<h3 id="sequence-microheterogeneity">Sequence Microheterogeneity</h3>
+<p>Natural fibrolase exhibits microheterogeneity at both the N-terminus and at positions 189 and 192 <a href="https://pubmed.ncbi.nlm.nih.gov/1304358" title="Microheterogeneity in the sequence was found at both the amino-terminus and at residues 189 and 192">PMID:1304358</a>, suggesting natural variations in the venom extract.</p>
+<h2 id="inhibitors-and-regulation">Inhibitors and Regulation</h2>
+<h3 id="metal-chelation-inhibition">Metal Chelation Inhibition</h3>
+<p>As a zinc metalloproteinase, fibrolase is sensitive to metal chelators. The enzyme is inhibited by EDTA, o-phenanthroline, and tetraethylenepentamine (a specific zinc chelator) <a href="https://pubmed.ncbi.nlm.nih.gov/1898066" title="the enzyme is a metalloproteinase since it is inhibited by EDTA, o-phenanthroline and tetraethylenepentamine (a specific zinc chelator)">PMID:1898066</a>. This sensitivity to metal chelators is consistent with zinc being essential for both catalytic activity and structural integrity.</p>
+<h3 id="resistance-to-serine-protease-inhibitors">Resistance to Serine Protease Inhibitors</h3>
+<p>Fibrolase is not inhibited by classical serine protease inhibitors including diisopropylfluorophosphate (DFP), soybean trypsin inhibitor, and Trasylol <a href="https://pubmed.ncbi.nlm.nih.gov/1898066" title="is not inhibited by diisopropylfluorophosphate, soybean trypsin inhibitor, Trasylol">PMID:1898066</a>. This resistance profile confirms its classification as a metalloproteinase rather than a serine protease.</p>
+<h3 id="thiol-group-independence">Thiol Group Independence</h3>
+<p>The enzyme is not inhibited by p-chloromercuribenzoate, indicating that free thiol groups are not essential for its activity <a href="https://pubmed.ncbi.nlm.nih.gov/1898066" title="is not inhibited by... p-chloromercuribenzoate">PMID:1898066</a>, suggesting that the disulfide bonds provide sufficient structural stability.</p>
+<h3 id="zinc-requirement">Zinc Requirement</h3>
+<p>The absolute requirement for zinc is demonstrated by the complete loss of activity upon zinc removal and the restoration of activity upon zinc repletion. Metal analysis confirmed that fibrolase contains exactly 1 mol of zinc per mol of protein <a href="https://pubmed.ncbi.nlm.nih.gov/1898066" title="Metal analysis revealed 1 mol of zinc/mol of protein">PMID:1898066</a>.</p>
+<h2 id="medical-significance-and-therapeutic-potential">Medical Significance and Therapeutic Potential</h2>
+<h3 id="advantages-as-a-fibrinolytic-agent">Advantages as a Fibrinolytic Agent</h3>
+<p>Fibrolase represents a unique approach to thrombolytic therapy due to several key advantages:</p>
+<ol>
+<li>
+<p><strong>Direct Action</strong>: Unlike plasminogen activators such as tissue plasminogen activator (tPA), fibrolase acts directly on fibrin without requiring the plasminogen activation cascade <a href="https://pubmed.ncbi.nlm.nih.gov/1898066" title="The enzyme exhibits direct fibrinolytic activity and does not activate plasminogen">PMID:1898066</a>.</p>
+</li>
+<li>
+<p><strong>Non-hemorrhagic Profile</strong>: The lack of hemorrhagic activity reduces the risk of bleeding complications that are common with other thrombolytic agents <a href="https://pubmed.ncbi.nlm.nih.gov/1898066" title="unlike some other venom fibrinolytic metalloproteinases, fibrolase exhibits little if any hemorrhagic activity">PMID:1898066</a>.</p>
+</li>
+<li>
+<p><strong>Specific Substrate Recognition</strong>: The enzyme shows selectivity for fibrin substrates over other proteins, potentially reducing off-target effects.</p>
+</li>
+</ol>
+<h3 id="clinical-development-challenges">Clinical Development Challenges</h3>
+<p>Despite its promising properties, the clinical development of alfimeprase faced significant challenges. The failure of phase III clinical trials highlights the complexity of translating promising preclinical results into successful clinical outcomes. Factors that may have contributed to clinical failure include:</p>
+<ol>
+<li>
+<p><strong>Immunogenicity</strong>: As a foreign protein, alfimeprase may have triggered immune responses that limited its efficacy or safety.</p>
+</li>
+<li>
+<p><strong>Pharmacokinetics</strong>: The in vivo behavior of the recombinant protein may have differed from expectations based on in vitro studies.</p>
+</li>
+<li>
+<p><strong>Clinical Trial Design</strong>: The specific patient populations, dosing regimens, or outcome measures may not have been optimally designed to demonstrate efficacy.</p>
+</li>
+</ol>
+<h3 id="historical-context-in-thrombolytic-therapy">Historical Context in Thrombolytic Therapy</h3>
+<p>The development of alfimeprase occurred during a period when the thrombolytic therapy field was seeking alternatives to urokinase, which had been withdrawn from the market due to manufacturing issues <a href="https://pubmed.ncbi.nlm.nih.gov/18632486" title="Urokinase has been used as a thrombolytic agent for dysfunctional occluded CVCs, but the alterations in manufacturing practice prompted the Food and Drug Administration to suspend further production of urokinase in 1999">PMID:18632486</a>. This created a clinical need for new fibrinolytic agents with improved safety profiles.</p>
+<h3 id="research-significance">Research Significance</h3>
+<p>From a research perspective, fibrolase has provided important insights into:</p>
+<ol>
+<li>
+<p><strong>Structure-Function Relationships</strong>: The detailed structural characterization has advanced understanding of metalloproteinase catalysis and specificity.</p>
+</li>
+<li>
+<p><strong>Venom Biology</strong>: Fibrolase represents an example of how evolution has optimized enzymes for specific biological functions.</p>
+</li>
+<li>
+<p><strong>Drug Development</strong>: The alfimeprase story illustrates both the potential and the challenges of developing venom-derived therapeutics.</p>
+</li>
+</ol>
+<h2 id="summary">Summary</h2>
+<p>Fibrolase is a fascinating example of a snake venom component that has been extensively characterized and developed for therapeutic applications. Its unique combination of direct fibrinolytic activity without hemorrhagic effects made it an attractive candidate for treating thrombotic conditions. While the clinical development of alfimeprase ultimately was unsuccessful, the extensive research on fibrolase has contributed significantly to our understanding of metalloproteinase structure and function, as well as the challenges of developing venom-derived therapeutics. The protein remains an important model system for studying fibrinolytic enzymes and continues to provide insights into the design of improved thrombolytic agents.</p>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P28891
+gene_symbol: fibrolase
+taxon:
+  id: NCBITaxon:8713
+  label: Agkistrodon contortrix contortrix
+description: &#39;Fibrolase is a non-hemorrhagic snake venom zinc metalloproteinase (EC 3.4.24.72) from southern copperhead (Agkistrodon contortrix contortrix) that exhibits direct fibrinolytic activity. Unlike plasminogen activators, it directly cleaves fibrin and fibrinogen at specific X-Leu bonds without requiring plasminogen activation, making it a unique fibrinolytic enzyme. As a venom component, it functions as a toxin that disrupts hemostasis in envenomated prey by dissolving blood clots. The enzyme requires zinc for catalytic activity and was developed into a recombinant therapeutic (alfimeprase) for clinical applications, though phase III trials were ultimately unsuccessful.&#39;
+existing_annotations:
+- term:
+    id: GO:0035821
+    label: modulation of process of another organism
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000108
+  review:
+    summary: This annotation correctly identifies fibrolase&#39;s role in inter-organism interaction through venom. As a venom component, fibrolase directly affects hemostasis in prey/victim organisms by degrading fibrin/fibrinogen, thus modulating coagulation processes in the target organism.
+    action: ACCEPT
+    reason: Fibrolase is a venom metalloproteinase that directly affects another organism&#39;s physiology by disrupting hemostasis through fibrinolytic activity. This is a core function as it represents the primary biological role of this venom component [PMID:1898066, PMID:1304358].
+    supported_by:
+      - reference_id: PMID:1898066
+        supporting_text: &#34;The enzyme exhibits direct fibrinolytic activity and does not activate plasminogen. In vitro studies revealed that fibrolase dissolves clots made either from purified fibrinogen or from whole blood.&#34;
+      - reference_id: PMID:1304358
+        supporting_text: &#34;This is the first report of the sequence of a direct-acting, nonhemorrhagic fibrinolytic enzyme found in snake venom.&#34;
+- term:
+    id: GO:0004222
+    label: metalloendopeptidase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: This annotation correctly identifies the molecular function as a metalloendopeptidase. Fibrolase is classified as EC 3.4.24.72, a zinc metalloproteinase that cleaves peptide bonds in fibrin/fibrinogen. The term accurately captures the enzymatic mechanism.
+    action: ACCEPT
+    reason: The term accurately describes the core catalytic activity - fibrolase is indeed a zinc-dependent metalloendopeptidase (EC 3.4.24.72) that hydrolyzes internal peptide bonds. This is supported by extensive biochemical characterization showing zinc dependency and specific cleavage patterns [PMID:1898066].
+    supported_by:
+      - reference_id: PMID:1898066
+        supporting_text: &#34;the enzyme is a metalloproteinase since it is inhibited by EDTA, o-phenanthroline and tetraethylenepentamine (a specific zinc chelator). Metal analysis revealed 1 mol of zinc/mol of protein.&#34;
+      - reference_id: PMID:1898066
+        supporting_text: &#34;Study of cleavage site preference of the fibrinolytic enzyme using the oxidized B chain of insulin revealed that specificity is similar to other snake venom metalloproteinases with cleavage primarily directed to an X-Leu bond.&#34;
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: Correct annotation - fibrolase is a secreted venom protein found in the extracellular space after envenomation. The protein is secreted from venom glands and acts extracellularly on fibrin/fibrinogen substrates.
+    action: ACCEPT
+    reason: Fibrolase is definitively a secreted protein that functions in the extracellular environment. It is produced by venom glands and secreted as part of the venom to act on extracellular targets (fibrin/fibrinogen in blood) [PMID:1304358, PMID:1898066].
+    supported_by:
+      - reference_id: PMID:1304358
+        supporting_text: &#34;fibrolase, a fibrinolytic enzyme from southern copperhead (Agkistrodon contortrix contortrix) venom&#34;
+      - reference_id: PMID:1898066
+        supporting_text: &#34;A fibrinolytic enzyme present in Agkistrodon contortrix contortrix (southern copperhead) venom has been purified&#34;
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  review:
+    summary: This annotation is incorrect. Fibrolase is a secreted venom protein that acts in the extracellular space, not a plasma membrane-associated protein. There is no evidence for membrane localization.
+    action: REMOVE
+    reason: Fibrolase is a secreted soluble enzyme that functions in the extracellular environment (blood plasma) after envenomation. It has no transmembrane domains or membrane-association motifs, and all functional studies show it acting as a soluble enzyme on soluble or fibrin-bound substrates. The UniProt entry clearly states it is &#34;Secreted&#34; with no membrane association [PMID:1304358, PMID:1898066].
+    supported_by:
+      - reference_id: PMID:1898066
+        supporting_text: &#34;The enzyme, fibrolase, has a molecular weight of 23,000-24,000 and an isoelectric point of pH 6.8. It is composed of approximately 200 amino acids&#34;
+      - reference_id: PMID:1304358
+        supporting_text: &#34;Fibrolase is composed of 203 residues in a single polypeptide chain with a molecular weight of 22,891&#34;
+- term:
+    id: GO:0006508
+    label: proteolysis
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: Correct but could be more specific. Fibrolase performs proteolysis specifically on fibrin/fibrinogen substrates. A more specific term like &#39;venom-mediated fibrinolysis&#39; (GO:0044484) would better capture the biological context.
+    action: MODIFY
+    reason: While proteolysis is correct, it&#39;s too general for this specialized venom enzyme. Fibrolase specifically performs fibrinolytic proteolysis as part of venom action. The term &#39;venom-mediated fibrinolysis&#39; (GO:0044484) more accurately describes the biological process [PMID:1898066].
+    proposed_replacement_terms:
+      - id: GO:0044484
+        label: venom-mediated fibrinolysis
+    supported_by:
+      - reference_id: PMID:1898066
+        supporting_text: &#34;The enzyme exhibits direct fibrinolytic activity and does not activate plasminogen. In vitro studies revealed that fibrolase dissolves clots made either from purified fibrinogen or from whole blood.&#34;
+      - reference_id: PMID:1304358
+        supporting_text: &#34;a direct-acting, nonhemorrhagic fibrinolytic enzyme found in snake venom&#34;
+- term:
+    id: GO:0008233
+    label: peptidase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: This term is correct but too general. Fibrolase is specifically a metalloendopeptidase with defined substrate specificity, not just any peptidase.
+    action: REMOVE
+    reason: This overly broad term adds no information beyond the more specific &#39;metalloendopeptidase activity&#39; (GO:0004222) already present. The general peptidase activity is redundant with the more specific metallopeptidase annotations and doesn&#39;t capture the enzyme&#39;s specific catalytic mechanism or substrate specificity [PMID:1898066].
+    supported_by:
+      - reference_id: PMID:1898066
+        supporting_text: &#34;the enzyme is a metalloproteinase since it is inhibited by EDTA, o-phenanthroline and tetraethylenepentamine (a specific zinc chelator)&#34;
+- term:
+    id: GO:0008237
+    label: metallopeptidase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: Correct annotation that captures the metal-dependent peptidase activity. However, this is somewhat redundant with the more specific &#39;metalloendopeptidase activity&#39; (GO:0004222) annotation.
+    action: REMOVE
+    reason: This term is redundant with the more specific &#39;metalloendopeptidase activity&#39; (GO:0004222) which better describes the enzyme&#39;s function. Metalloendopeptidase is a child term of metallopeptidase, so keeping both is unnecessary. The more specific term provides more information about the cleavage pattern (internal bonds) [PMID:1898066].
+    supported_by:
+      - reference_id: PMID:1898066
+        supporting_text: &#34;Study of cleavage site preference of the fibrinolytic enzyme using the oxidized B chain of insulin revealed that specificity is similar to other snake venom metalloproteinases with cleavage primarily directed to an X-Leu bond.&#34;
+- term:
+    id: GO:0016787
+    label: hydrolase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: This extremely broad term is technically correct but uninformative. Fibrolase has much more specific annotations that describe its actual function.
+    action: REMOVE
+    reason: This is an overly general parent term that provides no useful information beyond the specific metalloendopeptidase activity already annotated. Hydrolase activity is an ancestor of peptidase activity, which itself is an ancestor of metalloendopeptidase activity. Keeping this broad term adds no value [PMID:1898066].
+    supported_by:
+      - reference_id: PMID:1898066
+        supporting_text: &#34;the enzyme is a metalloproteinase&#34;
+- term:
+    id: GO:0046872
+    label: metal ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: Correct but could be more specific. Fibrolase specifically binds zinc ions, not just any metal ion. The more specific term &#39;zinc ion binding&#39; (GO:0008270) would be more accurate.
+    action: MODIFY
+    reason: While metal ion binding is correct, fibrolase specifically requires zinc for catalytic activity. Metal analysis confirmed 1 mol of zinc per mol of protein, and the enzyme is inhibited by zinc-specific chelators. The term &#39;zinc ion binding&#39; (GO:0008270) more precisely describes this molecular function [PMID:1898066].
+    proposed_replacement_terms:
+      - id: GO:0008270
+        label: zinc ion binding
+    supported_by:
+      - reference_id: PMID:1898066
+        supporting_text: &#34;Metal analysis revealed 1 mol of zinc/mol of protein&#34;
+      - reference_id: PMID:1898066
+        supporting_text: &#34;the enzyme is a metalloproteinase since it is inhibited by EDTA, o-phenanthroline and tetraethylenepentamine (a specific zinc chelator)&#34;
+- term:
+    id: GO:0090729
+    label: toxin activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: Correct annotation. Fibrolase is a venom toxin that disrupts hemostasis in envenomated organisms through its fibrinolytic activity, representing a key component of copperhead venom&#39;s toxic effects.
+    action: ACCEPT
+    reason: Fibrolase is indeed a toxin - it&#39;s a venom component that causes pathological effects in envenomated organisms by disrupting normal hemostasis through direct fibrinolysis. This is a core function as it represents the protein&#39;s primary biological role in the context of envenomation [PMID:1304358, PMID:1898066].
+    supported_by:
+      - reference_id: PMID:1304358
+        supporting_text: &#34;fibrolase, a fibrinolytic enzyme from southern copperhead (Agkistrodon contortrix contortrix) venom&#34;
+      - reference_id: PMID:1898066
+        supporting_text: &#34;A fibrinolytic enzyme present in Agkistrodon contortrix contortrix (southern copperhead) venom&#34;
+- term:
+    id: GO:0044484
+    label: venom-mediated fibrinolysis
+  evidence_type: IEA
+  review:
+    summary: Core function of fibrolase in venom-mediated fibrinolysis
+    action: NEW
+    reason: Fibrolase specifically performs fibrinolytic proteolysis as part of venom action to dissolve blood clots. This biological process is core to its function but was missing from existing annotations.
+    supported_by:
+      - reference_id: PMID:1898066
+        supporting_text: &#34;A fibrinolytic enzyme present in Agkistrodon contortrix contortrix (southern copperhead) venom&#34;
+core_functions:
+- description: Zinc metalloendopeptidase that directly cleaves fibrin and fibrinogen at X-Leu bonds to dissolve blood clots
+  molecular_function:
+    id: GO:0004222
+    label: metalloendopeptidase activity
+  directly_involved_in:
+    - id: GO:0044484
+      label: venom-mediated fibrinolysis
+  locations:
+    - id: GO:0005576
+      label: extracellular region
+  substrates:
+    - id: CHEBI:5054
+      label: Fibrin
+    - id: GO:0005577
+      label: fibrinogen complex
+- description: Acts as a venom toxin that modulates hemostasis in envenomated organisms
+  molecular_function:
+    id: GO:0090729
+    label: toxin activity
+  directly_involved_in:
+    - id: GO:0035821
+      label: modulation of process of another organism
+  locations:
+    - id: GO:0005576
+      label: extracellular region
+references:
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt.
+  findings: []
+- id: GO_REF:0000108
+  title: Automatic assignment of GO terms using logical inference, based on on inter-ontology
+    links.
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods.
+  findings: []
+- id: PMID:1898066
+  title: Purification and characterization of a fibrinolytic enzyme from venom of
+    the southern copperhead snake (Agkistrodon contortrix contortrix).
+  findings:
+    - statement: Fibrolase is a zinc metalloproteinase containing 1 mol of zinc per mol of protein
+      supporting_text: &#34;However, the enzyme is a metalloproteinase since it is inhibited by EDTA, o-phenanthroline and tetraethylenepentamine (a specific zinc chelator). Metal analysis revealed 1 mol of zinc/mol of protein.&#34;
+      full_text_unavailable: true
+    - statement: Fibrolase exhibits substrate specificity similar to other snake venom metalloproteinases with preference for X-Leu bonds
+      supporting_text: &#34;Study of cleavage site preference of the fibrinolytic enzyme using the oxidized B chain of insulin revealed that specificity is similar to other snake venom metalloproteinases with cleavage primarily directed to an X-Leu bond.&#34;
+      full_text_unavailable: true
+    - statement: Fibrolase exhibits direct fibrinolytic activity without activating plasminogen
+      supporting_text: &#34;The enzyme exhibits direct fibrinolytic activity and does not activate plasminogen. In vitro studies revealed that fibrolase dissolves clots made either from purified fibrinogen or from whole blood.&#34;
+      full_text_unavailable: true
+    - statement: Fibrolase has molecular weight of 23,000-24,000 Da and isoelectric point of pH 6.8
+      supporting_text: &#34;The enzyme, fibrolase, has a molecular weight of 23,000-24,000 and an isoelectric point of pH 6.8.&#34;
+      full_text_unavailable: true
+    - statement: Fibrolase is composed of approximately 200 amino acids with blocked NH2-terminus and contains little or no carbohydrate
+      supporting_text: &#34;It is composed of approximately 200 amino acids, possesses a blocked NH2-terminus and contains little or no carbohydrate.&#34;
+      full_text_unavailable: true
+    - statement: Unlike some other venom fibrinolytic metalloproteinases, fibrolase exhibits little or no hemorrhagic activity
+      supporting_text: &#34;Interestingly, unlike some other venom fibrinolytic metalloproteinases, fibrolase exhibits little if any hemorrhagic activity.&#34;
+      full_text_unavailable: true
+    - statement: Fibrolase is not inhibited by serine protease inhibitors but is specifically inhibited by metal chelators
+      supporting_text: &#34;The enzyme shows no activity against a series of chromogenic p-nitroanilide substrates and is not inhibited by diisopropylfluorophosphate, soybean trypsin inhibitor, Trasylol, or p-chloromercuribenzoate. However, the enzyme is a metalloproteinase since it is inhibited by EDTA, o-phenanthroline and tetraethylenepentamine (a specific zinc chelator).&#34;
+      full_text_unavailable: true
+- id: PMID:1304358
+  title: Amino acid sequence of fibrolase, a direct-acting fibrinolytic enzyme from
+    Agkistrodon contortrix contortrix venom.
+  findings:
+    - statement: Fibrolase is the first sequenced direct-acting, nonhemorrhagic fibrinolytic enzyme from snake venom
+      supporting_text: &#34;This is the first report of the sequence of a direct-acting, nonhemorrhagic fibrinolytic enzyme found in snake venom.&#34;
+      full_text_unavailable: true
+    - statement: Fibrolase consists of 203 amino acid residues in a single polypeptide chain with molecular weight of 22,891 Da
+      supporting_text: &#34;Fibrolase is composed of 203 residues in a single polypeptide chain with a molecular weight of 22,891, as determined by the sequence.&#34;
+      full_text_unavailable: true
+    - statement: Fibrolase has a blocked amino-terminus with a pyroglutamic acid residue
+      supporting_text: &#34;The amino-terminus is blocked by a cyclized glutamine (pyroglutamic acid) residue, and the sequence of this region of the molecule was determined by mass spectrometry.&#34;
+      full_text_unavailable: true
+    - statement: Fibrolase shows sequence homology to hemorrhagic snake venom metalloproteinases
+      supporting_text: &#34;Its sequence is homologous to the sequence of the hemorrhagic toxin Ht-d of Crotalus atrox venom and with the sequences of two metalloproteinases from Trimeresurus flavoviridis venom.&#34;
+      full_text_unavailable: true
+    - statement: Fibrolase contains six cysteine residues involved in three disulfide bonds with specific connectivity pattern
+      supporting_text: &#34;All six cysteine residues in fibrolase are involved in disulfide bonds. A disulfide bond between cysteine-118 and cysteine-198 has been established and bonds between cysteines-158/165 and between cysteines-160/192 are inferred from the homology to Ht-d.&#34;
+      full_text_unavailable: true
+    - statement: Fibrolase has predominantly beta-sheet secondary structure with minimal alpha-helix content
+      supporting_text: &#34;Secondary structure prediction reveals a very low percentage of alpha-helix (4%), but much greater beta-structure (39.5%).&#34;
+      full_text_unavailable: true
+    - statement: Fibrolase lacks asparagine-linked glycosylation sites
+      supporting_text: &#34;Analysis of the sequence reveals the absence of asparagine-linked glycosylation sites defined by the consensus sequence: asparagine-X-serine/threonine.&#34;
+      full_text_unavailable: true
+    - statement: Fibrolase exhibits microheterogeneity at the amino-terminus and at specific residue positions
+      supporting_text: &#34;Microheterogeneity in the sequence was found at both the amino-terminus and at residues 189 and 192.&#34;
+      full_text_unavailable: true
+
+suggested_questions:
+- question: How does fibrolase achieve substrate specificity for fibrin and other extracellular matrix proteins?
+- question: What role does fibrolase play in venom composition and prey immobilization?
+- question: How has fibrolase evolved to optimize its proteolytic activity in different environmental conditions?
+- question: What are the structural features that determine fibrolase enzymatic activity and stability?
+suggested_experiments:
+- description: Enzyme kinetics analysis to characterize fibrolase substrate specificity and catalytic parameters
+- description: Structural determination using X-ray crystallography to understand the molecular basis of fibrolase activity
+- description: Venom composition analysis to study fibrolase expression and co-expressed proteins
+- description: Phylogenetic analysis of fibrolase evolution across different snake species
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+    <div class="section">
+        <div class="pathway-link">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h2 class="section-title">🔗 Related Resources</h2>
+                <span class="vote-buttons" data-g="P28891" data-a="PATHWAY: fibrolase pathways" data-r="" data-act="PATHWAY">
+                    <button class="vote-btn" data-v="up" title="Pathway visualization is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="Pathway visualization needs improvement">👎</button>
+                </span>
+            </div>
+            <p>
+                <a href="fibrolase-pathway.html" target="_blank" class="btn-link">
+                    📊 View Pathway Visualization
+                </a>
+                <span style="color: #666; font-size: 0.9rem; margin-left: 1rem;">
+                    Interactive pathway diagram with detailed annotations
+                </span>
+            </p>
+        </div>
+    </div>
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

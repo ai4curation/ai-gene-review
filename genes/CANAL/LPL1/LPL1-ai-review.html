@@ -1,0 +1,1859 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LPL1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>LPL1</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q5AMS2" target="_blank" class="term-link">
+                        Q5AMS2
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Candida albicans SC5314</span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "LPL1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q5AMS2" data-a="DESCRIPTION: Putative phospholipase B homolog of S. cerevisiae ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Putative phospholipase B homolog of S. cerevisiae LPL1, likely encoding a lipid droplet-associated enzyme with phospholipase activity on glycerophospholipids. Based on homology, predicted to contain GXSXG lipase motif and function in phospholipid metabolism during stationary phase.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006629" target="_blank" class="term-link">
+                                    GO:0006629
+                                </a>
+                            </span>
+                            <span class="term-label">lipid metabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q5AMS2" data-a="GO:0006629" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This broad biological process term is appropriate for a phospholipase B enzyme. The S. cerevisiae homolog LPL1 is well-characterized as functioning in lipid metabolism, specifically in phospholipid hydrolysis and lipid droplet dynamics. The IBA annotation is based on phylogenetic inference from characterized orthologs.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The annotation is supported by strong homology to S. cerevisiae LPL1, which has demonstrated roles in lipid metabolism. Phospholipase B enzymes by definition participate in lipid metabolic processes through hydrolysis of glycerophospholipids. The term accurately captures the core metabolic function without being overly specific.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:CANAL/LPL1/LPL1-deep-research.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">The S. cerevisiae LPL1 (YOR059c) gene encodes a phospholipase B... Shows phospholipase activity with broad substrate specificity, acting on all glycerophospholipids primarily at sn-2 position, then at sn-1 position</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004622" target="_blank" class="term-link">
+                                    GO:0004622
+                                </a>
+                            </span>
+                            <span class="term-label">phosphatidylcholine lysophospholipase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q5AMS2" data-a="GO:0004622" data-r="GO_REF:0000033" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This molecular function represents one of the three activities of phospholipase B enzymes - the lysophospholipase activity. However, this annotation is too narrow as it only captures one aspect of phospholipase B function and is specific to phosphatidylcholine substrates, while the enzyme likely has broader substrate specificity.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Phospholipase B enzymes have three distinct activities: sn-1/sn-2 fatty acid ester hydrolase, lysophospholipase, and transacylase activity. The current term only captures the lysophospholipase activity on phosphatidylcholine. The more comprehensive term GO:0102545 (phospholipase B activity) would better represent the full enzymatic capability of this protein, as it encompasses all three activities and broader substrate specificity.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0102545" target="_blank" class="term-link">
+                                    phospholipase B activity
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:CANAL/LPL1/LPL1-deep-research.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Fungal phospholipase B (PLB) enzymes harbor three distinct activities: 1. sn-1 and sn-2 fatty acid ester hydrolase activity, 2. Lysophospholipase activity, 3. Transacylase activity</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005811" target="_blank" class="term-link">
+                                    GO:0005811
+                                </a>
+                            </span>
+                            <span class="term-label">lipid droplet</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q5AMS2" data-a="GO:0005811" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This cellular component annotation is strongly supported by characterization of the S. cerevisiae homolog LPL1, which shows exclusive localization to lipid droplets during stationary phase. This localization is consistent with the enzyme role in lipid metabolism and storage regulation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The S. cerevisiae LPL1 has been experimentally demonstrated to localize exclusively to lipid droplets at stationary phase. This localization makes functional sense for a phospholipase B enzyme involved in lipid metabolism and droplet dynamics. The IBA annotation based on phylogenetic inference from the well-characterized S. cerevisiae ortholog is reliable.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:CANAL/LPL1/LPL1-deep-research.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">The S. cerevisiae LPL1 (YOR059c) gene encodes a phospholipase B localized to lipid droplets during stationary phase... Exclusively localized to lipid droplets at stationary phase</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0047372" target="_blank" class="term-link">
+                                    GO:0047372
+                                </a>
+                            </span>
+                            <span class="term-label">monoacylglycerol lipase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q5AMS2" data-a="GO:0047372" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation suggests additional lipase activity beyond phospholipase function. While some lipases can have promiscuous substrate specificity, there is no direct evidence that LPL1 homologs have monoacylglycerol lipase activity as a primary function. This appears to be a secondary or promiscuous activity.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The primary characterized function of LPL1 homologs is phospholipase B activity on glycerophospholipids, not monoacylglycerol hydrolysis. While the enzyme may have some activity on monoacylglycerols due to the general lipase domain, this is likely not the core function. The annotation may reflect substrate promiscuity rather than the primary enzymatic role. Keeping as non-core acknowledges potential activity without overstating its importance.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:CANAL/LPL1/LPL1-deep-research.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Shows phospholipase activity with broad substrate specificity, acting on all glycerophospholipids primarily at sn-2 position, then at sn-1 position [Note: no mention of monoacylglycerol substrates in primary literature]</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q5AMS2" data-a="GO:0016020" data-r="GO_REF:0000043" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This generic membrane annotation is based on automated prediction from a transmembrane domain (residues 286-306 per UniProt). However, this is inconsistent with the well-characterized lipid droplet localization of the S. cerevisiae homolog. The predicted transmembrane domain may represent a hydrophobic region for lipid droplet association rather than true membrane insertion.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The annotation conflicts with experimental evidence showing exclusive lipid droplet localization for the S. cerevisiae homolog. While the protein has a predicted hydrophobic region (286-306), this likely mediates lipid droplet association rather than membrane integration. Lipid droplets have a unique phospholipid monolayer structure distinct from bilayer membranes. The generic &#34;membrane&#34; term is misleading and the more specific &#34;lipid droplet&#34; annotation (GO:0005811) is already present and correct.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:CANAL/LPL1/LPL1-deep-research.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Exclusively localized to lipid droplets at stationary phase</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:CANAL/LPL1/LPL1-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">FT   TRANSMEM        286..306 [Note: This hydrophobic region likely mediates lipid droplet binding rather than membrane insertion]</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016042" target="_blank" class="term-link">
+                                    GO:0016042
+                                </a>
+                            </span>
+                            <span class="term-label">lipid catabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q5AMS2" data-a="GO:0016042" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This biological process annotation accurately describes the catabolic aspect of phospholipase B activity - the hydrolysis of phospholipids into fatty acids and lysophospholipids. This is a appropriate child term of the broader lipid metabolic process already annotated.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Phospholipase B enzymes catalyze the hydrolytic breakdown of glycerophospholipids, which is definitionally a lipid catabolic process. The annotation correctly captures this catabolic function. While based on automated keyword mapping (IEA), it aligns with the known enzymatic activity of phospholipase B family members.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:CANAL/LPL1/LPL1-deep-research.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Phospholipase B enzymes harbor... sn-1 and sn-2 fatty acid ester hydrolase activity [hydrolysis represents catabolism of lipids]</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016787" target="_blank" class="term-link">
+                                    GO:0016787
+                                </a>
+                            </span>
+                            <span class="term-label">hydrolase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q5AMS2" data-a="GO:0016787" data-r="GO_REF:0000043" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is an overly broad molecular function term that provides minimal information about the specific enzymatic activity. While technically correct (phospholipases are hydrolases), this annotation adds no value beyond what is already captured by more specific terms.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The term &#34;hydrolase activity&#34; is too generic and uninformative. The protein already has more specific molecular function annotations (phospholipase/lysophospholipase activities) that are children of hydrolase activity in the GO hierarchy. This broad parent term adds no additional information and represents the type of vague annotation that should be avoided according to curation guidelines. The specific phospholipase B activity (GO:0102545) provides much more informative functional annotation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:CANAL/LPL1/LPL1-deep-research.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Contains the canonical lipase motif GXSXG essential for catalytic activity [specific lipase, not generic hydrolase]</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Phospholipid hydrolysis at lipid droplets</h3>
+                <span class="vote-buttons" data-g="Q5AMS2" data-a="FUNCTION: Phospholipid hydrolysis at lipid droplets..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0102545" target="_blank" class="term-link">
+                            phospholipase B activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006629" target="_blank" class="term-link">
+                                lipid metabolic process
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016042" target="_blank" class="term-link">
+                                lipid catabolic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005811" target="_blank" class="term-link">
+                                lipid droplet
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:CANAL/LPL1/LPL1-deep-research.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">Fungal phospholipase B (PLB) enzymes harbor three distinct activities: 1. sn-1 and sn-2 fatty acid ester hydrolase activity, 2. Lysophospholipase activity, 3. Transacylase activity</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:CANAL/LPL1/LPL1-deep-research.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">Shows phospholipase activity with broad substrate specificity, acting on all glycerophospholipids primarily at sn-2 position, then at sn-1 position</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:CANAL/LPL1/LPL1-deep-research.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep research analysis of C. albicans LPL1 gene</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">S. cerevisiae homolog LPL1 encodes phospholipase B with conserved catalytic motif</div>
+                        
+                        <div class="finding-text">"Contains the canonical lipase motif GXSXG essential for catalytic activity"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Phospholipase B enzymes have three distinct enzymatic activities</div>
+                        
+                        <div class="finding-text">"Fungal phospholipase B (PLB) enzymes harbor three distinct activities: 1. sn-1 and sn-2 fatty acid ester hydrolase activity, 2. Lysophospholipase activity, 3. Transacylase activity"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Exclusive localization to lipid droplets during stationary phase</div>
+                        
+                        <div class="finding-text">"The S. cerevisiae LPL1 (YOR059c) gene encodes a phospholipase B localized to lipid droplets during stationary phase... Exclusively localized to lipid droplets at stationary phase"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Broad substrate specificity for glycerophospholipids</div>
+                        
+                        <div class="finding-text">"Shows phospholipase activity with broad substrate specificity, acting on all glycerophospholipids primarily at sn-2 position, then at sn-1 position"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:CANAL/LPL1/LPL1-uniprot.txt
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">UniProt entry for C. albicans LPL1 (Q5AMS2)</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Contains DUF676 lipase-like domain</div>
+                        
+                        <div class="finding-text">"DOMAIN 14..213 /note=&#34;DUF676&#34;"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Predicted hydrophobic region for lipid droplet association</div>
+                        
+                        <div class="finding-text">"TRANSMEM 286..306 /note=&#34;Helical&#34;"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Member of putative lipase ROG1 family</div>
+                        
+                        <div class="finding-text">"SIMILARITY: Belongs to the putative lipase ROG1 family"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(LPL1-deep-research.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q5AMS2" data-a="DOC: Deep Research" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="deep-research-candida-albicans-lpl1-cal0000180378q5ams2">Deep Research: Candida albicans LPL1 (CAL0000180378/Q5AMS2)</h1>
+<h2 id="gene-identification-and-basic-information">Gene Identification and Basic Information</h2>
+<h3 id="primary-identifiers">Primary Identifiers</h3>
+<ul>
+<li><strong>Gene Symbol</strong>: LPL1</li>
+<li><strong>Systematic Name</strong>: CAL0000180378 / C1_01320W_A</li>
+<li><strong>UniProt ID</strong>: Q5AMS2</li>
+<li><strong>Organism</strong>: <em>Candida albicans</em> SC5314</li>
+<li><strong>Description</strong>: Putative phospholipase B, homolog of <em>Saccharomyces cerevisiae</em> LPL1/LPS1</li>
+</ul>
+<h2 id="homology-and-evolutionary-context">Homology and Evolutionary Context</h2>
+<h3 id="saccharomyces-cerevisiae-lpl1-homolog">Saccharomyces cerevisiae LPL1 Homolog</h3>
+<p>The <em>S. cerevisiae</em> LPL1 (YOR059c) gene encodes a phospholipase B localized to lipid droplets during stationary phase [https://www.sciencedirect.com/science/article/abs/pii/S1388198114001243]. Key features include:<br />
+- Contains the canonical lipase motif GXSXG essential for catalytic activity<br />
+- Shows phospholipase activity with broad substrate specificity, acting on all glycerophospholipids primarily at sn-2 position, then at sn-1 position<br />
+- Deletion of LPL1 results in altered lipid droplet morphology<br />
+- Exclusively localized to lipid droplets at stationary phase</p>
+<h3 id="phospholipase-b-family-characteristics">Phospholipase B Family Characteristics</h3>
+<p>Fungal phospholipase B (PLB) enzymes harbor three distinct activities [https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2077850/]:<br />
+1. sn-1 and sn-2 fatty acid ester hydrolase activity<br />
+2. Lysophospholipase activity<br />
+3. Transacylase activity</p>
+<p>The GXSXG consensus sequence contains critical catalytic residues [https://pmc.ncbi.nlm.nih.gov/articles/PMC7072546/]:<br />
+- Serine residue acts as nucleophile to form enzyme-acyl intermediate<br />
+- Aspartate residue acts as general base to activate catalytic serine<br />
+- Forms a Ser/Asp catalytic dyad mechanism</p>
+<h3 id="evolutionary-distribution">Evolutionary Distribution</h3>
+<p>Many fungal species possess multiple PLB genes [https://www.frontiersin.org/journals/microbiology/articles/10.3389/fmicb.2010.00125/full]:<br />
+- <em>S. cerevisiae</em>: 3 PLB genes<br />
+- <em>C. albicans</em>: 5-member PLB family (PLB1, PLB2, PLB3, PLB4, PLB5)<br />
+- The expansion of PLB genes in pathogenic fungi suggests roles in virulence</p>
+<h2 id="candida-albicans-lipid-metabolism-context">Candida albicans Lipid Metabolism Context</h2>
+<h3 id="phospholipid-biosynthesis-pathways">Phospholipid Biosynthesis Pathways</h3>
+<p>Key genes in <em>C. albicans</em> phospholipid metabolism include [https://journals.asm.org/doi/10.1128/ec.00054-15]:<br />
+- <strong>CHO1</strong>: Phosphatidylserine synthase<br />
+- <strong>PSD1/PSD2</strong>: Phosphatidylserine decarboxylases<br />
+These genes affect extracellular vesicle morphology, cargo, and immunostimulatory properties</p>
+<h3 id="lipid-metabolism-and-virulence">Lipid Metabolism and Virulence</h3>
+<p>Lipid metabolism in <em>C. albicans</em> is crucial for [https://pubmed.ncbi.nlm.nih.gov/23974286/]:<br />
+- Biofilm formation - biofilms contain higher phospholipid and sphingolipid levels than planktonic cells [https://pmc.ncbi.nlm.nih.gov/articles/PMC3352276/]<br />
+- Hypoxic adaptation - dynamic lipidome reprogramming under oxygen limitation [https://journals.asm.org/doi/10.1128/msphere.00913-19]<br />
+- Multidrug resistance acquisition through lipid-mediated cellular circuit crosstalk</p>
+<h3 id="sphingolipid-and-ergosterol-pathways">Sphingolipid and Ergosterol Pathways</h3>
+<p>De novo sphingolipid biosynthesis is hypha-associated and essential for filamentation [https://journals.asm.org/doi/10.1128/msystems.00539-22]. Major sphingolipids include:<br />
+- IPC (inositolphosphorylceramide)<br />
+- MIPC (mannosyl-inositolphosphorylceramide)<br />
+- M(IP)2C (mannosyl diinositolphosphoryl ceramide)</p>
+<h2 id="functional-predictions-and-potential-roles">Functional Predictions and Potential Roles</h2>
+<h3 id="based-on-s-cerevisiae-homology">Based on S. cerevisiae Homology</h3>
+<p>Given the homology to <em>S. cerevisiae</em> LPL1, the <em>C. albicans</em> LPL1 likely functions as:<br />
+- Phospholipase B with activity on glycerophospholipids<br />
+- Lipid droplet-associated enzyme active during stationary phase/nutrient limitation<br />
+- Regulator of lipid droplet morphology and dynamics</p>
+<h3 id="potential-pathogenesis-related-functions">Potential Pathogenesis-Related Functions</h3>
+<p>Phospholipase B enzymes in pathogenic fungi contribute to [https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3109512/]:<br />
+- Host membrane disruption through phospholipid hydrolysis<br />
+- Cell signaling modulation affecting virulence trait expression<br />
+- Production of immunomodulatory lipid effectors<br />
+- Evasion of host immune defense mechanisms</p>
+<h3 id="metabolic-integration">Metabolic Integration</h3>
+<p>The enzyme likely participates in:<br />
+- Membrane lipid remodeling during morphological transitions (yeast-to-hyphae)<br />
+- Lipid droplet metabolism during nutrient scavenging<br />
+- Generation of signaling lipids affecting stress responses</p>
+<h2 id="recent-functional-genomics-context">Recent Functional Genomics Context</h2>
+<h3 id="essential-gene-studies-2024">Essential Gene Studies (2024)</h3>
+<p>Recent genome-wide screens identified essential genes in <em>C. albicans</em> [https://www.cell.com/cell-reports/fulltext/S2211-1247(24)00940-9]:<br />
+- ~70% of <em>C. albicans</em> genes remain uncharacterized (as of 2019)<br />
+- Machine learning models predict gene essentiality for antifungal target identification [https://pubmed.ncbi.nlm.nih.gov/34764269/]<br />
+- Functional genomic screening identifies genes important for fitness in host-relevant environments</p>
+<h3 id="knowledge-gaps">Knowledge Gaps</h3>
+<p>Despite extensive research on <em>C. albicans</em> lipid metabolism:<br />
+- Specific functional characterization of CAL0000180378/LPL1 remains limited<br />
+- Direct experimental evidence for phospholipase B activity needs confirmation<br />
+- Role in virulence and host-pathogen interactions requires investigation<br />
+- Potential as antifungal target unexplored</p>
+<h2 id="structural-and-biochemical-predictions">Structural and Biochemical Predictions</h2>
+<h3 id="domain-architecture">Domain Architecture</h3>
+<p>Based on fungal phospholipase B family features:<br />
+- Expected to contain GXSXG lipase motif<br />
+- Likely possesses α/β hydrolase fold characteristic of this enzyme family<br />
+- May contain lipid droplet targeting sequences</p>
+<h3 id="catalytic-mechanism">Catalytic Mechanism</h3>
+<p>Predicted to utilize:<br />
+- Serine-aspartate catalytic dyad<br />
+- Two-step reaction: acylation followed by deacylation<br />
+- Broad substrate specificity for glycerophospholipids</p>
+<h2 id="clinical-and-therapeutic-relevance">Clinical and Therapeutic Relevance</h2>
+<h3 id="candida-albicans-pathogenesis">Candida albicans Pathogenesis</h3>
+<p><em>C. albicans</em> causes severe infections with limited treatment options [https://pmc.ncbi.nlm.nih.gov/articles/PMC11416860/]:<br />
+- Fourth leading cause of hospital-acquired bloodstream infections<br />
+- High mortality rates (30-60%) for invasive candidiasis<br />
+- Increasing antifungal resistance</p>
+<h3 id="potential-as-drug-target">Potential as Drug Target</h3>
+<p>Phospholipase B enzymes represent attractive antifungal targets because:<br />
+- Essential for virulence in multiple pathogenic fungi<br />
+- Absent or significantly different in mammalian hosts<br />
+- Druggable enzyme active site with defined catalytic mechanism</p>
+<h2 id="research-priorities-and-future-directions">Research Priorities and Future Directions</h2>
+<h3 id="immediate-research-needs">Immediate Research Needs</h3>
+<ol>
+<li><strong>Functional validation</strong>: Confirm phospholipase B activity through biochemical assays</li>
+<li><strong>Localization studies</strong>: Determine subcellular localization under different growth conditions</li>
+<li><strong>Deletion phenotype</strong>: Characterize null mutant for growth, virulence, and lipid metabolism defects</li>
+<li><strong>Expression profiling</strong>: Analyze gene expression during infection-relevant conditions</li>
+</ol>
+<h3 id="long-term-investigation-areas">Long-term Investigation Areas</h3>
+<ol>
+<li><strong>Structure determination</strong>: Solve crystal structure to understand catalytic mechanism</li>
+<li><strong>Substrate specificity</strong>: Define preference for different phospholipid substrates</li>
+<li><strong>Virulence contribution</strong>: Assess role in animal infection models</li>
+<li><strong>Drug discovery</strong>: Screen for specific inhibitors as potential antifungals</li>
+</ol>
+<h2 id="summary">Summary</h2>
+<p>The <em>Candida albicans</em> LPL1 gene (CAL0000180378/Q5AMS2) encodes a putative phospholipase B homologous to <em>S. cerevisiae</em> LPL1. Based on family characteristics, it likely contains the GXSXG lipase motif and functions in phospholipid metabolism, potentially contributing to virulence through membrane disruption and lipid signaling. Despite its potential importance, direct experimental characterization remains limited, representing a significant knowledge gap in understanding <em>C. albicans</em> pathogenesis and identifying novel antifungal targets. The expansion of phospholipase B genes in <em>C. albicans</em> compared to non-pathogenic yeasts suggests specialized roles in host adaptation and virulence that warrant further investigation.</p>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q5AMS2
+gene_symbol: LPL1
+taxon:
+  id: NCBITaxon:237561
+  label: Candida albicans SC5314
+description: &#39;Putative phospholipase B homolog of S. cerevisiae LPL1, likely encoding a lipid droplet-associated enzyme with phospholipase activity on glycerophospholipids. Based on homology, predicted to contain GXSXG lipase motif and function in phospholipid metabolism during stationary phase.&#39;
+existing_annotations:
+- term:
+    id: GO:0006629
+    label: lipid metabolic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &#39;This broad biological process term is appropriate for a phospholipase B enzyme. The S. cerevisiae homolog LPL1 is well-characterized as functioning in lipid metabolism, specifically in phospholipid hydrolysis and lipid droplet dynamics. The IBA annotation is based on phylogenetic inference from characterized orthologs.&#39;
+    action: ACCEPT
+    reason: &#39;The annotation is supported by strong homology to S. cerevisiae LPL1, which has demonstrated roles in lipid metabolism. Phospholipase B enzymes by definition participate in lipid metabolic processes through hydrolysis of glycerophospholipids. The term accurately captures the core metabolic function without being overly specific.&#39;
+    supported_by:
+      - reference_id: &#39;file:CANAL/LPL1/LPL1-deep-research.md&#39;
+        supporting_text: &#39;The S. cerevisiae LPL1 (YOR059c) gene encodes a phospholipase B... Shows phospholipase activity with broad substrate specificity, acting on all glycerophospholipids primarily at sn-2 position, then at sn-1 position&#39;
+- term:
+    id: GO:0004622
+    label: phosphatidylcholine lysophospholipase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &#39;This molecular function represents one of the three activities of phospholipase B enzymes - the lysophospholipase activity. However, this annotation is too narrow as it only captures one aspect of phospholipase B function and is specific to phosphatidylcholine substrates, while the enzyme likely has broader substrate specificity.&#39;
+    action: MODIFY
+    reason: &#39;Phospholipase B enzymes have three distinct activities: sn-1/sn-2 fatty acid ester hydrolase, lysophospholipase, and transacylase activity. The current term only captures the lysophospholipase activity on phosphatidylcholine. The more comprehensive term GO:0102545 (phospholipase B activity) would better represent the full enzymatic capability of this protein, as it encompasses all three activities and broader substrate specificity.&#39;
+    proposed_replacement_terms:
+      - id: GO:0102545
+        label: &#39;phospholipase B activity&#39;
+    supported_by:
+      - reference_id: &#39;file:CANAL/LPL1/LPL1-deep-research.md&#39;
+        supporting_text: &#39;Fungal phospholipase B (PLB) enzymes harbor three distinct activities: 1. sn-1 and sn-2 fatty acid ester hydrolase activity, 2. Lysophospholipase activity, 3. Transacylase activity&#39;
+- term:
+    id: GO:0005811
+    label: lipid droplet
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &#39;This cellular component annotation is strongly supported by characterization of the S. cerevisiae homolog LPL1, which shows exclusive localization to lipid droplets during stationary phase. This localization is consistent with the enzyme role in lipid metabolism and storage regulation.&#39;
+    action: ACCEPT
+    reason: &#39;The S. cerevisiae LPL1 has been experimentally demonstrated to localize exclusively to lipid droplets at stationary phase. This localization makes functional sense for a phospholipase B enzyme involved in lipid metabolism and droplet dynamics. The IBA annotation based on phylogenetic inference from the well-characterized S. cerevisiae ortholog is reliable.&#39;
+    supported_by:
+      - reference_id: &#39;file:CANAL/LPL1/LPL1-deep-research.md&#39;
+        supporting_text: &#39;The S. cerevisiae LPL1 (YOR059c) gene encodes a phospholipase B localized to lipid droplets during stationary phase... Exclusively localized to lipid droplets at stationary phase&#39;
+- term:
+    id: GO:0047372
+    label: monoacylglycerol lipase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &#39;This annotation suggests additional lipase activity beyond phospholipase function. While some lipases can have promiscuous substrate specificity, there is no direct evidence that LPL1 homologs have monoacylglycerol lipase activity as a primary function. This appears to be a secondary or promiscuous activity.&#39;
+    action: KEEP_AS_NON_CORE
+    reason: &#39;The primary characterized function of LPL1 homologs is phospholipase B activity on glycerophospholipids, not monoacylglycerol hydrolysis. While the enzyme may have some activity on monoacylglycerols due to the general lipase domain, this is likely not the core function. The annotation may reflect substrate promiscuity rather than the primary enzymatic role. Keeping as non-core acknowledges potential activity without overstating its importance.&#39;
+    supported_by:
+      - reference_id: &#39;file:CANAL/LPL1/LPL1-deep-research.md&#39;
+        supporting_text: &#39;Shows phospholipase activity with broad substrate specificity, acting on all glycerophospholipids primarily at sn-2 position, then at sn-1 position [Note: no mention of monoacylglycerol substrates in primary literature]&#39;
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;This generic membrane annotation is based on automated prediction from a transmembrane domain (residues 286-306 per UniProt). However, this is inconsistent with the well-characterized lipid droplet localization of the S. cerevisiae homolog. The predicted transmembrane domain may represent a hydrophobic region for lipid droplet association rather than true membrane insertion.&#39;
+    action: REMOVE
+    reason: &#39;The annotation conflicts with experimental evidence showing exclusive lipid droplet localization for the S. cerevisiae homolog. While the protein has a predicted hydrophobic region (286-306), this likely mediates lipid droplet association rather than membrane integration. Lipid droplets have a unique phospholipid monolayer structure distinct from bilayer membranes. The generic &#34;membrane&#34; term is misleading and the more specific &#34;lipid droplet&#34; annotation (GO:0005811) is already present and correct.&#39;
+    supported_by:
+      - reference_id: &#39;file:CANAL/LPL1/LPL1-deep-research.md&#39;
+        supporting_text: &#39;Exclusively localized to lipid droplets at stationary phase&#39;
+      - reference_id: &#39;file:CANAL/LPL1/LPL1-uniprot.txt&#39;
+        supporting_text: &#39;FT   TRANSMEM        286..306 [Note: This hydrophobic region likely mediates lipid droplet binding rather than membrane insertion]&#39;
+- term:
+    id: GO:0016042
+    label: lipid catabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;This biological process annotation accurately describes the catabolic aspect of phospholipase B activity - the hydrolysis of phospholipids into fatty acids and lysophospholipids. This is a appropriate child term of the broader lipid metabolic process already annotated.&#39;
+    action: ACCEPT
+    reason: &#39;Phospholipase B enzymes catalyze the hydrolytic breakdown of glycerophospholipids, which is definitionally a lipid catabolic process. The annotation correctly captures this catabolic function. While based on automated keyword mapping (IEA), it aligns with the known enzymatic activity of phospholipase B family members.&#39;
+    supported_by:
+      - reference_id: &#39;file:CANAL/LPL1/LPL1-deep-research.md&#39;
+        supporting_text: &#39;Phospholipase B enzymes harbor... sn-1 and sn-2 fatty acid ester hydrolase activity [hydrolysis represents catabolism of lipids]&#39;
+- term:
+    id: GO:0016787
+    label: hydrolase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;This is an overly broad molecular function term that provides minimal information about the specific enzymatic activity. While technically correct (phospholipases are hydrolases), this annotation adds no value beyond what is already captured by more specific terms.&#39;
+    action: REMOVE
+    reason: &#39;The term &#34;hydrolase activity&#34; is too generic and uninformative. The protein already has more specific molecular function annotations (phospholipase/lysophospholipase activities) that are children of hydrolase activity in the GO hierarchy. This broad parent term adds no additional information and represents the type of vague annotation that should be avoided according to curation guidelines. The specific phospholipase B activity (GO:0102545) provides much more informative functional annotation.&#39;
+    supported_by:
+      - reference_id: &#39;file:CANAL/LPL1/LPL1-deep-research.md&#39;
+        supporting_text: &#39;Contains the canonical lipase motif GXSXG essential for catalytic activity [specific lipase, not generic hydrolase]&#39;
+core_functions:
+- description: Phospholipid hydrolysis at lipid droplets
+  molecular_function:
+    id: GO:0102545
+    label: phospholipase B activity
+  supported_by:
+  - reference_id: &#39;file:CANAL/LPL1/LPL1-deep-research.md&#39;
+    supporting_text: &#39;Fungal phospholipase B (PLB) enzymes harbor three distinct activities: 1. sn-1 and sn-2 fatty acid ester hydrolase activity, 2. Lysophospholipase activity, 3. Transacylase activity&#39;
+  - reference_id: &#39;file:CANAL/LPL1/LPL1-deep-research.md&#39;
+    supporting_text: &#39;Shows phospholipase activity with broad substrate specificity, acting on all glycerophospholipids primarily at sn-2 position, then at sn-1 position&#39;
+  directly_involved_in:
+  - id: GO:0006629
+    label: lipid metabolic process
+  - id: GO:0016042
+    label: lipid catabolic process
+  locations:
+  - id: GO:0005811
+    label: lipid droplet
+references:
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+- id: &#39;file:CANAL/LPL1/LPL1-deep-research.md&#39;
+  title: Deep research analysis of C. albicans LPL1 gene
+  findings:
+    - statement: S. cerevisiae homolog LPL1 encodes phospholipase B with conserved catalytic motif
+      supporting_text: &#39;Contains the canonical lipase motif GXSXG essential for catalytic activity&#39;
+    - statement: Phospholipase B enzymes have three distinct enzymatic activities
+      supporting_text: &#39;Fungal phospholipase B (PLB) enzymes harbor three distinct activities: 1. sn-1 and sn-2 fatty acid ester hydrolase activity, 2. Lysophospholipase activity, 3. Transacylase activity&#39;
+    - statement: Exclusive localization to lipid droplets during stationary phase
+      supporting_text: &#39;The S. cerevisiae LPL1 (YOR059c) gene encodes a phospholipase B localized to lipid droplets during stationary phase... Exclusively localized to lipid droplets at stationary phase&#39;
+    - statement: Broad substrate specificity for glycerophospholipids
+      supporting_text: &#39;Shows phospholipase activity with broad substrate specificity, acting on all glycerophospholipids primarily at sn-2 position, then at sn-1 position&#39;
+- id: &#39;file:CANAL/LPL1/LPL1-uniprot.txt&#39;
+  title: UniProt entry for C. albicans LPL1 (Q5AMS2)
+  findings:
+    - statement: Contains DUF676 lipase-like domain
+      supporting_text: &#39;DOMAIN 14..213 /note=&#34;DUF676&#34;&#39;
+    - statement: Predicted hydrophobic region for lipid droplet association
+      supporting_text: &#39;TRANSMEM 286..306 /note=&#34;Helical&#34;&#39;
+    - statement: Member of putative lipase ROG1 family
+      supporting_text: &#39;SIMILARITY: Belongs to the putative lipase ROG1 family&#39;
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+    <div class="section">
+        <div class="pathway-link">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h2 class="section-title">🔗 Related Resources</h2>
+                <span class="vote-buttons" data-g="Q5AMS2" data-a="PATHWAY: LPL1 pathways" data-r="" data-act="PATHWAY">
+                    <button class="vote-btn" data-v="up" title="Pathway visualization is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="Pathway visualization needs improvement">👎</button>
+                </span>
+            </div>
+            <p>
+                <a href="LPL1-pathway.html" target="_blank" class="btn-link">
+                    📊 View Pathway Visualization
+                </a>
+                <span style="color: #666; font-size: 0.9rem; margin-left: 1rem;">
+                    Interactive pathway diagram with detailed annotations
+                </span>
+            </p>
+        </div>
+    </div>
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

@@ -1,5 +1,5 @@
-id: https://w3id.org/ai4curation/gene_review
-name: gene_curation
+id: https://ai4curation.io/ai-gene-review
+name: gene_review
 description: Schema for gene curation
   Top level entity is a GeneReview, which is about a single gene (and its equivalent swiss-prot entry).
   It contains a high level summary of the gene, plus a review of all existing annotations.
@@ -19,6 +19,7 @@ prefixes:
   dcterms: http://purl.org/dc/terms/
   ECO: http://purl.obolibrary.org/obo/ECO_
   IAO: http://purl.obolibrary.org/obo/IAO_
+  SO: http://purl.obolibrary.org/obo/SO_
 
 imports:
   - linkml:types
@@ -32,10 +33,17 @@ slots:
   label:
     description: Human readable name of the entity
     required: true
+    slot_uri: rdfs:label
   gene_symbol:
     range: string
     description: Symbol of the gene
     required: true
+  product_type:
+    range: ProductTypeEnum
+    description: Type of gene product (protein, ncRNA, etc.)
+    required: false
+    comments:
+      - currently not required, assumed PROTEIN by default, but this may be explicit in future
   title:
     range: string
     description: Title of the entity
@@ -44,8 +52,13 @@ slots:
   aliases:
     range: string
     multivalued: true
+  tags:
+    range: string
+    multivalued: true
+    description: Tags associated with the gene for categorization and organization
   description:
     description: Description of the entity
+    slot_uri: dcterms:description
   statement:
     range: string
     description: Concise statement describing an aspect of the gene
@@ -81,6 +94,7 @@ slots:
   predicate:
     range: string
     description: Predicate of the extension
+    slot_uri: rdf:predicate
   taxon:
     range: Term
     inlined: true
@@ -160,7 +174,9 @@ classes:
     slots:
      - id
      - gene_symbol
+     - product_type
      - aliases
+     - tags
      - description
      - taxon
      - references
@@ -178,7 +194,11 @@ classes:
       - label
       - description
       - ontology
-
+    slot_usage:
+      id:
+        description: An OBO CURIE for a term in GO, CL, CHEBI, etc.
+      label:
+        description: the term name
 
   Reference:
     description: A reference is a published text  that describes a finding or a method. References
@@ -296,6 +316,25 @@ classes:
     slots:
       - predicate
       - term
+    slot_usage:
+      predicate:
+        bindings:
+          - binds_value_of: id
+            range: ROTermEnum
+            obligation_level: REQUIRED
+
+  TermMapping:
+    description: A mapping between the proposed term and an equivalent term in another ontology
+    attributes:
+      predicate:
+        range: string
+        required: true
+        description: Mapping predicate (e.g., 'skos:exactMatch', 'skos:closeMatch', 'skos:broadMatch', 'skos:narrowMatch')
+      target_term:
+        range: Term
+        required: true
+        inlined: true
+        description: The target term in another ontology
 
   ProposedOntologyTerm:
     description: A proposed new ontology term that should exist but doesn't currently
@@ -311,6 +350,15 @@ classes:
       justification:
         range: string
         description: Justification for why this term is needed
+      proposed_parent:
+        range: Term
+        inlined: true
+        description: Proposed parent term in the ontology hierarchy
+      proposed_mappings:
+        range: TermMapping
+        multivalued: true
+        inlined_as_list: true
+        description: Proposed mappings to equivalent terms in other ontologies
       supported_by:
         range: SupportingTextInReference
         multivalued: true
@@ -535,7 +583,47 @@ enums:
       is_direct: false
       relationship_types:
         - rdfs:subClassOf
-      
+
+  ROTermEnum:
+    description: A term in the relation ontology
+
+  ProductTypeEnum:
+    description: Type of gene product
+    permissible_values:
+      PROTEIN:
+        description: Protein-coding gene
+        meaning: SO:0001217  # protein_coding_gene
+      MIRNA:
+        description: microRNA
+        meaning: SO:0000276  # miRNA
+      LNCRNA:
+        description: Long non-coding RNA
+        meaning: SO:0001877  # lncRNA
+      SNORNA:
+        description: Small nucleolar RNA
+        meaning: SO:0000275  # snoRNA
+      SNRNA:
+        description: Small nuclear RNA
+        meaning: SO:0000274  # snRNA
+      TRNA:
+        description: Transfer RNA
+        meaning: SO:0000253  # tRNA
+      RRNA:
+        description: Ribosomal RNA
+        meaning: SO:0000252  # rRNA
+      PIRNA:
+        description: PIWI-interacting RNA
+        meaning: SO:0001035  # piRNA
+      ANTISENSE_RNA:
+        description: Antisense RNA
+        meaning: SO:0000644  # antisense_RNA
+      PSEUDOGENE:
+        description: Pseudogene
+        meaning: SO:0000336  # pseudogene
+      OTHER_NCRNA:
+        description: Other non-coding RNA
+        meaning: SO:0000655  # ncRNA
+
   ManuscriptSection:
     description: |-
       Sections of a scientific manuscript or publication

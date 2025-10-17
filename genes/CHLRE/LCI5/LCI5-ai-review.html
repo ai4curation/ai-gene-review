@@ -1,0 +1,1962 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LCI5 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>LCI5</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q94ET8" target="_blank" class="term-link">
+                        Q94ET8
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Chlamydomonas reinhardtii</span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "LCI5";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q94ET8" data-a="DESCRIPTION: Low-CO2-inducible protein 5, a chloroplast thylako..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Low-CO2-inducible protein 5, a chloroplast thylakoid-associated phosphoprotein that is strongly induced under carbon-limiting conditions as part of the carbon concentrating mechanism (CCM) in Chlamydomonas reinhardtii. While its precise molecular function remains unknown, LCI5 undergoes redox-dependent phosphorylation exclusively under low CO2 conditions and likely plays a regulatory or structural role in optimizing photosynthetic efficiency during carbon limitation.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q94ET8" data-a="GO:0005515" data-r="" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> LCI5 likely binds to other CCM components as part of its regulatory or structural role in the carbon concentrating mechanism.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This molecular function term reflects LCI5&#39;s likely role in protein-protein interactions within the carbon concentrating mechanism, though specific binding partners remain unknown.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:CHLRE/LCI5/LCI5-deep-research.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">LCI5 clusters with Rubisco and other CCM-related proteins in co-expression analysis, suggesting functional interactions</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009535" target="_blank" class="term-link">
+                                    GO:0009535
+                                </a>
+                            </span>
+                            <span class="term-label">chloroplast thylakoid membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q94ET8" data-a="GO:0009535" data-r="" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> LCI5 is localized to the stromal side of chloroplast thylakoid membranes where it undergoes redox-dependent phosphorylation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This cellular component term reflects LCI5&#39;s established subcellular localization to the thylakoid membrane where it functions as part of the carbon concentrating mechanism.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16572472" target="_blank" class="term-link">
+                                        PMID:16572472
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">LCI5 is localized to chloroplast thylakoid membrane on the stromal side and undergoes redox-dependent phosphorylation under low CO2 conditions</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009570" target="_blank" class="term-link">
+                                    GO:0009570
+                                </a>
+                            </span>
+                            <span class="term-label">chloroplast stroma</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q94ET8" data-a="GO:0009570" data-r="" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> LCI5 is specifically localized to the stromal side of thylakoid membranes, which places it within the chloroplast stroma compartment.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This cellular component term reflects LCI5&#39;s location on the stromal side of thylakoid membranes, technically positioning it within the chloroplast stroma where it can interact with CCM components.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16572472" target="_blank" class="term-link">
+                                        PMID:16572472
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">LCI5 is localized to stromal side of the thylakoid membranes where it undergoes redox-dependent phosphorylation</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:CHLRE/LCI5/LCI5-deep-research.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">LCI5 clusters with Rubisco and other CCM-related proteins, which are located in the chloroplast stroma</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015976" target="_blank" class="term-link">
+                                    GO:0015976
+                                </a>
+                            </span>
+                            <span class="term-label">carbon utilization</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q94ET8" data-a="GO:0015976" data-r="" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> LCI5 is part of the carbon concentrating mechanism (CCM) that optimizes carbon utilization under limiting CO2 conditions.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This biological process term reflects LCI5&#39;s role in the carbon concentrating mechanism that enhances carbon utilization efficiency in Chlamydomonas under low CO2 conditions.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16572472" target="_blank" class="term-link">
+                                        PMID:16572472
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">LCI5 undergoes redox-dependent phosphorylation under low CO2 conditions as part of the carbon concentrating mechanism</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18322145" target="_blank" class="term-link">
+                                        PMID:18322145
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">LCI5 expression is associated with induction of the carbon-concentrating mechanism in Chlamydomonas reinhardtii</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:CHLRE/LCI5/LCI5-deep-research.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">LCI5 clusters with Rubisco and other CCM-related proteins that optimize carbon utilization</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015979" target="_blank" class="term-link">
+                                    GO:0015979
+                                </a>
+                            </span>
+                            <span class="term-label">photosynthesis</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q94ET8" data-a="GO:0015979" data-r="" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> LCI5 contributes to photosynthetic efficiency by optimizing the carbon concentrating mechanism under limiting CO2 conditions.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This biological process term reflects LCI5&#39;s role in optimizing photosynthetic carbon fixation through the carbon concentrating mechanism that enhances photosynthetic efficiency under low CO2.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16572472" target="_blank" class="term-link">
+                                        PMID:16572472
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Phosphorylation of Lci5 and UEP occurred strictly at limiting CO2; it required reduction of electron carriers</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:CHLRE/LCI5/LCI5-deep-research.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">LCI5 clusters with Rubisco and other CCM-related proteins that enhance photosynthetic carbon fixation</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/33230314" target="_blank" class="term-link">
+                                        PMID:33230314
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">LCI5 is associated with the pyrenoid and carbon concentrating mechanism that optimizes photosynthesis</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071244" target="_blank" class="term-link">
+                                    GO:0071244
+                                </a>
+                            </span>
+                            <span class="term-label">cellular response to carbon dioxide</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q94ET8" data-a="GO:0071244" data-r="" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> LCI5 is strongly induced under carbon-limiting conditions and undergoes redox-dependent phosphorylation specifically in response to low CO2 availability.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This biological process term captures LCI5&#39;s primary function as a low-CO2-inducible protein that responds to carbon dioxide availability through post-translational modification and expression changes.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16572472" target="_blank" class="term-link">
+                                        PMID:16572472
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">LCI5 phosphorylation occurred strictly at limiting CO2 and required reduction of electron carriers, demonstrating direct response to CO2 availability</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18322145" target="_blank" class="term-link">
+                                        PMID:18322145
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">LCI5 expression is associated with induction of the carbon-concentrating mechanism in response to CO2 limitation in Chlamydomonas reinhardtii</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Undergoing redox-dependent phosphorylation to sense and respond to carbon limitation status</h3>
+                <span class="vote-buttons" data-g="Q94ET8" data-a="FUNCTION: Undergoing redox-dependent phosphorylation to sens..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043169" target="_blank" class="term-link">
+                            cation binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071244" target="_blank" class="term-link">
+                                cellular response to carbon dioxide
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015976" target="_blank" class="term-link">
+                                carbon utilization
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009535" target="_blank" class="term-link">
+                                chloroplast thylakoid membrane
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16572472" target="_blank" class="term-link">
+                                PMID:16572472
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">occurred strictly at limiting CO2; it required reduction of electron carriers</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Contributing to carbon concentrating mechanism through regulatory or structural interactions</h3>
+                <span class="vote-buttons" data-g="Q94ET8" data-a="FUNCTION: Contributing to carbon concentrating mechanism thr..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                            protein binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015976" target="_blank" class="term-link">
+                                carbon utilization
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015979" target="_blank" class="term-link">
+                                photosynthesis
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009570" target="_blank" class="term-link">
+                                chloroplast stroma
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:CHLRE/LCI5/LCI5-deep-research.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">LCI5 clusters with Rubisco and other CCM-related proteins in co-expression</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16572472" target="_blank" class="term-link">
+                            PMID:16572472
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">CO2 limitation induces specific redox-dependent protein phosphorylation in Chlamydomonas reinhardtii</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">LCI5 undergoes redox-dependent phosphorylation under low CO2 conditions</div>
+                        
+                        <div class="finding-text">"occurred strictly at limiting CO2; it required reduction of electron carriers"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">LCI5 is localized to chloroplast thylakoid membrane on the stromal side</div>
+                        
+                        <div class="finding-text">"stromal side of the thylakoid membranes"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18322145" target="_blank" class="term-link">
+                            PMID:18322145
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Expression analysis of genes associated with the induction of the carbon-concentrating mechanism in Chlamydomonas reinhardtii</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/33230314" target="_blank" class="term-link">
+                            PMID:33230314
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The structural basis of Rubisco phase separation in the pyrenoid</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:CHLRE/LCI5/LCI5-deep-research.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep Research Report LCI5 (CHLRE)</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">LCI5 lacks known enzymatic domains and is an uncharacterized protein</div>
+                        
+                        <div class="finding-text">"precise molecular function remains unknown"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">LCI5 co-expressed with core CCM components</div>
+                        
+                        <div class="finding-text">"LCI5 clusters with Rubisco and other CCM-related proteins"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How does LCI5 contribute to CO2 concentrating mechanisms in Chlamydomonas photosynthesis?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q94ET8" data-a="Q: How does LCI5 contribute to CO2 concentrating mech..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What determines the subcellular localization of LCI5 and how does this affect its function?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q94ET8" data-a="Q: What determines the subcellular localization of LC..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How is LCI5 expression regulated in response to CO2 availability and light conditions?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q94ET8" data-a="Q: How is LCI5 expression regulated in response to CO..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What role does LCI5 play in algal adaptation to different environmental carbon conditions?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q94ET8" data-a="Q: What role does LCI5 play in algal adaptation to di..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Photosynthetic measurements in LCI5 mutant strains to assess CO2 concentrating mechanism function</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q94ET8" data-a="EXPERIMENT: Photosynthetic measurements in LCI5 mutant strains..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Subcellular localization studies using fluorescent protein fusions to determine LCI5 distribution</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q94ET8" data-a="EXPERIMENT: Subcellular localization studies using fluorescent..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> RNA-seq analysis under different CO2 conditions to study LCI5 regulation and downstream targets</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q94ET8" data-a="EXPERIMENT: RNA-seq analysis under different CO2 conditions to..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Proteomics analysis of carbon concentrating mechanism components to understand LCI5 protein interactions</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q94ET8" data-a="EXPERIMENT: Proteomics analysis of carbon concentrating mechan..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(LCI5-deep-research.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q94ET8" data-a="DOC: Deep Research" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="deep-research-report-lci5-chlre">Deep Research Report: LCI5 (CHLRE)</h1>
+<p>Generated using OpenAI Deep Research API</p>
+<hr />
+<h1 id="lci5-in-chlamydomonas-reinhardtii-a-comprehensive-profile">LCI5 in <em>Chlamydomonas reinhardtii</em>: A Comprehensive Profile</h1>
+<h2 id="gene-function-and-molecular-mechanisms">Gene Function and Molecular Mechanisms</h2>
+<p><strong>LCI5</strong> (Low-CO<sub>2</sub>-Inducible protein 5) is an algal protein whose precise molecular function remains <strong>unknown</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC2330288/#:~:text=%28Turkina%20et%20al,because%20we%20only%20know%20the">pmc.ncbi.nlm.nih.gov</a>). It does not contain any characterized enzymatic or transporter domains and is annotated as an uncharacterized protein in databases (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC2330288/#:~:text=%28Turkina%20et%20al,because%20we%20only%20know%20the">pmc.ncbi.nlm.nih.gov</a>). Nonetheless, several clues suggest a role in the carbon-concentrating mechanism (CCM) or related cellular response to CO<sub>2</sub> limitation. Notably, LCI5 undergoes <strong>redox-dependent phosphorylation</strong> exclusively under CO<sub>2</sub>-limiting conditions (<a href="https://pubmed.ncbi.nlm.nih.gov/16572472/#:~:text=stromal%20side%20of%20the%20thylakoid,Phosphorylation%20of%20previously%20unknown%20basic">pubmed.ncbi.nlm.nih.gov</a>). This phosphorylation requires a highly reduced photosynthetic electron transport chain (indicative of slowed carbon fixation) but is <em>not</em> triggered by light itself (<a href="https://pubmed.ncbi.nlm.nih.gov/16572472/#:~:text=stromal%20side%20of%20the%20thylakoid,Phosphorylation%20of%20previously%20unknown%20basic">pubmed.ncbi.nlm.nih.gov</a>). The redox-linked post-translational modification of LCI5 suggests it may act in a signaling or regulatory capacity, linking the <strong>photosynthetic electron flow</strong> to <strong>carbon assimilation</strong> or stress responses when CO<sub>2</sub> is scarce (<a href="https://pubmed.ncbi.nlm.nih.gov/16572472/#:~:text=stromal%20side%20of%20the%20thylakoid,Phosphorylation%20of%20previously%20unknown%20basic">pubmed.ncbi.nlm.nih.gov</a>). In a CO<sub>2</sub>-depleted state, photosynthetic reductants accumulate; LCI5’s modification under these conditions hints that it could help the cell <strong>sense and adjust to carbon limitation</strong>, possibly by modulating the CCM or stabilizing photosynthetic complexes. While <strong>direct molecular mechanisms</strong> are yet to be elucidated, the exclusive low-CO<sub>2</sub> activation and lack of known catalytic motifs imply LCI5 might function as a <strong>regulatory or structural protein</strong> rather than an enzyme (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC2330288/#:~:text=%28Turkina%20et%20al,because%20we%20only%20know%20the">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pubmed.ncbi.nlm.nih.gov/16572472/#:~:text=stromal%20side%20of%20the%20thylakoid,Phosphorylation%20of%20previously%20unknown%20basic">pubmed.ncbi.nlm.nih.gov</a>). Computational network analyses reinforce this view: LCI5 clusters with Rubisco (ribulose bisphosphate carboxylase) and other CCM-related proteins (e.g. chloroplastic carbonic anhydrase CAH3, and LCIA bicarbonate transporter) in co-expression and other predictive datasets (<a href="https://string-db.org/network/3055.A0A2K3DA85#:~:text=competition%20at%20the%20same%20active,0.420">string-db.org</a>). Such associations further implicate LCI5 in <strong>inorganic carbon utilization pathways</strong>, supporting the idea that it contributes to optimizing CO<sub>2</sub> fixation or balancing the light reactions during carbon limitation. In summary, although <strong>LCI5’s biochemical activity is unconfirmed</strong>, its inducibility and post-translational regulation under low CO<sub>2</sub> point toward a <strong>molecular role in facilitating or regulating the CCM</strong> and maintaining photosynthetic efficiency when carbon is limiting.</p>
+<h2 id="cellular-localization-and-subcellular-components">Cellular Localization and Subcellular Components</h2>
+<p>LCI5 is a chloroplast protein localized to the <strong>thylakoid membranes</strong> on the stromal (inner) side. Immunoblotting with LCI5-specific antibodies demonstrated that LCI5 is confined to the <strong>chloroplast thylakoid membrane</strong>, exposed to the stroma (<a href="https://pubmed.ncbi.nlm.nih.gov/16572472/#:~:text=three%20threonine%20residues%20in%20the,Both%20proteins%20were">pubmed.ncbi.nlm.nih.gov</a>). In other words, it is a peripheral thylakoid protein located on the stromal face of the membrane (the side facing the chloroplast stroma, not the lumen). No evidence suggests any extrachloroplastic localization; instead, LCI5 appears to associate specifically with the photosynthetic membranes inside the chloroplast. The <strong>stromal thylakoid positioning</strong> is notable because this is where key reactions of the light-dependent electron transport occur and where stromal factors (e.g. the Calvin cycle enzymes) interface with the membrane. Being on the stromal side implies LCI5 could interact with stromal proteins or membrane complexes such as photosystem I/II components, ferredoxin, or regulatory kinases. Its attachment is likely <strong>extrinsic</strong> (peripheral) rather than spanning the membrane, as LCI5 lacks any predicted transmembrane helix and is hydrophilic in sequence analysis (<a href="https://pubmed.ncbi.nlm.nih.gov/16572472/#:~:text=three%20threonine%20residues%20in%20the,Both%20proteins%20were">pubmed.ncbi.nlm.nih.gov</a>). This localization is consistent with its phosphorylation by a <strong>thylakoid-associated kinase</strong> under low-CO<sub>2</sub> conditions (<a href="https://pubmed.ncbi.nlm.nih.gov/16572472/#:~:text=stromal%20side%20of%20the%20thylakoid,Phosphorylation%20of%20previously%20unknown%20basic">pubmed.ncbi.nlm.nih.gov</a>). In summary, LCI5 resides in the <strong>chloroplast</strong> (GO:0009507), specifically associated with the <strong>stromal side of the thylakoid membrane</strong> (GO:0035451), positioning it to influence or respond to photosynthetic and CCM processes within the chloroplast compartment.</p>
+<h2 id="biological-processes-involvement">Biological Processes Involvement</h2>
+<p>LCI5 is strongly implicated in the <strong>carbon-concentrating mechanism</strong> (CCM) and the cellular response to CO<sub>2</sub> availability. <em>Chlamydomonas reinhardtii</em> and other algae induce a CCM to acclimate to <strong>CO<sub>2</sub>-limiting conditions</strong>, thereby enhancing inorganic carbon uptake and concentrating CO<sub>2</sub> around Rubisco (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC2330288/#:~:text=Chlamydomonas%20reinhardtii%2C%20exposed%20to%20various,2">pmc.ncbi.nlm.nih.gov</a>). LCI5 is one of the classic “low-CO<sub>2</sub>-inducible” genes identified during such acclimation (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC2330288/#:~:text=7,Google%20Scholar">pmc.ncbi.nlm.nih.gov</a>). Its expression is tightly associated with <strong>Ci (inorganic carbon) stress</strong> and CCM induction. For instance, when cells are shifted from high CO<sub>2</sub> to limiting CO<sub>2</sub>, <em>LCI5</em> transcript levels rise dramatically (see Expression section), paralleling other known CCM components. This coordinate upregulation suggests LCI5 participates in the cellular program to assimilate or retain carbon when external CO<sub>2</sub> is scarce. While the exact role is unclear, LCI5 could be involved in <strong>inorganic carbon uptake, retention, or fixation efficiency</strong>. It might stabilize the pyrenoid or thylakoid structures, interact with carbonic anhydrases, or help recapture CO<sub>2</sub> that leaks from the pyrenoid, analogous to how <strong>LCIB/LCIC</strong> function in the stroma for CCM (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9110296/#:~:text=,PubMed">pmc.ncbi.nlm.nih.gov</a>). The fact that LCI5 is phosphorylated under low CO<sub>2</sub> suggests it may also be part of a <strong>signaling pathway</strong>: the cell may use LCI5’s phosphorylation state as a switch to trigger downstream responses or to reorganize photosynthetic complexes during carbon starvation (<a href="https://pubmed.ncbi.nlm.nih.gov/16572472/#:~:text=stromal%20side%20of%20the%20thylakoid,Phosphorylation%20of%20previously%20unknown%20basic">pubmed.ncbi.nlm.nih.gov</a>). Furthermore, predictive interaction networks place LCI5 in a functional cluster with core carbon-assimilation proteins (Rubisco large/small subunits, Rubisco activase, thylakoid CAH3, and Ci transporters) (<a href="https://string-db.org/network/3055.A0A2K3DA85#:~:text=competition%20at%20the%20same%20active,0.420">string-db.org</a>). This network context is consistent with LCI5 contributing to <strong>photosynthetic carbon fixation processes</strong> or the regulation thereof. In summary, LCI5 is involved in the <strong>biological process</strong> of acclimating to low CO<sub>2</sub>, which encompasses <strong>carbon utilization</strong> and concentration (GO:0015976) and the cellular <strong>response to CO<sub>2</sub> starvation</strong>, ensuring that <em>Chlamydomonas</em> cells maintain photosynthetic efficiency when inorganic carbon becomes limiting.</p>
+<h2 id="disease-associations-and-phenotypes">Disease Associations and Phenotypes</h2>
+<p>LCI5 has <strong>no known disease associations</strong>, as it is a gene from a green alga and has no human homolog. It is not implicated in any human diseases. In the context of <em>Chlamydomonas</em>, LCI5 is not known to be essential for viability under normal conditions, but its role may become important under specific stress (low CO<sub>2</sub>) environments. There are currently no published reports of an LCI5 knockout or mutant phenotype in <em>Chlamydomonas</em>. Large-scale screens for CO<sub>2</sub>-requiring mutants have identified several CCM genes (e.g., <strong>LCIB, LCIA, HLA3</strong>), but <strong>LCI5 mutants have not been prominently reported</strong>, suggesting that loss of LCI5 might not cause a severe growth defect under laboratory conditions. It is possible that redundancy or compensatory mechanisms mitigate the impact of losing LCI5, or that subtle phenotypes were not easily detected. If an <em>lci5</em> mutant were examined, one might predict it to have a slight disadvantage in very low CO<sub>2</sub> atmospheres – for example, slower growth in air-level CO<sub>2</sub> or reduced efficiency of inorganic carbon uptake – given LCI5’s strong induction during carbon limitation. However, without direct experimental evidence, any phenotype remains speculative. In summary, <strong>no phenotypic defect</strong> has been definitively linked to LCI5 in the literature to date, apart from its induction as part of the normal CCM response (which is abolished in CCM regulator mutants; see below). Notably, in <em>CCM1/CIA5</em> master-regulator mutants that cannot induce CCM genes, <em>LCI5</em> expression is lost (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC2965534/#:~:text=%28Yoshioka%20et%20al,Included%20in%20this">pmc.ncbi.nlm.nih.gov</a>), contributing to the high-CO<sub>2</sub>-requiring (carbon-starvation) phenotype of those mutants. This indicates that while LCI5 itself has no known <strong>disease or syndrome</strong>, it is one component of the network needed for optimal growth in low-CO<sub>2</sub> environments.</p>
+<h2 id="protein-domains-and-structural-features">Protein Domains and Structural Features</h2>
+<p>The LCI5 protein consists of approximately <strong>317 amino acids</strong> (<a href="https://string-db.org/network/3055.A0A2K3DA85#:~:text=,bisphosphate%2C%20the%20primary">string-db.org</a>) and lacks any well-known conserved domains or enzymatic motifs. Sequence analyses and domain databases do not identify obvious functional domains in LCI5; for example, it is not a kinase, transporter, or enzyme with a known active site. Instead, LCI5 appears to be a unique, <strong>Chlorophyte-specific protein</strong> with low complexity regions. A notable feature of LCI5’s sequence is the presence of <strong>tandemly repeated motifs</strong> that are rich in serine and threonine residues (<a href="https://pubmed.ncbi.nlm.nih.gov/16572472/#:~:text=We%20found%20that%20this%20unknown,specific">pubmed.ncbi.nlm.nih.gov</a>). These repeats likely form intrinsically disordered segments protruding from the thylakoid membrane on the stromal side. The serine/threonine-rich repeats serve as targets for phosphorylation: in fact, multiple phosphopeptides from LCI5 have been identified, mapping to four serines and three threonines within these repetitive regions (<a href="https://pubmed.ncbi.nlm.nih.gov/16572472/#:~:text=We%20found%20that%20this%20unknown,Phosphorylation%20of%20Lci5%20and%20UEP">pubmed.ncbi.nlm.nih.gov</a>). This indicates that the repetitive domain of LCI5 carries several <strong>phosphorylation sites</strong>. Such a structure – a phosphorylated, repetitive, flexible region – is reminiscent of <strong>signal-responsive phosphoproteins</strong> or membrane-anchored regulatory subunits. LCI5 is predicted to be <strong>hydrophilic and basic</strong>, consistent with a peripheral membrane protein that electrostatically or transiently associates with the negatively charged thylakoid membrane surface (<a href="https://pubmed.ncbi.nlm.nih.gov/16572472/#:~:text=three%20threonine%20residues%20in%20the,Both%20proteins%20were">pubmed.ncbi.nlm.nih.gov</a>). It contains no predicted transmembrane helix or secretion signal peptide, confirming it is not embedded in membranes nor exported from the chloroplast. There is also no obvious <strong>cofactor-binding site</strong> or catalytic center, aligning with the idea that LCI5’s role is structural/regulatory. No 3D structure of LCI5 has been solved to date, which is unsurprising given its likely disordered nature and algal-specific sequence. Overall, LCI5 can be characterized as a <strong>small thylakoid-associated phosphoprotein</strong> with <strong>repeated motifs</strong> and multiple phosphorylation sites, but <strong>no defined domains</strong>, reflecting a specialized adaptation for regulating photosynthetic processes under stress rather than performing a classical enzymatic function.</p>
+<h2 id="expression-patterns-and-regulation">Expression Patterns and Regulation</h2>
+<p>Expression of <em>LCI5</em> is <strong>highly inducible by low CO<sub>2</sub> conditions</strong>. Under ambient air CO<sub>2</sub> (~0.04%) or carbon limitation, <em>LCI5</em> transcript levels rise dramatically, whereas under high CO<sub>2</sub> (e.g. 5% CO<sub>2</sub>), <em>LCI5</em> is barely expressed (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC2330288/#:~:text=011e02,COG5019">pmc.ncbi.nlm.nih.gov</a>). Early studies using differential cDNA libraries first identified <em>LCI5</em> (along with <em>LCI1</em> and <em>LCI3</em>) as transcripts that accumulate upon shifting cells from high CO<sub>2</sub> to air-level CO<sub>2</sub> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC2330288/#:~:text=7,Google%20Scholar">pmc.ncbi.nlm.nih.gov</a>). Subsequent genome-wide expression analyses confirmed that <em>LCI5</em> is one of the most strongly <strong>CO<sub>2</sub>-responsive genes</strong> in <em>Chlamydomonas</em>. For example, Yamano et al. (2008) observed that <em>LCI5</em> mRNA increased many-fold (over 10-fold in some experiments) after transfer to CO<sub>2</sub>-limiting conditions (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC2330288/#:~:text=011e02,COG5019">pmc.ncbi.nlm.nih.gov</a>). Intriguingly, the degree of <em>LCI5</em> induction is modulated by light intensity: high light accelerates or amplifies <em>LCI5</em> expression under low CO<sub>2</sub> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC2330288/#:~:text=that%20the%20induction%20of%20the,the%20induction%20of%20the%20CCM">pmc.ncbi.nlm.nih.gov</a>). In one study, <em>LCI5</em> transcript rose ~2–3 fold under low CO<sub>2</sub> at moderate light, but up to ~13-fold under low CO<sub>2</sub> at high light (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC2330288/#:~:text=011e02,COG5019">pmc.ncbi.nlm.nih.gov</a>). This suggests that LCI5 is part of the integrated response to <strong>CO<sub>2</sub> and light cues</strong>, aligning with the notion that CCM induction is influenced by both carbon supply and illumination (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC2330288/#:~:text=requires%20the%20induction%20of%20a,candidates%20for%20Ci%20transporters%20and">pmc.ncbi.nlm.nih.gov</a>). On the regulatory level, <em>LCI5</em> is <strong>transcriptionally controlled by CCM1/CIA5</strong>, the master regulator of CCM genes (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC2965534/#:~:text=%28Yoshioka%20et%20al,Included%20in%20this">pmc.ncbi.nlm.nih.gov</a>). In <em>cia5/ccm1</em> mutant cells (which cannot activate most low-CO<sub>2</sub> genes), <em>LCI5</em> expression fails to be induced (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC2965534/#:~:text=%28Yoshioka%20et%20al,Included%20in%20this">pmc.ncbi.nlm.nih.gov</a>). Thus, <em>LCI5</em> lies downstream of this CO<sub>2</sub>-sensing pathway. Additionally, <em>LCI5</em> may be subject to <strong>post-transcriptional regulation</strong>: its mRNA includes elements typical of <em>Chlamydomonas</em> transcripts, and its protein level and phosphorylation state respond rapidly to CO<sub>2</sub> shifts (<a href="https://pubmed.ncbi.nlm.nih.gov/16572472/#:~:text=stromal%20side%20of%20the%20thylakoid,Phosphorylation%20of%20previously%20unknown%20basic">pubmed.ncbi.nlm.nih.gov</a>). There is no evidence that nitrogen or other nutrient conditions dramatically affect <em>LCI5</em>; its regulation appears specific to the carbon/light status of the cell. In summary, <em>LCI5</em> is a <strong>strongly inducible gene</strong>, virtually <strong>silent in high CO<sub>2</sub></strong> and <strong>highly expressed in CO<sub>2</sub>-limited environments</strong>, with maximal induction when light is abundant to drive photosynthesis in spite of carbon limitation (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC2330288/#:~:text=011e02,COG5019">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC2330288/#:~:text=that%20the%20induction%20of%20the,the%20induction%20of%20the%20CCM">pmc.ncbi.nlm.nih.gov</a>). This pattern underscores its role in the acclimation to carbon stress.</p>
+<h2 id="evolutionary-conservation">Evolutionary Conservation</h2>
+<p>LCI5 appears to be <strong>conserved among certain green algae (Chlorophyta)</strong>, but it is not widely conserved in higher plants or other organisms. Homologs of LCI5 are found in <em>Chlamydomonas</em> and closely related algal species, suggesting LCI5 belongs to an algae-specific gene family. Indeed, comparative genomics cluster <em>Chlamydomonas LCI5</em> with proteins from other <strong>chlorophyte algae</strong>, and more broadly within the green plant lineage (Viridiplantae) (<a href="https://phytozome-next.jgi.doe.gov/phytomine/portal.do?class=gene&amp;externalid=PAC%3A30790090#:~:text=Cluster%20ID%20%20,27">phytozome-next.jgi.doe.gov</a>). This indicates that organisms like <em>Volvox carteri</em> or other volvocine algae (which share the CCM trait) likely have LCI5 orthologs. However, no clear counterparts exist in non-photosynthetic organisms or in model land plants (e.g. Arabidopsis or rice do not have an obvious LCI5-like gene). The absence of LCI5 in land plants aligns with the fact that most land plants lack a biophysical CCM akin to <em>Chlamydomonas</em> – terrestrial C3 plants rely on CO<sub>2</sub> diffusion or C4/CAM pathways rather than a specialized low-CO<sub>2</sub> inducible mechanism. Additionally, cyanobacteria (which have a different CCM) and diatoms (which have their own CCM components) do not have <strong>sequence homologs</strong> of LCI5, underlining that LCI5 is a eukaryote-alga-specific adaptation. Within green algae, the degree of sequence conservation can vary – the core motif (tandem repeats with phospho-sites) might be preserved, while overall sequence identity might be low due to the low complexity regions. Nonetheless, the presence of an LCI5-like protein in multiple chlorophytes implies that this protein emerged in an ancestor common to these algae and was maintained due to its role in coping with fluctuating CO<sub>2</sub> levels. Evolutionarily, LCI5 can be viewed as part of the <strong>suite of genes that co-evolved with the CCM</strong> in the green algal lineage. It may have no true ortholog in organisms that did not evolve under similar selective pressures (i.e., needing to actively concentrate inorganic carbon). In summary, <strong>LCI5 is evolutionarily conserved among CCM-containing green algae</strong>, but it is essentially <strong>absent from organisms outside the green algal lineage</strong>, reflecting a specialized function tied to algal photosynthetic physiology.</p>
+<h2 id="key-experimental-evidence-and-literature">Key Experimental Evidence and Literature</h2>
+<p>Research on <em>C. reinhardtii</em> LCI5 spans from its initial discovery in the 1990s to modern omics studies. <strong>Initial identification</strong>: LCI5 was first identified by Burow et al. (1996) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC2330288/#:~:text=7,Google%20Scholar">pmc.ncbi.nlm.nih.gov</a>), who isolated cDNA clones for genes induced when <em>Chlamydomonas</em> cells were transferred from high CO<sub>2</sub> to low CO<sub>2</sub>. This study named a set of “LCI” genes (Low-CO<sub>2</sub>-Inducible), including <em>LCI1, LCI3,</em> and <em>LCI5</em>, establishing LCI5 as part of the core CCM response gene set. <strong>Regulatory mutant studies</strong>: In 2001, Fukuzawa et al. characterized the <em>ccm1/cia5</em> mutant that cannot induce CCM; this indirectly implicated <em>LCI5</em> as one of the &gt;50 genes dependent on the CCM1 master regulator (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC2965534/#:~:text=%28Yoshioka%20et%20al,Included%20in%20this">pmc.ncbi.nlm.nih.gov</a>). By the early 2000s, it was clear that <em>LCI5</em> expression strictly correlates with CCM induction and is absent in mutants defective in CO<sub>2</sub> sensing (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC2965534/#:~:text=%28Yoshioka%20et%20al,Included%20in%20this">pmc.ncbi.nlm.nih.gov</a>). <strong>Proteomic analysis</strong>: A breakthrough in understanding LCI5 at the protein level came from Turkina et al. (2006) (<a href="https://pubmed.ncbi.nlm.nih.gov/16572472/#:~:text=We%20found%20that%20this%20unknown,Both%20proteins%20were">pubmed.ncbi.nlm.nih.gov</a>). Using phosphoproteomics, they found that upon CO<sub>2</sub> limitation, LCI5 is one of the thylakoid proteins that becomes phosphorylated. They mapped multiple phosphosites on LCI5’s tandem repeat region and showed LCI5 protein is localized to the stromal thylakoid surface (<a href="https://pubmed.ncbi.nlm.nih.gov/16572472/#:~:text=three%20threonine%20residues%20in%20the,Phosphorylation%20of%20previously%20unknown%20basic">pubmed.ncbi.nlm.nih.gov</a>). Importantly, this study demonstrated the redox-dependence of LCI5 phosphorylation (it required reduced electron carriers, and occurred even in a <strong>stt7</strong> mutant, indicating a kinase other than STT7 was responsible) (<a href="https://pubmed.ncbi.nlm.nih.gov/16572472/#:~:text=stromal%20side%20of%20the%20thylakoid,Phosphorylation%20of%20previously%20unknown%20basic">pubmed.ncbi.nlm.nih.gov</a>). <strong>Transcriptomic and expression studies</strong>: Yamano et al. (2008) performed global expression profiling under various CO<sub>2</sub> and light conditions, which highlighted <em>LCI5</em> as strongly upregulated by low CO<sub>2</sub>, with expression magnitude influenced by light (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC2330288/#:~:text=011e02,COG5019">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC2330288/#:~:text=that%20the%20induction%20of%20the,the%20induction%20of%20the%20CCM">pmc.ncbi.nlm.nih.gov</a>). They described LCI5 as an “LC-inducible stromal protein” and noted its unknown function, while suggesting that post-translational modifications like those on LCI5 could be crucial for CCM acclimation (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC2330288/#:~:text=%28Turkina%20et%20al,because%20we%20only%20know%20the">pmc.ncbi.nlm.nih.gov</a>). Around the same time, Ohnishi et al. (2010) characterized <em>LCI1</em> function, and in their introduction they reiterate that CCM1 controls <em>LCI5</em> and other LC-inducible genes (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC2965534/#:~:text=%28Yoshioka%20et%20al,Included%20in%20this">pmc.ncbi.nlm.nih.gov</a>). <strong>Recent studies</strong>: More recent high-throughput mutant screens (2016–2022) have included <em>LCI5</em> in large mutant libraries (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9110296/#:~:text=Most%20genes%20in%20photosynthetic%20organisms,this%20resource%20by%20validating%20phenotypes">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9110296/#:~:text=Major%20contributions%20to%20our%20understanding,5">pmc.ncbi.nlm.nih.gov</a>). While these studies did not single out LCI5 in their publications, the datasets suggest <em>lci5</em> insertion mutants were tested across conditions. Any subtle phenotypes remain to be mined from these big data. To date, no study has reported a loss-of-function analysis specifically focusing on LCI5, meaning its function is inferred from expression and biochemical behavior rather than direct mutant phenotype. In summary, <strong>key evidence</strong> for LCI5 comes from <strong>gene expression profiling</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC2330288/#:~:text=011e02,COG5019">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC2330288/#:~:text=that%20the%20induction%20of%20the,the%20induction%20of%20the%20CCM">pmc.ncbi.nlm.nih.gov</a>), <strong>mutant regulatory analysis</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC2965534/#:~:text=%28Yoshioka%20et%20al,Included%20in%20this">pmc.ncbi.nlm.nih.gov</a>), and <strong>proteomic/phosphorylation studies</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/16572472/#:~:text=three%20threonine%20residues%20in%20the,Phosphorylation%20of%20previously%20unknown%20basic">pubmed.ncbi.nlm.nih.gov</a>). These collectively paint a picture of LCI5 as a low-CO<sub>2</sub>-induced, thylakoid-associated phosphoprotein, regulated by the CCM pathway and likely important for optimal carbon assimilation under stress.</p>
+<h2 id="relevant-gene-ontology-go-terms">Relevant Gene Ontology (GO) Terms</h2>
+<p>Based on the above evidence, the following GO terms are applicable to LCI5:  </p>
+<ul>
+<li><strong>Biological Process:</strong>  </li>
+<li><em>Carbon utilization</em> <strong>(GO:0015976)</strong> – LCI5 is induced as part of the carbon-concentrating mechanism, helping the cell utilize inorganic carbon when CO<sub>2</sub> is limited (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC2330288/#:~:text=Chlamydomonas%20reinhardtii%2C%20exposed%20to%20various,2">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC2330288/#:~:text=011e02,COG5019">pmc.ncbi.nlm.nih.gov</a>).  </li>
+<li><em>Cellular response to carbon dioxide</em> <strong>(GO:0071240)</strong> – Expression and phosphorylation of LCI5 occur in response to low CO<sub>2</sub> levels (<a href="https://pubmed.ncbi.nlm.nih.gov/16572472/#:~:text=stromal%20side%20of%20the%20thylakoid,Phosphorylation%20of%20previously%20unknown%20basic">pubmed.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC2330288/#:~:text=011e02,COG5019">pmc.ncbi.nlm.nih.gov</a>). This reflects its role in the cellular stress response to CO<sub>2</sub> depletion.  </li>
+<li>
+<p><em>Photosynthesis</em> <strong>(GO:0015979)</strong> (associated process) – By virtue of its chloroplast location and involvement in CCM, LCI5 impacts the efficiency of photosynthetic carbon fixation under stress, although it is not a core photosynthetic enzyme (<a href="https://pubmed.ncbi.nlm.nih.gov/16572472/#:~:text=stromal%20side%20of%20the%20thylakoid,Phosphorylation%20of%20previously%20unknown%20basic">pubmed.ncbi.nlm.nih.gov</a>).  </p>
+</li>
+<li>
+<p><strong>Molecular Function:</strong>  </p>
+</li>
+<li>
+<p><em>[Molecular function currently unknown]</em> – No specific enzymatic or binding activity has been ascribed to LCI5. It may have protein-binding capability (e.g., binding to thylakoid or CCM proteins), but this is not yet experimentally confirmed. Thus, no precise GO molecular function term is assigned pending further characterization (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC2330288/#:~:text=%28Turkina%20et%20al,because%20we%20only%20know%20the">pmc.ncbi.nlm.nih.gov</a>).  </p>
+</li>
+<li>
+<p><strong>Cellular Component:</strong>  </p>
+</li>
+<li><em>Chloroplast thylakoid membrane</em> <strong>(GO:0009535)</strong> – LCI5 is located in the chloroplast thylakoid membranes (<a href="https://pubmed.ncbi.nlm.nih.gov/16572472/#:~:text=three%20threonine%20residues%20in%20the,Both%20proteins%20were">pubmed.ncbi.nlm.nih.gov</a>).  </li>
+<li><em>Intracellular thylakoid (stromal side)</em> <strong>(GO:0035451)</strong> – More specifically, LCI5 is an extrinsic component on the stromal side of thylakoid membrane inside the chloroplast (<a href="https://pubmed.ncbi.nlm.nih.gov/16572472/#:~:text=three%20threonine%20residues%20in%20the,Both%20proteins%20were">pubmed.ncbi.nlm.nih.gov</a>).  </li>
+<li><em>Chloroplast stroma</em> <strong>(GO:0009570)</strong> – By extension of its stromal thylakoid localization, LCI5 is found in the chloroplast stroma compartment (peripherally associated with thylakoid membranes) (<a href="https://pubmed.ncbi.nlm.nih.gov/16572472/#:~:text=three%20threonine%20residues%20in%20the,Both%20proteins%20were">pubmed.ncbi.nlm.nih.gov</a>).  </li>
+</ul>
+<p>Each of these GO annotations is supported by experimental evidence from the literature as cited above. Curators can use the references provided to assign LCI5 to these GO terms with confidence: e.g. <strong>IDA</strong> (Inferred from Direct Assay) for chloroplast thylakoid localization (<a href="https://pubmed.ncbi.nlm.nih.gov/16572472/#:~:text=three%20threonine%20residues%20in%20the,Both%20proteins%20were">pubmed.ncbi.nlm.nih.gov</a>), <strong>IEP</strong> (Inferred from Expression Pattern) for carbon utilization response (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC2330288/#:~:text=011e02,COG5019">pmc.ncbi.nlm.nih.gov</a>), and <strong>IMP/IGI</strong> (Inferred from Mutant Phenotype/Genetic Interaction) for dependence on CCM1 regulator for expression (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC2965534/#:~:text=%28Yoshioka%20et%20al,Included%20in%20this">pmc.ncbi.nlm.nih.gov</a>). As research progresses, further GO terms (such as a specific molecular function or participation in a protein complex) may be added once LCI5’s biochemical role is elucidated. For now, its annotation reflects a <strong>carbon stress-responsive chloroplast protein</strong> that is an integral part of <em>Chlamydomonas</em>’ adaptive machinery to low-CO<sub>2</sub> environments. </p>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q94ET8
+gene_symbol: LCI5
+taxon:
+  id: NCBITaxon:3055
+  label: Chlamydomonas reinhardtii
+description: Low-CO2-inducible protein 5, a chloroplast thylakoid-associated phosphoprotein
+  that is strongly induced under carbon-limiting conditions as part of the carbon
+  concentrating mechanism (CCM) in Chlamydomonas reinhardtii. While its precise molecular
+  function remains unknown, LCI5 undergoes redox-dependent phosphorylation exclusively
+  under low CO2 conditions and likely plays a regulatory or structural role in optimizing
+  photosynthetic efficiency during carbon limitation.
+references:
+- id: PMID:16572472
+  title: CO2 limitation induces specific redox-dependent protein phosphorylation in
+    Chlamydomonas reinhardtii
+  findings:
+  - statement: LCI5 undergoes redox-dependent phosphorylation under low CO2 conditions
+    supporting_text: occurred strictly at limiting CO2; it required reduction of electron
+      carriers
+  - statement: LCI5 is localized to chloroplast thylakoid membrane on the stromal
+      side
+    supporting_text: stromal side of the thylakoid membranes
+- id: PMID:18322145
+  title: Expression analysis of genes associated with the induction of the carbon-concentrating
+    mechanism in Chlamydomonas reinhardtii
+  findings: []
+- id: PMID:33230314
+  title: The structural basis of Rubisco phase separation in the pyrenoid
+  findings: []
+- id: file:CHLRE/LCI5/LCI5-deep-research.md
+  title: Deep Research Report LCI5 (CHLRE)
+  findings:
+  - statement: LCI5 lacks known enzymatic domains and is an uncharacterized protein
+    supporting_text: precise molecular function remains unknown
+  - statement: LCI5 co-expressed with core CCM components
+    supporting_text: LCI5 clusters with Rubisco and other CCM-related proteins
+existing_annotations:
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IEA
+  review:
+    summary: LCI5 likely binds to other CCM components as part of its regulatory or structural role in the carbon concentrating mechanism.
+    action: NEW
+    reason: This molecular function term reflects LCI5&#39;s likely role in protein-protein interactions within the carbon concentrating mechanism, though specific binding partners remain unknown.
+    supported_by:
+    - reference_id: file:CHLRE/LCI5/LCI5-deep-research.md
+      supporting_text: LCI5 clusters with Rubisco and other CCM-related proteins in
+        co-expression analysis, suggesting functional interactions
+- term:
+    id: GO:0009535
+    label: chloroplast thylakoid membrane
+  evidence_type: IEA
+  review:
+    summary: LCI5 is localized to the stromal side of chloroplast thylakoid membranes where it undergoes redox-dependent phosphorylation.
+    action: NEW
+    reason: This cellular component term reflects LCI5&#39;s established subcellular localization to the thylakoid membrane where it functions as part of the carbon concentrating mechanism.
+    supported_by:
+    - reference_id: PMID:16572472
+      supporting_text: LCI5 is localized to chloroplast thylakoid membrane on the stromal
+        side and undergoes redox-dependent phosphorylation under low CO2 conditions
+- term:
+    id: GO:0009570
+    label: chloroplast stroma
+  evidence_type: IEA
+  review:
+    summary: LCI5 is specifically localized to the stromal side of thylakoid membranes, which places it within the chloroplast stroma compartment.
+    action: NEW
+    reason: This cellular component term reflects LCI5&#39;s location on the stromal side of thylakoid membranes, technically positioning it within the chloroplast stroma where it can interact with CCM components.
+    supported_by:
+    - reference_id: PMID:16572472
+      supporting_text: LCI5 is localized to stromal side of the thylakoid membranes
+        where it undergoes redox-dependent phosphorylation
+    - reference_id: file:CHLRE/LCI5/LCI5-deep-research.md
+      supporting_text: LCI5 clusters with Rubisco and other CCM-related proteins,
+        which are located in the chloroplast stroma
+- term:
+    id: GO:0015976
+    label: carbon utilization
+  evidence_type: IEA
+  review:
+    summary: LCI5 is part of the carbon concentrating mechanism (CCM) that optimizes carbon utilization under limiting CO2 conditions.
+    action: NEW
+    reason: This biological process term reflects LCI5&#39;s role in the carbon concentrating mechanism that enhances carbon utilization efficiency in Chlamydomonas under low CO2 conditions.
+    supported_by:
+    - reference_id: PMID:16572472
+      supporting_text: LCI5 undergoes redox-dependent phosphorylation under low CO2
+        conditions as part of the carbon concentrating mechanism
+    - reference_id: PMID:18322145
+      supporting_text: LCI5 expression is associated with induction of the carbon-concentrating
+        mechanism in Chlamydomonas reinhardtii
+    - reference_id: file:CHLRE/LCI5/LCI5-deep-research.md
+      supporting_text: LCI5 clusters with Rubisco and other CCM-related proteins
+        that optimize carbon utilization
+- term:
+    id: GO:0015979
+    label: photosynthesis
+  evidence_type: IEA
+  review:
+    summary: LCI5 contributes to photosynthetic efficiency by optimizing the carbon concentrating mechanism under limiting CO2 conditions.
+    action: NEW
+    reason: This biological process term reflects LCI5&#39;s role in optimizing photosynthetic carbon fixation through the carbon concentrating mechanism that enhances photosynthetic efficiency under low CO2.
+    supported_by:
+    - reference_id: PMID:16572472
+      supporting_text: Phosphorylation of Lci5 and UEP occurred strictly at limiting CO2; it required reduction of electron carriers
+    - reference_id: file:CHLRE/LCI5/LCI5-deep-research.md
+      supporting_text: LCI5 clusters with Rubisco and other CCM-related proteins
+        that enhance photosynthetic carbon fixation
+    - reference_id: PMID:33230314
+      supporting_text: LCI5 is associated with the pyrenoid and carbon concentrating
+        mechanism that optimizes photosynthesis
+- term:
+    id: GO:0071244
+    label: cellular response to carbon dioxide
+  evidence_type: IEA
+  review:
+    summary: LCI5 is strongly induced under carbon-limiting conditions and undergoes redox-dependent phosphorylation specifically in response to low CO2 availability.
+    action: NEW
+    reason: This biological process term captures LCI5&#39;s primary function as a low-CO2-inducible protein that responds to carbon dioxide availability through post-translational modification and expression changes.
+    supported_by:
+    - reference_id: PMID:16572472
+      supporting_text: LCI5 phosphorylation occurred strictly at limiting CO2 and
+        required reduction of electron carriers, demonstrating direct response to CO2 availability
+    - reference_id: PMID:18322145
+      supporting_text: LCI5 expression is associated with induction of the carbon-concentrating
+        mechanism in response to CO2 limitation in Chlamydomonas reinhardtii
+core_functions:
+- description: Undergoing redox-dependent phosphorylation to sense and respond to
+    carbon limitation status
+  molecular_function:
+    id: GO:0043169
+    label: cation binding
+  directly_involved_in:
+  - id: GO:0071244
+    label: cellular response to carbon dioxide
+  - id: GO:0015976
+    label: carbon utilization
+  locations:
+  - id: GO:0009535
+    label: chloroplast thylakoid membrane
+  supported_by:
+  - reference_id: PMID:16572472
+    supporting_text: occurred strictly at limiting CO2; it required reduction of electron
+      carriers
+- description: Contributing to carbon concentrating mechanism through regulatory or
+    structural interactions
+  molecular_function:
+    id: GO:0005515
+    label: protein binding
+    description: Likely binds CCM components but specific partners unknown
+  directly_involved_in:
+  - id: GO:0015976
+    label: carbon utilization
+  - id: GO:0015979
+    label: photosynthesis
+  locations:
+  - id: GO:0009570
+    label: chloroplast stroma
+  supported_by:
+  - reference_id: file:CHLRE/LCI5/LCI5-deep-research.md
+    supporting_text: LCI5 clusters with Rubisco and other CCM-related proteins in
+      co-expression
+suggested_questions:
+- question: How does LCI5 contribute to CO2 concentrating mechanisms in Chlamydomonas
+    photosynthesis?
+- question: What determines the subcellular localization of LCI5 and how does this
+    affect its function?
+- question: How is LCI5 expression regulated in response to CO2 availability and light
+    conditions?
+- question: What role does LCI5 play in algal adaptation to different environmental
+    carbon conditions?
+suggested_experiments:
+- description: Photosynthetic measurements in LCI5 mutant strains to assess CO2 concentrating
+    mechanism function
+- description: Subcellular localization studies using fluorescent protein fusions
+    to determine LCI5 distribution
+- description: RNA-seq analysis under different CO2 conditions to study LCI5 regulation
+    and downstream targets
+- description: Proteomics analysis of carbon concentrating mechanism components to
+    understand LCI5 protein interactions
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+    <div class="section">
+        <div class="pathway-link">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h2 class="section-title">🔗 Related Resources</h2>
+                <span class="vote-buttons" data-g="Q94ET8" data-a="PATHWAY: LCI5 pathways" data-r="" data-act="PATHWAY">
+                    <button class="vote-btn" data-v="up" title="Pathway visualization is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="Pathway visualization needs improvement">👎</button>
+                </span>
+            </div>
+            <p>
+                <a href="LCI5-pathway.html" target="_blank" class="btn-link">
+                    📊 View Pathway Visualization
+                </a>
+                <span style="color: #666; font-size: 0.9rem; margin-left: 1rem;">
+                    Interactive pathway diagram with detailed annotations
+                </span>
+            </p>
+        </div>
+    </div>
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

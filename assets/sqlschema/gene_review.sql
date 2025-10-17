@@ -1,11 +1,12 @@
 -- # Class: GeneReview Description: Complete review for a gene
 --     * Slot: id
 --     * Slot: gene_symbol Description: Symbol of the gene
+--     * Slot: product_type Description: Type of gene product (protein, ncRNA, etc.)
 --     * Slot: description Description: Description of the entity
 --     * Slot: taxon_id
 -- # Class: Term Description: A term in a specific ontology
---     * Slot: id
---     * Slot: label Description: Human readable name of the entity
+--     * Slot: id Description: An OBO CURIE for a term in GO, CL, CHEBI, etc.
+--     * Slot: label Description: the term name
 --     * Slot: description Description: Description of the entity
 --     * Slot: ontology Description: Ontology of the term. E.g `go`, `cl`, `hp`
 --     * Slot: Review_id Description: Autocreated FK slot
@@ -33,6 +34,7 @@
 --     * Slot: negated Description: Whether the term is negated
 --     * Slot: evidence_type Description: Evidence code (e.g., IDA, IBA, ISS, TAS)
 --     * Slot: original_reference_id Description: ID of the original reference
+--     * Slot: retired Description: Whether the annotation is retired or replaced
 --     * Slot: term_id Description: Term to be annotated
 --     * Slot: review_id Description: Review of the gene
 -- # Class: Review Description: A review of an existing annotation.
@@ -49,11 +51,17 @@
 --     * Slot: id
 --     * Slot: predicate Description: Predicate of the extension
 --     * Slot: term_id Description: Term to be annotated
+-- # Class: TermMapping Description: A mapping between the proposed term and an equivalent term in another ontology
+--     * Slot: id
+--     * Slot: predicate Description: Mapping predicate (e.g., 'skos:exactMatch', 'skos:closeMatch', 'skos:broadMatch', 'skos:narrowMatch')
+--     * Slot: ProposedOntologyTerm_id Description: Autocreated FK slot
+--     * Slot: target_term_id Description: The target term in another ontology
 -- # Class: ProposedOntologyTerm Description: A proposed new ontology term that should exist but doesn't currently
 --     * Slot: id
 --     * Slot: proposed_name Description: Proposed name for the new term
 --     * Slot: proposed_definition Description: Proposed definition for the new term
 --     * Slot: justification Description: Justification for why this term is needed
+--     * Slot: proposed_parent_id Description: Proposed parent term in the ontology hierarchy
 -- # Class: Experiment Description: A suggested experiment to answer a question about the gene
 --     * Slot: id
 --     * Slot: hypothesis Description: Hypothesis to be investigated
@@ -65,6 +73,9 @@
 -- # Class: GeneReview_aliases
 --     * Slot: GeneReview_id Description: Autocreated FK slot
 --     * Slot: aliases
+-- # Class: GeneReview_tags
+--     * Slot: GeneReview_id Description: Autocreated FK slot
+--     * Slot: tags Description: Tags associated with the gene for categorization and organization
 -- # Class: GeneReview_existing_annotations
 --     * Slot: GeneReview_id Description: Autocreated FK slot
 --     * Slot: existing_annotations_id
@@ -74,6 +85,12 @@
 -- # Class: GeneReview_proposed_new_terms
 --     * Slot: GeneReview_id Description: Autocreated FK slot
 --     * Slot: proposed_new_terms_id Description: Proposed new ontology terms that should exist but don't
+-- # Class: GeneReview_suggested_questions
+--     * Slot: GeneReview_id Description: Autocreated FK slot
+--     * Slot: suggested_questions_id Description: Suggested questions to ask experts about the gene. Only include if not obvious from the literature.
+-- # Class: GeneReview_suggested_experiments
+--     * Slot: GeneReview_id Description: Autocreated FK slot
+--     * Slot: suggested_experiments_id
 -- # Class: Reference_findings
 --     * Slot: Reference_id Description: Autocreated FK slot
 --     * Slot: findings_id
@@ -128,22 +145,15 @@ CREATE TABLE "Review" (
 CREATE TABLE "CoreFunction" (
 	id INTEGER NOT NULL,
 	description TEXT,
-	molecular_function_id TEXT,
+	molecular_function_id TEXT NOT NULL,
 	in_complex_id TEXT,
 	PRIMARY KEY (id),
 	FOREIGN KEY(molecular_function_id) REFERENCES "Term" (id),
 	FOREIGN KEY(in_complex_id) REFERENCES "Term" (id)
 );CREATE INDEX "ix_CoreFunction_id" ON "CoreFunction" (id);
-CREATE TABLE "ProposedOntologyTerm" (
-	id INTEGER NOT NULL,
-	proposed_name TEXT NOT NULL,
-	proposed_definition TEXT NOT NULL,
-	justification TEXT,
-	PRIMARY KEY (id)
-);CREATE INDEX "ix_ProposedOntologyTerm_id" ON "ProposedOntologyTerm" (id);
 CREATE TABLE "Experiment" (
 	id INTEGER NOT NULL,
-	hypothesis TEXT NOT NULL,
+	hypothesis TEXT,
 	description TEXT NOT NULL,
 	experiment_type TEXT,
 	PRIMARY KEY (id)
@@ -156,6 +166,7 @@ CREATE TABLE "Question" (
 CREATE TABLE "GeneReview" (
 	id TEXT NOT NULL,
 	gene_symbol TEXT NOT NULL,
+	product_type VARCHAR(13),
 	description TEXT,
 	taxon_id TEXT,
 	PRIMARY KEY (id),
@@ -168,12 +179,21 @@ CREATE TABLE "AnnotationExtension" (
 	PRIMARY KEY (id),
 	FOREIGN KEY(term_id) REFERENCES "Term" (id)
 );CREATE INDEX "ix_AnnotationExtension_id" ON "AnnotationExtension" (id);
+CREATE TABLE "ProposedOntologyTerm" (
+	id INTEGER NOT NULL,
+	proposed_name TEXT NOT NULL,
+	proposed_definition TEXT NOT NULL,
+	justification TEXT,
+	proposed_parent_id TEXT,
+	PRIMARY KEY (id),
+	FOREIGN KEY(proposed_parent_id) REFERENCES "Term" (id)
+);CREATE INDEX "ix_ProposedOntologyTerm_id" ON "ProposedOntologyTerm" (id);
 CREATE TABLE "Question_experts" (
 	"Question_id" INTEGER,
 	experts TEXT,
 	PRIMARY KEY ("Question_id", experts),
 	FOREIGN KEY("Question_id") REFERENCES "Question" (id)
-);CREATE INDEX "ix_Question_experts_Question_id" ON "Question_experts" ("Question_id");CREATE INDEX "ix_Question_experts_experts" ON "Question_experts" (experts);
+);CREATE INDEX "ix_Question_experts_experts" ON "Question_experts" (experts);CREATE INDEX "ix_Question_experts_Question_id" ON "Question_experts" ("Question_id");
 CREATE TABLE "Reference" (
 	id TEXT NOT NULL,
 	title TEXT NOT NULL,
@@ -183,12 +203,27 @@ CREATE TABLE "Reference" (
 	PRIMARY KEY (id),
 	FOREIGN KEY("GeneReview_id") REFERENCES "GeneReview" (id)
 );CREATE INDEX "ix_Reference_id" ON "Reference" (id);
+CREATE TABLE "TermMapping" (
+	id INTEGER NOT NULL,
+	predicate TEXT NOT NULL,
+	"ProposedOntologyTerm_id" INTEGER,
+	target_term_id TEXT NOT NULL,
+	PRIMARY KEY (id),
+	FOREIGN KEY("ProposedOntologyTerm_id") REFERENCES "ProposedOntologyTerm" (id),
+	FOREIGN KEY(target_term_id) REFERENCES "Term" (id)
+);CREATE INDEX "ix_TermMapping_id" ON "TermMapping" (id);
 CREATE TABLE "GeneReview_aliases" (
 	"GeneReview_id" TEXT,
 	aliases TEXT,
 	PRIMARY KEY ("GeneReview_id", aliases),
 	FOREIGN KEY("GeneReview_id") REFERENCES "GeneReview" (id)
-);CREATE INDEX "ix_GeneReview_aliases_aliases" ON "GeneReview_aliases" (aliases);CREATE INDEX "ix_GeneReview_aliases_GeneReview_id" ON "GeneReview_aliases" ("GeneReview_id");
+);CREATE INDEX "ix_GeneReview_aliases_GeneReview_id" ON "GeneReview_aliases" ("GeneReview_id");CREATE INDEX "ix_GeneReview_aliases_aliases" ON "GeneReview_aliases" (aliases);
+CREATE TABLE "GeneReview_tags" (
+	"GeneReview_id" TEXT,
+	tags TEXT,
+	PRIMARY KEY ("GeneReview_id", tags),
+	FOREIGN KEY("GeneReview_id") REFERENCES "GeneReview" (id)
+);CREATE INDEX "ix_GeneReview_tags_tags" ON "GeneReview_tags" (tags);CREATE INDEX "ix_GeneReview_tags_GeneReview_id" ON "GeneReview_tags" ("GeneReview_id");
 CREATE TABLE "GeneReview_core_functions" (
 	"GeneReview_id" TEXT,
 	core_functions_id INTEGER,
@@ -202,7 +237,21 @@ CREATE TABLE "GeneReview_proposed_new_terms" (
 	PRIMARY KEY ("GeneReview_id", proposed_new_terms_id),
 	FOREIGN KEY("GeneReview_id") REFERENCES "GeneReview" (id),
 	FOREIGN KEY(proposed_new_terms_id) REFERENCES "ProposedOntologyTerm" (id)
-);CREATE INDEX "ix_GeneReview_proposed_new_terms_proposed_new_terms_id" ON "GeneReview_proposed_new_terms" (proposed_new_terms_id);CREATE INDEX "ix_GeneReview_proposed_new_terms_GeneReview_id" ON "GeneReview_proposed_new_terms" ("GeneReview_id");
+);CREATE INDEX "ix_GeneReview_proposed_new_terms_GeneReview_id" ON "GeneReview_proposed_new_terms" ("GeneReview_id");CREATE INDEX "ix_GeneReview_proposed_new_terms_proposed_new_terms_id" ON "GeneReview_proposed_new_terms" (proposed_new_terms_id);
+CREATE TABLE "GeneReview_suggested_questions" (
+	"GeneReview_id" TEXT,
+	suggested_questions_id INTEGER,
+	PRIMARY KEY ("GeneReview_id", suggested_questions_id),
+	FOREIGN KEY("GeneReview_id") REFERENCES "GeneReview" (id),
+	FOREIGN KEY(suggested_questions_id) REFERENCES "Question" (id)
+);CREATE INDEX "ix_GeneReview_suggested_questions_GeneReview_id" ON "GeneReview_suggested_questions" ("GeneReview_id");CREATE INDEX "ix_GeneReview_suggested_questions_suggested_questions_id" ON "GeneReview_suggested_questions" (suggested_questions_id);
+CREATE TABLE "GeneReview_suggested_experiments" (
+	"GeneReview_id" TEXT,
+	suggested_experiments_id INTEGER,
+	PRIMARY KEY ("GeneReview_id", suggested_experiments_id),
+	FOREIGN KEY("GeneReview_id") REFERENCES "GeneReview" (id),
+	FOREIGN KEY(suggested_experiments_id) REFERENCES "Experiment" (id)
+);CREATE INDEX "ix_GeneReview_suggested_experiments_suggested_experiments_id" ON "GeneReview_suggested_experiments" (suggested_experiments_id);CREATE INDEX "ix_GeneReview_suggested_experiments_GeneReview_id" ON "GeneReview_suggested_experiments" ("GeneReview_id");
 CREATE TABLE "SupportingTextInReference" (
 	id INTEGER NOT NULL,
 	reference_id TEXT,
@@ -217,6 +266,7 @@ CREATE TABLE "ExistingAnnotation" (
 	negated BOOLEAN,
 	evidence_type VARCHAR(3),
 	original_reference_id TEXT,
+	retired BOOLEAN,
 	term_id TEXT,
 	review_id INTEGER,
 	PRIMARY KEY (id),
@@ -230,21 +280,21 @@ CREATE TABLE "Reference_findings" (
 	PRIMARY KEY ("Reference_id", findings_id),
 	FOREIGN KEY("Reference_id") REFERENCES "Reference" (id),
 	FOREIGN KEY(findings_id) REFERENCES "Finding" (id)
-);CREATE INDEX "ix_Reference_findings_Reference_id" ON "Reference_findings" ("Reference_id");CREATE INDEX "ix_Reference_findings_findings_id" ON "Reference_findings" (findings_id);
+);CREATE INDEX "ix_Reference_findings_findings_id" ON "Reference_findings" (findings_id);CREATE INDEX "ix_Reference_findings_Reference_id" ON "Reference_findings" ("Reference_id");
 CREATE TABLE "Review_additional_reference_ids" (
 	"Review_id" INTEGER,
 	additional_reference_ids_id TEXT,
 	PRIMARY KEY ("Review_id", additional_reference_ids_id),
 	FOREIGN KEY("Review_id") REFERENCES "Review" (id),
 	FOREIGN KEY(additional_reference_ids_id) REFERENCES "Reference" (id)
-);CREATE INDEX "ix_Review_additional_reference_ids_Review_id" ON "Review_additional_reference_ids" ("Review_id");CREATE INDEX "ix_Review_additional_reference_ids_additional_reference_ids_id" ON "Review_additional_reference_ids" (additional_reference_ids_id);
+);CREATE INDEX "ix_Review_additional_reference_ids_additional_reference_ids_id" ON "Review_additional_reference_ids" (additional_reference_ids_id);CREATE INDEX "ix_Review_additional_reference_ids_Review_id" ON "Review_additional_reference_ids" ("Review_id");
 CREATE TABLE "GeneReview_existing_annotations" (
 	"GeneReview_id" TEXT,
 	existing_annotations_id INTEGER,
 	PRIMARY KEY ("GeneReview_id", existing_annotations_id),
 	FOREIGN KEY("GeneReview_id") REFERENCES "GeneReview" (id),
 	FOREIGN KEY(existing_annotations_id) REFERENCES "ExistingAnnotation" (id)
-);CREATE INDEX "ix_GeneReview_existing_annotations_GeneReview_id" ON "GeneReview_existing_annotations" ("GeneReview_id");CREATE INDEX "ix_GeneReview_existing_annotations_existing_annotations_id" ON "GeneReview_existing_annotations" (existing_annotations_id);
+);CREATE INDEX "ix_GeneReview_existing_annotations_existing_annotations_id" ON "GeneReview_existing_annotations" (existing_annotations_id);CREATE INDEX "ix_GeneReview_existing_annotations_GeneReview_id" ON "GeneReview_existing_annotations" ("GeneReview_id");
 CREATE TABLE "ExistingAnnotation_extensions" (
 	"ExistingAnnotation_id" INTEGER,
 	extensions_id INTEGER,
@@ -257,7 +307,7 @@ CREATE TABLE "ExistingAnnotation_supporting_entities" (
 	supporting_entities TEXT,
 	PRIMARY KEY ("ExistingAnnotation_id", supporting_entities),
 	FOREIGN KEY("ExistingAnnotation_id") REFERENCES "ExistingAnnotation" (id)
-);CREATE INDEX "ix_ExistingAnnotation_supporting_entities_ExistingAnnotation_id" ON "ExistingAnnotation_supporting_entities" ("ExistingAnnotation_id");CREATE INDEX "ix_ExistingAnnotation_supporting_entities_supporting_entities" ON "ExistingAnnotation_supporting_entities" (supporting_entities);
+);CREATE INDEX "ix_ExistingAnnotation_supporting_entities_supporting_entities" ON "ExistingAnnotation_supporting_entities" (supporting_entities);CREATE INDEX "ix_ExistingAnnotation_supporting_entities_ExistingAnnotation_id" ON "ExistingAnnotation_supporting_entities" ("ExistingAnnotation_id");
 CREATE TABLE "Review_supported_by" (
 	"Review_id" INTEGER,
 	supported_by_id INTEGER,
@@ -278,4 +328,4 @@ CREATE TABLE "ProposedOntologyTerm_supported_by" (
 	PRIMARY KEY ("ProposedOntologyTerm_id", supported_by_id),
 	FOREIGN KEY("ProposedOntologyTerm_id") REFERENCES "ProposedOntologyTerm" (id),
 	FOREIGN KEY(supported_by_id) REFERENCES "SupportingTextInReference" (id)
-);CREATE INDEX "ix_ProposedOntologyTerm_supported_by_ProposedOntologyTerm_id" ON "ProposedOntologyTerm_supported_by" ("ProposedOntologyTerm_id");CREATE INDEX "ix_ProposedOntologyTerm_supported_by_supported_by_id" ON "ProposedOntologyTerm_supported_by" (supported_by_id);
+);CREATE INDEX "ix_ProposedOntologyTerm_supported_by_supported_by_id" ON "ProposedOntologyTerm_supported_by" (supported_by_id);CREATE INDEX "ix_ProposedOntologyTerm_supported_by_ProposedOntologyTerm_id" ON "ProposedOntologyTerm_supported_by" ("ProposedOntologyTerm_id");

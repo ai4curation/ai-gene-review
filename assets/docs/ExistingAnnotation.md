@@ -6,7 +6,7 @@ An existing annotation from the GO database, plus a review of the annotation.
 URI: [gene_review:ExistingAnnotation](https://w3id.org/ai4curation/gene_review/ExistingAnnotation)
 
 
-[![img](https://yuml.me/diagram/nofunky;dir:TB/class/[Term],[Review],[Reference],[Review]<review%200..1-++[ExistingAnnotation&#124;negated:boolean%20%3F;evidence_type:EvidenceType%20%3F;supporting_entities:string%20*],[Reference]<original_reference_id%200..1-%20[ExistingAnnotation],[AnnotationExtension]<extensions%200..*-++[ExistingAnnotation],[Term]<term%200..1-++[ExistingAnnotation],[GeneReview]++-%20existing_annotations%200..*>[ExistingAnnotation],[GeneReview],[AnnotationExtension])](https://yuml.me/diagram/nofunky;dir:TB/class/[Term],[Review],[Reference],[Review]<review%200..1-++[ExistingAnnotation&#124;negated:boolean%20%3F;evidence_type:EvidenceType%20%3F;supporting_entities:string%20*],[Reference]<original_reference_id%200..1-%20[ExistingAnnotation],[AnnotationExtension]<extensions%200..*-++[ExistingAnnotation],[Term]<term%200..1-++[ExistingAnnotation],[GeneReview]++-%20existing_annotations%200..*>[ExistingAnnotation],[GeneReview],[AnnotationExtension])
+[![img](https://yuml.me/diagram/nofunky;dir:TB/class/[Term],[Review],[Reference],[Review]<review%200..1-++[ExistingAnnotation&#124;negated:boolean%20%3F;evidence_type:EvidenceType%20%3F;retired:boolean%20%3F;supporting_entities:string%20*],[Reference]<original_reference_id%200..1-%20[ExistingAnnotation],[AnnotationExtension]<extensions%200..*-++[ExistingAnnotation],[Term]<term%200..1-++[ExistingAnnotation],[GeneReview]++-%20existing_annotations%200..*>[ExistingAnnotation],[GeneReview],[AnnotationExtension])](https://yuml.me/diagram/nofunky;dir:TB/class/[Term],[Review],[Reference],[Review]<review%200..1-++[ExistingAnnotation&#124;negated:boolean%20%3F;evidence_type:EvidenceType%20%3F;retired:boolean%20%3F;supporting_entities:string%20*],[Reference]<original_reference_id%200..1-%20[ExistingAnnotation],[AnnotationExtension]<extensions%200..*-++[ExistingAnnotation],[Term]<term%200..1-++[ExistingAnnotation],[GeneReview]++-%20existing_annotations%200..*>[ExistingAnnotation],[GeneReview],[AnnotationExtension])
 
 ## Referenced by Class
 
@@ -31,6 +31,9 @@ URI: [gene_review:ExistingAnnotation](https://w3id.org/ai4curation/gene_review/E
  * [original_reference_id](original_reference_id.md)  <sub>0..1</sub>
      * Description: ID of the original reference
      * Range: [Reference](Reference.md)
+ * [retired](retired.md)  <sub>0..1</sub>
+     * Description: Whether the annotation is retired or replaced
+     * Range: [Boolean](types/Boolean.md)
  * [supporting_entities](supporting_entities.md)  <sub>0..\*</sub>
      * Description: IDs of the supporting entities
      * Range: [String](types/String.md)
