@@ -1,0 +1,1782 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>hglS - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>hglS</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88CC1" target="_blank" class="term-link">
+                        Q88CC1
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida KT2440</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Aliases:</span>
+                <div class="aliases">
+                    
+                    <span class="badge">ydcJ</span>
+                    
+                    <span class="badge">PP_5260</span>
+                    
+                </div>
+            </div>
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "hglS";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88CC1" data-a="DESCRIPTION: HglS is a 2-oxoadipate dioxygenase/decarboxylase t..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>HglS is a 2-oxoadipate dioxygenase/decarboxylase that catalyzes the final step in D-lysine catabolism by converting 2-oxoadipate to D-2-hydroxyglutarate through an Fe(II)- and O2-dependent mechanism involving successive decarboxylation and intramolecular hydroxylation. The enzyme shows high specificity for 2-oxoadipate (KM ~0.01-0.06 mM) and is essential for growth on both L-lysine and D-lysine. HglS belongs to the DUF1338 family and represents the last missing enzymatic step in plant lysine catabolism that was identified through high-resolution crystal structures (PDB: 6W1G, 6W1H) which revealed the molecular basis for substrate specificity mediated by a conserved arginine residue (Arg74).</p>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Proposed New Ontology Terms</h2>
+        
+        <div class="proposed-term">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>2-oxoadipate dioxygenase activity</h3>
+                <span class="vote-buttons" data-g="Q88CC1" data-a="2-oxoadipate dioxygenase activity" data-r="" data-act="NEW">
+                    <button class="vote-btn" data-v="up" title="Agree this term should be created">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with creating this term">👎</button>
+                </span>
+            </div>
+
+            
+            <p><strong>Definition:</strong> Catalysis of the oxidative decarboxylation of 2-oxoadipate to form D-2-hydroxyglutarate using Fe(II) and O2 as cofactors</p>
+            
+
+            
+            <p><strong>Justification:</strong> HglS represents a specific type of dioxygenase activity with unique substrate specificity. A more specific term would better capture this distinct enzymatic function than the general dioxygenase activity term.</p>
+            
+
+            
+
+            
+
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016491" target="_blank" class="term-link">
+                                    GO:0016491
+                                </a>
+                            </span>
+                            <span class="term-label">oxidoreductase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CC1" data-a="GO:0016491" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Accurate but general - HglS is specifically a dioxygenase/decarboxylase
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While correct, this term is too general. The more specific dioxygenase activity term better captures HglS function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051213" target="_blank" class="term-link">
+                                    GO:0051213
+                                </a>
+                            </span>
+                            <span class="term-label">dioxygenase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CC1" data-a="GO:0051213" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct and specific - HglS performs dioxygenase activity on 2-oxoadipate
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Accurately describes the core molecular function. HglS is a Fe(II)-dependent dioxygenase that incorporates O2 during the oxidative decarboxylation of 2-oxoadipate.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006554" target="_blank" class="term-link">
+                                    GO:0006554
+                                </a>
+                            </span>
+                            <span class="term-label">lysine catabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31064836" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:31064836
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Massively parallel fitness profiling reveals multiple novel ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CC1" data-a="GO:0006554" data-r="PMID:31064836" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core biological process - HglS is essential for lysine catabolism
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> HglS catalyzes a key step in lysine breakdown and deletion mutants cannot grow on lysine.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042180" target="_blank" class="term-link">
+                                    GO:0042180
+                                </a>
+                            </span>
+                            <span class="term-label">ketone metabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31064836" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:31064836
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Massively parallel fitness profiling reveals multiple novel ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CC1" data-a="GO:0042180" data-r="PMID:31064836" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Specific metabolic process - HglS processes 2-oxoadipate (a ketone derivative)
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The substrate 2-oxoadipate is a ketone derivative and the reaction involves ketone metabolism.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006520" target="_blank" class="term-link">
+                                    GO:0006520
+                                </a>
+                            </span>
+                            <span class="term-label">amino acid metabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31064836" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:31064836
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Massively parallel fitness profiling reveals multiple novel ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CC1" data-a="GO:0006520" data-r="PMID:31064836" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Broad metabolic process - HglS functions in amino acid catabolism
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> As part of lysine catabolism, HglS participates in amino acid metabolic processes.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Fe(II)-dependent dioxygenase that catalyzes oxidative decarboxylation of 2-oxoadipate to D-2-hydroxyglutarate with high substrate specificity (KM ~0.01-0.06 mM)</h3>
+                <span class="vote-buttons" data-g="Q88CC1" data-a="FUNCTION: Fe(II)-dependent dioxygenase that catalyzes oxidat..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051213" target="_blank" class="term-link">
+                            dioxygenase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006554" target="_blank" class="term-link">
+                                lysine catabolic process
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042180" target="_blank" class="term-link">
+                                ketone metabolic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31064836" target="_blank" class="term-link">
+                                PMID:31064836
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">involves the direct conversion of 2OA to d-2HG</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32523014" target="_blank" class="term-link">
+                                PMID:32523014
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">HglS exhibited activity only with 2OA, and displayed no detectable and statistically significant activity above background</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Essential metabolic enzyme for bacterial growth on both L-lysine and D-lysine as carbon sources</h3>
+                <span class="vote-buttons" data-g="Q88CC1" data-a="FUNCTION: Essential metabolic enzyme for bacterial growth on..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051213" target="_blank" class="term-link">
+                            dioxygenase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006554" target="_blank" class="term-link">
+                                lysine catabolic process
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006520" target="_blank" class="term-link">
+                                amino acid metabolic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31064836" target="_blank" class="term-link">
+                                PMID:31064836
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">A ΔPP_5260 strain was unable to grow on either isomer of lysine</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31064836" target="_blank" class="term-link">
+                                PMID:31064836
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">PP_5260, showed a significant fitness defect...near other d-lysine catabolic genes in the P. putida genome</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/31064836" target="_blank" class="term-link">
+                            PMID:31064836
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Massively parallel fitness profiling reveals multiple novel enzymes in Pseudomonas putida lysine metabolism.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">HglS catalyzes conversion of 2-oxoadipate to D-2-hydroxyglutarate</div>
+                        
+                        <div class="finding-text">"involves the direct conversion of 2OA to d-2HG"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">HglS is essential for growth on lysine isomers</div>
+                        
+                        <div class="finding-text">"A ΔPP_5260 strain was unable to grow on either isomer of lysine"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">HglS is involved in D-lysine catabolic pathway</div>
+                        
+                        <div class="finding-text">"PP_5260, showed a significant fitness defect...near other d-lysine catabolic genes in the P. putida genome"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">HglS shows high substrate specificity and kinetic parameters</div>
+                        
+                        <div class="finding-text">"Kcat values for their given substrates (330 m−1 for PP_5260"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">HglS expression is induced by lysine derivatives</div>
+                        
+                        <div class="finding-text">"YdcJ [PP_5260]...were upregulated when grown on l-lysine, d-lysine, or 2AA"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32523014" target="_blank" class="term-link">
+                            PMID:32523014
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">An iron (II) dependent oxygenase performs the last missing step of plant lysine catabolism.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">HglS crystal structure reveals molecular basis for substrate specificity</div>
+                        
+                        <div class="finding-text">"Initially, Hg1S was crystallized without substrate, and the Hg1S structure was solved at 1.1 Å resolution"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Arg74 is critical for substrate specificity</div>
+                        
+                        <div class="finding-text">"arginine 74 forms a salt bridge with the distal carboxylate of the 2OA substrate...an R74A mutation abolished enzymatic activity"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">HglS is highly specific for 2-oxoadipate substrate</div>
+                        
+                        <div class="finding-text">"HglS exhibited activity only with 2OA, and displayed no detectable and statistically significant activity above background"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">HglS represents the missing step in plant lysine catabolism</div>
+                        
+                        <div class="finding-text">"DUF1338 family proteins catalyze the last unknown step of plant lysine catabolism"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How does HglS coordinate with other enzymes in the lysine catabolic pathway?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Bacterial metabolism specialists, Enzyme biochemists, Systems biologists</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88CC1" data-a="Q: How does HglS coordinate with other enzymes in the..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the evolutionary origin of the DUF1338 family and how did substrate specificity evolve?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Evolutionary biochemists, Comparative genomics researchers, Structural biologists</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88CC1" data-a="Q: What is the evolutionary origin of the DUF1338 fam..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Can HglS be engineered for biotechnological production of D-2-hydroxyglutarate or related compounds?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Enzyme engineers, Synthetic biologists, Metabolic engineers</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88CC1" data-a="Q: Can HglS be engineered for biotechnological produc..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Systematic comparison of HglS substrate specificity across different 2-oxo acids to fully define the substrate scope and identify any secondary activities.</p>
+                    
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: Comparative enzymatic analysis</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88CC1" data-a="EXPERIMENT: Systematic comparison of HglS substrate specificit..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Site-directed mutagenesis of residues beyond Arg74 to understand the complete molecular basis for substrate specificity and catalytic mechanism.</p>
+                    
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: Structural-functional analysis</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88CC1" data-a="EXPERIMENT: Site-directed mutagenesis of residues beyond Arg74..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Comprehensive analysis of DUF1338 family members across bacteria and eukaryotes to understand evolutionary conservation and functional divergence.</p>
+                    
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: Phylogenetic analysis</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88CC1" data-a="EXPERIMENT: Comprehensive analysis of DUF1338 family members a..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Complete mapping of lysine catabolism pathway in P. putida to understand HglS integration with upstream and downstream enzymes.</p>
+                    
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: Metabolic pathway analysis</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88CC1" data-a="EXPERIMENT: Complete mapping of lysine catabolism pathway in P..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Tags</h2>
+        <div class="aliases">
+            
+            <span class="badge">lbnl-favorites</span>
+            
+        </div>
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88CC1
+gene_symbol: hglS
+aliases:
+- ydcJ
+- PP_5260
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida KT2440
+description: &#39;HglS is a 2-oxoadipate dioxygenase/decarboxylase that catalyzes the final step in D-lysine catabolism by converting 2-oxoadipate to D-2-hydroxyglutarate through an Fe(II)- and O2-dependent mechanism involving successive decarboxylation and intramolecular hydroxylation. The enzyme shows high specificity for 2-oxoadipate (KM ~0.01-0.06 mM) and is essential for growth on both L-lysine and D-lysine. HglS belongs to the DUF1338 family and represents the last missing enzymatic step in plant lysine catabolism that was identified through high-resolution crystal structures (PDB: 6W1G, 6W1H) which revealed the molecular basis for substrate specificity mediated by a conserved arginine residue (Arg74).&#39;
+existing_annotations:
+- term:
+    id: GO:0016491
+    label: oxidoreductase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: Accurate but general - HglS is specifically a dioxygenase/decarboxylase
+    action: KEEP_AS_NON_CORE
+    reason: While correct, this term is too general. The more specific dioxygenase activity term better captures HglS function.
+- term:
+    id: GO:0051213
+    label: dioxygenase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: Correct and specific - HglS performs dioxygenase activity on 2-oxoadipate
+    action: ACCEPT
+    reason: Accurately describes the core molecular function. HglS is a Fe(II)-dependent dioxygenase that incorporates O2 during the oxidative decarboxylation of 2-oxoadipate.
+- term:
+    id: GO:0006554
+    label: lysine catabolic process
+  evidence_type: IMP
+  original_reference_id: PMID:31064836
+  review:
+    summary: Core biological process - HglS is essential for lysine catabolism
+    action: NEW
+    reason: HglS catalyzes a key step in lysine breakdown and deletion mutants cannot grow on lysine.
+- term:
+    id: GO:0042180
+    label: ketone metabolic process
+  evidence_type: IDA
+  original_reference_id: PMID:31064836
+  review:
+    summary: Specific metabolic process - HglS processes 2-oxoadipate (a ketone derivative)
+    action: NEW
+    reason: The substrate 2-oxoadipate is a ketone derivative and the reaction involves ketone metabolism.
+- term:
+    id: GO:0006520
+    label: amino acid metabolic process
+  evidence_type: IMP
+  original_reference_id: PMID:31064836
+  review:
+    summary: Broad metabolic process - HglS functions in amino acid catabolism
+    action: NEW
+    reason: As part of lysine catabolism, HglS participates in amino acid metabolic processes.
+references:
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods.
+  findings: []
+- id: PMID:31064836
+  title: Massively parallel fitness profiling reveals multiple novel enzymes in Pseudomonas putida lysine metabolism.
+  findings:
+  - statement: HglS catalyzes conversion of 2-oxoadipate to D-2-hydroxyglutarate
+    supporting_text: involves the direct conversion of 2OA to d-2HG
+  - statement: HglS is essential for growth on lysine isomers
+    supporting_text: &#34;A \u0394PP_5260 strain was unable to grow on either isomer of lysine&#34;
+  - statement: HglS is involved in D-lysine catabolic pathway
+    supporting_text: PP_5260, showed a significant fitness defect...near other d-lysine catabolic genes in the P. putida genome
+  - statement: HglS shows high substrate specificity and kinetic parameters
+    supporting_text: &#34;Kcat values for their given substrates (330 m\u22121 for PP_5260&#34;
+  - statement: HglS expression is induced by lysine derivatives
+    supporting_text: YdcJ [PP_5260]...were upregulated when grown on l-lysine, d-lysine, or 2AA
+- id: PMID:32523014
+  title: An iron (II) dependent oxygenase performs the last missing step of plant lysine catabolism.
+  findings:
+  - statement: HglS crystal structure reveals molecular basis for substrate specificity
+    supporting_text: &#34;Initially, Hg1S was crystallized without substrate, and the Hg1S structure was solved at 1.1 \xC5 resolution&#34;
+  - statement: Arg74 is critical for substrate specificity
+    supporting_text: arginine 74 forms a salt bridge with the distal carboxylate of the 2OA substrate...an R74A mutation abolished enzymatic activity
+  - statement: HglS is highly specific for 2-oxoadipate substrate
+    supporting_text: HglS exhibited activity only with 2OA, and displayed no detectable and statistically significant activity above background
+  - statement: HglS represents the missing step in plant lysine catabolism
+    supporting_text: DUF1338 family proteins catalyze the last unknown step of plant lysine catabolism
+core_functions:
+- description: Fe(II)-dependent dioxygenase that catalyzes oxidative decarboxylation of 2-oxoadipate to D-2-hydroxyglutarate with high substrate specificity (KM ~0.01-0.06 mM)
+  molecular_function:
+    id: GO:0051213
+    label: dioxygenase activity
+  directly_involved_in:
+  - id: GO:0006554
+    label: lysine catabolic process
+  - id: GO:0042180
+    label: ketone metabolic process
+  supported_by:
+  - reference_id: PMID:31064836
+    supporting_text: involves the direct conversion of 2OA to d-2HG
+  - reference_id: PMID:32523014
+    supporting_text: HglS exhibited activity only with 2OA, and displayed no detectable and statistically significant activity above background
+- description: Essential metabolic enzyme for bacterial growth on both L-lysine and D-lysine as carbon sources
+  molecular_function:
+    id: GO:0051213
+    label: dioxygenase activity
+  directly_involved_in:
+  - id: GO:0006554
+    label: lysine catabolic process
+  - id: GO:0006520
+    label: amino acid metabolic process
+  supported_by:
+  - reference_id: PMID:31064836
+    supporting_text: &#34;A \u0394PP_5260 strain was unable to grow on either isomer of lysine&#34;
+  - reference_id: PMID:31064836
+    supporting_text: PP_5260, showed a significant fitness defect...near other d-lysine catabolic genes in the P. putida genome
+proposed_new_terms:
+- proposed_name: 2-oxoadipate dioxygenase activity
+  proposed_definition: Catalysis of the oxidative decarboxylation of 2-oxoadipate to form D-2-hydroxyglutarate using Fe(II) and O2 as cofactors
+  justification: HglS represents a specific type of dioxygenase activity with unique substrate specificity. A more specific term would better capture this distinct enzymatic function than the general dioxygenase activity term.
+suggested_experiments:
+- experiment_type: Comparative enzymatic analysis
+  description: Systematic comparison of HglS substrate specificity across different 2-oxo acids to fully define the substrate scope and identify any secondary activities.
+- experiment_type: Structural-functional analysis
+  description: Site-directed mutagenesis of residues beyond Arg74 to understand the complete molecular basis for substrate specificity and catalytic mechanism.
+- experiment_type: Phylogenetic analysis
+  description: Comprehensive analysis of DUF1338 family members across bacteria and eukaryotes to understand evolutionary conservation and functional divergence.
+- experiment_type: Metabolic pathway analysis
+  description: Complete mapping of lysine catabolism pathway in P. putida to understand HglS integration with upstream and downstream enzymes.
+suggested_questions:
+- question: How does HglS coordinate with other enzymes in the lysine catabolic pathway?
+  experts:
+  - Bacterial metabolism specialists
+  - Enzyme biochemists
+  - Systems biologists
+- question: What is the evolutionary origin of the DUF1338 family and how did substrate specificity evolve?
+  experts:
+  - Evolutionary biochemists
+  - Comparative genomics researchers
+  - Structural biologists
+- question: Can HglS be engineered for biotechnological production of D-2-hydroxyglutarate or related compounds?
+  experts:
+  - Enzyme engineers
+  - Synthetic biologists
+  - Metabolic engineers
+tags:
+- lbnl-favorites
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

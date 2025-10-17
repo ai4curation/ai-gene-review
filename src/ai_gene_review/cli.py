@@ -6,7 +6,7 @@ from typing import List, Optional
 import typer
 from typing_extensions import Annotated
 
-from ai_gene_review.etl.gene import fetch_gene_data, expand_organism_name
+from ai_gene_review.etl.gene import fetch_gene_data, fetch_gene_data_ncRNA, expand_organism_name
 from ai_gene_review.etl.publication import (
     cache_publications,
     extract_pmids_from_yaml,
@@ -152,6 +152,114 @@ def fetch_gene(
                     )
                 else:
                     typer.echo(f"  - {file_prefix}-ai-review.yaml (unmodified)")
+
+    except ValueError as e:
+        typer.echo(f"Error: {e}", err=True)
+        raise typer.Exit(code=1)
+    except Exception as e:
+        typer.echo(f"Unexpected error: {e}", err=True)
+        raise typer.Exit(code=1)
+
+
+@app.command()
+def fetch_ncrna(
+    organism: Annotated[
+        str, typer.Argument(help="Organism name (e.g., human, mouse, yeast)")
+    ],
+    gene: Annotated[
+        str, typer.Argument(help="Gene symbol (e.g., SNORD3A, XIST, H19)")
+    ],
+    rnacentral_id: Annotated[
+        Optional[str],
+        typer.Option(
+            "--rnacentral-id",
+            "-r",
+            help="RNAcentral ID (optional, will be resolved if not provided)",
+        ),
+    ] = None,
+    output_dir: Annotated[
+        Optional[Path],
+        typer.Option(
+            "--output-dir", "-o", help="Output directory (default: current directory)"
+        ),
+    ] = None,
+    no_seed: Annotated[
+        bool,
+        typer.Option(
+            "--no-seed", help="Skip creating ai-review.yaml structure"
+        ),
+    ] = False,
+    alias: Annotated[
+        Optional[str],
+        typer.Option(
+            "--alias",
+            "-a",
+            help="Alias to use for directory name and file prefixes instead of gene symbol",
+        ),
+    ] = None,
+    force: Annotated[
+        bool,
+        typer.Option(
+            "--force",
+            "-f",
+            help="Force overwrite existing RNAcentral files even if they exist",
+        ),
+    ] = False,
+):
+    """Fetch ncRNA gene data from RNAcentral database.
+
+    Creates a directory structure:
+    genes/<organism>/<gene>/
+        <gene>-rnacentral.json
+        <gene>-ai-review.yaml (with ncRNA-specific structure)
+
+    This command is designed for non-coding RNA genes and uses RNAcentral
+    as the primary data source instead of UniProt.
+
+    Use --alias to specify a custom name for the directory and file prefixes.
+    """
+    try:
+        typer.echo(f"Fetching ncRNA data for {gene} ({organism})...")
+
+        result = fetch_gene_data_ncRNA(
+            gene_info=(organism, gene),
+            rnacentral_id=rnacentral_id,
+            base_path=output_dir,
+            seed_annotations=not no_seed,
+            alias=alias,
+            force=force,
+        )
+
+        # Show where files were created
+        base_path = output_dir or Path.cwd()
+        dir_name = alias if alias else gene
+        file_prefix = alias if alias else gene
+        gene_dir = base_path / "genes" / organism / dir_name
+
+        typer.echo("✓ ncRNA data fetch completed!")
+        typer.echo(f"Location: {gene_dir}")
+
+        # Report any differences found that weren't updated
+        differences_not_updated = []
+        if not force:
+            if result.get("rnacentral_differences") and not result.get("rnacentral_updated"):
+                differences_not_updated.append(f"{file_prefix}-rnacentral.json differs from remote")
+
+        if differences_not_updated:
+            typer.echo("")
+            typer.echo("⚠ Some files have differences but were not updated:")
+            for diff in differences_not_updated:
+                typer.echo(f"  - {diff}")
+            typer.echo("Use --force to overwrite existing files")
+
+        # Display appropriate message for ai-review.yaml
+        if not no_seed:
+            if result["yaml_created"]:
+                typer.echo(
+                    f"  - {file_prefix}-ai-review.yaml (created with ncRNA structure)"
+                )
+            elif result["yaml_existed"]:
+                typer.echo(f"  - {file_prefix}-ai-review.yaml (already exists)")
 
     except ValueError as e:
         typer.echo(f"Error: {e}", err=True)

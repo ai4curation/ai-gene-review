@@ -1,0 +1,3071 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>rhlB - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>rhlB</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q9HXE5" target="_blank" class="term-link">
+                        Q9HXE5
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas aeruginosa PAO1</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Aliases:</span>
+                <div class="aliases">
+                    
+                    <span class="badge">rhl</span>
+                    
+                </div>
+            </div>
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "rhlB";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q9HXE5" data-a="DESCRIPTION: ATP-dependent RNA helicase of the DEAD-box family ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>ATP-dependent RNA helicase of the DEAD-box family that functions as a core component of the RNA degradosome complex in Pseudomonas aeruginosa PAO1. RhlB unwinds structured RNA using ATP hydrolysis, facilitating degradation by RNase E and the 3&#39;-5&#39; exoribonuclease PNPase. It localizes to membrane-proximal cytoplasmic foci through direct interaction with RNase E via the AR1 motif. RhlB forms a functional complex with PNPase independent of RNase E, acting as the beta subunit for degradation of double-stranded RNA. Essential for mRNA turnover, post-transcriptional regulation, and bacterial virulence in P. aeruginosa.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HXE5" data-a="GO:0005829" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytosolic localization confirmed. RhlB localizes to discrete cytoplasmic foci at the inner membrane through interaction with membrane-tethered RNase E. Co-localization studies in P. aeruginosa show RhlB clusters with RNase E and PNPase in membrane-proximal puncta.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Experimental evidence from PMC:11964227 clearly demonstrates RhlB localization to membrane-proximal cytoplasmic foci through RNase E interaction. This is consistent with the known function of RhlB as a cytoplasmic component of the RNA degradosome complex.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    PMC:11964227
+                                    
+                                </span>
+                                
+                                <div class="support-text">RhlB and PNPase co-cluster with RNase E in membrane-proximal puncta, indicating the degradosome assembles at the cytoplasmic face of the membrane</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003724" target="_blank" class="term-link">
+                                    GO:0003724
+                                </a>
+                            </span>
+                            <span class="term-label">RNA helicase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HXE5" data-a="GO:0003724" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core molecular function confirmed by extensive experimental evidence. RhlB unwinds double-stranded RNA and stem-loop structures using ATP hydrolysis. Contains conserved DEAD-box motifs including Walker A (ATP binding) and DEAD motif (ATP hydrolysis). Helicase activity is allosterically activated by RNase E binding.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the fundamental molecular function of RhlB, confirmed by multiple studies including PMID:16275923 showing RhlB forms active helicase complex with PNPase, and PMC:10500059 demonstrating RNase E allosterically activates RhlB helicase activity.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    PMC:10500059
+                                    
+                                </span>
+                                
+                                <div class="support-text">an RNase E fragment was shown to allosterically activate RhlB, increasing its RNA affinity and even enabling partial helix unwinding in the absence of ATP</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16275923" target="_blank" class="term-link">
+                                        PMID:16275923
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">the PNPase-α protein complexes of rne131 Δ rhlB showed decreased exonucleolytic degradation specifically of duplex RNA but no loss of ability to degrade single-stranded RNA</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000166" target="_blank" class="term-link">
+                                    GO:0000166
+                                </a>
+                            </span>
+                            <span class="term-label">nucleotide binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HXE5" data-a="GO:0000166" data-r="GO_REF:0000043" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Too general. The more specific ATP binding term (GO:0005524) is already present and more informative for this ATP-dependent helicase.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This term is overly broad. RhlB specifically binds ATP, not general nucleotides, and the ATP binding annotation (GO:0005524) already captures this function more precisely.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProtKB:Q9HXE5
+                                    
+                                </span>
+                                
+                                <div class="support-text">DEAD-box RNA helicase involved in RNA degradation</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003676" target="_blank" class="term-link">
+                                    GO:0003676
+                                </a>
+                            </span>
+                            <span class="term-label">nucleic acid binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HXE5" data-a="GO:0003676" data-r="GO_REF:0000002" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Too general. The more specific RNA binding term (GO:0003723) is already present and more appropriate for this RNA helicase.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This term is overly broad. RhlB specifically binds RNA substrates, not DNA or other nucleic acids, making the RNA binding annotation (GO:0003723) more appropriate and informative.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProtKB:Q9HXE5
+                                    
+                                </span>
+                                
+                                <div class="support-text">DEAD-box RNA helicase involved in RNA degradation</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003723" target="_blank" class="term-link">
+                                    GO:0003723
+                                </a>
+                            </span>
+                            <span class="term-label">RNA binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HXE5" data-a="GO:0003723" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Essential function for RhlB - it must bind RNA substrates to perform its helicase activity. Supported by domain analysis showing DEAD and Helicase_C domains.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> RNA binding is fundamental to RhlB function as an RNA helicase. The protein must bind RNA substrates to unwind secondary structures. Domain analysis confirms presence of RNA-binding domains.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProtKB:Q9HXE5
+                                    
+                                </span>
+                                
+                                <div class="support-text">Helicase ATP-binding ... Helicase C-terminal</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    PMC:10500059
+                                    
+                                </span>
+                                
+                                <div class="support-text">RhlB unwinds stem-loop or duplex regions that stall PNPase, thereby allowing processive RNA degradation</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003724" target="_blank" class="term-link">
+                                    GO:0003724
+                                </a>
+                            </span>
+                            <span class="term-label">RNA helicase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HXE5" data-a="GO:0003724" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Automated annotation consistent with the IBA-supported annotation. Correctly identifies the core molecular function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Duplicate of IBA annotation but still accurate. RNA helicase activity is the core molecular function of RhlB, experimentally validated.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/1931833" target="_blank" class="term-link">
+                                        PMID:1931833
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">A newly recognized gene we name rhlB, after RNA helicase-like genes, has been found in the 85-minute region of the Escherichia coli chromosome. This gene encodes protein sequence motifs similar to those known for &#34;D-E-A-D box&#34; gene products.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004386" target="_blank" class="term-link">
+                                    GO:0004386
+                                </a>
+                            </span>
+                            <span class="term-label">helicase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HXE5" data-a="GO:0004386" data-r="GO_REF:0000043" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Too general. The more specific RNA helicase activity (GO:0003724) is already present and better describes RhlB function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This generic helicase activity term is less informative than the specific RNA helicase activity annotation (GO:0003724) that accurately captures RhlB as an RNA-specific helicase.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/1931833" target="_blank" class="term-link">
+                                        PMID:1931833
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Proteins in this gene family occur in eukaryotes as well as prokaryotes, and, as far as tested, have been found to participate in ATP-dependent RNA helicase or RNA-dependent ATPase activities.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005524" target="_blank" class="term-link">
+                                    GO:0005524
+                                </a>
+                            </span>
+                            <span class="term-label">ATP binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HXE5" data-a="GO:0005524" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Essential for RhlB function. Contains conserved ATP-binding motifs including Walker A (P-loop) that binds β-γ phosphate of ATP. Motif II (DEAD sequence: Asp-Glu-Ala-Asp) critical for ATP hydrolysis. ATP binding drives conformational changes that enable RNA unwinding.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> ATP binding is absolutely essential for RhlB helicase function. DEAD-box helicases require ATP binding for conformational changes that drive RNA unwinding. Well-documented molecular mechanism.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/1931833" target="_blank" class="term-link">
+                                        PMID:1931833
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">have been found to participate in ATP-dependent RNA helicase or RNA-dependent ATPase activities</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProtKB:Q9HXE5
+                                    
+                                </span>
+                                
+                                <div class="support-text">DEAD-box RNA helicase involved in RNA degradation</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HXE5" data-a="GO:0005737" data-r="GO_REF:0000120" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Redundant with the more specific cytosol annotation (GO:0005829) above. Cytosol is a child term of cytoplasm, making this annotation unnecessary.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Cytoplasm is a broader parent term of cytosol. Since RhlB specifically localizes to the cytosol (GO:0005829), the more general cytoplasm annotation is redundant and less informative.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    PMC:11964227
+                                    
+                                </span>
+                                
+                                <div class="support-text">RhlB and PNPase co-cluster with RNase E in membrane-proximal puncta, indicating the degradosome assembles at the cytoplasmic face of the membrane</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006401" target="_blank" class="term-link">
+                                    GO:0006401
+                                </a>
+                            </span>
+                            <span class="term-label">RNA catabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000104
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HXE5" data-a="GO:0006401" data-r="GO_REF:0000104" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core biological process experimentally validated. RhlB unwinds RNA secondary structures enabling degradation by RNase E and PNPase. Critical for mRNA turnover - deletion causes accumulation of structured RNAs. Works with PNPase to degrade 3&#39;-end hairpins and duplex RNA regions that would otherwise stall exonucleases.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a core biological process for RhlB. Multiple studies demonstrate RhlB is essential for RNA degradation, particularly of structured RNAs. PMID:16275923 shows RhlB deletion specifically impairs degradation of duplex RNA by PNPase.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16275923" target="_blank" class="term-link">
+                                        PMID:16275923
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">the PNPase-α protein complexes of rne131 Δ rhlB showed decreased exonucleolytic degradation specifically of duplex RNA but no loss of ability to degrade single-stranded RNA</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    PMC:10500059
+                                    
+                                </span>
+                                
+                                <div class="support-text">RhlB unwinds stem-loop or duplex regions that stall PNPase, thereby allowing processive RNA degradation</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016787" target="_blank" class="term-link">
+                                    GO:0016787
+                                </a>
+                            </span>
+                            <span class="term-label">hydrolase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HXE5" data-a="GO:0016787" data-r="GO_REF:0000043" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Too general. The more specific ATP hydrolysis activity (GO:0016887) is already present and better describes the enzymatic function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is an overly broad term. RhlB specifically hydrolyzes ATP, and the more specific ATP hydrolysis activity annotation (GO:0016887) provides better functional precision.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/1931833" target="_blank" class="term-link">
+                                        PMID:1931833
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">have been found to participate in ATP-dependent RNA helicase or RNA-dependent ATPase activities</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016887" target="_blank" class="term-link">
+                                    GO:0016887
+                                </a>
+                            </span>
+                            <span class="term-label">ATP hydrolysis activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000116
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HXE5" data-a="GO:0016887" data-r="GO_REF:0000116" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Essential catalytic activity of RhlB. ATP hydrolysis by the DEAD motif provides energy for RNA unwinding. RNA binding stimulates ATPase activity. EC 3.6.4.13 specifically describes ATP-dependent RNA helicase activity. RNase E binding allosterically increases ATP turnover.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> ATP hydrolysis is the essential catalytic mechanism that powers RNA unwinding by RhlB. This activity is stimulated by RNA binding and allosterically enhanced by RNase E interaction, as demonstrated in PMC:10500059.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    PMC:10500059
+                                    
+                                </span>
+                                
+                                <div class="support-text">leads to increased ATP turnover, essential prerequisite for RNA unwinding</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/1931833" target="_blank" class="term-link">
+                                        PMID:1931833
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">have been found to participate in ATP-dependent RNA helicase or RNA-dependent ATPase activities</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006402" target="_blank" class="term-link">
+                                    GO:0006402
+                                </a>
+                            </span>
+                            <span class="term-label">mRNA catabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15867149" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15867149
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Evidence in vivo that the DEAD-box RNA helicase RhlB facilit...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HXE5" data-a="GO:0006402" data-r="PMID:15867149" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Key missing annotation. RhlB is specifically involved in mRNA degradation as part of the degradosome complex. Multiple studies demonstrate RhlB facilitates mRNA turnover by unwinding structured regions that would otherwise block degradation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation captures a core function of RhlB that is more specific than general RNA catabolic process. Evidence from PMID:15867149 shows RhlB facilitates mRNA degradation, and PMC:11964227 demonstrates its role in mRNA turnover affects virulence.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15867149" target="_blank" class="term-link">
+                                        PMID:15867149
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">RhlB facilitates endoribonucleolytic cleavage by RNase E, demonstrating a functional interaction between the RNA helicase and the endoribonuclease</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    PMC:11964227
+                                    
+                                </span>
+                                
+                                <div class="support-text">mutants with an RNase E unable to recruit RhlB have altered expression of quorum sensing regulators and Type III secretion system components, and these mutants exhibited impaired virulence in a model host infection</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1990904" target="_blank" class="term-link">
+                                    GO:1990904
+                                </a>
+                            </span>
+                            <span class="term-label">ribonucleoprotein complex</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HXE5" data-a="GO:1990904" data-r="" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RhlB is a core component of the RNA degradosome, a multiprotein ribonucleoprotein complex that includes RNase E, PNPase, and other RNA processing enzymes.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This cellular component term captures RhlB&#39;s role as part of the RNA degradosome complex, which is a ribonucleoprotein complex containing both proteins and RNA substrates.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProtKB:Q9HXE5
+                                    
+                                </span>
+                                
+                                <div class="support-text">Component of the RNA degradosome, which is a multiprotein complex involved in RNA processing and mRNA degradation</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15867149" target="_blank" class="term-link">
+                                        PMID:15867149
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The RNA degradosome of Escherichia coli is a ribonucleolytic multienzyme complex containing RNase E, polynucleotide phosphorylase, RhlB, and enolase</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    PMC:11964227
+                                    
+                                </span>
+                                
+                                <div class="support-text">RhlB and PNPase co-cluster with RNase E in membrane-proximal puncta, indicating the degradosome assembles as a ribonucleoprotein complex</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>ATP-dependent RNA unwinding in degradosome-mediated RNA decay</h3>
+                <span class="vote-buttons" data-g="Q9HXE5" data-a="FUNCTION: ATP-dependent RNA unwinding in degradosome-mediate..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003724" target="_blank" class="term-link">
+                            RNA helicase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006401" target="_blank" class="term-link">
+                                RNA catabolic process
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006402" target="_blank" class="term-link">
+                                mRNA catabolic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1990904" target="_blank" class="term-link">
+                                ribonucleoprotein complex
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            PMC:11964227
+                            
+                        </span>
+                        
+                        <div class="finding-text">RhlB and PNPase co-cluster with RNase E in membrane-proximal puncta, indicating the degradosome assembles at the cytoplasmic face of the membrane</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            PMC:10500059
+                            
+                        </span>
+                        
+                        <div class="finding-text">RhlB unwinds stem-loop or duplex regions that stall PNPase, thereby allowing processive RNA degradation</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        UniProtKB:Q9HXE5
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">UniProt entry for Pseudomonas aeruginosa RhlB</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">DEAD-box RNA helicase involved in RNA degradation</div>
+                        
+                        <div class="finding-text">"DEAD-box RNA helicase involved in RNA degradation"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Component of the RNA degradosome</div>
+                        
+                        <div class="finding-text">"Component of the RNA degradosome, which is a multiprotein complex involved in RNA processing and mRNA degradation"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Contains characteristic helicase domains</div>
+                        
+                        <div class="finding-text">"Helicase ATP-binding ... Helicase C-terminal"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/1931833" target="_blank" class="term-link">
+                            PMID:1931833
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">rhlB, a new Escherichia coli K-12 gene with an RNA helicase-like protein sequence motif</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">RhlB identified as DEAD-box RNA helicase with conserved motifs</div>
+                        
+                        <div class="finding-text">"A newly recognized gene we name rhlB, after RNA helicase-like genes, has been found in the 85-minute region of the Escherichia coli chromosome. This gene encodes protein sequence motifs similar to those known for &#39;D-E-A-D box&#39; gene products."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">One of at least five DEAD-box helicases in E. coli</div>
+                        
+                        <div class="finding-text">"Sequence analysis of these fragments suggests that E. coli possesses at least five RNA helicase-like (rhl) D-E-A-D box genes at widely separated chromosomal locations."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16275923" target="_blank" class="term-link">
+                            PMID:16275923
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">RhlB helicase rather than enolase is the beta-subunit of the Escherichia coli polynucleotide phosphorylase (PNPase)-exoribonucleolytic complex</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">RhlB forms functional complex with PNPase independent of RNase E</div>
+                        
+                        <div class="finding-text">"immunoprecipitates from cells expressing PNPase-α, RhlB, and enolase from single-copy chromosomal loci, plus a mutant RNase E protein lacking its C-terminal half, showed direct association of PNPase-α only with RhlB."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">RhlB is the beta subunit of PNPase complex, not enolase</div>
+                        
+                        <div class="finding-text">"The β-subunit has been believed to be enolase; we report here that it is instead the RhlB helicase."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Essential for PNPase-mediated degradation of double-stranded RNA</div>
+                        
+                        <div class="finding-text">"the PNPase-α protein complexes of rne131 Δ rhlB showed decreased exonucleolytic degradation specifically of duplex RNA but no loss of ability to degrade single-stranded RNA"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        PMC:11964227
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Critical functions and key interactions mediated by the RNase E scaffolding domain in Pseudomonas aeruginosa</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">RhlB localizes to membrane-proximal cytoplasmic foci via RNase E interaction</div>
+                        
+                        <div class="finding-text">"RhlB and PNPase co-cluster with RNase E in membrane-proximal puncta, indicating the degradosome assembles at the cytoplasmic face of the membrane"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Disrupting RNase E-RhlB interaction impairs virulence</div>
+                        
+                        <div class="finding-text">"mutants with an RNase E unable to recruit RhlB have altered expression of quorum sensing regulators and Type III secretion system components, and these mutants exhibited impaired virulence in a model host infection"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        PMC:10500059
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Allosteric activation of RhlB by RNase E induces partial duplex opening in substrate RNA</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">RNase E binding allosterically activates RhlB helicase activity</div>
+                        
+                        <div class="finding-text">"an RNase E fragment was shown to allosterically activate RhlB, increasing its RNA affinity and even enabling partial helix unwinding in the absence of ATP"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15867149" target="_blank" class="term-link">
+                            PMID:15867149
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Evidence in vivo that the DEAD-box RNA helicase RhlB facilitates the degradation of ribosome-free mRNA by RNase E</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">RhlB is a component of the E. coli RNA degradosome multienzyme complex that facilitates mRNA degradation</div>
+                        
+                        <div class="finding-text">"The RNA degradosome of Escherichia coli is a ribonucleolytic multienzyme complex containing RNase E, polynucleotide phosphorylase, RhlB, and enolase."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">RhlB facilitates endoribonucleolytic cleavage by RNase E through direct functional interaction</div>
+                        
+                        <div class="finding-text">"Primer extension analysis of the lacZ message indicates that RhlB facilitates endoribonucleolytic cleavage by RNase E, demonstrating a functional interaction between the RNA helicase and the endoribonuclease."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">RhlB deletion stabilizes mRNA by reducing RNase E cleavage activity</div>
+                        
+                        <div class="finding-text">"deleting the gene encoding RhlB stabilizes a lacZ mRNA transcribed by bacteriophage T7 RNA polymerase... The effect of point mutations inactivating RhlB is comparable with the effect of deleting the gene."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">RhlB&#39;s enzymatic activity is required for its role in mRNA degradation</div>
+                        
+                        <div class="finding-text">"The extent of overproduction of β-galactosidase with these mutants is the same as in the Δ rhlB strain. These results show that the effect on the T7- lacZ mRNA of point mutations that inactivate RhlB is the same as the deletion of the gene. We conclude that the enzymatic activity of RhlB is required for its role in T7- lacZ mRNA degradation."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">RhlB preferentially targets ribosome-free mRNA for degradation</div>
+                        
+                        <div class="finding-text">"The distinctive features of T7 transcription are the synthesis of long stretches of ribosome-free mRNA due to rapid elongation and the relative insensitivity of the RNA polymerase to transcription termination by Rho... If the RhlB-RNase E pathway in E. coli were involved in the degradation of ribosome-free mRNA, this function would be complementary to transcription termination by Rho."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25389270" target="_blank" class="term-link">
+                            PMID:25389270
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Molecular recognition of RhlB and RNase D in the Caulobacter crescentus RNA degradosome</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">RhlB interacts directly with the catalytic domain of RNase E in C. crescentus</div>
+                        
+                        <div class="finding-text">"We demonstrate that the helicase component of the degradosome, RhlB, interacts directly with a portion of the catalytic domain of RNase E and the contact site is mapped to the C-terminal extension (CTE) of the helicase."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The C-terminal extension of RhlB is necessary and sufficient for RNase E interaction</div>
+                        
+                        <div class="finding-text">"Only RhlB416–517 was able to form a stable interaction with CcNTD1–575, indicating that the CTE of RhlB contains the interaction site for RNase E... when GST-RhlB416–517 was used as bait in a pull down experiment with C. crescentus cell lysate, the known degradosome proteins (RNase E, aconitase and PNPase) were all enriched"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">RhlB and RNase E form a 2:1 stoichiometric complex in the tetrameric degradosome</div>
+                        
+                        <div class="finding-text">"in the context of the tetrameric CcNTD1–575, it appears that the stoichiometry of this complex is altered to a 2:1 ratio. Given that the tetrameric form of RNase E is expected to be the predominant form of the enzyme in the cell, we would expect the 2:1 ratio of this complex to also be found in vivo."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Close proximity of RhlB helicase to RNase E active site enables direct substrate transfer</div>
+                        
+                        <div class="finding-text">"Given that RhlB interacts with the S1 and 5′-sensor domains of CcNTD, the helicase and the active site of RNase E will be in close proximity within the degradosome assembly. Such a close interaction between the RNase E catalytic domain and a DEAD-box helicase has not been shown previously in any organism. It could be imagined that as structured RNA substrates are unwound by RhlB they could be passed directly to the active site of RNase E."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000116.md" target="_blank" class="term-link">
+                            GO_REF:0000116
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Automatic Gene Ontology annotation based on Rhea mapping.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods.</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(rhlB-deep-research.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9HXE5" data-a="DOC: Deep Research" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="deep-research-report-rhlb-gene-nomenclature-clarification">Deep Research Report: rhlB Gene Nomenclature Clarification</h1>
+<p><strong>IMPORTANT NOMENCLATURE NOTE</strong>: There are TWO different genes named "rhlB" in <em>Pseudomonas aeruginosa</em>:</p>
+<ol>
+<li><strong>PA3861 (RNA Helicase RhlB)</strong> - UniProt Q9HXE5 - ATP-dependent RNA helicase</li>
+<li><strong>Rhamnolipid Biosynthesis RhlB</strong> - Rhamnosyltransferase I for rhamnolipid production</li>
+</ol>
+<p>This directory (PSEAE/rhlB) contains information about <strong>PA3861 (RNA Helicase RhlB)</strong>. The research below covers both for clarity.</p>
+<hr />
+<h1 id="part-i-rna-helicase-rhlb-pa3861-current-directory-gene">PART I: RNA Helicase RhlB (PA3861) - Current Directory Gene</h1>
+<h2 id="gene-function-and-molecular-mechanisms">Gene Function and Molecular Mechanisms</h2>
+<p>RhlB is a DEAD-box family RNA helicase that uses ATP hydrolysis to unwind structured RNA, facilitating RNA degradation [PMC:10500059]. It has RNA-stimulated ATPase activity and can destabilize double-stranded RNA segments, thereby "unfolding" secondary structures in an ATP-dependent manner. This helicase activity is crucial for smooth mRNA turnover: RhlB helps degrade RNAs that form stem-loop structures which would otherwise stall ribonucleases. RhlB works in concert with the 3′–5′ exoribonuclease PNPase to degrade structured RNA <a href="https://pubmed.ncbi.nlm.nih.gov/16275923">PMID:16275923</a>.</p>
+<h2 id="cellular-localization-and-complex-formation">Cellular Localization and Complex Formation</h2>
+<p>RhlB is a cytoplasmic protein that operates as part of the multi-protein RNA degradosome complex. In <em>P. aeruginosa</em> PAO1, RhlB is predominantly found in the cytoplasm (GO:0005737) [PMC:11964227]. It localizes to discrete foci within the cell, which co-reside at the inner membrane with RNase E – the scaffold of the degradosome. RhlB interacts directly with RNase E via a short linear motif in the RNase E C-terminal region, anchoring RhlB into the degradosome.</p>
+<h2 id="core-functions-of-rna-helicase-rhlb">Core Functions of RNA Helicase RhlB</h2>
+<ul>
+<li><strong>ATP-dependent RNA unwinding</strong> (GO:0003724)</li>
+<li><strong>Component of RNA degradosome</strong> (GO:1990904)</li>
+<li><strong>mRNA catabolic process</strong> (GO:0006401)</li>
+<li><strong>Cytoplasmic localization</strong> (GO:0005829)</li>
+</ul>
+<hr />
+<h1 id="part-ii-rhamnolipid-biosynthesis-rhlb-comprehensive-research">PART II: Rhamnolipid Biosynthesis RhlB - Comprehensive Research</h1>
+<h2 id="gene-overview">Gene Overview</h2>
+<p>The rhamnolipid biosynthesis rhlB gene encodes <strong>rhamnosyltransferase I (RhlB)</strong>, a key enzyme in the biosynthesis of rhamnolipids - glycolipid biosurfactants that serve as virulence factors, facilitate biofilm formation, and enable surface motility in <em>Pseudomonas aeruginosa</em>. This rhlB is distinct from the RNA helicase and is part of the rhlAB operon critical for rhamnolipid production.</p>
+<h2 id="core-molecular-functions">Core Molecular Functions</h2>
+<h3 id="rhamnosyltransferase-activity">Rhamnosyltransferase Activity</h3>
+<p>The rhamnolipid biosynthesis RhlB functions as <strong>rhamnosyltransferase I</strong>, catalyzing the formation of mono-rhamnolipids by adding dTDP-L-rhamnose to HAA (3-(3-hydroxyalkanoyloxy)alkanoic acid) precursors [PMC:5352749]. This is the first rhamnosylation step in rhamnolipid biosynthesis.</p>
+<p><strong>Enzymatic Reaction:</strong><br />
+- HAA + dTDP-L-rhamnose → Mono-rhamnolipid + dTDP<br />
+- <strong>EC classification</strong>: Glycosyltransferase activity<br />
+- <strong>Cofactor requirements</strong>: dTDP-L-rhamnose (donor substrate)<br />
+- <strong>Product</strong>: Mono-rhamnolipids (primarily Rha-C10-C10)</p>
+<h3 id="sugar-transferase-activity">Sugar Transferase Activity</h3>
+<p>RhlB exhibits specific <strong>glucosyltransferase activity</strong> (GO:0016757) and more broadly <strong>transferase activity, transferring glycosyl groups</strong> (GO:0016758). The enzyme shows specificity for L-rhamnose transfer and requires the activated sugar donor dTDP-L-rhamnose.</p>
+<h2 id="key-biological-processes">Key Biological Processes</h2>
+<h3 id="rhamnolipid-biosynthesis-pathway">Rhamnolipid Biosynthesis Pathway</h3>
+<p>The complete rhamnolipid biosynthesis involves three sequential enzymatic steps:</p>
+<ol>
+<li><strong>RhlA</strong>: Catalyzes formation of HAA from two β-hydroxyfatty acids</li>
+<li><strong>RhlB</strong> (Rhamnosyltransferase I): Adds first rhamnose to HAA → mono-rhamnolipid</li>
+<li><strong>RhlC</strong> (Rhamnosyltransferase II): Adds second rhamnose → di-rhamnolipid</li>
+</ol>
+<h3 id="surfactant-production">Surfactant Production</h3>
+<p>Rhamnolipids produced via RhlB activity serve as <strong>biological surfactants</strong> with critical functions:<br />
+- <strong>Surface tension reduction</strong>: Enable spreading and wetting<br />
+- <strong>Emulsification</strong>: Facilitate uptake of hydrophobic substrates<br />
+- <strong>Micelle formation</strong>: Critical micelle concentration ~50-200 mg/L</p>
+<h3 id="biofilm-formation-and-architecture">Biofilm Formation and Architecture</h3>
+<p>RhlB-produced rhamnolipids play essential roles in biofilm development:<br />
+- <strong>Initial adhesion</strong>: Facilitate bacterial attachment to surfaces<br />
+- <strong>Biofilm maturation</strong>: Enable three-dimensional structure formation<br />
+- <strong>Channel maintenance</strong>: Keep water channels open in mature biofilms<br />
+- <strong>Dispersal mechanisms</strong>: Promote detachment and spreading</p>
+<h3 id="virulence-and-pathogenicity">Virulence and Pathogenicity</h3>
+<p>Rhamnolipids function as <strong>virulence factors</strong> through multiple mechanisms:<br />
+- <strong>Hemolytic activity</strong>: Disrupt host cell membranes<br />
+- <strong>Immune evasion</strong>: Interfere with phagocytosis<br />
+- <strong>Tissue damage</strong>: Contribute to lung damage in cystic fibrosis<br />
+- <strong>Host cell invasion</strong>: Facilitate bacterial penetration</p>
+<h2 id="protein-structure-and-membrane-association">Protein Structure and Membrane Association</h2>
+<h3 id="rhamnosyltransferase-domain-structure">Rhamnosyltransferase Domain Structure</h3>
+<p>The rhamnolipid biosynthesis RhlB contains:<br />
+- <strong>Glycosyltransferase domain</strong>: Catalytic core for rhamnose transfer<br />
+- <strong>Membrane-spanning regions</strong>: At least two putative transmembrane domains<br />
+- <strong>Active site</strong>: Binds both dTDP-L-rhamnose donor and HAA acceptor</p>
+<h3 id="membrane-localization">Membrane Localization</h3>
+<p>RhlB is an <strong>inner membrane-bound enzyme</strong> that:<br />
+- <strong>Membrane topology</strong>: Integral membrane protein with cytoplasmic catalytic domain<br />
+- <strong>Synthesis location</strong>: Rhamnolipids synthesized at cytoplasmic face of inner membrane<br />
+- <strong>Transport requirement</strong>: Products must be exported to extracellular space</p>
+<h2 id="role-in-quorum-sensing-regulation">Role in Quorum Sensing Regulation</h2>
+<h3 id="rhlrrhli-system-control">RhlR/RhlI System Control</h3>
+<p>Rhamnolipid biosynthesis rhlB is under strict <strong>quorum sensing control</strong>:<br />
+- <strong>Activator</strong>: RhlR (transcriptional regulator)<br />
+- <strong>Signal molecule</strong>: N-butyryl-homoserine lactone (C4-HSL)<br />
+- <strong>RhlR-C4-HSL complex</strong>: Binds to rhlAB promoter, activates transcription<br />
+- <strong>Growth phase dependency</strong>: Maximal expression in stationary phase</p>
+<h3 id="hierarchical-regulation">Hierarchical Regulation</h3>
+<p>The rhl system operates within a <strong>quorum sensing hierarchy</strong>:<br />
+- <strong>Las system</strong>: Controls RhlR expression (las → rhl cascade)<br />
+- <strong>LasR/3OC12-HSL</strong>: Required for full rhlAB operon activation<br />
+- <strong>Integration signals</strong>: Multiple environmental inputs converge on rhlAB regulation</p>
+<h2 id="virulence-and-pathogenicity-mechanisms">Virulence and Pathogenicity Mechanisms</h2>
+<h3 id="direct-virulence-functions">Direct Virulence Functions</h3>
+<p>Rhamnolipids produced by RhlB contribute to pathogenesis through:<br />
+- <strong>Cytotoxicity</strong>: Kill polymorphonuclear leukocytes and macrophages<br />
+- <strong>Membrane disruption</strong>: Hemolytic activity against red blood cells<br />
+- <strong>Tissue invasion</strong>: Facilitate bacterial dissemination in host tissues<br />
+- <strong>Lung damage</strong>: Major contributor to pathology in cystic fibrosis patients</p>
+<h3 id="indirect-virulence-support">Indirect Virulence Support</h3>
+<p>RhlB supports pathogenicity by:<br />
+- <strong>Nutrient acquisition</strong>: Enhanced uptake of hydrophobic carbon sources<br />
+- <strong>Stress resistance</strong>: Protection against host defense mechanisms<br />
+- <strong>Motility enhancement</strong>: Swarming and swimming motility facilitation<br />
+- <strong>Biofilm persistence</strong>: Antibiotic resistance through biofilm formation</p>
+<h2 id="industrial-and-biotechnological-applications">Industrial and Biotechnological Applications</h2>
+<h3 id="biosurfactant-production">Biosurfactant Production</h3>
+<p>Rhamnolipids have significant <strong>commercial potential</strong>:<br />
+- <strong>Market value</strong>: $2.8 billion globally (2023)<br />
+- <strong>Applications</strong>: Detergents, emulsifiers, wetting agents<br />
+- <strong>Advantages</strong>: Biodegradable, non-toxic, environmentally friendly<br />
+- <strong>Production challenges</strong>: High costs, low yields, downstream processing</p>
+<h3 id="environmental-bioremediation">Environmental Bioremediation</h3>
+<p>RhlB-produced rhamnolipids are valuable for:<br />
+- <strong>Oil spill cleanup</strong>: Enhanced hydrocarbon solubilization and biodegradation<br />
+- <strong>Soil washing</strong>: Removal of petroleum contaminants from contaminated soils<br />
+- <strong>Heavy metal extraction</strong>: Mobilization of toxic metals from sediments<br />
+- <strong>Groundwater treatment</strong>: Enhanced pump-and-treat remediation systems</p>
+<h3 id="agricultural-applications">Agricultural Applications</h3>
+<p>Emerging uses include:<br />
+- <strong>Biopesticides</strong>: Antifungal activity against plant pathogens<br />
+- <strong>Plant growth promotion</strong>: Enhanced nutrient uptake<br />
+- <strong>Soil conditioning</strong>: Improved soil structure and water retention<br />
+- <strong>Sustainable agriculture</strong>: Reduced chemical pesticide dependence</p>
+<h2 id="environmental-role-and-biodegradation">Environmental Role and Biodegradation</h2>
+<h3 id="natural-functions">Natural Functions</h3>
+<p>In environmental contexts, RhlB-produced rhamnolipids:<br />
+- <strong>Hydrocarbon utilization</strong>: Enable P. aeruginosa to use hydrophobic carbon sources<br />
+- <strong>Competitive advantage</strong>: Provide ecological niche through surfactant production<br />
+- <strong>Biofilm formation</strong>: Support community structure in environmental biofilms<br />
+- <strong>Stress adaptation</strong>: Enhance survival under nutrient limitation</p>
+<h3 id="biodegradation-applications">Biodegradation Applications</h3>
+<p>Rhamnolipids enhance biodegradation by:<br />
+- <strong>Bioavailability increase</strong>: Solubilize poorly water-soluble contaminants<br />
+- <strong>Mass transfer enhancement</strong>: Improve substrate accessibility to degrading bacteria<br />
+- <strong>Microbial community stimulation</strong>: Support growth of biodegrading consortia<br />
+- <strong>Contaminant desorption</strong>: Remove pollutants from soil matrices</p>
+<h2 id="key-experimental-findings">Key Experimental Findings</h2>
+<h3 id="discovery-and-characterization">Discovery and Characterization</h3>
+<ul>
+<li><strong>Initial identification</strong>: rhlAB operon cloned and characterized in 1993 <a href="https://pubmed.ncbi.nlm.nih.gov/8051059">PMID:8051059</a></li>
+<li><strong>Enzymatic activity</strong>: RhlB rhamnosyltransferase activity demonstrated in vitro</li>
+<li><strong>Product analysis</strong>: Mono-rhamnolipid structure confirmed by NMR and MS</li>
+<li><strong>Membrane association</strong>: Transmembrane topology established through biochemical analysis</li>
+</ul>
+<h3 id="functional-studies">Functional Studies</h3>
+<ul>
+<li><strong>Knockout phenotypes</strong>: ΔrhlB mutants completely unable to produce rhamnolipids</li>
+<li><strong>Complementation</strong>: Heterologous expression in E. coli restores rhamnolipid production</li>
+<li><strong>Substrate specificity</strong>: Strict requirement for dTDP-L-rhamnose and HAA</li>
+<li><strong>Cofactor dependencies</strong>: Mg²⁺ or Mn²⁺ required for optimal activity</li>
+</ul>
+<h3 id="biotechnology-applications">Biotechnology Applications</h3>
+<ul>
+<li><strong>Heterologous production</strong>: Successful expression in P. putida and other non-pathogenic hosts</li>
+<li><strong>Metabolic engineering</strong>: Enhanced production through pathway optimization</li>
+<li><strong>Industrial fermentation</strong>: Scale-up challenges and optimization strategies</li>
+<li><strong>Product purification</strong>: Development of efficient downstream processing methods</li>
+</ul>
+<h3 id="recent-advances-2023-2024">Recent Advances (2023-2024)</h3>
+<ul>
+<li><strong>Advanced expression systems</strong>: Stable integration strategies in non-pathogenic hosts</li>
+<li><strong>Process optimization</strong>: Improved yields using crude glycerol substrates</li>
+<li><strong>EstA relationship</strong>: Enhanced rhamnolipid production through estA overexpression</li>
+<li><strong>Tailor-made rhamnolipids</strong>: Engineering approaches for specific congener production</li>
+</ul>
+<h2 id="gene-organization-and-regulation">Gene Organization and Regulation</h2>
+<h3 id="operon-structure">Operon Structure</h3>
+<p>The rhamnolipid biosynthesis genes are organized as:<br />
+- <strong>rhlAB operon</strong>: rhlA (HAA synthesis) + rhlB (mono-rhamnolipid synthesis)<br />
+- <strong>Promoter elements</strong>: RhlR binding sites, σ54-dependent promoter<br />
+- <strong>Chromosomal location</strong>: Adjacent to rhlRI quorum sensing genes<br />
+- <strong>Conservation</strong>: Highly conserved across P. aeruginosa strains</p>
+<h3 id="expression-patterns">Expression Patterns</h3>
+<p>RhlB expression is characterized by:<br />
+- <strong>Growth phase dependency</strong>: Low in exponential, high in stationary phase<br />
+- <strong>Nutrient regulation</strong>: Carbon and nitrogen limitation effects<br />
+- <strong>Environmental signals</strong>: Temperature, pH, oxygen availability<br />
+- <strong>Strain variation</strong>: Expression levels vary among clinical isolates</p>
+<h2 id="evolutionary-conservation-and-distribution">Evolutionary Conservation and Distribution</h2>
+<h3 id="phylogenetic-analysis">Phylogenetic Analysis</h3>
+<p>The rhamnolipid biosynthesis rhlB shows:<br />
+- <strong>Species distribution</strong>: Primarily in Pseudomonas genus<br />
+- <strong>Strain conservation</strong>: High sequence identity across P. aeruginosa isolates<br />
+- <strong>Functional conservation</strong>: Maintained enzymatic activity across species<br />
+- <strong>Horizontal transfer</strong>: Evidence for acquisition in some non-Pseudomonas species</p>
+<h3 id="comparative-genomics">Comparative Genomics</h3>
+<p>Analysis reveals:<br />
+- <strong>Operon synteny</strong>: rhlAB organization conserved across species<br />
+- <strong>Regulatory conservation</strong>: Similar quorum sensing control mechanisms<br />
+- <strong>Functional divergence</strong>: Some species produce modified rhamnolipid structures<br />
+- <strong>Environmental adaptation</strong>: Gene expression patterns reflect ecological niches</p>
+<h2 id="clinical-and-diagnostic-significance">Clinical and Diagnostic Significance</h2>
+<h3 id="biomarker-applications">Biomarker Applications</h3>
+<p>RhlB activity serves as:<br />
+- <strong>P. aeruginosa detection</strong>: Rhamnolipid production as diagnostic marker<br />
+- <strong>Virulence assessment</strong>: RhlB expression correlates with pathogenicity<br />
+- <strong>Treatment monitoring</strong>: Reduced rhamnolipid production indicates therapeutic efficacy<br />
+- <strong>Resistance patterns</strong>: RhlB regulation linked to antibiotic resistance mechanisms</p>
+<h3 id="therapeutic-targets">Therapeutic Targets</h3>
+<p>RhlB represents a potential drug target:<br />
+- <strong>Enzyme inhibition</strong>: Small molecule inhibitors of rhamnosyltransferase activity<br />
+- <strong>Regulatory interference</strong>: Disruption of quorum sensing control<br />
+- <strong>Pathway disruption</strong>: Targeting HAA synthesis (RhlA) or rhamnose metabolism<br />
+- <strong>Biofilm prevention</strong>: Reduced rhamnolipid production impairs biofilm formation</p>
+<h2 id="future-research-directions">Future Research Directions</h2>
+<h3 id="structural-biology">Structural Biology</h3>
+<p>Priority areas include:<br />
+- <strong>Crystal structure determination</strong>: High-resolution structure of RhlB enzyme<br />
+- <strong>Substrate binding studies</strong>: Detailed analysis of active site interactions<br />
+- <strong>Membrane protein structure</strong>: Understanding of transmembrane organization<br />
+- <strong>Structure-function relationships</strong>: Mutagenesis studies guided by structural data</p>
+<h3 id="biotechnology-development">Biotechnology Development</h3>
+<p>Key objectives encompass:<br />
+- <strong>Enhanced production strains</strong>: Metabolic engineering for improved yields<br />
+- <strong>Novel applications</strong>: Exploration of rhamnolipid uses in new industries<br />
+- <strong>Cost reduction</strong>: Development of economical production processes<br />
+- <strong>Product diversification</strong>: Engineering of novel rhamnolipid structures</p>
+<h3 id="environmental-applications">Environmental Applications</h3>
+<p>Research priorities include:<br />
+- <strong>Field studies</strong>: Real-world bioremediation applications<br />
+- <strong>Microbial ecology</strong>: Role of rhamnolipids in environmental communities<br />
+- <strong>Bioavailability studies</strong>: Enhanced understanding of contaminant mobilization<br />
+- <strong>Regulatory approval</strong>: Development of protocols for environmental release</p>
+<p>This comprehensive research demonstrates that the rhamnolipid biosynthesis rhlB gene encodes a critical enzyme for surfactant production, virulence, and biotechnological applications in <em>Pseudomonas aeruginosa</em>, distinct from the RNA helicase RhlB (PA3861) that is the subject of the current directory structure.</p>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q9HXE5
+gene_symbol: rhlB
+aliases:
+- rhl
+taxon:
+  id: NCBITaxon:208964
+  label: Pseudomonas aeruginosa PAO1
+description: ATP-dependent RNA helicase of the DEAD-box family that functions as a
+  core component of the RNA degradosome complex in Pseudomonas aeruginosa PAO1. RhlB
+  unwinds structured RNA using ATP hydrolysis, facilitating degradation by RNase E
+  and the 3&#39;-5&#39; exoribonuclease PNPase. It localizes to membrane-proximal cytoplasmic
+  foci through direct interaction with RNase E via the AR1 motif. RhlB forms a functional
+  complex with PNPase independent of RNase E, acting as the beta subunit for degradation
+  of double-stranded RNA. Essential for mRNA turnover, post-transcriptional regulation,
+  and bacterial virulence in P. aeruginosa.
+existing_annotations:
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: Cytosolic localization confirmed. RhlB localizes to discrete cytoplasmic
+      foci at the inner membrane through interaction with membrane-tethered RNase
+      E. Co-localization studies in P. aeruginosa show RhlB clusters with RNase E
+      and PNPase in membrane-proximal puncta.
+    action: ACCEPT
+    reason: Experimental evidence from PMC:11964227 clearly demonstrates RhlB localization
+      to membrane-proximal cytoplasmic foci through RNase E interaction. This is consistent
+      with the known function of RhlB as a cytoplasmic component of the RNA degradosome
+      complex.
+    supported_by:
+    - reference_id: PMC:11964227
+      supporting_text: RhlB and PNPase co-cluster with RNase E in membrane-proximal
+        puncta, indicating the degradosome assembles at the cytoplasmic face of the
+        membrane
+- term:
+    id: GO:0003724
+    label: RNA helicase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: Core molecular function confirmed by extensive experimental evidence.
+      RhlB unwinds double-stranded RNA and stem-loop structures using ATP hydrolysis.
+      Contains conserved DEAD-box motifs including Walker A (ATP binding) and DEAD
+      motif (ATP hydrolysis). Helicase activity is allosterically activated by RNase
+      E binding.
+    action: ACCEPT
+    reason: This is the fundamental molecular function of RhlB, confirmed by multiple
+      studies including PMID:16275923 showing RhlB forms active helicase complex with
+      PNPase, and PMC:10500059 demonstrating RNase E allosterically activates RhlB
+      helicase activity.
+    supported_by:
+    - reference_id: PMC:10500059
+      supporting_text: an RNase E fragment was shown to allosterically activate RhlB,
+        increasing its RNA affinity and even enabling partial helix unwinding in the
+        absence of ATP
+    - reference_id: PMID:16275923
+      supporting_text: the PNPase-α protein complexes of rne131 Δ rhlB showed decreased
+        exonucleolytic degradation specifically of duplex RNA but no loss of ability
+        to degrade single-stranded RNA
+- term:
+    id: GO:0000166
+    label: nucleotide binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: Too general. The more specific ATP binding term (GO:0005524) is already
+      present and more informative for this ATP-dependent helicase.
+    action: REMOVE
+    reason: This term is overly broad. RhlB specifically binds ATP, not general nucleotides,
+      and the ATP binding annotation (GO:0005524) already captures this function more
+      precisely.
+    supported_by:
+    - reference_id: UniProtKB:Q9HXE5
+      supporting_text: DEAD-box RNA helicase involved in RNA degradation
+- term:
+    id: GO:0003676
+    label: nucleic acid binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: Too general. The more specific RNA binding term (GO:0003723) is already
+      present and more appropriate for this RNA helicase.
+    action: REMOVE
+    reason: This term is overly broad. RhlB specifically binds RNA substrates, not
+      DNA or other nucleic acids, making the RNA binding annotation (GO:0003723) more
+      appropriate and informative.
+    supported_by:
+    - reference_id: UniProtKB:Q9HXE5
+      supporting_text: DEAD-box RNA helicase involved in RNA degradation
+- term:
+    id: GO:0003723
+    label: RNA binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: Essential function for RhlB - it must bind RNA substrates to perform
+      its helicase activity. Supported by domain analysis showing DEAD and Helicase_C
+      domains.
+    action: ACCEPT
+    reason: RNA binding is fundamental to RhlB function as an RNA helicase. The protein
+      must bind RNA substrates to unwind secondary structures. Domain analysis confirms
+      presence of RNA-binding domains.
+    supported_by:
+    - reference_id: UniProtKB:Q9HXE5
+      supporting_text: Helicase ATP-binding ... Helicase C-terminal
+    - reference_id: PMC:10500059
+      supporting_text: RhlB unwinds stem-loop or duplex regions that stall PNPase,
+        thereby allowing processive RNA degradation
+- term:
+    id: GO:0003724
+    label: RNA helicase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: Automated annotation consistent with the IBA-supported annotation. Correctly
+      identifies the core molecular function.
+    action: ACCEPT
+    reason: Duplicate of IBA annotation but still accurate. RNA helicase activity
+      is the core molecular function of RhlB, experimentally validated.
+    supported_by:
+    - reference_id: PMID:1931833
+      supporting_text: A newly recognized gene we name rhlB, after RNA helicase-like
+        genes, has been found in the 85-minute region of the Escherichia coli chromosome.
+        This gene encodes protein sequence motifs similar to those known for &#34;D-E-A-D
+        box&#34; gene products.
+- term:
+    id: GO:0004386
+    label: helicase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: Too general. The more specific RNA helicase activity (GO:0003724) is
+      already present and better describes RhlB function.
+    action: REMOVE
+    reason: This generic helicase activity term is less informative than the specific
+      RNA helicase activity annotation (GO:0003724) that accurately captures RhlB
+      as an RNA-specific helicase.
+    supported_by:
+    - reference_id: PMID:1931833
+      supporting_text: Proteins in this gene family occur in eukaryotes as well as
+        prokaryotes, and, as far as tested, have been found to participate in ATP-dependent
+        RNA helicase or RNA-dependent ATPase activities.
+- term:
+    id: GO:0005524
+    label: ATP binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &#39;Essential for RhlB function. Contains conserved ATP-binding motifs including
+      Walker A (P-loop) that binds β-γ phosphate of ATP. Motif II (DEAD sequence:
+      Asp-Glu-Ala-Asp) critical for ATP hydrolysis. ATP binding drives conformational
+      changes that enable RNA unwinding.&#39;
+    action: ACCEPT
+    reason: ATP binding is absolutely essential for RhlB helicase function. DEAD-box
+      helicases require ATP binding for conformational changes that drive RNA unwinding.
+      Well-documented molecular mechanism.
+    supported_by:
+    - reference_id: PMID:1931833
+      supporting_text: have been found to participate in ATP-dependent RNA helicase
+        or RNA-dependent ATPase activities
+    - reference_id: UniProtKB:Q9HXE5
+      supporting_text: DEAD-box RNA helicase involved in RNA degradation
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: Redundant with the more specific cytosol annotation (GO:0005829) above.
+      Cytosol is a child term of cytoplasm, making this annotation unnecessary.
+    action: REMOVE
+    reason: Cytoplasm is a broader parent term of cytosol. Since RhlB specifically
+      localizes to the cytosol (GO:0005829), the more general cytoplasm annotation
+      is redundant and less informative.
+    supported_by:
+    - reference_id: PMC:11964227
+      supporting_text: RhlB and PNPase co-cluster with RNase E in membrane-proximal
+        puncta, indicating the degradosome assembles at the cytoplasmic face of the
+        membrane
+- term:
+    id: GO:0006401
+    label: RNA catabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  review:
+    summary: Core biological process experimentally validated. RhlB unwinds RNA secondary
+      structures enabling degradation by RNase E and PNPase. Critical for mRNA turnover
+      - deletion causes accumulation of structured RNAs. Works with PNPase to degrade
+      3&#39;-end hairpins and duplex RNA regions that would otherwise stall exonucleases.
+    action: ACCEPT
+    reason: This is a core biological process for RhlB. Multiple studies demonstrate
+      RhlB is essential for RNA degradation, particularly of structured RNAs. PMID:16275923
+      shows RhlB deletion specifically impairs degradation of duplex RNA by PNPase.
+    supported_by:
+    - reference_id: PMID:16275923
+      supporting_text: the PNPase-α protein complexes of rne131 Δ rhlB showed decreased
+        exonucleolytic degradation specifically of duplex RNA but no loss of ability
+        to degrade single-stranded RNA
+    - reference_id: PMC:10500059
+      supporting_text: RhlB unwinds stem-loop or duplex regions that stall PNPase,
+        thereby allowing processive RNA degradation
+- term:
+    id: GO:0016787
+    label: hydrolase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: Too general. The more specific ATP hydrolysis activity (GO:0016887) is
+      already present and better describes the enzymatic function.
+    action: REMOVE
+    reason: This is an overly broad term. RhlB specifically hydrolyzes ATP, and the
+      more specific ATP hydrolysis activity annotation (GO:0016887) provides better
+      functional precision.
+    supported_by:
+    - reference_id: PMID:1931833
+      supporting_text: have been found to participate in ATP-dependent RNA helicase
+        or RNA-dependent ATPase activities
+- term:
+    id: GO:0016887
+    label: ATP hydrolysis activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000116
+  review:
+    summary: Essential catalytic activity of RhlB. ATP hydrolysis by the DEAD motif
+      provides energy for RNA unwinding. RNA binding stimulates ATPase activity. EC
+      3.6.4.13 specifically describes ATP-dependent RNA helicase activity. RNase E
+      binding allosterically increases ATP turnover.
+    action: ACCEPT
+    reason: ATP hydrolysis is the essential catalytic mechanism that powers RNA unwinding
+      by RhlB. This activity is stimulated by RNA binding and allosterically enhanced
+      by RNase E interaction, as demonstrated in PMC:10500059.
+    supported_by:
+    - reference_id: PMC:10500059
+      supporting_text: leads to increased ATP turnover, essential prerequisite for
+        RNA unwinding
+    - reference_id: PMID:1931833
+      supporting_text: have been found to participate in ATP-dependent RNA helicase
+        or RNA-dependent ATPase activities
+- term:
+    id: GO:0006402
+    label: mRNA catabolic process
+  evidence_type: TAS
+  original_reference_id: PMID:15867149
+  review:
+    summary: Key missing annotation. RhlB is specifically involved in mRNA degradation
+      as part of the degradosome complex. Multiple studies demonstrate RhlB facilitates
+      mRNA turnover by unwinding structured regions that would otherwise block degradation.
+    action: NEW
+    reason: This annotation captures a core function of RhlB that is more specific
+      than general RNA catabolic process. Evidence from PMID:15867149 shows RhlB facilitates
+      mRNA degradation, and PMC:11964227 demonstrates its role in mRNA turnover affects
+      virulence.
+    supported_by:
+    - reference_id: PMID:15867149
+      supporting_text: RhlB facilitates endoribonucleolytic cleavage by RNase E, demonstrating
+        a functional interaction between the RNA helicase and the endoribonuclease
+    - reference_id: PMC:11964227
+      supporting_text: mutants with an RNase E unable to recruit RhlB have altered
+        expression of quorum sensing regulators and Type III secretion system components,
+        and these mutants exhibited impaired virulence in a model host infection
+- term:
+    id: GO:1990904
+    label: ribonucleoprotein complex
+  evidence_type: IEA
+  review:
+    summary: RhlB is a core component of the RNA degradosome, a multiprotein ribonucleoprotein complex that includes RNase E, PNPase, and other RNA processing enzymes.
+    action: NEW
+    reason: This cellular component term captures RhlB&#39;s role as part of the RNA degradosome complex, which is a ribonucleoprotein complex containing both proteins and RNA substrates.
+    supported_by:
+    - reference_id: UniProtKB:Q9HXE5
+      supporting_text: Component of the RNA degradosome, which is a multiprotein complex involved in RNA processing and mRNA degradation
+    - reference_id: PMID:15867149
+      supporting_text: The RNA degradosome of Escherichia coli is a ribonucleolytic multienzyme complex containing RNase E, polynucleotide phosphorylase, RhlB, and enolase
+    - reference_id: PMC:11964227
+      supporting_text: RhlB and PNPase co-cluster with RNase E in membrane-proximal puncta, indicating the degradosome assembles as a ribonucleoprotein complex
+core_functions:
+- description: ATP-dependent RNA unwinding in degradosome-mediated RNA decay
+  molecular_function:
+    id: GO:0003724
+    label: RNA helicase activity
+  directly_involved_in:
+  - id: GO:0006401
+    label: RNA catabolic process
+  - id: GO:0006402
+    label: mRNA catabolic process
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  - id: GO:1990904
+    label: ribonucleoprotein complex
+  supported_by:
+  - reference_id: PMC:11964227
+    supporting_text: RhlB and PNPase co-cluster with RNase E in membrane-proximal
+      puncta, indicating the degradosome assembles at the cytoplasmic face of the
+      membrane
+  - reference_id: PMC:10500059
+    supporting_text: RhlB unwinds stem-loop or duplex regions that stall PNPase, thereby
+      allowing processive RNA degradation
+references:
+- id: UniProtKB:Q9HXE5
+  title: UniProt entry for Pseudomonas aeruginosa RhlB
+  findings:
+  - statement: DEAD-box RNA helicase involved in RNA degradation
+    supporting_text: DEAD-box RNA helicase involved in RNA degradation
+  - statement: Component of the RNA degradosome
+    supporting_text: Component of the RNA degradosome, which is a multiprotein complex
+      involved in RNA processing and mRNA degradation
+  - statement: Contains characteristic helicase domains
+    supporting_text: Helicase ATP-binding ... Helicase C-terminal
+- id: PMID:1931833
+  title: rhlB, a new Escherichia coli K-12 gene with an RNA helicase-like protein
+    sequence motif
+  findings:
+  - statement: RhlB identified as DEAD-box RNA helicase with conserved motifs
+    supporting_text: A newly recognized gene we name rhlB, after RNA helicase-like
+      genes, has been found in the 85-minute region of the Escherichia coli chromosome.
+      This gene encodes protein sequence motifs similar to those known for &#39;D-E-A-D
+      box&#39; gene products.
+    full_text_unavailable: true
+  - statement: One of at least five DEAD-box helicases in E. coli
+    supporting_text: Sequence analysis of these fragments suggests that E. coli possesses
+      at least five RNA helicase-like (rhl) D-E-A-D box genes at widely separated
+      chromosomal locations.
+    full_text_unavailable: true
+- id: PMID:16275923
+  title: RhlB helicase rather than enolase is the beta-subunit of the Escherichia
+    coli polynucleotide phosphorylase (PNPase)-exoribonucleolytic complex
+  findings:
+  - statement: RhlB forms functional complex with PNPase independent of RNase E
+    supporting_text: immunoprecipitates from cells expressing PNPase-α, RhlB, and
+      enolase from single-copy chromosomal loci, plus a mutant RNase E protein lacking
+      its C-terminal half, showed direct association of PNPase-α only with RhlB.
+  - statement: RhlB is the beta subunit of PNPase complex, not enolase
+    supporting_text: The β-subunit has been believed to be enolase; we report here
+      that it is instead the RhlB helicase.
+  - statement: Essential for PNPase-mediated degradation of double-stranded RNA
+    supporting_text: the PNPase-α protein complexes of rne131 Δ rhlB showed decreased
+      exonucleolytic degradation specifically of duplex RNA but no loss of ability
+      to degrade single-stranded RNA
+- id: PMC:11964227
+  title: Critical functions and key interactions mediated by the RNase E scaffolding
+    domain in Pseudomonas aeruginosa
+  findings:
+  - statement: RhlB localizes to membrane-proximal cytoplasmic foci via RNase E interaction
+    supporting_text: RhlB and PNPase co-cluster with RNase E in membrane-proximal
+      puncta, indicating the degradosome assembles at the cytoplasmic face of the
+      membrane
+  - statement: Disrupting RNase E-RhlB interaction impairs virulence
+    supporting_text: mutants with an RNase E unable to recruit RhlB have altered expression
+      of quorum sensing regulators and Type III secretion system components, and these
+      mutants exhibited impaired virulence in a model host infection
+- id: PMC:10500059
+  title: Allosteric activation of RhlB by RNase E induces partial duplex opening in
+    substrate RNA
+  findings:
+  - statement: RNase E binding allosterically activates RhlB helicase activity
+    supporting_text: an RNase E fragment was shown to allosterically activate RhlB,
+      increasing its RNA affinity and even enabling partial helix unwinding in the
+      absence of ATP
+- id: PMID:15867149
+  title: Evidence in vivo that the DEAD-box RNA helicase RhlB facilitates the degradation
+    of ribosome-free mRNA by RNase E
+  findings:
+  - statement: RhlB is a component of the E. coli RNA degradosome multienzyme complex
+      that facilitates mRNA degradation
+    supporting_text: The RNA degradosome of Escherichia coli is a ribonucleolytic
+      multienzyme complex containing RNase E, polynucleotide phosphorylase, RhlB,
+      and enolase.
+  - statement: RhlB facilitates endoribonucleolytic cleavage by RNase E through direct
+      functional interaction
+    supporting_text: Primer extension analysis of the lacZ message indicates that
+      RhlB facilitates endoribonucleolytic cleavage by RNase E, demonstrating a functional
+      interaction between the RNA helicase and the endoribonuclease.
+  - statement: RhlB deletion stabilizes mRNA by reducing RNase E cleavage activity
+    supporting_text: deleting the gene encoding RhlB stabilizes a lacZ mRNA transcribed
+      by bacteriophage T7 RNA polymerase... The effect of point mutations inactivating
+      RhlB is comparable with the effect of deleting the gene.
+  - statement: RhlB&#39;s enzymatic activity is required for its role in mRNA degradation
+    supporting_text: The extent of overproduction of β-galactosidase with these mutants
+      is the same as in the Δ rhlB strain. These results show that the effect on the
+      T7- lacZ mRNA of point mutations that inactivate RhlB is the same as the deletion
+      of the gene. We conclude that the enzymatic activity of RhlB is required for
+      its role in T7- lacZ mRNA degradation.
+  - statement: RhlB preferentially targets ribosome-free mRNA for degradation
+    supporting_text: The distinctive features of T7 transcription are the synthesis
+      of long stretches of ribosome-free mRNA due to rapid elongation and the relative
+      insensitivity of the RNA polymerase to transcription termination by Rho... If
+      the RhlB-RNase E pathway in E. coli were involved in the degradation of ribosome-free
+      mRNA, this function would be complementary to transcription termination by Rho.
+- id: PMID:25389270
+  title: Molecular recognition of RhlB and RNase D in the Caulobacter crescentus RNA
+    degradosome
+  findings:
+  - statement: RhlB interacts directly with the catalytic domain of RNase E in C.
+      crescentus
+    supporting_text: We demonstrate that the helicase component of the degradosome,
+      RhlB, interacts directly with a portion of the catalytic domain of RNase E and
+      the contact site is mapped to the C-terminal extension (CTE) of the helicase.
+  - statement: The C-terminal extension of RhlB is necessary and sufficient for RNase
+      E interaction
+    supporting_text: Only RhlB416–517 was able to form a stable interaction with CcNTD1–575,
+      indicating that the CTE of RhlB contains the interaction site for RNase E...
+      when GST-RhlB416–517 was used as bait in a pull down experiment with C. crescentus
+      cell lysate, the known degradosome proteins (RNase E, aconitase and PNPase)
+      were all enriched
+  - statement: RhlB and RNase E form a 2:1 stoichiometric complex in the tetrameric
+      degradosome
+    supporting_text: in the context of the tetrameric CcNTD1–575, it appears that
+      the stoichiometry of this complex is altered to a 2:1 ratio. Given that the
+      tetrameric form of RNase E is expected to be the predominant form of the enzyme
+      in the cell, we would expect the 2:1 ratio of this complex to also be found
+      in vivo.
+  - statement: Close proximity of RhlB helicase to RNase E active site enables direct
+      substrate transfer
+    supporting_text: Given that RhlB interacts with the S1 and 5′-sensor domains of
+      CcNTD, the helicase and the active site of RNase E will be in close proximity
+      within the degradosome assembly. Such a close interaction between the RNase
+      E catalytic domain and a DEAD-box helicase has not been shown previously in
+      any organism. It could be imagined that as structured RNA substrates are unwound
+      by RhlB they could be passed directly to the active site of RNase E.
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms.
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+- id: GO_REF:0000104
+  title: Electronic Gene Ontology annotations created by transferring manual GO annotations
+    between related proteins based on shared sequence features.
+  findings: []
+- id: GO_REF:0000116
+  title: Automatic Gene Ontology annotation based on Rhea mapping.
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods.
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+    <div class="section">
+        <div class="pathway-link">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h2 class="section-title">🔗 Related Resources</h2>
+                <span class="vote-buttons" data-g="Q9HXE5" data-a="PATHWAY: rhlB pathways" data-r="" data-act="PATHWAY">
+                    <button class="vote-btn" data-v="up" title="Pathway visualization is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="Pathway visualization needs improvement">👎</button>
+                </span>
+            </div>
+            <p>
+                <a href="rhlB-pathway.html" target="_blank" class="btn-link">
+                    📊 View Pathway Visualization
+                </a>
+                <span style="color: #666; font-size: 0.9rem; margin-left: 1rem;">
+                    Interactive pathway diagram with detailed annotations
+                </span>
+            </p>
+        </div>
+    </div>
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

@@ -1,0 +1,1583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>hglS - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>hglS</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88CC1" target="_blank" class="term-link">
+                        Q88CC1
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida KT2440</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Aliases:</span>
+                <div class="aliases">
+                    
+                    <span class="badge">ydcJ</span>
+                    
+                    <span class="badge">PP_5260</span>
+                    
+                </div>
+            </div>
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "hglS";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88CC1" data-a="DESCRIPTION: 2-oxoadipate dioxygenase/decarboxylase that cataly..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>2-oxoadipate dioxygenase/decarboxylase that catalyzes the decarboxylation and hydroxylation of 2-oxoadipate to form D-2-hydroxyglutarate. This Fe(2+)-dependent enzyme is specific for 2-oxoadipate and plays a crucial role in D-lysine catabolism in Pseudomonas putida KT2440. The enzyme performs the last step in a lysine degradation pathway, converting 2-oxoadipate (derived from lysine) into D-2-hydroxyglutarate with the release of CO2. Note: The deep research file incorrectly conflates this enzyme with α-hydroxyglutarate oxidoreductase from 1969 research, which catalyzes the opposite reaction (oxidizing D-2-hydroxyglutarate to 2-oxoglutarate).
+</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016491" target="_blank" class="term-link">
+                                    GO:0016491
+                                </a>
+                            </span>
+                            <span class="term-label">oxidoreductase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CC1" data-a="GO:0016491" data-r="GO_REF:0000120" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This general oxidoreductase annotation is correct but too broad. The enzyme does perform oxidation-reduction, but a more specific term should be used.
+
+                        </div>
+                        
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="#" target="_blank" class="term-link">
+                                    2-oxoadipate dioxygenase/decarboxylase activity
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051213" target="_blank" class="term-link">
+                                    GO:0051213
+                                </a>
+                            </span>
+                            <span class="term-label">dioxygenase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CC1" data-a="GO:0051213" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct annotation - the enzyme is indeed a dioxygenase that incorporates both atoms of O2, with one oxygen going into the hydroxyl group of 2-hydroxyglutarate and the other released as CO2 after decarboxylation.
+
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051213" target="_blank" class="term-link">
+                            dioxygenase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                        <div class="finding-text">Function supported by computational analysis and sequence similarity</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12534463" target="_blank" class="term-link">
+                            PMID:12534463
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Complete genome sequence and comparative analysis of the metabolically versatile Pseudomonas putida KT2440</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/31064836" target="_blank" class="term-link">
+                            PMID:31064836
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Massively parallel fitness profiling reveals multiple novel enzymes in Pseudomonas putida lysine metabolism</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32523014" target="_blank" class="term-link">
+                            PMID:32523014
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">An iron (II) dependent oxygenase performs the last missing step of plant lysine catabolism</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Why did evolution select D-2-hydroxyglutarate as the product rather than L-2-hydroxyglutarate?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Metabolic evolution researchers, stereochemistry experts</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88CC1" data-a="Q: Why did evolution select D-2-hydroxyglutarate as t..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the physiological role of D-2-hydroxyglutarate in P. putida beyond being a metabolite?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Bacterial metabolism researchers</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88CC1" data-a="Q: What is the physiological role of D-2-hydroxygluta..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Can HglS be engineered for biocatalytic production of chiral hydroxy acids?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Industrial biotechnology groups</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88CC1" data-a="Q: Can HglS be engineered for biocatalytic production..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Directed evolution of HglS to accept alternative substrates</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88CC1" data-a="EXPERIMENT: Directed evolution of HglS to accept alternative s..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Metabolomics analysis of D-2-hydroxyglutarate levels under different growth conditions</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88CC1" data-a="EXPERIMENT: Metabolomics analysis of D-2-hydroxyglutarate leve..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(hglS-deep-research.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88CC1" data-a="DOC: Deep Research" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="deep-research-report-hgls-psepk">Deep Research Report: hglS (PSEPK)</h1>
+<p>Generated using OpenAI Deep Research API</p>
+<hr />
+<h1 id="hgls-gene-pseudomonas-putida-kt2440-comprehensive-analysis">HglS Gene (Pseudomonas putida KT2440) – Comprehensive Analysis</h1>
+<h2 id="function-and-molecular-mechanism">Function and Molecular Mechanism</h2>
+<p>The <em>hglS</em> gene of <em>P. putida</em> KT2440 encodes a subunit of <strong>D-2-hydroxyglutarate dehydrogenase (D2HGDH)</strong>, an enzyme that oxidizes D-2-hydroxyglutarate to 2-oxoglutarate (α-ketoglutarate) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC250148/#:~:text=Oxidation%20of%20d,dichlorophenol%20indophenol%2C%20or%20mammalian%20cytochrome">pmc.ncbi.nlm.nih.gov</a>). Biochemical studies in <em>P. putida</em> showed this reaction is <strong>inducible and coupled to the electron transport chain</strong>, with electrons passed to oxygen via membrane cytochromes (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC250148/#:~:text=hydroxyglutarate%20oxidoreductase%2C%20an%20inducible%20membrane,%E2%88%924%7Dm%20for">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC250148/#:~:text=c,cyt%20c%5D%20%E2%86%92%20oxygen">pmc.ncbi.nlm.nih.gov</a>). The enzyme is a <strong>flavoprotein oxidoreductase</strong>: the large subunit contains a flavin adenine dinucleotide (FAD) cofactor and a catalytic site, while HglS is a small electron-transfer subunit. In <em>P. stutzeri</em>, a homologous D2HGDH requires a separate flavoprotein or cytochrome to shuttle electrons to the respiratory chain (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6177604/#:~:text=for%20the%20utilization%20of%20d,malate">pmc.ncbi.nlm.nih.gov</a>). The P. aeruginosa enzyme is a Zn²⁺-binding metallo-flavoprotein, indicating a metal cofactor for substrate binding/orientation (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC250148/#:~:text=Oxidation">pmc.ncbi.nlm.nih.gov</a>). <strong>Mechanistically</strong>, HglS and its partner subunit catalyze dehydrogenation of D-2-hydroxyglutarate (a secondary alcohol) to 2-oxoglutarate, with quinones or cytochromes as electron acceptors (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC250148/#:~:text=Oxidation%20of%20d,dichlorophenol%20indophenol%2C%20or%20mammalian%20cytochrome">pmc.ncbi.nlm.nih.gov</a>). This restores 2-oxoglutarate (an important TCA-cycle intermediate) and frees reduced electron carriers into the respiratory chain.  </p>
+<h2 id="cellular-localization">Cellular Localization</h2>
+<p>Evidence suggests HglS is associated with the <strong>inner membrane/periplasmic space</strong>. Early work demonstrated the D-2-hydroxyglutarate oxidoreductase is <em>membrane-bound</em> in <em>P. putida</em>, localized to the particulate (membrane) fraction (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC250148/#:~:text=hydroxyglutarate%20oxidoreductase%2C%20an%20inducible%20membrane,%E2%88%924%7Dm%20for">pmc.ncbi.nlm.nih.gov</a>). The enzyme likely faces the periplasm: D-2-HG dehydrogenases in pseudomonads often act in the periplasm with electrons fed into the electron transport chain. Consistently, <em>P. stutzeri</em> D2HGDH uses a soluble carrier to connect with the respiratory chain (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6177604/#:~:text=for%20the%20utilization%20of%20d,malate">pmc.ncbi.nlm.nih.gov</a>), implying a periplasmic enzyme transferring electrons inward. HglS likely contains a signal peptide for periplasmic export and possibly a heme cofactor if it functions as a c-type cytochrome subunit. Thus, the <strong>HglS-containing D2HGDH enzyme is periplasmic or inner-membrane-associated</strong>, with HglS aiding electron transfer to membrane carriers (quinones/cytochromes) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC250148/#:~:text=with%20a%20nonionic%20detergent%20yields,cyt%20c%5D%20%E2%86%92%20oxygen">pmc.ncbi.nlm.nih.gov</a>). This subcellular localization allows D-2-hydroxyglutarate present in the periplasm (from metabolism or import) to be oxidized efficiently and funneled into central metabolism.  </p>
+<h2 id="biological-processes-involvement">Biological Processes Involvement</h2>
+<p>HglS is integral to <strong>D-2-hydroxyglutarate catabolism</strong> and related metabolic pathways. D-2-HG is not a primary nutrient but arises as a by-product of other pathways (e.g. serine and methylarginine metabolism) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6177604/#:~:text=d,source%20for%20growth%20of%20P">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6177604/#:~:text=SerA%20combines%20the%20reaction%20of,decarboxylating">pmc.ncbi.nlm.nih.gov</a>). In <em>Pseudomonas</em>, D2HGDH (with HglS) links this by-product back to central carbon metabolism by regenerating 2-oxoglutarate (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6177604/#:~:text=SerA%20combines%20the%20reaction%20of,decarboxylating">pmc.ncbi.nlm.nih.gov</a>). This link is crucial in <strong>L-serine biosynthesis</strong>: as shown in <em>P. stutzeri</em>, the serine-pathway enzyme SerA produces D-2-HG to pull a thermodynamically unfavorable step, and D2HGDH then reconverts D-2-HG to 2-oxoglutarate (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6177604/#:~:text=d,source%20for%20growth%20of%20P">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6177604/#:~:text=SerA%20combines%20the%20reaction%20of,decarboxylating">pmc.ncbi.nlm.nih.gov</a>). Thus, HglS participates in maintaining serine biosynthesis flux. Additionally, D2HGDH enables bacteria to utilize <strong>D-malate</strong> as a carbon source (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6177604/#:~:text=stutzeri%20strain%20A1501%20reduces%20oxaloacetate,support%20the%20idea%20that%20D2HGDH">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6177604/#:~:text=note%2C%20D2HGDH%20participates%20in%20converting,participates%20in%20both%20a%20core">pmc.ncbi.nlm.nih.gov</a>). <em>P. stutzeri</em> mutants lacking D2HGDH cannot grow on D-malate (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6177604/#:~:text=stutzeri%20strain%20A1501%20reduces%20oxaloacetate,support%20the%20idea%20that%20D2HGDH">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6177604/#:~:text=to%20utilize%20d,malate%20utilization">pmc.ncbi.nlm.nih.gov</a>), indicating the enzyme’s broad role in <strong>D-dicarboxylic acid metabolism</strong>. By oxidizing D-malate (a structural analog of D-2-HG) to oxaloacetate, the enzyme (and HglS) expands the substrate range for growth (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6177604/#:~:text=stutzeri%20strain%20A1501%20reduces%20oxaloacetate,support%20the%20idea%20that%20D2HGDH">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6177604/#:~:text=note%2C%20D2HGDH%20participates%20in%20converting,participates%20in%20both%20a%20core">pmc.ncbi.nlm.nih.gov</a>). In <em>P. putida</em>, HglS likely plays similar roles: enabling the bacterium to catabolize unusual D-isomers of organic acids and integrate them into the TCA cycle. Overall, <em>hglS</em>-driven activity supports <strong>metabolic versatility</strong>, connecting peripheral catabolic routes (D-2-HG, D-malate) with core metabolism (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6177604/#:~:text=exogenously%20added%20d,malate">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6177604/#:~:text=note%2C%20D2HGDH%20participates%20in%20converting,participates%20in%20both%20a%20core">pmc.ncbi.nlm.nih.gov</a>). This function is an adaptive advantage in nutrient-diverse environments.  </p>
+<h2 id="disease-associations-and-phenotypes">Disease Associations and Phenotypes</h2>
+<p>There are <strong>no direct disease associations</strong> known for <em>hglS</em> in <em>P. putida</em>. This gene is part of a metabolic pathway for nutrient utilization rather than a virulence factor. <em>P. putida</em> KT2440 is an environmental, non-pathogenic strain widely used in biotechnology (<a href="https://enviromicro-journals.onlinelibrary.wiley.com/doi/full/10.1111/1462-2920.13230#:~:text=By%20the%20time%20the%20complete,However%2C%20neither%20the%20annotation">enviromicro-journals.onlinelibrary.wiley.com</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4731212/#:~:text=Pseudomonas%20putida%20are%20ubiquitous%20inhabitants,The%20set%20of">pmc.ncbi.nlm.nih.gov</a>). Unlike the human D2HGDH (where mutations cause D-2-hydroxyglutaric aciduria), the bacterial HglS has not been implicated in human disease. However, the enzyme’s activity reflects metabolic traits that could influence fitness in certain niches. For example, the ability to break down D-malate or unusual metabolites could affect <em>P. putida</em>’s survival in plant rhizospheres or soil (but not pathogenicity) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4731212/#:~:text=Pseudomonas%20putida%20are%20ubiquitous%20inhabitants,The%20set%20of">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4230813/#:~:text=promotion%20or%20bioremediation%20capacity%2C%20its,geographical%20location%20a%20number%20of">pmc.ncbi.nlm.nih.gov</a>). Phenotypically, an <em>hglS</em> (D2HGDH) mutant would lose the ability to use D-2-HG and D-malate. Such mutants would likely accumulate D-2-HG internally and might show slower growth when serine synthesis is required, as seen in <em>P. stutzeri</em> where D2HGDH loss impairs serine pathway efficiency (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6177604/#:~:text=stutzeri%20strain%20A1501%20reduces%20oxaloacetate,support%20the%20idea%20that%20D2HGDH">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6177604/#:~:text=SerA%20combines%20the%20reaction%20of,decarboxylating">pmc.ncbi.nlm.nih.gov</a>). They would also fail to grow on D-malate as sole carbon source (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6177604/#:~:text=stutzeri%20strain%20A1501%20reduces%20oxaloacetate,support%20the%20idea%20that%20D2HGDH">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6177604/#:~:text=to%20utilize%20d,malate%20utilization">pmc.ncbi.nlm.nih.gov</a>). In summary, <em>hglS</em> is <strong>not associated with disease</strong>, but it contributes to metabolic flexibility and environmental fitness. </p>
+<h2 id="protein-domains-and-structural-features">Protein Domains and Structural Features</h2>
+<p>The HglS protein is characterized as a <strong>small electron-transferring subunit</strong> of the D2HGDH enzyme complex. Small subunits in similar dehydrogenases often contain <strong>c-type cytochrome domains</strong> or other cofactor-binding motifs for electron relay. HglS is much smaller than the catalytic subunit (~15–20 kDa vs ~60 kDa for the large subunit) and likely binds a heme cofactor (based on analogy to other periplasmic dehydrogenases). This would enable HglS to accept electrons from the FAD in the large subunit and pass them to the cytochrome chain. The large D2HGDH subunit (not HglS) contains an FAD-binding domain (a Rossmann-fold) and a catalytic site that binds D-2-HG along with a Zn²⁺ cofactor (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC250148/#:~:text=Oxidation">pmc.ncbi.nlm.nih.gov</a>). In <em>P. aeruginosa</em> D2HGDH, Zn²⁺ is essential for orienting the substrate in the active site (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC250148/#:~:text=Oxidation">pmc.ncbi.nlm.nih.gov</a>), suggesting that region is conserved in <em>P. putida</em>’s enzyme. HglS itself likely has a <strong>heme c binding CXXCH motif</strong> if it is a c-type cytochrome, or binds a flavin if it’s a flavoprotein carrier (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6177604/#:~:text=for%20the%20utilization%20of%20d,malate">pmc.ncbi.nlm.nih.gov</a>). Structurally, it would be mostly α-helical (typical of c-type cytochromes) with a covalently attached heme. The assembled enzyme is a membrane-associated flavocytochrome complex. Early studies noted the D-2-HG oxidoreductase behaved as a soluble<br />
+flavocytochrome after detergent treatment (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC250148/#:~:text=with%20enzymic%20properties%20and%20chemical,cyt%20c%5D%20%E2%86%92%20oxygen">pmc.ncbi.nlm.nih.gov</a>), consistent with a two-component enzyme (flavin enzyme + cytochrome). Therefore, <strong>HglS’s main structural features</strong> include a cofactor-binding site for electron transfer (heme or flavin) and possibly a signal peptide anchoring it to the periplasmic side of the membrane. Together with the large subunit, it forms a functional holoenzyme complex.  </p>
+<h2 id="expression-patterns-and-regulation">Expression Patterns and Regulation</h2>
+<p>Expression of <em>hglS</em> is <strong>substrate-inducible</strong> and tied to specific growth conditions. In <em>P. putida</em>, the enzyme was reported to be induced when D-α-hydroxyglutarate or related substrates are available (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC250148/#:~:text=Oxidation%20of%20d,dichlorophenol%20indophenol%2C%20or%20mammalian%20cytochrome">pmc.ncbi.nlm.nih.gov</a>). This suggests transcription of <em>hglS</em> (and the D2HGDH operon) is up-regulated by the presence of D-2-HG or D-malate in the medium. Indeed, in <em>P. stutzeri</em>, the D2HGDH protein is strongly induced by adding D-2-HG or D-malate (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6177604/#:~:text=for%20the%20utilization%20of%20d,malate">pmc.ncbi.nlm.nih.gov</a>). This indicates a likely <strong>responsive regulator</strong> controlling <em>hglS</em>. The regulator could be a LysR-family or another sensor that detects D-2-HG/D-malate and activates the operon (though the specific regulator is not yet characterized in KT2440). Additionally, <em>hglS</em> expression connects to serine biosynthesis: under conditions of active L-serine production (which generates D-2-HG byproduct), the D2HGDH pathway is engaged (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6177604/#:~:text=SerA%20combines%20the%20reaction%20of,decarboxylating">pmc.ncbi.nlm.nih.gov</a>). Thus, <em>hglS</em> may see higher expression during growth on amino acids or when serine pathway flux is high. Global regulators might influence <em>hglS</em> as well – for example, stationary-phase or carbon-catabolite repression could modulate its expression given it’s a secondary metabolism gene. No direct data on <em>hglS</em> transcription factors in KT2440 are published, but the <strong>pattern of induction by specific dicarboxylates</strong> is clear from experimental analogs (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6177604/#:~:text=for%20the%20utilization%20of%20d,malate">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6177604/#:~:text=stutzeri%20strain%20A1501%20reduces%20oxaloacetate,support%20the%20idea%20that%20D2HGDH">pmc.ncbi.nlm.nih.gov</a>). In summary, <em>hglS</em> is <strong>expressed when its substrate or analogs are present</strong>, ensuring the D-2-HG detoxification/utilization system is only active when needed. This regulated expression conserves energy and coordinates with related metabolic pathways (serine biosynthesis, D-malate uptake).  </p>
+<h2 id="evolutionary-conservation">Evolutionary Conservation</h2>
+<p>The <em>hglS</em> gene and its associated D2HGDH function are conserved across diverse bacteria, especially within the <em>Pseudomonas</em> genus. Homologs of <em>hglS</em> exist in <em>P. stutzeri</em>, <em>P. aeruginosa</em>, and other pseudomonads that possess D-2-hydroxyglutarate dehydrogenases. <em>P. aeruginosa PAO1</em> has a D2HGDH enzyme with ~70% amino acid identity to the <em>P. putida</em> one (based on cross-species comparisons) – indicating strong conservation of both large and small subunits. This PAO1 enzyme (gene PA5332, sometimes called <em>d2hgdH</em>) performs the same reaction (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC250148/#:~:text=Oxidation">pmc.ncbi.nlm.nih.gov</a>). <em>P. stutzeri A1501</em> also contains a homologous operon, and functional studies confirmed a similar role for its D2HGDH (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6177604/#:~:text=stutzeri%20strain%20A1501%20reduces%20oxaloacetate,support%20the%20idea%20that%20D2HGDH">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6177604/#:~:text=exogenously%20added%20d,malate">pmc.ncbi.nlm.nih.gov</a>). Beyond pseudomonads, D-2-HG dehydrogenases (and likely small subunits akin to HglS) are found in other bacteria that degrade amino acids via 2-hydroxyacids – for example, <em>Ralstonia</em> or <em>Azotobacter</em> species catabolizing lysine/pipecolate have analogous enzymes (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC250148/#:~:text=with%20enzymic%20properties%20and%20chemical,cyt%20c%5D%20%E2%86%92%20oxygen">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC250148/#:~:text=1,1039.1967.%20%5BDOI">pmc.ncbi.nlm.nih.gov</a>). This suggests an <strong>evolutionarily conserved strategy</strong>: many soil and plant-associated bacteria evolved D-2-HG dehydrogenases to channel unusual D-metabolites into the TCA cycle. Even organisms as different as <em>E. coli</em> have enzymes for D- and L-2-HG (though E. coli’s are cytosolic and unrelated in sequence) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6177604/#:~:text=Pseudomonas%20is%20a%20vast%20bacteria,malate%20utilization">pmc.ncbi.nlm.nih.gov</a>). In eukaryotes, the D2HGDH enzyme in mitochondria is evolutionarily related, indicating a distant common origin for this metabolic function. The conservation of <em>hglS</em> within pseudomonads implies it confers adaptive advantage in environments rich in amino acids and D-isomers. Phylogenetically, <em>hglS</em> clusters with other Proteobacterial small dehydrogenase subunits, often adjacent to their large-subunit genes in the genome. The <em>P. putida</em> KT2440 genome context of <em>hglS</em> is within a putative operon for D-2-HG utilization (neighboring genes likely encode the large dehydrogenase subunit and possibly a transporter). This clustering is conserved in related species, underscoring that <em>hglS</em> and its operon descended from a common ancestral gene set through vertical inheritance. There is <strong>little evidence of horizontal gene transfer</strong> for <em>hglS</em>; instead, its broad presence in pseudomonads suggests it was present in their common ancestor and retained due to its utility in diverse niches (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4731212/#:~:text=between%20the%20genomes%20of%20different,influence%20in%20colonization%20and%20survival">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4731212/#:~:text=isolates%20are%20considered%20to%20be,occupied%20by%20opportunistic%20human%20pathogens">pmc.ncbi.nlm.nih.gov</a>).  </p>
+<h2 id="key-experimental-evidence-and-literature">Key Experimental Evidence and Literature</h2>
+<p>Multiple lines of research underpin our understanding of <em>hglS</em> and D2HGDH in <em>P. putida</em> and related bacteria. <strong>Biochemical characterization</strong> dates back to Reitz &amp; Rodwell (1969), who purified “α-hydroxyglutarate oxidoreductase” from <em>P. putida</em> and showed its membrane-bound nature and specificity for D-α-hydroxyglutarate (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC250148/#:~:text=Oxidation%20of%20d,dichlorophenol%20indophenol%2C%20or%20mammalian%20cytochrome">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC250148/#:~:text=with%20a%20nonionic%20detergent%20yields,cyt%20c%5D%20%E2%86%92%20oxygen">pmc.ncbi.nlm.nih.gov</a>). This classic work established the enzyme’s function and induction by substrate. More recently, <strong>genetic and physiological studies</strong> in <em>Pseudomonas stutzeri</em> provided direct evidence of the enzyme’s role in metabolism. Guo <em>et al.</em> (2018) created D2HGDH knock-out mutants and demonstrated loss of D-malate utilization and perturbed serine biosynthesis (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6177604/#:~:text=stutzeri%20strain%20A1501%20reduces%20oxaloacetate,support%20the%20idea%20that%20D2HGDH">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6177604/#:~:text=note%2C%20D2HGDH%20participates%20in%20converting,participates%20in%20both%20a%20core">pmc.ncbi.nlm.nih.gov</a>). They also measured induction of the gene by D-2-HG/D-malate and identified that SerA and D2HGDH form a metabolic loop in serine production (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6177604/#:~:text=d,source%20for%20growth%20of%20P">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6177604/#:~:text=SerA%20combines%20the%20reaction%20of,decarboxylating">pmc.ncbi.nlm.nih.gov</a>). In <em>P. aeruginosa</em>, <strong>structural enzymology</strong> by Quaye <em>et al.</em> (2023) examined the D2HGDH protein. They found it to be a flavoprotein that absolutely requires Zn²⁺ and acts as a homodimer (with anticipated involvement of a small subunit for electron transfer) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC250148/#:~:text=Oxidation">pmc.ncbi.nlm.nih.gov</a>). This study used purified enzyme, calorimetry, and kinetics to elucidate how substrate binds and how the enzyme stabilizes the transition state (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC250148/#:~:text=Oxidation">pmc.ncbi.nlm.nih.gov</a>). Together, these studies paint a comprehensive picture: from <em>P. putida</em> KT2440 (genomic context and annotation) to functional assays in other <em>Pseudomonas</em> and detailed enzyme mechanisms. Additional support comes from comparative genomics and metabolic models of KT2440, which note the presence of a D-2-HG dehydrogenase pathway contributing to the strain’s broad catabolic repertoire (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4731212/#:~:text=between%20the%20genomes%20of%20different,influence%20in%20colonization%20and%20survival">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4230813/#:~:text=promotion%20or%20bioremediation%20capacity%2C%20its,geographical%20location%20a%20number%20of">pmc.ncbi.nlm.nih.gov</a>). In summary, <strong>key evidence</strong> includes: the 1960s enzyme isolation confirming <em>hglS</em>-associated activity (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC250148/#:~:text=Oxidation%20of%20d,dichlorophenol%20indophenol%2C%20or%20mammalian%20cytochrome">pmc.ncbi.nlm.nih.gov</a>), modern mutant phenotypes linking <em>hglS</em> to serine and D-malate metabolism (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6177604/#:~:text=stutzeri%20strain%20A1501%20reduces%20oxaloacetate,support%20the%20idea%20that%20D2HGDH">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6177604/#:~:text=note%2C%20D2HGDH%20participates%20in%20converting,participates%20in%20both%20a%20core">pmc.ncbi.nlm.nih.gov</a>), and biochemical analyses confirming the enzyme’s cofactor requirements and mechanism (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC250148/#:~:text=Oxidation">pmc.ncbi.nlm.nih.gov</a>). All these findings support Gene Ontology annotations that <em>hglS</em> is involved in <strong>D-2-hydroxyglutarate metabolic process</strong>, has <strong>D-2-hydroxyglutarate dehydrogenase activity</strong>, and is located in the <strong>periplasmic space/inner membrane</strong> as part of a flavoprotein-cytochrome enzyme complex. </p>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(hglS-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88CC1" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="hgls-gene-review-notes">hglS Gene Review Notes</h1>
+<h2 id="gene-function-clarification">Gene Function Clarification</h2>
+<p>The hglS gene encodes <strong>2-oxoadipate dioxygenase/decarboxylase</strong> (EC 1.13.11.93), also known as <strong>hydroxyglutarate synthase</strong>. This enzyme catalyzes:</p>
+<div class="codehilite"><pre><span></span><code><span class="mf">2</span><span class="o">-</span><span class="n">oxoadipate</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">O2</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="p">(</span><span class="n">R</span><span class="p">)</span><span class="o">-</span><span class="mf">2</span><span class="o">-</span><span class="n">hydroxyglutarate</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">CO2</span>
+</code></pre></div>
+
+<h2 id="critical-distinction-between-two-different-enzymes">Critical Distinction Between Two Different Enzymes</h2>
+<p>The deep research file contains a significant error where it conflates hglS with a completely different enzyme. After thorough investigation, these are definitively different proteins:</p>
+<h3 id="1-hgls-hydroxyglutarate-synthase-this-gene">1. hglS (Hydroxyglutarate Synthase) - THIS GENE</h3>
+<ul>
+<li><strong>EC Number</strong>: 1.13.11.93</li>
+<li><strong>Reaction</strong>: 2-oxoadipate (C6) + O2 → D-2-hydroxyglutarate (C5) + CO2</li>
+<li><strong>Reaction Type</strong>: Dioxygenase with decarboxylation (removes one carbon as CO2)</li>
+<li><strong>Direction</strong>: IRREVERSIBLE (due to CO2 release)</li>
+<li><strong>Cofactors</strong>: Fe(II) and O2</li>
+<li><strong>Protein Family</strong>: DUF1338</li>
+<li><strong>Function</strong>: Terminal step in lysine catabolism pathway</li>
+<li><strong>Discovery</strong>: 2019-2020 (Thompson et al., PMID:31064836, PMID:32523014)</li>
+</ul>
+<h3 id="2-hydroxyglutarate-oxidoreductase-1969-enzyme-different-enzyme">2. α-Hydroxyglutarate Oxidoreductase (1969 enzyme) - DIFFERENT ENZYME</h3>
+<ul>
+<li><strong>Reaction</strong>: D-2-hydroxyglutarate (C5) + acceptor ⇌ 2-oxoglutarate (C5) + reduced acceptor  </li>
+<li><strong>Reaction Type</strong>: Oxidoreductase (no change in carbon number)</li>
+<li><strong>Direction</strong>: Potentially reversible</li>
+<li><strong>Cofactors</strong>: Electron acceptors (ferricyanide, dichlorophenol indophenol, cytochrome c)</li>
+<li><strong>Location</strong>: Membrane-bound in electron transport particle</li>
+<li><strong>Function</strong>: Oxidation of D-2-hydroxyglutarate in different metabolic context</li>
+<li><strong>Discovery</strong>: 1969 (Reitz &amp; Rodwell, PMID:5354943)</li>
+</ul>
+<h2 id="why-these-cannot-be-the-same-enzyme">Why These Cannot Be The Same Enzyme</h2>
+<ol>
+<li><strong>Different substrates and products</strong>:</li>
+<li>hglS: 2-oxoadipate (6 carbons) → 2-hydroxyglutarate (5 carbons)</li>
+<li>
+<p>1969 enzyme: 2-hydroxyglutarate (5 carbons) → 2-oxoglutarate (5 carbons)</p>
+</li>
+<li>
+<p><strong>Different reaction chemistry</strong>:</p>
+</li>
+<li>hglS: Decarboxylation + hydroxylation (loses CO2)</li>
+<li>
+<p>1969 enzyme: Simple oxidation/reduction (no CO2 involved)</p>
+</li>
+<li>
+<p><strong>Different thermodynamics</strong>:</p>
+</li>
+<li>hglS: Irreversible due to CO2 release</li>
+<li>
+<p>1969 enzyme: Potentially reversible oxidation/reduction</p>
+</li>
+<li>
+<p><strong>Different metabolic roles</strong>:</p>
+</li>
+<li>hglS: Final step converting 2-oxoadipate in lysine catabolism</li>
+<li>1969 enzyme: Metabolizes D-2-hydroxyglutarate to 2-oxoglutarate</li>
+</ol>
+<h2 id="lysine-catabolism-pathway-context">Lysine Catabolism Pathway Context</h2>
+<div class="codehilite"><pre><span></span><code>L-Lysine → ... → 2-oxoadipate → [hglS/HglS] → D-2-hydroxyglutarate
+                      (C6)                           (C5) + CO2
+</code></pre></div>
+
+<p>The D-2-hydroxyglutarate produced by hglS could theoretically serve as substrate for the 1969 oxidoreductase (if both are present), but they are separate enzymes with distinct functions in the metabolic network.</p>
+<h2 id="key-evidence">Key Evidence</h2>
+<h3 id="pdb-structures">PDB Structures</h3>
+<ul>
+<li><strong>6W1G</strong>: Crystal structure at 1.14 Å showing hydroxyglutarate synthase</li>
+<li><strong>6W1H</strong>: Crystal structure at 1.42 Å with substrate (2-oxoadipate) bound</li>
+</ul>
+<h3 id="key-papers">Key Papers</h3>
+<ul>
+<li><strong>PMID:31064836</strong>: First characterization of DUF1338 family function, showing hglS role in lysine catabolism</li>
+<li><strong>PMID:32523014</strong>: Structural and mechanistic studies revealing successive decarboxylation and hydroxylation mechanism</li>
+</ul>
+<h2 id="biological-role">Biological Role</h2>
+<ul>
+<li>Final step in lysine catabolism pathway</li>
+<li>Converts 2-oxoadipate (from lysine degradation) to D-2-hydroxyglutarate</li>
+<li>Essential for growth on both L-lysine and D-lysine</li>
+<li>Expression induced by lysine and related compounds</li>
+</ul>
+<h2 id="go-annotation-recommendations">GO Annotation Recommendations</h2>
+<ol>
+<li>Current "oxidoreductase activity" (GO:0016491) is too broad</li>
+<li>"Dioxygenase activity" (GO:0051213) is accurate and should be retained</li>
+<li>A new specific term "2-oxoadipate dioxygenase/decarboxylase activity" should be created for this enzyme class</li>
+</ol>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Hgls Falcon Research</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(HglS-falcon-research.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88CC1" data-a="DOC: Hgls Falcon Research" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="falcon-research-report-hgls-psepk">Falcon Research Report: HglS (PSEPK)</h1>
+<p>Generated using FutureHouse Falcon API</p>
+<hr />
+<p>Question: You are a molecular biologist and gene annotation expert conducting comprehensive research to support GO annotation curation.</p>
+<p>Provide detailed, well-cited information focusing on:<br />
+1. Gene function and molecular mechanisms<br />
+2. Cellular localization and subcellular components<br />
+3. Biological processes involvement<br />
+4. Disease associations and phenotypes<br />
+5. Protein domains and structural features<br />
+6. Expression patterns and regulation<br />
+7. Evolutionary conservation<br />
+8. Key experimental evidence and literature</p>
+<p>Format as a comprehensive research report with citations suitable for Gene Ontology annotation curation.</p>
+<p>Research the Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440) gene HglS.</p>
+<p>=== UNIPROT METADATA ===<br />
+UniProt ID: Q88CC1<br />
+Entry Name: HGLS_PSEPK<br />
+Gene Name: hglS<br />
+Locus Tag: PP_5260 {ECO:0000312|EMBL:AAN70825.1}<br />
+Gene Synonyms: ydcJ {ECO:0000303|PubMed:31064836}<br />
+Protein Name: 2-oxoadipate dioxygenase/decarboxylase<br />
+EC Number: 1.13.11.93<br />
+Organism: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)<br />
+NCBI Taxonomy ID: 160488<br />
+Function: Catalyzes the decarboxylation and hydroxylation of 2- oxoadipate (2OA) to form D-2-hydroxyglutarate (D-2-HGA) (PubMed:31064836, PubMed:32523014). Is specific for 2-oxoadipate (PubMed:32523014). Is involved in a D-lysine catabolic pathway (PubMed:31064836).<br />
+======================</p>
+<p>Provide a comprehensive report covering function, localization, processes, domains, disease associations, expression, conservation, and relevant GO terms.</p>
+<p>IMPORTANT: Focus specifically on the gene identified by the metadata above, particularly the UniProt ID, locus tag, and protein description if provided.</p>
+<p>Sometimes different genes in the same organism have the same name. In this case, the gene being reviewed is the one identified by the metadata above.</p>
+<p>Below is a comprehensive research report on the Pseudomonas putida gene hglS (UniProt Q88CC1, locus tag PP_5260), which encodes a protein commonly annotated as “2‐oxoadipate dioxygenase/decarboxylase” and is a critical component of the D‐lysine catabolic pathway. This report brings together detailed information on gene function and molecular mechanisms, cellular localization, involvement in biological processes, protein domain organization and structural features, expression and regulatory patterns, evolutionary conservation, and key experimental evidence supporting these annotations. Throughout the text, specific data from recent studies are cited using the provided citation keys.</p>
+<ol>
+<li>
+<p>Gene Function and Molecular Mechanisms<br />
+HglS catalyzes the conversion of 2‐oxoadipate (2OA) to D‐2‑hydroxyglutarate (D‑2‑HG) by coupling decarboxylation with an oxygenation (hydroxylation) reaction, thereby providing a link between D‐lysine degradation and central metabolic processes such as the tricarboxylic acid (TCA) cycle (blakehedges2019massivelyparallelfitness pages 1-3, blakehedges2019massivelyparallelfitness pages 10-13). This reaction is unique in that it introduces a hydroxyl group into the substrate concomitant with the loss of a carboxylate group, resulting in the production of D‑2‑HG in a stereochemically defined manner that contrasts with pathways that form L‑2‑hydroxyglutarate (blakehedges2019massivelyparallelfitness pages 3-5, blakehedges2019massivelyparallelfitness pages 8-10). Mechanistic studies indicate that HglS is strictly specific for its substrate 2OA, and the enzyme displays catalytic rates (k_cat values around 330 min⁻¹) comparable to those observed in hydroxymandelate synthase, despite only limited sequence homology between these enzymes (blakehedges2019massivelyparallelfitness pages 10-13, thompson2019asongof pages 108-116). The biochemical reaction requires molecular oxygen and Fe(II) as a cofactor, and oxygen consumption assays demonstrate a 1:1 stoichiometry of O₂ utilization to 2OA turnover, with subsequent incorporation of oxygen atoms into the product as verified by isotopic labeling experiments (thompson2019asongof pages 108-116, thompson2019asongof pages 16-20). These observations, together with genetically determined growth defects in knockout strains on lysine as a sole carbon source, firmly establish HglS as a critical enzyme in the D‑lysine catabolic pathway (blakehedges2019massivelyparallelfitness pages 1-3, thompson2019asongofa pages 108-116).</p>
+</li>
+<li>
+<p>Cellular Localization and Subcellular Components<br />
+Although direct experimental data on the subcellular localization of HglS in Pseudomonas putida are limited, its role in central metabolism strongly suggests that it is localized within the cytoplasm where amino acid catabolism occurs (blakehedges2019massivelyparallelfitness pages 1-3, blakehedges2019massivelyparallelfitness pages 3-5). In contrast, homologous DUF1338 proteins in plant systems have been reported to partition to compartments such as the apoplast or other organelles involved in amino acid metabolism, although such differences in cellular localization likely reflect divergent trafficking in eukaryotic versus prokaryotic systems (blakehedges2019massivelyparallelfitness pages 8-10, thompson2019asongofa pages 29-34). Based on the genomic context and the metabolic function, it is most reasonable to infer that HglS operates in the cytosol of P. putida, where the coexistence of glycolytic and TCA cycle enzymes enables rapid metabolic flux in response to changing substrate availability (blakehedges2019massivelyparallelfitness pages 10-13, thompson2019asongofa pages 96-99).</p>
+</li>
+<li>
+<p>Biological Processes and Pathway Involvement<br />
+HglS is fundamentally involved in the lysine catabolic process as it catalyzes a key, previously missing, step that channels D‑lysine intermediates into central carbon metabolism (blakehedges2019massivelyparallelfitness pages 1-3, blakehedges2019massivelyparallelfitness pages 10-13). Specifically, by converting 2OA into D‑2‑HG, HglS enables the subsequent oxidation reaction (carried out by downstream enzymes such as those analogous to PP_4493) that ultimately generates 2‑ketoglutarate (2KG), a critical TCA cycle intermediate (thompson2019asongof pages 16-20, thompson2019asongofb pages 29-34). This connection between lysine degradation and central metabolism reinforces the biological importance of HglS in maintaining cellular energy balance and metabolic homeostasis (blakehedges2019massivelyparallelfitness pages 3-5, thompson2019asongof pages 108-116). Large-scale fitness profiling using random barcode transposon sequencing (RB-TnSeq) has demonstrated that disruption of hglS leads to marked growth defects when lysine is used as the sole carbon source, thereby validating its central role in amino acid metabolism (blakehedges2019massivelyparallelfitness pages 1-3, thompson2019asongofb pages 29-34).</p>
+</li>
+<li>
+<p>Disease Associations and Phenotypic Implications<br />
+Although HglS is derived from Pseudomonas putida and no direct disease association in humans has been reported—given that homologs of this enzyme are absent from animals and humans—the fundamental role of lysine catabolism in bacterial physiology suggests that impairments in this pathway can have significant phenotypic consequences. Genetic disruptions in hglS in P. putida result in growth defects when lysine is the sole energy source, and similar disruptions in homologous pathways in other bacteria have been linked to reduced fitness and metabolic inefficiencies (thompson2020aniron(ii) pages 36-49, thompson2019asongofa pages 20-26). In plants, mutation of DUF1338 homologs has been associated with developmental phenotypes such as delayed germination and impaired seed development, highlighting the metabolic significance of related enzymes in higher organisms (thompson2019asongof pages 99-102, thompson2019asongofa pages 96-99). While there are no direct disease phenotypes in Pseudomonas putida associated with hglS, the enzyme’s central function in lysine degradation might be of interest in applied contexts such as metabolic engineering and environmental bioremediation where altered amino acid metabolism can influence overall organismal performance (blakehedges2019massivelyparallelfitness pages 1-3, thompson2019asongofa pages 108-116).</p>
+</li>
+<li>
+<p>Protein Domains and Structural Features<br />
+HglS belongs to the DUF1338 family, which is a group of proteins of previously unknown function that are now recognized for their role in amino acid catabolism. The protein features a VOC (vicinal oxygen chelate) domain fold, which is typified by a central jelly roll or β‑barrel configuration (blakehedges2019massivelyparallelfitness pages 10-13, blakehedges2019massivelyparallelfitnessa pages 8-10). This structural motif forms the catalytic core of the enzyme and houses the active site where substrate binding and transformation occur. Critical to the enzyme’s activity is the coordination of an Fe(II) ion, mediated by a highly conserved HHE triad consisting of two histidine residues and one glutamate residue (blakehedges2019massivelyparallelfitness pages 8-10, thompson2019asongof pages 99-102). Structural studies, including high-resolution X‑ray crystallography, have revealed that in both the apo and substrate‑bound states the active site accommodates the metal cofactor in a geometry consistent with nonheme Fe(II) oxygenases, despite the fact that some crystal structures might show nickel due to purification protocols (thompson2019asongofa pages 96-99, thompson2019asongofa pages 102-106). In addition to the metal‑binding site, a crucial arginine residue (Arg74) has been identified as playing a fundamental role in substrate recognition by forming a salt bridge with the distal carboxylate of 2OA (thompson2019asongofa pages 108-116, thompson2019asongof pages 102-106). Furthermore, residues such as valine 402 and serine 403, which reside on a flexible loop that undergoes a pronounced conformational change upon substrate binding, establish hydrogen bonding interactions with the α‑keto group of the substrate and contribute to strict substrate specificity (thompson2019asongof pages 102-106, thompson2019asongof pages 108-116). Collectively, these structural features not only define the catalytic mechanism of HglS but also underscore the evolutionary conservation of the DUF1338/VOC domain across diverse organisms (thompson2019asongofa pages 29-34, thompson2019asongofa pages 7-9, thompson2019asongofa pages 99-102).</p>
+</li>
+<li>
+<p>Expression Patterns and Regulation<br />
+Gene expression analyses and targeted proteomics have revealed that hglS expression in Pseudomonas putida is regulated in response to the availability of lysine and its related metabolites. When cells are grown on lysine or related substrates such as 2‑aminoadipate (2AA) and glutarate, the expression levels of HglS and other lysine catabolic enzymes are notably upregulated (blakehedges2019massivelyparallelfitness pages 1-3, thompson2019asongof pages 16-20). This dynamic regulation implies that the cellular demand for HglS activity increases when lysine degradation is required, thereby ensuring efficient conversion of catabolic intermediates into metabolites that feed into central metabolic pathways (blakehedges2019massivelyparallelfitness pages 3-5, blakehedges2019massivelyparallelfitness pages 10-13). Moreover, fitness profiling experiments employing RB‑TnSeq have demonstrated that transposon insertions disrupting hglS result in significant fitness defects under conditions where lysine or its isomers are the primary carbon sources, further corroborating the regulated expression and functional indispensability of this gene (blakehedges2019massivelyparallelfitness pages 8-10, thompson2019massivelyparallelfitness pages 9-12). Although detailed promoter analysis or transcript stability studies are not provided in the current context, the collected proteomic and phenotypic data collectively indicate that HglS is part of a highly orchestrated regulatory network that modulates lysine metabolism in response to environmental and intracellular cues (thompson2019massivelyparallelfitness pages 9-12, thompson2020aniron(ii) pages 1-5).</p>
+</li>
+<li>
+<p>Evolutionary Conservation<br />
+Phylogenetic and comparative genomic analyses underscore the high degree of evolutionary conservation exhibited by the DUF1338 family proteins, including HglS. This family is widely distributed among bacteria, fungi, plants, and green algae, while being notably absent in animals and archaea, which suggests a fundamental role in microbial and plant physiology that is maintained across diverse taxonomic groups (blakehedges2019massivelyparallelfitness pages 1-3, blakehedges2019massivelyparallelfitness pages 8-10). The conservation of critical catalytic residues—especially those involved in Fe(II) coordination (the HHE triad) and substrate binding (notably Arg74)—is strikingly high; for example, nearly all DUF1338 homologs preserve these features, even in the face of low overall sequence identity (thompson2019asongofa pages 29-34, thompson2019asongofa pages 108-116, thompson2019asongof pages 26-29). In plants, homologs of HglS have been functionally characterized (e.g., FLO7 in rice and AT1G07040 in Arabidopsis thaliana), and these enzymes catalyze analogous reactions in lysine catabolism, affecting developmental processes such as seed germination and starch metabolism (thompson2019asongof pages 99-102, thompson2019asongofa pages 96-99). The presence of similar DUF1338 proteins in industrially and medically relevant bacteria, including Mycobacterium tuberculosis and Pseudomonas fluorescens, further highlights the evolutionary importance of this enzyme for efficient amino acid degradation and metabolic adaptation (thompson2019asongofa pages 99-102, thompson2020aniron(ii) pages 5-10). Therefore, the evolutionary conservation of HglS supports its designation as a crucial enzyme within a deeply rooted metabolic pathway that has been maintained throughout billions of years of divergent evolution (thompson2019asongofa pages 108-116, thompson2019asongofa pages 99-102).</p>
+</li>
+<li>
+<p>Key Experimental Evidence and Literature<br />
+The functional and mechanistic attributes of HglS have been elucidated using a variety of experimental approaches. High‑throughput fitness profiling via RB‑TnSeq was instrumental in pinpointing hglS as essential for lysine catabolism, with transposon insertions in this gene leading to significant growth deficiencies on D‑lysine and L‑lysine media (blakehedges2019massivelyparallelfitness pages 1-3, blakehedges2019massivelyparallelfitness pages 10-13). Purification of the recombinant protein followed by in vitro enzymatic assays demonstrated that HglS specifically converts 2OA to D‑2‑HG, as evidenced by LC‑TOF mass spectrometry and enzyme‑coupled decarboxylation assays that monitored CO₂ evolution and oxygen consumption (blakehedges2019massivelyparallelfitness pages 8-10, thompson2019asongof pages 108-116). Kinetic measurements further confirmed the high catalytic efficiency of HglS, with a reported V_max of approximately 0.33 mM/min and a substrate K_m of 0.06 mM, supporting the enzyme’s strong substrate affinity and rapid turnover (thompson2019asongof pages 108-116, thompson2019asongof pages 16-20). In addition, crystallographic studies have provided detailed insights into the enzyme’s three‑dimensional structure; high‑resolution X‑ray crystal structures (up to 1.1 Å resolution) have been solved for both the apo form and substrate‑bound states, revealing the DUF1338/VOC domain architecture, the Fe(II) binding pocket, and the conformational changes that occur upon substrate binding (thompson2019asongofa pages 96-99, thompson2019asongofa pages 102-106, thompson2019asongofa pages 108-116). Site‑directed mutagenesis of key residues such as Arg74 and Val402 has confirmed their critical roles in substrate binding and catalytic efficiency, as mutations at these positions dramatically reduce enzyme turnover (thompson2019asongof pages 102-106, thompson2019asongof pages 108-116). Collectively, these multiple lines of evidence—from genetic fitness assays and proteomic analyses to enzymatic kinetics and crystallography—establish HglS as an essential enzyme in P. putida lysine catabolism and provide robust support for its GO annotations related to oxidoreductase activity, decarboxylase activity, and iron ion binding (blakehedges2019massivelyparallelfitness pages 1-3, blakehedges2019massivelyparallelfitness pages 3-5, blakehedges2019massivelyparallelfitness pages 10-13).</p>
+</li>
+<li>
+<p>Gene Ontology Annotation and Summary of Functional Attributes<br />
+Based on the extensive experimental and comparative evidence, HglS can be robustly annotated with several high‑level Gene Ontology (GO) terms. In terms of molecular function, HglS is characterized as an “iron(II)-dependent oxygenase” and “decarboxylase” that exhibits specific oxidoreductase activity toward 2‑oxoadipate (blakehedges2019massivelyparallelfitness pages 1-3, blakehedges2019massivelyparallelfitness pages 10-13). The enzyme’s active site features, including the DUF1338 domain with its VOC fold, the conserved HHE triad, and critical substrate binding residues such as Arg74, directly support GO terms including “iron ion binding,” “oxidoreductase activity,” and “decarboxylase activity” (blakehedges2019massivelyparallelfitness pages 10-13, blakehedges2019massivelyparallelfitnessa pages 8-10, thompson2019asongof pages 102-106). Biologically, HglS is involved in the “lysine catabolic process” by mediating the oxidative decarboxylation of 2‑oxoadipate to D‑2‑hydroxyglutarate, thereby linking lysine degradation to central energy metabolism via the TCA cycle (blakehedges2019massivelyparallelfitness pages 8-10, thompson2019asongof pages 16-20, thompson2019asongofb pages 29-34). Although no direct human disease association exists for this bacterial gene, its essential role in lysine metabolism is evident from the severe growth phenotypes observed in gene disruption studies, and analogous alterations in plant homologs have been linked to developmental defects (blakehedges2019massivelyparallelfitness pages 3-5, thompson2019asongof pages 99-102). With respect to cellular components, the enzyme is predicted to be cytoplasmic in P. putida, consistent with its role in central metabolic pathways (blakehedges2019massivelyparallelfitness pages 1-3, thompson2019asongofa pages 96-99). Furthermore, the regulation of hglS expression in response to lysine and related metabolite availability supports its role as an inducible enzyme in amino acid catabolism, with targeted proteomics showing increased expression in lysine‑rich conditions (thompson2019asongof pages 16-20, blakehedges2019massivelyparallelfitness pages 3-5). Finally, the evolutionary conservation of HglS across diverse taxa, as evidenced by extensive phylogenomic analyses, highlights the ancient and critical nature of its metabolic function, which is maintained through conserved catalytic domains and key active site residues (thompson2019asongofa pages 29-34, thompson2019asongofa pages 108-116, thompson2019asongof pages 26-29).</p>
+</li>
+<li>
+<p>Conclusion<br />
+In summary, the Pseudomonas putida gene hglS (UniProt ID Q88CC1, locus tag PP_5260) encodes a DUF1338‑containing iron(II)-dependent decarboxylase/oxygenase that catalyzes the oxidative decarboxylation of 2‑oxoadipate to produce D‑2‑hydroxyglutarate. This reaction represents the terminal enzymatic step of a D‑lysine catabolic pathway that connects amino acid degradation to central metabolic flux through the TCA cycle. Detailed structural analyses have revealed that HglS possesses a VOC domain fold featuring a highly conserved HHE triad and key substrate binding residues such as Arg74, Val402, and Ser403 that are essential for its substrate specificity and catalytic efficiency. Functional genetic and proteomic studies have demonstrated that hglS expression is inducible under conditions that promote lysine catabolism, and its disruption results in significant fitness defects when lysine is the sole carbon source. Although no direct disease associations have been documented for this bacterial gene, its evolutionary conservation across bacteria, plants, fungi, and green algae underscores its fundamental role in amino acid metabolism. The collective experimental evidence—including RB‑TnSeq fitness profiles, in vitro biochemical assays, kinetic measurements, and high‑resolution crystallographic structures—provides a solid basis for its GO annotations related to oxidoreductase activity, decarboxylase function, iron ion binding, and lysine catabolic process. Overall, HglS serves as a paradigmatic example of how previously uncharacterized protein families (DUF1338) can be functionally annotated through integrated genetic, biochemical, structural, and phylogenomic approaches, thereby contributing essential insights into metabolic network organization and regulation in Pseudomonas putida (blakehedges2019massivelyparallelfitness pages 1-3, blakehedges2019massivelyparallelfitness pages 10-13, blakehedges2019massivelyparallelfitness pages 3-5, blakehedges2019massivelyparallelfitness pages 8-10, blakehedges2019massivelyparallelfitnessa pages 8-10, thompson2019asongof pages 102-106, thompson2019asongofa pages 96-99, thompson2019asongofa pages 29-34, thompson2019asongofa pages 108-116, thompson2019asongof pages 16-20).</p>
+</li>
+</ol>
+<p>This report offers robust, multi‐dimensional evidence supporting the current GO annotations for hglS and provides a foundation for further experimental and functional studies, particularly in the context of metabolic engineering and the elucidation of amino acid degradation pathways in diverse organisms.</p>
+<p>References</p>
+<ol>
+<li>
+<p>(blakehedges2019massivelyparallelfitness pages 1-3): JM Blake-Hedges and P Cruz-Morales. Massively parallel fitness profiling reveals multiple novel enzymes in pseudomonas. Unknown journal, 2019.</p>
+</li>
+<li>
+<p>(blakehedges2019massivelyparallelfitness pages 10-13): JM Blake-Hedges and P Cruz-Morales. Massively parallel fitness profiling reveals multiple novel enzymes in pseudomonas. Unknown journal, 2019.</p>
+</li>
+<li>
+<p>(blakehedges2019massivelyparallelfitness pages 3-5): JM Blake-Hedges and P Cruz-Morales. Massively parallel fitness profiling reveals multiple novel enzymes in pseudomonas. Unknown journal, 2019.</p>
+</li>
+<li>
+<p>(blakehedges2019massivelyparallelfitness pages 8-10): JM Blake-Hedges and P Cruz-Morales. Massively parallel fitness profiling reveals multiple novel enzymes in pseudomonas. Unknown journal, 2019.</p>
+</li>
+<li>
+<p>(thompson2019asongof pages 108-116): MG Thompson. A song of lysine and pseudomonas putida. Unknown journal, 2019.</p>
+</li>
+<li>
+<p>(thompson2019asongof pages 16-20): MG Thompson. A song of lysine and pseudomonas putida. Unknown journal, 2019.</p>
+</li>
+<li>
+<p>(thompson2019asongofa pages 108-116): MG Thompson. A song of lysine and pseudomonas putida. Unknown journal, 2019.</p>
+</li>
+<li>
+<p>(thompson2019asongofa pages 29-34): MG Thompson. A song of lysine and pseudomonas putida. Unknown journal, 2019.</p>
+</li>
+<li>
+<p>(thompson2019asongofa pages 96-99): MG Thompson. A song of lysine and pseudomonas putida. Unknown journal, 2019.</p>
+</li>
+<li>
+<p>(thompson2019asongofb pages 29-34): MG Thompson. A song of lysine and pseudomonas putida. Unknown journal, 2019.</p>
+</li>
+<li>
+<p>(thompson2020aniron(ii) pages 36-49): Mitchell G. Thompson, Jacquelyn M. Blake-Hedges, Jose Henrique Pereira, John A. Hangasky, Michael S. Belcher, William M. Moore, Jesus F. Barajas, Pablo Cruz-Morales, Lorenzo J. Washington, Robert W. Haushalter, Christopher B. Eiben, Yuzhong Liu, Will Skyrud, Veronica T. Benites, Tyler P. Barnum, Edward E. K. Baidoo, Henrik V. Scheller, Michael A. Marletta, Patrick M. Shih, Paul D. Adams, and Jay D. Keasling. An iron (ii) dependent oxygenase performs the last missing step of plant lysine catabolism. BioRxiv, Jan 2020. URL: https://doi.org/10.1101/2020.01.30.927905, doi:10.1101/2020.01.30.927905. This article has 16 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(thompson2019asongofa pages 20-26): MG Thompson. A song of lysine and pseudomonas putida. Unknown journal, 2019.</p>
+</li>
+<li>
+<p>(thompson2019asongof pages 99-102): MG Thompson. A song of lysine and pseudomonas putida. Unknown journal, 2019.</p>
+</li>
+<li>
+<p>(blakehedges2019massivelyparallelfitnessa pages 8-10): JM Blake-Hedges and P Cruz-Morales. Massively parallel fitness profiling reveals multiple novel enzymes in pseudomonas. Unknown journal, 2019.</p>
+</li>
+<li>
+<p>(thompson2019asongofa pages 102-106): MG Thompson. A song of lysine and pseudomonas putida. Unknown journal, 2019.</p>
+</li>
+<li>
+<p>(thompson2019asongof pages 102-106): MG Thompson. A song of lysine and pseudomonas putida. Unknown journal, 2019.</p>
+</li>
+<li>
+<p>(thompson2019asongofa pages 7-9): MG Thompson. A song of lysine and pseudomonas putida. Unknown journal, 2019.</p>
+</li>
+<li>
+<p>(thompson2019asongofa pages 99-102): MG Thompson. A song of lysine and pseudomonas putida. Unknown journal, 2019.</p>
+</li>
+<li>
+<p>(thompson2019massivelyparallelfitness pages 9-12): Mitchell G. Thompson, Jacquelyn M. Blake-Hedges, Pablo Cruz-Morales, Jesus F. Barajas, Samuel C. Curran, Christopher B. Eiben, Nicholas C. Harris, Veronica T. Benites, Jennifer W. Gin, William A. Sharpless, Frederick F. Twigg, Will Skyrud, Rohith N. Krishna, Jose Henrique Pereira, Edward E. K. Baidoo, Christopher J. Petzold, Paul D. Adams, Adam P. Arkin, Adam M. Deutschbauer, and Jay D. Keasling. Massively parallel fitness profiling reveals multiple novel enzymes in <i>pseudomonas putida</i> lysine metabolism. mBio, Jun 2019. URL: https://doi.org/10.1128/mbio.02577-18, doi:10.1128/mbio.02577-18. This article has 77 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(thompson2020aniron(ii) pages 1-5): Mitchell G. Thompson, Jacquelyn M. Blake-Hedges, Jose Henrique Pereira, John A. Hangasky, Michael S. Belcher, William M. Moore, Jesus F. Barajas, Pablo Cruz-Morales, Lorenzo J. Washington, Robert W. Haushalter, Christopher B. Eiben, Yuzhong Liu, Will Skyrud, Veronica T. Benites, Tyler P. Barnum, Edward E. K. Baidoo, Henrik V. Scheller, Michael A. Marletta, Patrick M. Shih, Paul D. Adams, and Jay D. Keasling. An iron (ii) dependent oxygenase performs the last missing step of plant lysine catabolism. BioRxiv, Jan 2020. URL: https://doi.org/10.1101/2020.01.30.927905, doi:10.1101/2020.01.30.927905. This article has 16 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(thompson2019asongof pages 26-29): MG Thompson. A song of lysine and pseudomonas putida. Unknown journal, 2019.</p>
+</li>
+<li>
+<p>(thompson2020aniron(ii) pages 5-10): Mitchell G. Thompson, Jacquelyn M. Blake-Hedges, Jose Henrique Pereira, John A. Hangasky, Michael S. Belcher, William M. Moore, Jesus F. Barajas, Pablo Cruz-Morales, Lorenzo J. Washington, Robert W. Haushalter, Christopher B. Eiben, Yuzhong Liu, Will Skyrud, Veronica T. Benites, Tyler P. Barnum, Edward E. K. Baidoo, Henrik V. Scheller, Michael A. Marletta, Patrick M. Shih, Paul D. Adams, and Jay D. Keasling. An iron (ii) dependent oxygenase performs the last missing step of plant lysine catabolism. BioRxiv, Jan 2020. URL: https://doi.org/10.1101/2020.01.30.927905, doi:10.1101/2020.01.30.927905. This article has 16 citations and is from a poor quality or predatory journal.</p>
+</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88CC1
+gene_symbol: hglS
+aliases:
+- ydcJ
+- PP_5260
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida KT2440
+description: &#39;2-oxoadipate dioxygenase/decarboxylase that catalyzes the decarboxylation and hydroxylation of 2-oxoadipate
+  to form D-2-hydroxyglutarate. This Fe(2+)-dependent enzyme is specific for 2-oxoadipate and plays a crucial role in D-lysine
+  catabolism in Pseudomonas putida KT2440. The enzyme performs the last step in a lysine degradation pathway, converting 2-oxoadipate
+  (derived from lysine) into D-2-hydroxyglutarate with the release of CO2. Note: The deep research file incorrectly conflates
+  this enzyme with α-hydroxyglutarate oxidoreductase from 1969 research, which catalyzes the opposite reaction (oxidizing
+  D-2-hydroxyglutarate to 2-oxoglutarate).
+
+  &#39;
+existing_annotations:
+- term:
+    id: GO:0016491
+    label: oxidoreductase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &#39;This general oxidoreductase annotation is correct but too broad. The enzyme does perform oxidation-reduction,
+      but a more specific term should be used.
+
+      &#39;
+    action: MODIFY
+    proposed_replacement_terms:
+    - id: NEW_TERM_001
+      label: 2-oxoadipate dioxygenase/decarboxylase activity
+- term:
+    id: GO:0051213
+    label: dioxygenase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;Correct annotation - the enzyme is indeed a dioxygenase that incorporates both atoms of O2, with one oxygen
+      going into the hydroxyl group of 2-hydroxyglutarate and the other released as CO2 after decarboxylation.
+
+      &#39;
+    action: ACCEPT
+core_functions:
+- molecular_function:
+    id: GO:0051213
+    label: dioxygenase activity
+    description: &#39;Catalyzes the Fe(2+)-dependent conversion of 2-oxoadipate to D-2-hydroxyglutarate with consumption of O2
+      and release of CO2. This is the specific 2-oxoadipate dioxygenase/decarboxylase activity (EC 1.13.11.93), representing
+      the first characterized function of the DUF1338 protein family
+
+      &#39;
+  supported_by:
+  - reference_id: GO_REF:0000043
+    supporting_text: Function supported by computational analysis and sequence similarity
+references:
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods.
+  findings: []
+- id: PMID:12534463
+  title: Complete genome sequence and comparative analysis of the metabolically versatile Pseudomonas putida KT2440
+  findings: []
+- id: PMID:31064836
+  title: Massively parallel fitness profiling reveals multiple novel enzymes in Pseudomonas putida lysine metabolism
+  findings: []
+- id: PMID:32523014
+  title: An iron (II) dependent oxygenase performs the last missing step of plant lysine catabolism
+  findings: []
+suggested_questions:
+- question: Why did evolution select D-2-hydroxyglutarate as the product rather than L-2-hydroxyglutarate?
+  experts:
+  - Metabolic evolution researchers, stereochemistry experts
+- question: What is the physiological role of D-2-hydroxyglutarate in P. putida beyond being a metabolite?
+  experts:
+  - Bacterial metabolism researchers
+- question: Can HglS be engineered for biocatalytic production of chiral hydroxy acids?
+  experts:
+  - Industrial biotechnology groups
+suggested_experiments:
+- description: Directed evolution of HglS to accept alternative substrates
+- description: Metabolomics analysis of D-2-hydroxyglutarate levels under different growth conditions
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

@@ -17,7 +17,7 @@ URI: [gene_review:AnnotationExtension](https://w3id.org/ai4curation/gene_review/
 
 ### Own
 
- * [predicate](predicate.md)  <sub>0..1</sub>
+ * [AnnotationExtension➞predicate](AnnotationExtension_predicate.md)  <sub>0..1</sub>
      * Description: Predicate of the extension
      * Range: [String](types/String.md)
  * [term](term.md)  <sub>0..1</sub>

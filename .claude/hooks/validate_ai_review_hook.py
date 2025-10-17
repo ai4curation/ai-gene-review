@@ -2,6 +2,11 @@
 """
 Hook to automatically validate ai-review.yaml files after they are written or edited.
 This hook runs the validation tool and displays the results to provide immediate feedback.
+
+**NOTE**
+
+Be sure to exit with code 2 if you want to block the operation.
+https://docs.claude.com/en/docs/claude-code/hooks#exit-code-2-behavior
 """
 
 import sys
@@ -99,15 +104,15 @@ def main():
         if result.returncode != 0:
             print("❌ Validation failed - blocking file modification", file=sys.stderr)
             print("Fix validation errors before saving the file.", file=sys.stderr)
-            sys.exit(1)  # Block the operation
+            sys.exit(2)  # Block the operation
 
     except subprocess.CalledProcessError as e:
         print(f"❌ Failed to run validation: {e}", file=sys.stderr)
-        sys.exit(1)  # Block on validation errors
+        sys.exit(2)  # Block on validation errors
     except Exception as e:
         print(f"❌ Unexpected error during validation: {e}", file=sys.stderr)
         # Allow operation to proceed on unexpected errors (don't block on hook failures)
-        sys.exit(0)
+        sys.exit(2)
 
     # Exit 0 if validation passed
     sys.exit(0)

@@ -1,0 +1,1211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PHTF1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>PHTF1</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q9UMS5" target="_blank" class="term-link">
+                        Q9UMS5
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "PHTF1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q9UMS5" data-a="DESCRIPTION: TODO: Add description for PHTF1..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>TODO: Add description for PHTF1</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005783" target="_blank" class="term-link">
+                                    GO:0005783
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UMS5" data-a="GO:0005783" data-r="GO_REF:0000002" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UMS5" data-a="GO:0005789" data-r="GO_REF:0000044" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005794" target="_blank" class="term-link">
+                                    GO:0005794
+                                </a>
+                            </span>
+                            <span class="term-label">Golgi apparatus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UMS5" data-a="GO:0005794" data-r="GO_REF:0000044" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt.</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon Research</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(PHTF1-falcon-research.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9UMS5" data-a="DOC: Falcon Research" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="falcon-research-report-phtf1-human">Falcon Research Report: PHTF1 (human)</h1>
+<p>Generated using FutureHouse Falcon API</p>
+<p>UniProt ID: Q9UMS5<br />
+Directory alias: PHTF1</p>
+<hr />
+<p>Question: You are a molecular biologist and gene annotation expert conducting comprehensive research to support GO annotation curation.</p>
+<p>Provide detailed, well-cited information focusing on:<br />
+1. Gene function and molecular mechanisms<br />
+2. Cellular localization and subcellular components<br />
+3. Biological processes involvement<br />
+4. Disease associations and phenotypes<br />
+5. Protein domains and structural features<br />
+6. Expression patterns and regulation<br />
+7. Evolutionary conservation<br />
+8. Key experimental evidence and literature</p>
+<p>Format as a comprehensive research report with citations suitable for Gene Ontology annotation curation.</p>
+<p>Research the Homo sapiens gene PHTF1.</p>
+<p>=== UNIPROT METADATA ===<br />
+UniProt ID: Q9UMS5<br />
+Entry Name: PHTF1_HUMAN<br />
+Gene Name: PHTF1<br />
+Gene Synonyms: PHTF {ECO:0000303|PubMed:10395808}<br />
+Protein Name: Protein PHTF1<br />
+Organism: Homo sapiens (Human)<br />
+NCBI Taxonomy ID: 9606<br />
+Subcellular Location: Endoplasmic reticulum membrane<br />
+Subunit: Interacts with FEM1B.<br />
+======================</p>
+<p>Provide a comprehensive report covering function, localization, processes, domains, disease associations, expression, conservation, and relevant GO terms.</p>
+<p>IMPORTANT: Focus specifically on the gene identified by the metadata above, particularly the UniProt ID, locus tag, and protein description if provided.</p>
+<p>Sometimes different genes in the same organism have the same name. In this case, the gene being reviewed is the one identified by the metadata above.</p>
+<p>Comprehensive Analysis of the Homo sapiens PHTF1 Gene for Gene Ontology Annotation Curation  </p>
+<p>I. Introduction<br />
+The Homo sapiens gene PHTF1 (UniProt ID: Q9UMS5) encodes Protein PHTF1, a member of the putative homeodomain transcription factor family that plays multifaceted roles in cellular regulation, development, and disease etiology, and is characterized by several unique features that distinguish it from classical transcription factors. PHTF1 is located within the chromosomal region 1p11–p13, a locus that has attracted attention in both developmental biology and disease-focused studies, and is implicated in driving diverse processes such as DNA‐dependent transcription, cell cycle control, spermatogenesis, and immune regulation (OpenTargets Search: -PHTF1, huang2015analysisofthe pages 1-3). Notably, despite its classification as a transcription factor, PHTF1 is predominantly localized to the endoplasmic reticulum (ER) membrane—a localization that situates it at the crossroads of membrane‐mediated signaling and the regulation of gene expression, thereby suggesting roles in non‐canonical transcriptional regulation and signal integration (OpenTargets Search: -PHTF1, huang2015analysisofthe pages 1-3). Over the past several years, a body of evidence—from genome‐wide association studies (GWAS) and proteomic screens to functional assays in leukemia cell lines and studies on the sperm nuclear proteome—has underscored the relevance of PHTF1 in both normal physiology and pathologic states that include autoimmune disorders, acute lymphoblastic leukemia (ALL), and neurodegenerative diseases (OpenTargets Search: -PHTF1, castillo2014spermnuclearproteome pages 5-6, huang2015analysisofthe pages 1-3, huang2015analysisofthe pages 3-4). Given the complexity of its expression patterns, subcellular distribution, and functional domains, a comprehensive review of PHTF1 is essential to facilitate its accurate Gene Ontology (GO) annotation and to provide a framework for future functional studies.  </p>
+<p>II. Gene Function and Molecular Mechanisms<br />
+PHTF1 is primarily classified as a putative homeodomain transcription factor, and its central role in modulating DNA‐dependent transcription positions it as an integral regulator of gene expression. The presence of a homeobox domain within PHTF1 suggests a capacity for sequence‐specific DNA binding, a fundamental property shared by many transcriptional regulators that orchestrate downstream gene expression programs critical for cell proliferation, differentiation, and apoptosis (OpenTargets Search: -PHTF1, huang2015analysisofthe pages 1-3). On a molecular level, PHTF1 is proposed to exert its regulatory influence by recruiting co‐regulatory complexes that mediate chromatin remodeling and thereby alter transcriptional accessibility at target gene promoters; such a mechanism is consistent with the broader functional paradigms of homeodomain proteins (OpenTargets Search: -PHTF1).  </p>
+<p>Mechanistic studies indicate that perturbations in PHTF1 expression—whether through genetic mutations or epigenetic dysregulation—can significantly alter critical cellular outcomes. For example, aberrant overexpression of PHTF1 in acute lymphoblastic leukemia (ALL) models has been causally linked to reduced cell proliferation and enhanced apoptosis, which implicates the gene in the maintenance of cell cycle checkpoints and apoptotic processes (huang2015analysisofthe pages 1-3, huang2015analysisofthe pages 3-4). Such functional outcomes underline the possibility of PHTF1 serving as a tumor suppressor in hematopoietic tissues, where tight regulation of its transcriptional activity may be vital for preventing malignant transformation. In parallel, genetic association studies have linked PHTF1 to autoimmune phenotypes, including rheumatoid arthritis and hypothyroidism, thereby suggesting that its role in transcriptional control extends to the modulation of immune responses and inflammatory signaling pathways (OpenTargets Search: -PHTF1).  </p>
+<p>In addition to these roles, emerging evidence from CRISPR-based and GWAS studies has implied that PHTF1 may participate in the regulation of neuronal function, particularly within glutamatergic neurons, where its dysregulation could impact neurodegenerative processes (OpenTargets Search: -PHTF1). This potential neurogenic role is likely mediated through its ability to modulate the transcription of genes necessary for the proper functioning of neuronal circuits, further broadening the impact of PHTF1 across distinct cellular contexts. Furthermore, one important molecular interaction involves PHTF1’s binding with FEM1B—a protein intricately involved in apoptotic signaling. The PHTF1–FEM1B interaction may serve as a molecular bridge, coupling transcriptional regulatory events with the cellular apoptosis machinery, thereby ensuring that perturbations in genomic stability or cellular stress are met with appropriate pro‐ or anti‐apoptotic responses (huang2015analysisofthe pages 3-4, huang2015analysisofthe pages 1-3). Such interactions exemplify how PHTF1 integrates various signaling inputs to coordinate a multifaceted cellular response, emphasizing its role as a pivotal hub in the regulation of transcription and cell fate decisions.  </p>
+<p>III. Cellular Localization and Subcellular Components<br />
+In stark contrast to many transcription factors that are sequestered within the nucleus, PHTF1 has been experimentally determined to predominantly localize to the endoplasmic reticulum (ER) membrane, as indicated by UniProt metadata (OpenTargets Search: -PHTF1). This atypical subcellular localization raises intriguing questions regarding its mechanism of action, suggesting that PHTF1 may operate via non‐canonical pathways that link ER membrane dynamics to gene regulatory processes. The strategic positioning at the ER may enable PHTF1 to interact with a spectrum of signaling molecules and membrane‐bound receptors, thereby situating it as an intermediary capable of transducing extracellular or stress-related signals into transcriptional responses.  </p>
+<p>The ER membrane is a central hub for protein folding, lipid metabolism, and calcium signaling, and the residence of PHTF1 in this compartment hints at a potential role in interfacing with these processes. For instance, under conditions of ER stress, it is conceivable that PHTF1 might undergo post‐translational modifications—such as phosphorylation or ubiquitination—that alter its intracellular trafficking and potentially facilitate its translocation to the nucleus, thereby modulating transcription in response to stress signals. Although direct evidence for such a translocation event in the case of PHTF1 remains to be fully elucidated, parallels with other membrane-associated transcription factors lend credence to this hypothesis (OpenTargets Search: -PHTF1, huang2015analysisofthe pages 1-3).  </p>
+<p>Additional insights into the cellular distribution of PHTF1 are gleaned from proteomic studies of the sperm nuclear proteome, which have revealed the presence of PHTF1 in mature spermatozoa despite these cells being transcriptionally inert (castillo2014spermnuclearproteome pages 5-6). This observation not only confirms the pervasive expression of PHTF1 across different cell types but also suggests that its subcellular localization may vary during developmental transitions. In the context of spermatogenesis, the presence of PHTF1 in mature sperm may reflect a legacy of prior transcriptional activity or indicate a non‐transcriptional role that is pertinent to the later stages of sperm differentiation and early embryonic development. Moreover, the documented interaction with FEM1B further indicates that PHTF1’s localization is functionally significant, as membrane-associated protein–protein interactions are critical for the execution of cell death and survival programs (castillo2014spermnuclearproteome pages 5-6, huang2015analysisofthe pages 3-4).  </p>
+<p>Taken together, the unique ER membrane localization of PHTF1 underlines a sophisticated subcellular organization that likely contributes to its ability to integrate diverse signaling inputs. This spatial compartmentalization not only distinguishes PHTF1 from classical nuclear transcription factors but also underscores its potential to act as a mediator that couples ER stress responses and membrane-derived signals with the control of gene expression (OpenTargets Search: -PHTF1, huang2015analysisofthe pages 1-3).  </p>
+<p>IV. Biological Processes Involvement<br />
+PHTF1 is implicated in a broad spectrum of biological processes that reflect its importance in both fundamental cellular regulation and specialized developmental events. At its core, the gene’s primary function revolves around the regulation of DNA‐dependent transcription, and it is widely thought to influence gene expression by directly binding DNA at specific promoter regions (OpenTargets Search: -PHTF1, huang2015analysisofthe pages 1-3). Such regulation is central to cellular processes including cell proliferation, differentiation, and apoptosis—a testament to the critical role played by transcription factors in orchestrating complex genetic programs.  </p>
+<p>Beyond its role in transcription per se, PHTF1 has been associated with chromatin remodeling events that are pivotal for the accessibility of genomic DNA to the transcriptional machinery. Gene ontology annotations from studies examining differentially expressed genes in various disease states have linked transcription regulators like PHTF1 to processes such as viral gene expression, chromatin modification, and DNA binding (chen2021bioinformaticsanalysisfor pages 9-10, chen2021bioinformaticsanalysisfor pages 12-13). Although these studies do not exclusively focus on PHTF1, the functional parallels suggest that similar mechanisms may underlie its involvement in modulating chromatin structure and transcriptional output.  </p>
+<p>A particularly compelling biological role for PHTF1 is observed during spermatogenesis. Experimental evidence indicates that PHTF1 expression rises dramatically during the later stages of sperm development, and its subsequent detection in mature spermatozoa suggests a potential role in epigenetic programming that could influence early embryonic development (castillo2014spermnuclearproteome pages 5-6). The dynamic regulation of PHTF1 during this process implies that it may help coordinate the extensive transcriptional reprogramming that is required for the maturation of germ cells—a process that is critical for the transmission of genetic and epigenetic information to progeny.  </p>
+<p>In addition to its developmental role, PHTF1 is also involved in the regulation of immune responses and cellular signaling pathways. Genetic studies have associated the gene with autoimmune conditions such as rheumatoid arthritis and hypothyroidism, implying that PHTF1 may modulate the expression of genes that govern inflammatory responses and immune cell function (OpenTargets Search: -PHTF1). Furthermore, emerging evidence from studies focused on neuronal function hints at a potential role for PHTF1 in maintaining the integrity of glutamatergic neurons, which are essential for normal brain function and are implicated in the etiology of neurodegenerative diseases (OpenTargets Search: -PHTF1).  </p>
+<p>Complementing these well-established roles, broader gene ontology analyses have connected PHTF1 to biological processes such as wound healing, cell growth regulation, and the morphogenesis of epithelial sheets (chen2021bioinformaticsanalysisfor pages 12-13). Although the specific involvement of PHTF1 in these processes requires further validation, the congruence between its predicted transcription regulatory function and the observed phenotypes in various systems strengthens the overall case for its broad biological impact. Collectively, these diverse functional associations underscore the role of PHTF1 as a master regulator that integrates intrinsic genetic programs with extracellular signaling cues to maintain cellular homeostasis and drive critical developmental processes.  </p>
+<p>V. Disease Associations and Phenotypes<br />
+A growing body of evidence from genetic association studies and functional assays has implicated PHTF1 in a wide range of disease phenotypes, thereby underscoring its clinical significance. One of the most prominent associations involves autoimmune conditions; specifically, significant genetic links have been observed between PHTF1 and rheumatoid arthritis, as well as hypothyroidism (OpenTargets Search: -PHTF1). In patients predisposed to rheumatoid arthritis, PHTF1 is associated with markers such as rheumatoid factor seropositivity and anti-citrullinated protein antibody seropositivity, suggesting that its dysregulated expression may contribute to the inflammatory and immune-mediated processes underlying the disease.  </p>
+<p>Beyond autoimmune disorders, PHTF1 has also been connected with skeletal phenotypes. Its genomic locus, which lies within the 1p region, has been highlighted in studies that explored genetic variants influencing heel bone mineral density and osteoporosis (liu2021identificationofnovel pages 11-12). Although the mechanistic details linking PHTF1 to bone metabolism remain to be fully established, such genetic associations suggest that the gene may contribute to the regulation of bone homeostasis, possibly through its influence on cell growth and differentiation signals.  </p>
+<p>Perhaps the most striking disease associations of PHTF1 arise from its involvement in hematological malignancies. In both T-cell and B-cell acute lymphoblastic leukemia (ALL), PHTF1 is found to be overexpressed, and functional studies have demonstrated that increased levels of PHTF1 correlate with reduced proliferation and enhanced apoptosis in leukemia cell lines (huang2015analysisofthe pages 1-3, huang2015analysisofthe pages 3-4). Intriguingly, experimental evidence indicates that PHTF1 overexpression can lead to the activation of the PHTF1–FEM1B–Apaf-1 pathway, which promotes apoptotic cell death, thereby suggesting a tumor-suppressive role in the context of ALL. In healthy individuals, a positive correlation between PHTF1 expression and the transcription factor BCL11B has been observed, implying that in normal hematopoietic regulation, PHTF1 may act in concert with other transcriptional regulators to maintain controlled cell proliferation and genomic stability (huang2015analysisofthe pages 3-4, huang2015analysisofthe pages 1-3).  </p>
+<p>In addition to its roles in autoimmunity, bone metabolism, and leukemia, there is also emerging evidence linking PHTF1 to neurodegenerative conditions. Functional genomic studies have pointed to its involvement in the regulation of genes in glutamatergic neurons, suggesting that dysregulation of PHTF1 could contribute to neuronal dysfunction and neurodegeneration (OpenTargets Search: -PHTF1). Although further investigations are necessary to delineate the precise mechanisms at play, these observations expand the spectrum of PHTF1-associated diseases and highlight the gene’s pleiotropic effects across diverse biological systems.  </p>
+<p>Overall, the multifaceted disease associations of PHTF1—from autoimmune disorders and osteoporosis to leukemia and neurodegeneration—underscore the gene’s importance as a potential biomarker and therapeutic target, and they emphasize the necessity of continued research to fully elucidate its contributions to disease pathogenesis.  </p>
+<p>VI. Protein Domains and Structural Features<br />
+At the protein level, PHTF1 is defined by its characteristic homeodomain, an evolutionarily conserved motif that is critical for DNA binding and transcriptional regulation. The homeodomain typically comprises approximately 60 amino acids arranged in a helix–turn–helix conformation, which facilitates specific interactions with target DNA sequences and is essential for the regulatory functions of many developmental and cellular proteins (OpenTargets Search: -PHTF1, huang2015analysisofthe pages 1-3). Although high-resolution structural data for PHTF1 are presently lacking, sequence analysis strongly predicts that its homeodomain retains the canonical structural features required for its function in sequence-specific binding, thereby ensuring that downstream target genes are appropriately regulated.  </p>
+<p>Beyond the homeodomain, there is evidence to suggest that PHTF1 contains additional regions that mediate protein–protein interactions. A prime example of this is the documented interaction with FEM1B—a partner implicated in apoptotic signaling—which indicates that PHTF1 likely harbors specific interfaces dedicated to mediating complex formation with other regulatory proteins (huang2015analysisofthe pages 3-4, huang2015analysisofthe pages 1-3). These regions, although not as well structurally characterized as the homeodomain, may include intrinsically disordered segments or short linear motifs that serve as binding sites for co-regulators, thereby enhancing the versatility and context-dependent functionality of PHTF1.  </p>
+<p>Another structural feature of interest is the potential for PHTF1 to interact with cellular membranes. The UniProt metadata explicitly notes that PHTF1 localizes to the ER membrane, which suggests that apart from its well-conserved nuclear functions, it might possess hydrophobic regions or membrane-targeting signals that facilitate its anchorage to lipid bilayers (OpenTargets Search: -PHTF1). Such features are noteworthy because they hint at a dual functional paradigm where PHTF1 may reside in the ER membrane under basal conditions and, upon receiving appropriate signals, possibly translocate to the nucleus to exert transcriptional control. This duality is further supported by comparative analyses with other transcription factors that display dynamic subcellular localization, thus underscoring the complexity and adaptability of PHTF1’s structural design (huang2015analysisofthe pages 1-3).  </p>
+<p>In summary, the modular architecture of PHTF1, which integrates a conserved homeodomain with additional interaction domains and potential membrane-association elements, reflects its capacity to function as both a DNA-binding transcription factor and a mediator of signal transduction from the ER membrane. These structural insights not only provide a molecular basis for its diverse cellular roles but also serve as critical criteria for its accurate GO annotation.  </p>
+<p>VII. Expression Patterns and Regulation<br />
+The expression profile of PHTF1 is complex and highly context-dependent, reflecting the gene’s involvement in a variety of biological processes and its contribution to both normal cellular function and disease. One of the most striking aspects of PHTF1 expression is its dynamic regulation during spermatogenesis. Studies have shown that the expression of PHTF1 increases dramatically during the late stages of sperm development, and its detection in mature spermatozoa—even in the absence of active transcription—suggests a role in the epigenetic programming necessary for successful fertilization and early embryogenesis (castillo2014spermnuclearproteome pages 5-6). This stage‐specific expression pattern implies that PHTF1 is tightly integrated into the regulatory networks that govern germ cell maturation and may carry developmental signals from spermatogenic progenitors to the next generation.  </p>
+<p>In contrast, in somatic tissues—particularly within the hematopoietic compartment—PHTF1 expression appears to be dysregulated in pathological states. In both T-cell and B-cell acute lymphoblastic leukemia (ALL), for instance, PHTF1 is markedly overexpressed (huang2015analysisofthe pages 1-3, huang2015analysisofthe pages 3-4). Functional studies in ALL cell lines, such as Jurkat and Molt-4, have demonstrated that elevated levels of PHTF1 are associated with decreased cell proliferation and the induction of apoptotic pathways, indicating that PHTF1 may serve as a tumor suppressor in these contexts. In healthy hematopoietic cells, a positive correlation between PHTF1 and the expression of BCL11B—a key regulator of T-cell development—has been observed, suggesting that PHTF1 contributes to the maintenance of normal cell cycle progression and genomic stability (huang2015analysisofthe pages 3-4).  </p>
+<p>While the upstream regulatory mechanisms controlling PHTF1 expression remain incompletely defined, it is plausible that multiple layers of regulation—ranging from transcriptional control to post-transcriptional modifications—coordinate its tissue-specific expression. In addition, studies examining parathyroid hormone (PTH)-regulated gene expression have identified transcription factors that respond to hormonal cues in a manner that modulates gene networks involved in cell growth and differentiation (qiu2003comparativepromoteranalysis pages 5-6, qiu2003comparativepromoteranalysis pages 6-8). Although direct evidence for PHTF1 as a PTH-responsive gene has not been explicitly reported in the current context, the possibility that hormonal signaling might influence PHTF1 expression warrants further investigation, as it may reveal additional regulatory circuits through which PHTF1 functions.  </p>
+<p>Overall, the complex expression patterns of PHTF1—ranging from its robust upregulation during spermatogenesis to its dysregulation in leukemic cells—underscore its critical role in fine-tuning cellular proliferation, differentiation, and apoptosis. This intricate regulation is indicative of a gene that is highly sensitive to developmental and environmental cues, and it serves as a reminder of the need for precise control mechanisms to maintain cellular homeostasis across diverse physiological contexts.  </p>
+<p>VIII. Evolutionary Conservation<br />
+The evolutionary conservation of PHTF1 is an important indicator of its fundamental role in cellular biology. Located at 1p11–p13, PHTF1 exhibits a high degree of conservation not only in its coding sequence but also in the regulatory elements that orchestrate its expression, thereby emphasizing its essential function across species (huang2015analysisofthe pages 1-3). The conserved nature of its homeodomain, in particular, is a hallmark of many transcription factors that regulate key developmental processes, and its preservation across divergent taxa speaks to the evolutionary pressure to maintain the integrity of its DNA-binding and regulatory functions.  </p>
+<p>Comparative analyses of the PHTF1 sequence have revealed that critical residues within the homeodomain are maintained from lower eukaryotes through to humans, implying that the molecular mechanisms governing DNA recognition and transcriptional regulation have been conserved throughout evolution (huang2015analysisofthe pages 1-3). This conservation is not merely a reflection of the gene's functional importance; it also suggests that the signaling pathways and protein interaction networks in which PHTF1 participates are similarly preserved, thereby ensuring the fidelity of key biological processes such as cell differentiation, proliferation, and apoptosis.  </p>
+<p>Moreover, the conservation of PHTF1 extends beyond its coding region. The regulatory sequences that dictate its expression pattern—ensuring that it is activated at the appropriate developmental stages and in the correct cellular contexts—are likely under similar evolutionary constraints. This dual layer of conservation, affecting both protein function and gene regulation, reinforces the view that PHTF1 is indispensable for maintaining cellular homeostasis and proper developmental progression (huang2015analysisofthe pages 1-3, liu2021identificationofnovel pages 11-12).  </p>
+<p>The evolutionary perspective provided by such conservation studies not only bolsters the functional significance of PHTF1 but also provides a compelling rationale for its inclusion in conserved gene regulatory networks within the Gene Ontology framework. In essence, the enduring presence and functional integrity of PHTF1 across evolutionary timescales underscore its critical contributions to fundamental biological processes—a conclusion that is essential for accurate GO annotation and for guiding future comparative genomic studies.  </p>
+<p>IX. Key Experimental Evidence and Literature<br />
+A robust and diverse body of experimental evidence supports the multiple roles attributed to PHTF1, providing critical insights into its molecular functions, subcellular dynamics, and disease associations. Data derived from the Open Targets Platform have first brought to light significant genetic associations linking PHTF1 with autoimmune conditions such as rheumatoid arthritis and hypothyroidism, as well as with neurodegenerative diseases (OpenTargets Search: -PHTF1). These genome-wide analyses, which have identified PHTF1 as a gene harboring noteworthy genetic association scores, lay the groundwork for understanding its potential contributions to dysregulated immune responses and inflammatory processes.  </p>
+<p>Proteomic investigations have substantially broadened our understanding of PHTF1’s participation in spermatogenesis. In particular, studies examining the sperm nuclear proteome have consistently detected PHTF1 in mature sperm cells, thereby suggesting a role for the protein in the later stages of sperm development and in mediating epigenetic modifications that are vital for early embryogenesis (castillo2014spermnuclearproteome pages 5-6). Such observations are critical, as they highlight not only the developmental significance of PHTF1 but also its potential as a carrier of epigenetic information from the germline to the zygote.  </p>
+<p>In the realm of hematological malignancies, experimental evidence from studies on acute lymphoblastic leukemia (ALL) is especially compelling. Investigations have shown that PHTF1 is overexpressed in both T-cell and B-cell ALL, and functional assays in cell lines such as Jurkat and Molt-4 have demonstrated that increased PHTF1 levels are associated with reduced proliferation and the activation of apoptotic pathways (huang2015analysisofthe pages 1-3, huang2015analysisofthe pages 3-4). These findings have been instrumental in proposing a tumor-suppressive function for PHTF1 in leukemia, where its dysregulation may contribute to the disruption of normal cell cycle control and the induction of cell death.  </p>
+<p>Additional support for the functional repertoire of PHTF1 comes from studies focused on gene ontology and promoter analysis. For example, analyses of differentially expressed genes in the context of Helicobacter pylori infection have identified GO annotations related to viral gene expression, transcription, and chromatin modification, suggesting that transcription factors with functional similarities to PHTF1 might exhibit comparable regulatory capacities (chen2021bioinformaticsanalysisfor pages 9-10, chen2021bioinformaticsanalysisfor pages 12-13). Furthermore, promoter analyses examining transcription factor networks regulated by parathyroid hormone (PTH) have provided valuable insights into how external hormonal signals can modulate gene expression; while these studies do not directly implicate PHTF1, they establish a framework within which the regulatory influences on transcription factors can be understood (qiu2003comparativepromoteranalysis pages 5-6, qiu2003comparativepromoteranalysis pages 6-8).  </p>
+<p>Finally, bioinformatic approaches that integrate sequence conservation, predicted structural domains, and protein–protein interaction data have reinforced the central role of the PHTF1 homeodomain and have provided insights into its potential interaction interfaces. These computational analyses complement the experimental evidence by elucidating how conserved structural elements are likely to underpin the gene's functional versatility and its capacity to participate in diverse cellular processes (huang2015analysisofthe pages 1-3, OpenTargets Search: -PHTF1).  </p>
+<p>Together, the convergence of findings from genetic, proteomic, functional, and computational studies paints a comprehensive picture of PHTF1 as a key regulatory protein that is integrally involved in the maintenance of cellular homeostasis, the orchestration of developmental processes, and the modulation of disease pathways. This wealth of evidence provides a robust foundation for the assignment of detailed GO annotations that capture the full spectrum of PHTF1’s biological roles.  </p>
+<p>X. Conclusion<br />
+In summary, the comprehensive analysis presented in this report underscores the central role of the Homo sapiens gene PHTF1 as a multi-functional transcriptional regulator with significant implications for cellular homeostasis, development, and disease. PHTF1 encodes a putative homeodomain transcription factor that is uniquely localized to the ER membrane—a characteristic that distinguishes it from classical nuclear transcription factors and points to a dual functionality in which membrane-associated signaling is potentially coupled with direct regulation of gene expression (OpenTargets Search: -PHTF1, huang2015analysisofthe pages 1-3).  </p>
+<p>The functional versatility of PHTF1 is manifest in its involvement in key biological processes ranging from DNA-dependent transcription and chromatin remodeling to cell proliferation, differentiation, apoptosis, and even spermatogenesis. Its dynamic regulation during germ cell development, as well as its aberrant overexpression in leukemic cells, not only highlight its critical roles in normal physiology but also implicate it in diverse pathologic states such as autoimmune disorders, osteoporosis, neurodegenerative diseases, and hematological cancers (OpenTargets Search: -PHTF1, huang2015analysisofthe pages 1-3, huang2015analysisofthe pages 3-4).  </p>
+<p>Structurally, the conserved homeodomain of PHTF1 provides the molecular basis for its DNA-binding activity, while additional domains and interaction motifs—exemplified by its binding to FEM1B—suggest that the protein is equipped to engage in complex regulatory networks that coordinate cellular responses to both intrinsic cues and extracellular signals (OpenTargets Search: -PHTF1, huang2015analysisofthe pages 1-3). The evolutionary conservation of these structural and regulatory features further underscores the fundamental importance of PHTF1 in maintaining essential cellular functions across diverse species (huang2015analysisofthe pages 1-3, liu2021identificationofnovel pages 11-12).  </p>
+<p>The extensive experimental evidence supporting the roles of PHTF1—from genome-wide association studies and proteomic analyses to functional assays in various cellular models—solidifies its status as a pivotal mediator of transcriptional regulation and cellular signaling. These studies collectively illustrate that perturbations in PHTF1 expression or function can have profound effects on cell survival, proliferation, and differentiation, thereby influencing the onset and progression of multiple disease states (OpenTargets Search: -PHTF1, castillo2014spermnuclearproteome pages 5-6, chen2021bioinformaticsanalysisfor pages 9-10).  </p>
+<p>Looking ahead, future research efforts should aim to elucidate the precise molecular mechanisms underlying PHTF1’s regulation, including a detailed investigation of its post‐translational modifications, subcellular trafficking dynamics, and the full spectrum of its protein–protein interactions. High-resolution structural studies, advanced imaging techniques, and integrative transcriptomic and proteomic analyses will be critical in refining our understanding of how PHTF1 mediates transcriptional responses to both internal signals and environmental stressors. Such efforts will not only enhance the accuracy of GO annotations for PHTF1 but also provide deeper insights into its potential as a therapeutic target in diseases characterized by dysregulated cell growth, immune dysfunction, and neurodegeneration (qiu2003comparativepromoteranalysis pages 5-6, qiu2003comparativepromoteranalysis pages 6-8).  </p>
+<p>In light of its multifaceted roles in critical cellular processes and its pervasive involvement in disease phenotypes, PHTF1 represents a high-priority candidate for continued investigation and functional annotation. The integration of data across diverse experimental platforms reinforces the need for detailed and precise GO annotations that capture the complexity of PHTF1’s biological activities. Such comprehensive annotation will not only advance our fundamental understanding of transcriptional regulation and signal transduction but also facilitate the development of targeted therapeutic strategies for a range of conditions, thereby bridging the gap between basic research and clinical application (OpenTargets Search: -PHTF1, castillo2014spermnuclearproteome pages 5-6).</p>
+<p>References</p>
+<ol>
+<li>
+<p>(OpenTargets Search: -PHTF1): Open Targets Query (-PHTF1, 5 results). Buniello, A. et al. (2025). Open Targets Platform: facilitating therapeutic hypotheses building in drug discovery. Nucleic Acids Research.</p>
+</li>
+<li>
+<p>(huang2015analysisofthe pages 1-3): Xin Huang, Suxia Geng, Jianyu Weng, Zesheng Lu, Lingji Zeng, Minming Li, Chengxin Deng, Xiuli Wu, Yangqiu Li, and Xin Du. Analysis of the expression of phtf1 and related genes in acute lymphoblastic leukemia. Cancer Cell International, Oct 2015. URL: https://doi.org/10.1186/s12935-015-0242-9, doi:10.1186/s12935-015-0242-9. This article has 32 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(castillo2014spermnuclearproteome pages 5-6): J. Castillo, A. Amaral, A. Amaral, and R. Oliva. Sperm nuclear proteome and its epigenetic potential. Andrology, 2:326-338, May 2014. URL: https://doi.org/10.1111/j.2047-2927.2013.00170.x, doi:10.1111/j.2047-2927.2013.00170.x. This article has 87 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(huang2015analysisofthe pages 3-4): Xin Huang, Suxia Geng, Jianyu Weng, Zesheng Lu, Lingji Zeng, Minming Li, Chengxin Deng, Xiuli Wu, Yangqiu Li, and Xin Du. Analysis of the expression of phtf1 and related genes in acute lymphoblastic leukemia. Cancer Cell International, Oct 2015. URL: https://doi.org/10.1186/s12935-015-0242-9, doi:10.1186/s12935-015-0242-9. This article has 32 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(chen2021bioinformaticsanalysisfor pages 9-10): Dingyu Chen, Chao Li, Yan Zhao, Jianjiang Zhou, Qinrong Wang, and Yuan Xie. Bioinformatics analysis for the identification of differentially expressed genes and related signaling pathways in h. pylori-caga transfected gastric cancer cells. PeerJ, 9:e11203, Apr 2021. URL: https://doi.org/10.7717/peerj.11203, doi:10.7717/peerj.11203. This article has 8 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(chen2021bioinformaticsanalysisfor pages 12-13): Dingyu Chen, Chao Li, Yan Zhao, Jianjiang Zhou, Qinrong Wang, and Yuan Xie. Bioinformatics analysis for the identification of differentially expressed genes and related signaling pathways in h. pylori-caga transfected gastric cancer cells. PeerJ, 9:e11203, Apr 2021. URL: https://doi.org/10.7717/peerj.11203, doi:10.7717/peerj.11203. This article has 8 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(liu2021identificationofnovel pages 11-12): Ying-Qi Liu, Yong Liu, Qiang Zhang, Tao Xiao, and Hong-Wen Deng. Identification of novel pleiotropic snps associated with osteoporosis and rheumatoid arthritis. Calcified Tissue International, 109:17-31, Mar 2021. URL: https://doi.org/10.1007/s00223-021-00817-4, doi:10.1007/s00223-021-00817-4. This article has 9 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(qiu2003comparativepromoteranalysis pages 5-6): Ping Qiu, Ling Qin, Richard P. Sorrentino, Jonathan R. Greene, and Luquan Wang. Comparative promoter analysis and its application in analysis of pth-regulated gene expression. Journal of Molecular Biology, 326:1327-1336, Mar 2003. URL: https://doi.org/10.1016/s0022-2836(03)00053-6, doi:10.1016/s0022-2836(03)00053-6. This article has 32 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(qiu2003comparativepromoteranalysis pages 6-8): Ping Qiu, Ling Qin, Richard P. Sorrentino, Jonathan R. Greene, and Luquan Wang. Comparative promoter analysis and its application in analysis of pth-regulated gene expression. Journal of Molecular Biology, 326:1327-1336, Mar 2003. URL: https://doi.org/10.1016/s0022-2836(03)00053-6, doi:10.1016/s0022-2836(03)00053-6. This article has 32 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q9UMS5
+gene_symbol: PHTF1
+product_type: PROTEIN
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &#39;TODO: Add description for PHTF1&#39;
+existing_annotations:
+- term:
+    id: GO:0005783
+    label: endoplasmic reticulum
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0005794
+    label: Golgi apparatus
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms.
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt.
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

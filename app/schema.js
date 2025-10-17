@@ -6,6 +6,7 @@ window.searchSchema = {
   "searchableFields": [
     "gene_symbol",
     "protein_id",
+    "tags",
     "term_label",
     "term_id",
     "taxon_label",
@@ -61,6 +62,12 @@ window.searchSchema = {
       "label": "Negated",
       "type": "boolean",
       "sortBy": "alphabetical"
+    },
+    {
+      "field": "tags",
+      "label": "Tags",
+      "type": "array",
+      "sortBy": "count"
     }
   ],
   "displayFields": [
@@ -68,6 +75,11 @@ window.searchSchema = {
       "field": "gene_symbol",
       "label": "Gene",
       "type": "string"
+    },
+    {
+      "field": "review_html_link",
+      "label": "Review",
+      "type": "url"
     },
     {
       "field": "uniprot_link",
@@ -100,6 +112,16 @@ window.searchSchema = {
       "type": "url"
     },
     {
+      "field": "original_reference_id",
+      "label": "Orig Ref",
+      "type": "curie"
+    },
+    {
+      "field": "original_reference_title",
+      "label": "Orig Title",
+      "type": "string"
+    },
+    {
       "field": "review.summary",
       "label": "Summary",
       "type": "string"
@@ -128,6 +150,11 @@ window.searchSchema = {
       "field": "review.proposed_replacement_terms",
       "label": "Replacements",
       "type": "string"
+    },
+    {
+      "field": "tags",
+      "label": "Tags",
+      "type": "array"
     }
   ]
 };

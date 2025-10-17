@@ -1,0 +1,3071 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>gpd3 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>gpd3</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/O43026" target="_blank" class="term-link">
+                        O43026
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Schizosaccharomyces pombe</span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "gpd3";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="O43026" data-a="DESCRIPTION: Gpd3 is the minor isoform of glyceraldehyde-3-phos..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Gpd3 is the minor isoform of glyceraldehyde-3-phosphate dehydrogenase in S. pombe, catalyzing the reversible NAD+-dependent oxidation of glyceraldehyde-3-phosphate to 1,3-bisphosphoglycerate in glycolysis. While its paralog Tdh1 handles bulk glycolytic flux, Gpd3 shows evidence of moonlighting functions including stress response signaling, transcriptional regulation through RNA Pol II interaction, and RNA processing via splicing factor association. The protein is extensively post-translationally modified and functions within a stable glycolytic metabolon.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004365" target="_blank" class="term-link">
+                                    GO:0004365
+                                </a>
+                            </span>
+                            <span class="term-label">glyceraldehyde-3-phosphate dehydrogenase (NAD+) (phosphorylating) activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O43026" data-a="GO:0004365" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core enzymatic function well-supported. Catalyzes the sixth reaction of glycolysis (EC 1.2.1.12), converting G3P to 1,3-BPG. Conserved catalytic cysteine residue analogous to Tdh1 Cys-152. High sequence identity with Tdh1 paralog (~70-80%).
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O43026" data-a="GO:0005829" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Primary localization confirmed. Part of cytosolic glycolytic metabolon with high-confidence interactions (STRING PPI p-value 2.69×10^-14). Also supported by HDA evidence from PMID:16823372. Note: moonlighting functions suggest conditional nuclear localization.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006096" target="_blank" class="term-link">
+                                    GO:0006096
+                                </a>
+                            </span>
+                            <span class="term-label">glycolytic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O43026" data-a="GO:0006096" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Essential glycolytic function confirmed. Functions as backup to major isoform Tdh1 - tdh1Δ strain remains viable due to gpd3 presence (PMID:18406331). Also functions in reverse direction during gluconeogenesis.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004365" target="_blank" class="term-link">
+                                    GO:0004365
+                                </a>
+                            </span>
+                            <span class="term-label">glyceraldehyde-3-phosphate dehydrogenase (NAD+) (phosphorylating) activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O43026" data-a="GO:0004365" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Duplicate of above annotation with different evidence code. Core enzymatic function is correct.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O43026" data-a="GO:0005737" data-r="GO_REF:0000044" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Parent term of cytosol. Less specific but not incorrect. The more specific cytosol annotation (GO:0005829) is preferred.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006006" target="_blank" class="term-link">
+                                    GO:0006006
+                                </a>
+                            </span>
+                            <span class="term-label">glucose metabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O43026" data-a="GO:0006006" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Broader term encompassing glycolysis. Valid but less specific than glycolytic process annotations.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006096" target="_blank" class="term-link">
+                                    GO:0006096
+                                </a>
+                            </span>
+                            <span class="term-label">glycolytic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O43026" data-a="GO:0006096" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Duplicate annotation with different evidence code. Core function confirmed.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016491" target="_blank" class="term-link">
+                                    GO:0016491
+                                </a>
+                            </span>
+                            <span class="term-label">oxidoreductase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O43026" data-a="GO:0016491" data-r="GO_REF:0000043" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but overly general parent term. The specific GAPDH activity (GO:0004365) is more informative.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016620" target="_blank" class="term-link">
+                                    GO:0016620
+                                </a>
+                            </span>
+                            <span class="term-label">oxidoreductase activity, acting on the aldehyde or oxo group of donors, NAD or NADP as acceptor</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O43026" data-a="GO:0016620" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct intermediate term between general oxidoreductase and specific GAPDH activity. Less specific than GO:0004365.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050661" target="_blank" class="term-link">
+                                    GO:0050661
+                                </a>
+                            </span>
+                            <span class="term-label">NADP binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="O43026" data-a="GO:0050661" data-r="GO_REF:0000002" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Incorrect annotation. GAPDH uses NAD+, not NADP+. This enzyme is strictly NAD+-dependent, not NADP+-dependent. Likely automated annotation error.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051287" target="_blank" class="term-link">
+                                    GO:0051287
+                                </a>
+                            </span>
+                            <span class="term-label">NAD binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O43026" data-a="GO:0051287" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct - NAD+ is the required cofactor for GAPDH enzymatic activity. Conserved Rossmann-fold NAD-binding domain.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16823372" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16823372
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    ORFeome cloning and global analysis of protein localization ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O43026" data-a="GO:0005829" data-r="PMID:16823372" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput experimental confirmation of cytosolic localization. Strong evidence supporting primary localization.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061621" target="_blank" class="term-link">
+                                    GO:0061621
+                                </a>
+                            </span>
+                            <span class="term-label">canonical glycolysis</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISO</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O43026" data-a="GO:0061621" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Specific involvement in canonical glycolytic pathway confirmed. Functions within glycolytic metabolon, provides backup glycolytic capacity when Tdh1 absent.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Catalyzes the reversible NAD+-dependent oxidation of glyceraldehyde-3-phosphate to 1,3-bisphosphoglycerate as the minor GAPDH isoform in S. pombe</h3>
+                <span class="vote-buttons" data-g="O43026" data-a="FUNCTION: Catalyzes the reversible NAD+-dependent oxidation ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004365" target="_blank" class="term-link">
+                            glyceraldehyde-3-phosphate dehydrogenase (NAD+) (phosphorylating) activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Functions as metabolic backup providing essential glycolytic activity when major isoform Tdh1 is absent or inactivated</h3>
+                <span class="vote-buttons" data-g="O43026" data-a="FUNCTION: Functions as metabolic backup providing essential ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004365" target="_blank" class="term-link">
+                            glyceraldehyde-3-phosphate dehydrogenase (NAD+) (phosphorylating) activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Participates in glycolytic metabolon complex with high-confidence interactions with other glycolytic enzymes</h3>
+                <span class="vote-buttons" data-g="O43026" data-a="FUNCTION: Participates in glycolytic metabolon complex with ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004365" target="_blank" class="term-link">
+                            glyceraldehyde-3-phosphate dehydrogenase (NAD+) (phosphorylating) activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Shows potential moonlighting functions in transcriptional regulation through RNA Pol II interaction (requires validation)</h3>
+                <span class="vote-buttons" data-g="O43026" data-a="FUNCTION: Shows potential moonlighting functions in transcri..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004365" target="_blank" class="term-link">
+                            glyceraldehyde-3-phosphate dehydrogenase (NAD+) (phosphorylating) activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>May participate in oxidative stress response signaling similar to paralog Tdh1 (requires experimental confirmation)</h3>
+                <span class="vote-buttons" data-g="O43026" data-a="FUNCTION: May participate in oxidative stress response signa..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004365" target="_blank" class="term-link">
+                            glyceraldehyde-3-phosphate dehydrogenase (NAD+) (phosphorylating) activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16823372" target="_blank" class="term-link">
+                            PMID:16823372
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">ORFeome cloning and global analysis of protein localization in the fission yeast Schizosaccharomyces pombe.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18406331" target="_blank" class="term-link">
+                            PMID:18406331
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Glycolytic enzyme GAPDH promotes peroxide stress signaling through multistep phosphorelay to a MAPK cascade</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15620689" target="_blank" class="term-link">
+                            PMID:15620689
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Glyceraldehyde-3-phosphate dehydrogenase and actin associate with RNA polymerase II and interact with its Rpb7 subunit</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Should GO:0003723 (RNA binding) be added based on Rbm10 co-purification data from Weigt et al. 2021?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: RNA processing specialist, S. pombe functional genomics expert</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="O43026" data-a="Q: Should GO:0003723 (RNA binding) be added based on ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is the RNA Pol II interaction (PMID:15620689) sufficient evidence for adding GO:0006357 (regulation of transcription by RNA polymerase II)?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Transcription regulation expert, S. pombe gene regulation specialist</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="O43026" data-a="Q: Is the RNA Pol II interaction (PMID:15620689) suff..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Should GO:0005634 (nucleus) be added as conditional localization based on RNA Pol II and splicing factor interactions?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Cell biology expert, Protein localization specialist</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="O43026" data-a="Q: Should GO:0005634 (nucleus) be added as conditiona..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is oxidative stress response (GO:0034599) appropriate to infer from paralog Tdh1 evidence (PMID:18406331)?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Stress response expert, Comparative genomics specialist</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="O43026" data-a="Q: Is oxidative stress response (GO:0034599) appropri..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Co-immunoprecipitation of Gpd3 with Hsp70/Hsp90 under normal and stress conditions. This tests the controversial hypothesis that Gpd3 might have chaperone-related functions like mammalian GAPDH, though there is currently NO evidence for this in S. pombe.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Test if Gpd3 interacts with Hsp70 or Hsp90 chaperones in S. pombe (NOTE - this is highly speculative based on mammalian GAPDH data only)</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: Protein-protein interaction</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="O43026" data-a="EXPERIMENT: Co-immunoprecipitation of Gpd3 with Hsp70/Hsp90 un..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Monitor protein aggregation in gpd3Δ vs WT under heat shock or oxidative stress using fluorescent aggregation reporters. This would test whether Gpd3 has any role in protein homeostasis, though this function is unvalidated in fungi.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Test if Gpd3 affects protein aggregation under stress (HIGHLY SPECULATIVE - based solely on distant ortholog data)</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: Protein aggregation assay</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="O43026" data-a="EXPERIMENT: Monitor protein aggregation in gpd3Δ vs WT under h..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> In vitro heme binding assays with purified Gpd3 protein. Mammalian GAPDH acts as a heme chaperone (PMID:30012884), but this moonlighting function may not be conserved across such evolutionary distance.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Test if Gpd3 can bind heme like mammalian GAPDH (EXTREMELY SPECULATIVE)</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: Heme binding assay</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="O43026" data-a="EXPERIMENT: In vitro heme binding assays with purified Gpd3 pr..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Growth assays of gpd3Δ under conditions causing protein misfolding (heat shock, DTT, tunicamycin). Would reveal if Gpd3 contributes to protein quality control, though current evidence is lacking.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Test if gpd3Δ shows sensitivity to proteotoxic stress</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: Stress phenotyping</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="O43026" data-a="EXPERIMENT: Growth assays of gpd3Δ under conditions causing pr..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Live-cell imaging of Gpd3-GFP under oxidative stress, heat shock, or transcriptional stress to confirm potential nuclear moonlighting functions suggested by RNA Pol II interaction.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Test nuclear translocation of Gpd3 under various conditions</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: Subcellular localization</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="O43026" data-a="EXPERIMENT: Live-cell imaging of Gpd3-GFP under oxidative stre..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(gpd3-deep-research.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="O43026" data-a="DOC: Deep Research" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="the-multifaceted-roles-of-glyceraldehyde-3-phosphate-dehydrogenase-3-gpd3-in-schizosaccharomyces-pombe-a-comprehensive-synthesis">The Multifaceted Roles of Glyceraldehyde-3-Phosphate Dehydrogenase 3 (Gpd3) in <em>Schizosaccharomyces pombe</em>: A Comprehensive Synthesis</h1>
+<h2 id="section-1-gene-and-protein-identity-critical-disambiguation">Section 1: Gene and Protein Identity - Critical Disambiguation</h2>
+<h3 id="11-core-identity">1.1 Core Identity</h3>
+<ul>
+<li><strong>Gene Name</strong>: gpd3</li>
+<li><strong>Systematic ID</strong>: SPBC354.12</li>
+<li><strong>UniProt Accession</strong>: O43026</li>
+<li><strong>Protein Product</strong>: Glyceraldehyde-3-Phosphate Dehydrogenase 3 (Gpd3)</li>
+<li><strong>Gene Ontology Annotations</strong>: </li>
+<li>Canonical glycolysis (GO:0061621)</li>
+<li>Aerobic respiration (GO:0009060)</li>
+<li>Glyceraldehyde-3-phosphate dehydrogenase (NAD+) (phosphorylating) activity</li>
+<li>Cytosol localization (GO:0005829)</li>
+</ul>
+<h3 id="12-critical-disambiguation-from-similar-genes">1.2 Critical Disambiguation from Similar Genes</h3>
+<p>The gene gpd3 (SPBC354.12) must be clearly distinguished from:</p>
+<ol>
+<li>
+<p><strong>gpd2 (SPAC23D3.04c)</strong>: Encodes glycerol-3-phosphate dehydrogenase, involved in glycerol synthesis/catabolism, particularly in osmotic stress response and redox balance. Functionally distinct from the glyceraldehyde-3-phosphate dehydrogenase activity of Gpd3.</p>
+</li>
+<li>
+<p><strong>gmd3 (SPCC330.08)</strong>: An obsolete synonym for alg11, encoding GDP-Man:Man3GlcNAc2-PP-Dol alpha-1,2-mannosyltransferase involved in N-linked glycosylation in the ER. Study by Umeda et al. (2000) identified gmd3 mutant based on cell surface glycoprotein defects and demonstrated functional homology with <em>S. cerevisiae</em> ALG11, leading to re-designation.</p>
+</li>
+</ol>
+<h2 id="section-2-canonical-metabolic-function">Section 2: Canonical Metabolic Function</h2>
+<h3 id="21-catalytic-activity">2.1 Catalytic Activity</h3>
+<p>Gpd3 catalyzes the reversible, NAD+-dependent oxidation and phosphorylation of glyceraldehyde-3-phosphate (G3P) to D-glycerate 1,3-bisphosphate (1,3-BPG):</p>
+<p><strong>Reaction</strong> (EC 1.2.1.12):</p>
+<div class="codehilite"><pre><span></span><code>D-glyceraldehyde 3-phosphate + NAD+ + Pi ⇌ 3-phospho-D-glyceroyl phosphate + NADH + H+
+</code></pre></div>
+
+<ul>
+<li>Sixth reaction in canonical glycolytic pathway</li>
+<li>Critical energy-conserving step producing high-energy acyl-phosphate bond</li>
+<li>First ATP-generating step of glycolytic payoff phase (via subsequent pgk1 reaction)</li>
+<li>Functions bidirectionally in gluconeogenesis (reduction of 1,3-BPG to G3P)</li>
+<li>Likely forms homotetramer with Rossmann-fold NAD-binding domain</li>
+<li>Catalytic cysteine residue (analogous to Cys-152 in Tdh1) attacks G3P to form thiohemiacetal</li>
+</ul>
+<h3 id="22-isozyme-redundancy-with-tdh1">2.2 Isozyme Redundancy with Tdh1</h3>
+<p><em>S. pombe</em> contains two GAPDH genes:<br />
+- <strong>TDH1 (SPBC32F12.11)</strong>: Major glycolytic isozyme, high expression levels<br />
+- <strong>GPD3</strong>: Minor isozyme, much lower expression under standard conditions</p>
+<p>Key evidence:<br />
+- tdh1Δ strain remains viable on glucose due to gpd3 presence [PMID:18406331 - Morigasaki et al. 2008]<br />
+- gpd3Δ single deletion mutant viable under standard laboratory conditions<br />
+- Double tdh1Δ gpd3Δ presumed lethal (complete loss of GAPDH), though not formally reported<br />
+- Sequence identity between Tdh1 and Gpd3 likely ~70-80% with conserved catalytic residues</p>
+<h3 id="23-the-glycolytic-metabolon-physical-integration">2.3 The Glycolytic Metabolon - Physical Integration</h3>
+<p>Gpd3 functions as core component of stable multi-enzyme complex (metabolon):</p>
+<p><strong>STRING Database Analysis</strong>:<br />
+- PPI enrichment p-value: 2.69×10^-14 (exceptionally high confidence)<br />
+- Network reflects biologically significant, co-evolved functional module</p>
+<p><strong>High-Confidence Interactors</strong> (Table 1):</p>
+<table>
+<thead>
+<tr>
+<th>Protein</th>
+<th>Systematic ID</th>
+<th>UniProt</th>
+<th>Function</th>
+<th>STRING Score</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>fba1</td>
+<td>SPBC19C2.07</td>
+<td>P36580</td>
+<td>Fructose-bisphosphate aldolase</td>
+<td>0.997</td>
+<td>Co-expression, Experiments, Textmining</td>
+</tr>
+<tr>
+<td>pgi1</td>
+<td>SPBC1604.05</td>
+<td>P78917</td>
+<td>Glucose-6-phosphate isomerase</td>
+<td>0.997</td>
+<td>Co-expression, Experiments, Textmining</td>
+</tr>
+<tr>
+<td>pgk1</td>
+<td>SPBC14F5.04c</td>
+<td>O60101</td>
+<td>Phosphoglycerate kinase</td>
+<td>0.986</td>
+<td>Co-expression, Experiments, Textmining</td>
+</tr>
+<tr>
+<td>tpi1</td>
+<td>SPCC24B10.21</td>
+<td>P07669</td>
+<td>Triosephosphate isomerase</td>
+<td>0.984</td>
+<td>Co-expression, Experiments, Textmining</td>
+</tr>
+<tr>
+<td>tkt1</td>
+<td>SPBC119.12</td>
+<td>Q9URM2</td>
+<td>Transketolase (PPP)</td>
+<td>0.961</td>
+<td>Co-expression, Experiments, Textmining</td>
+</tr>
+<tr>
+<td>tdh1</td>
+<td>SPBC32F12.11</td>
+<td>P78958</td>
+<td>GAPDH paralog</td>
+<td>0.917</td>
+<td>Co-expression, Experiments, Textmining</td>
+</tr>
+<tr>
+<td>tal1</td>
+<td>SPAC2F7.01</td>
+<td>O42700</td>
+<td>Transaldolase (PPP)</td>
+<td>0.902</td>
+<td>Co-expression, Experiments, Textmining</td>
+</tr>
+<tr>
+<td>gcd1</td>
+<td>SPCC794.01c</td>
+<td>O59812</td>
+<td>Glucose-6-phosphate 1-dehydrogenase</td>
+<td>0.849</td>
+<td>Co-expression, Textmining</td>
+</tr>
+<tr>
+<td>SPBC24C6.09c</td>
+<td>SPBC24C6.09c</td>
+<td>O74770</td>
+<td>Probable phosphoketolase</td>
+<td>0.842</td>
+<td>Co-expression, Textmining</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Physical co-association enables substrate channeling</li>
+<li>Potential hetero-oligomeric complexes with tdh1 paralog</li>
+</ul>
+<h2 id="section-3-expression-dynamics-and-regulation">Section 3: Expression Dynamics and Regulation</h2>
+<h3 id="31-transcriptional-control">3.1 Transcriptional Control</h3>
+<p><strong>Basal Expression</strong>:<br />
+- High abundance protein in proliferating and quiescent cells<br />
+- Used as "housekeeping" control in expression studies (e.g., thiamine/glucose study normalization)<br />
+- Promoter lacks obvious stress-response elements known for tdh1</p>
+<p><strong>Dynamic Regulation</strong>:<br />
+- Upregulated during entry into quiescence<br />
+- Induced during G1/S transcriptional wave preceding DNA replication<br />
+- MBF reporter screen: gpd3Δ modestly elevates MBF-driven reporter (YFP/FSC ratio 1.57)</p>
+<p><strong>Chromatin-Level Control</strong>:<br />
+- Located in subtelomeric gene cluster subject to heterochromatic silencing<br />
+- vtc4Δ (polyphosphate polymerase deletion) leads to ~1.6-fold down-regulation of gpd3<br />
+- Suggests regulation via TORC2/HDAC pathways</p>
+<h3 id="32-post-translational-modifications">3.2 Post-Translational Modifications</h3>
+<p>Extensive PTM landscape identified across multiple proteomics studies:</p>
+<p><strong>Phosphorylation</strong>:<br />
+- Multiple serine and threonine residues<br />
+- Consistently identified across studies (PMIDs: 18257517, 19547744, 26412298, 27298342, 30726745, 37970674)</p>
+<p><strong>Ubiquitination</strong>:<br />
+- Lysine residues K5 and K193 (iPTMnet annotations)<br />
+- Potential regulation of stability or localization</p>
+<p><strong>Functional Implications</strong>:<br />
+- PTMs indicate dynamic regulation by intracellular signaling<br />
+- Potential "regulatory barcode" for context-dependent functional switching<br />
+- Links to stress-activated kinase cascades</p>
+<h2 id="section-4-non-canonical-functions-and-moonlighting-activities">Section 4: Non-Canonical Functions and Moonlighting Activities</h2>
+<h3 id="41-stress-signaling-and-redox-sensing">4.1 Stress Signaling and Redox Sensing</h3>
+<p><strong>H2O2 Stress Response</strong> [PMID:18406331 - Morigasaki et al. 2008]:<br />
+- Tdh1 (GAPDH paralog) binds two-component MAPK cascade components under H2O2 stress<br />
+- Oxidation of Tdh1's active-site Cys-152 enhances binding to Mcs4 response regulator<br />
+- Required for downstream stress signaling<br />
+- Gpd3 likely possesses corresponding redox-sensitive cysteine</p>
+<p><strong>Proposed Sty1 MAP Kinase Connection</strong>:<br />
+- Hypothesis: Gpd3 is downstream target/effector of Sty1 pathway<br />
+- Stress-induced phosphorylation may act as molecular switch<br />
+- Could rewire metabolic flux (e.g., towards pentose phosphate pathway for NADPH generation)<br />
+- Parallels human GAPDH oxidative stress response</p>
+<h3 id="42-nuclear-functions">4.2 Nuclear Functions</h3>
+<h4 id="421-transcriptional-cofactor">4.2.1 Transcriptional Cofactor</h4>
+<p><strong>RNA Polymerase II Interaction</strong> [PMID:15620689 - Mitsuzawa et al. 2005]:<br />
+- GAPDH physically interacts with Rpb7 subunit of RNA Pol II<br />
+- GAPDH affinity-purified via Rpb4/7 column<br />
+- Actin also found associated with Pol II complex<br />
+- Study did not distinguish Tdh1 vs Gpd3<br />
+- Suggests nuclear entry and potential transcriptional modulation</p>
+<p><strong>Hypothesis</strong>: Gpd3 moonlights as nuclear effector linking metabolic state (NAD+/NADH ratio) to gene expression program</p>
+<h4 id="422-rna-processing">4.2.2 RNA Processing</h4>
+<p><strong>Splicing Factor Association</strong> [Weigt et al. 2021]:<br />
+- Gpd3 co-purified with splicing factor Rbm10 in mass spectrometry survey<br />
+- SPBC354.12 (Gpd3) identified in Rbm10 pulldown<br />
+- Implies physical association with splicing apparatus<br />
+- Suggests additional nuclear role in RNA processing</p>
+<h3 id="43-cell-cycle-regulation">4.3 Cell Cycle Regulation</h3>
+<p><strong>G1/S Transcription</strong>:<br />
+- Genome-wide MBF reporter screen: gpd3Δ elevates MBF-driven expression (YFP/FSC ratio 1.57)<br />
+- Implies Gpd3 normally dampens G1/S transcription<br />
+- Or loss triggers compensatory cell-cycle response<br />
+- No obvious growth/cell-cycle arrest for gpd3Δ alone</p>
+<h3 id="44-cytoskeleton-and-membrane-functions">4.4 Cytoskeleton and Membrane Functions</h3>
+<ul>
+<li>In budding yeast, GAPDH binds actin and membranes</li>
+<li>In <em>S. pombe</em>, actin found associated with Pol II</li>
+<li>Plausible interaction with cytoskeleton/membranes under certain conditions</li>
+<li>Direct evidence in fission yeast lacking</li>
+</ul>
+<h2 id="section-5-evolutionary-context-and-functional-specialization">Section 5: Evolutionary Context and Functional Specialization</h2>
+<h3 id="51-deep-conservation">5.1 Deep Conservation</h3>
+<ul>
+<li>GAPDH among most highly conserved enzyme families across all domains of life</li>
+<li>PomBase identifies human GAPDH and GAPDHS as orthologs of <em>S. pombe</em> gpd3</li>
+<li>Direct evolutionary lineage validates use of mammalian findings for hypothesis generation</li>
+<li>Orthologs in other Schizosaccharomyces species (e.g., <em>S. japonicus</em> SJAG_03828)</li>
+<li>GAPDH family member PF00121</li>
+</ul>
+<h3 id="52-paralog-functional-divergence-model">5.2 Paralog Functional Divergence Model</h3>
+<h4 id="521-s-cerevisiae-paradigm-for-specialization">5.2.1 <em>S. cerevisiae</em> Paradigm for Specialization</h4>
+<p>Well-characterized example of paralog divergence in NAD+-dependent glycerol-3-phosphate dehydrogenases:</p>
+<p><strong>Gpd1 (GPD1)</strong>:<br />
+- Primary effector of osmotic stress response<br />
+- Transcription induced by high osmolarity via HOG MAP kinase pathway<br />
+- gpd1Δ mutants osmosensitive but viable under normal conditions</p>
+<p><strong>Gpd2 (GPD2)</strong>:<br />
+- Crucial for anaerobic redox balance<br />
+- Provides "redox sink" to regenerate NAD+ during fermentation<br />
+- Expression induced by anoxia<br />
+- gpd2Δ mutants impaired under anaerobic conditions</p>
+<p><strong>Double mutant</strong>: gpd1Δ gpd2Δ completely unable to produce glycerol, both osmosensitive and anaerobic growth-deficient</p>
+<h4 id="522-proposed-s-pombe-model">5.2.2 Proposed <em>S. pombe</em> Model</h4>
+<p>Drawing from <em>S. cerevisiae</em> precedent:<br />
+- <strong>Tdh1</strong>: Bulk "housekeeping" glycolytic flux (name homology with major <em>S. cerevisiae</em> isoforms)<br />
+- <strong>Gpd3</strong>: Specialized role in stress response or non-canonical functions<br />
+- Prediction: gpd3Δ phenotype revealed only under specific conditions</p>
+<h2 id="section-6-controversial-hypothesis-protein-folding-and-chaperone-function">Section 6: Controversial Hypothesis - Protein Folding and Chaperone Function</h2>
+<p><strong>CRITICAL NOTE</strong>: The following section presents a hypothesis based primarily on mammalian ortholog data with NO direct evidence in <em>S. pombe</em>. This should be considered highly speculative and requires experimental validation before acceptance.</p>
+<h3 id="61-chaperone-activity-in-mammalian-gapdh">6.1 Chaperone Activity in Mammalian GAPDH</h3>
+<p><strong>Heme Chaperone Function</strong>:<br />
+- Human GAPDH functions as molecular chaperone for heme proteins [PMID:30012884, PMID:34972240]<br />
+- Acts as repository for labile heme<br />
+- Delivers heme to target hemeproteins (myoglobin, hemoglobin)<br />
+- In yeast, GAPDH required for heme delivery to nuclear transcription factor Hap1 <a href="https://pubmed.ncbi.nlm.nih.gov/30012884">PMID:30012884</a></p>
+<p><strong>Interaction with Classical Chaperones</strong>:<br />
+- Direct interactions documented between GAPDH and Hsp70/Hsp90 <a href="https://pubmed.ncbi.nlm.nih.gov/11785981">PMID:11785981</a><br />
+- Hsp70 prevents aggregation of oxidatively damaged GAPDH<br />
+- Hsp90 forms complex with GAPDH during chaperone-mediated globin maturation <a href="https://pubmed.ncbi.nlm.nih.gov/34972240">PMID:34972240</a><br />
+- GAPDH appears to be client protein of chaperone system</p>
+<h3 id="62-connection-to-s-pombe-stress-response">6.2 Connection to <em>S. pombe</em> Stress Response</h3>
+<p><strong>Heat Shock Response</strong>:<br />
+- <em>S. pombe</em> heat shock response involves HSP induction [PMID:9021126, PMID:16911510]<br />
+- No direct evidence linking Gpd3 to heat shock response<br />
+- No GO annotations for Gpd3 in protein folding, UPR, or chaperone activity</p>
+<p><strong>Protein Aggregation</strong>:<br />
+- In mammals, GAPDH shows dual role:<br />
+  - Prone to misfolding/aggregation under severe oxidative stress (linked to neurodegeneration)<br />
+  - Can prevent aggregation of other proteins (huntingtin, prion proteins)<br />
+- No data on Gpd3 aggregation behavior in <em>S. pombe</em></p>
+<h3 id="63-critical-assessment">6.3 Critical Assessment</h3>
+<p>While the protein folding hypothesis is intriguing based on:<br />
+- Established chaperone function of human ortholog<br />
+- Gpd3's role as stress-response protein<br />
+- Mammalian GAPDH interactions with Hsp70/Hsp90</p>
+<p><strong>Major Caveats</strong>:<br />
+- No direct experimental support in <em>S. pombe</em><br />
+- Moonlighting functions may not be conserved across such evolutionary distances<br />
+- Requires systematic experimental validation before acceptance</p>
+<h2 id="section-7-experimental-roadmap-for-functional-elucidation">Section 7: Experimental Roadmap for Functional Elucidation</h2>
+<h3 id="71-key-outstanding-questions">7.1 Key Outstanding Questions</h3>
+<ol>
+<li>
+<p><strong>Functional Specialization</strong>: Do gpd3 and tdh1 have distinct, non-redundant roles? Is gpd3Δ tdh1Δ double deletion lethal?</p>
+</li>
+<li>
+<p><strong>PTM Consequences</strong>: What are functional impacts of phosphorylation/ubiquitination on activity, stability, localization, interactions?</p>
+</li>
+<li>
+<p><strong>Nuclear Translocation</strong>: Does Gpd3 enter nucleus in regulated manner responding to metabolic/stress signals?</p>
+</li>
+<li>
+<p><strong>Transcriptional Impact</strong>: Is Gpd3-RNA Pol II interaction dynamic? What genes are affected?</p>
+</li>
+<li>
+<p><strong>Upstream Signaling</strong>: Is Gpd3 direct substrate of Sty1 or other stress kinases? Which sites are targeted?</p>
+</li>
+</ol>
+<h3 id="72-priority-experimental-designs">7.2 Priority Experimental Designs</h3>
+<h4 id="721-systematic-phenotypic-profiling">7.2.1 Systematic Phenotypic Profiling</h4>
+<p><strong>Strain Construction</strong>:<br />
+- Obtain gpd3Δ and tdh1Δ from genome-wide deletion collection<br />
+- Construct gpd3Δ tdh1Δ double mutant via crossing/tetrad analysis</p>
+<p><strong>Phenotypic Array</strong> (Table 2):</p>
+<table>
+<thead>
+<tr>
+<th>Stress Category</th>
+<th>Agent</th>
+<th>Concentration</th>
+<th>Hypothesis Tested</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Oxidative</td>
+<td>H2O2, Diamide</td>
+<td>0.1-2 mM, 0.5-2 mM</td>
+<td>Metabolic switch to PPP for NADPH</td>
+</tr>
+<tr>
+<td>Osmotic</td>
+<td>Sorbitol, KCl</td>
+<td>0.5-1.5 M</td>
+<td>Specialized osmoadaptation role</td>
+</tr>
+<tr>
+<td>DNA Damage</td>
+<td>MMS, HU</td>
+<td>0.005-0.02%, 5-15 mM</td>
+<td>Nuclear DNA repair function</td>
+</tr>
+<tr>
+<td>Metabolic</td>
+<td>Glycerol, Ethanol, Low glucose</td>
+<td>2%, 0.1%</td>
+<td>Non-fermentable carbon utilization</td>
+</tr>
+<tr>
+<td>Temperature</td>
+<td>Heat (37-39°C), Cold (18-20°C)</td>
+<td>N/A</td>
+<td>Protein folding homeostasis</td>
+</tr>
+</tbody>
+</table>
+<h4 id="722-ptm-functional-analysis">7.2.2 PTM Functional Analysis</h4>
+<p><strong>Site-Directed Mutagenesis</strong>:<br />
+- CRISPR/Cas9 to create phosphomimetic (S→D, T→E) and phospho-dead (S→A, T→A) variants<br />
+- Target most robustly regulated sites from mass spec data</p>
+<p><strong>Functional Assays</strong>:<br />
+- Subject mutants to phenotypic array<br />
+- In vitro enzymatic assays (Km, Vmax changes)<br />
+- Cycloheximide chase for stability<br />
+- ^13C-labeling for metabolic flux analysis</p>
+<h4 id="723-moonlighting-function-validation">7.2.3 Moonlighting Function Validation</h4>
+<p><strong>Subcellular Localization</strong>:<br />
+- C-terminal Gpd3-GFP fusion at endogenous locus<br />
+- Quantitative live-cell microscopy under various conditions<br />
+- Test nuclear translocation upon H2O2 treatment</p>
+<p><strong>Stress-Dependent Interactome</strong>:<br />
+- AP-MS using Gpd3-GFP under basal vs stress conditions<br />
+- Validate RNA Pol II interaction<br />
+- Identify condition-specific partners</p>
+<p><strong>Additional Approaches</strong>:<br />
+- ChIP-seq to map genome-wide Gpd3 localization<br />
+- Reciprocal pulldowns of Rbm10, Rpb7<br />
+- Catalytically inactive mutant (Cys→Ser) to separate functions<br />
+- Monitor MBF-target expression in gpd3Δ</p>
+<h3 id="73-required-expertise">7.3 Required Expertise</h3>
+<ul>
+<li><strong>Proteomics/Mass Spectrometry</strong>: Quantitative PTM mapping (SILAC, TMT)</li>
+<li><strong>Structural Biology</strong>: Map PTMs onto GAPDH structure</li>
+<li><strong>Metabolomics</strong>: ^13C glucose tracing for flux analysis</li>
+<li><strong>Chromatin Biology</strong>: ChIP-seq optimization for Gpd3</li>
+</ul>
+<h2 id="section-8-synthesis-and-conclusions">Section 8: Synthesis and Conclusions</h2>
+<p>Gpd3 emerges as far more than a simple "housekeeping" glycolytic enzyme. The convergence of evidence suggests a sophisticated regulatory hub at the interface of:<br />
+- Central carbon metabolism<br />
+- Stress response signaling<br />
+- Gene expression control<br />
+- Cell cycle regulation<br />
+- Potentially protein homeostasis (requires validation)</p>
+<p><strong>Key Paradigm Shifts</strong>:<br />
+1. From static metabolic enzyme to dynamically regulated hub<br />
+2. From single function to context-dependent multifunctionality<br />
+3. From cytoplasmic to nuclear-cytoplasmic shuttling protein<br />
+4. From isolated enzyme to metabolon-integrated component</p>
+<p><strong>The Gpd3 Model</strong>:<br />
+- Under basal conditions: Metabolic workhorse in glycolytic metabolon<br />
+- Under stress: Regulatory specialist with non-canonical functions<br />
+- PTMs serve as molecular switches for functional transitions<br />
+- Paralog specialization allows functional diversification</p>
+<p><strong>Critical Open Questions</strong>:<br />
+- Specific stress conditions revealing gpd3Δ phenotypes<br />
+- Mechanistic basis of nuclear functions<br />
+- Conservation of moonlighting activities from mammals<br />
+- Integration with Sty1 MAP kinase pathway<br />
+- Reality of protein folding role (currently speculative)</p>
+<h2 id="references">References</h2>
+<h3 id="primary-s-pombe-studies">Primary <em>S. pombe</em> Studies</h3>
+<ul>
+<li>PMID:18406331 - Morigasaki et al. (2008) "Glycolytic enzyme GAPDH promotes peroxide stress signaling through multistep phosphorelay to a MAPK cascade" - Tdh1 Cys-152 redox sensing</li>
+<li>PMID:15620689 - Mitsuzawa et al. (2005) "Glyceraldehyde-3-phosphate dehydrogenase and actin associate with RNA polymerase II and interact with its Rpb7 subunit" - Nuclear GAPDH functions</li>
+<li>Weigt et al. (2021) - Rbm10 facilitates heterochromatin assembly via Clr6 HDAC complex - Gpd3-Rbm10 interaction</li>
+<li>PMC4845923 - Functional genome-wide genetic screening identifies new pathways controlling G1/S transcriptional wave - MBF reporter screen</li>
+</ul>
+<h3 id="ptm-studies">PTM Studies</h3>
+<ul>
+<li>PMIDs: 18257517, 19547744, 26412298, 27298342, 30726745, 37970674 - Various proteomics studies identifying Gpd3 phosphorylation and ubiquitination</li>
+</ul>
+<h3 id="mammalian-chaperone-studies-context-for-speculation">Mammalian Chaperone Studies (Context for Speculation)</h3>
+<ul>
+<li>PMID:30012884 - "Glyceraldehyde-3-phosphate dehydrogenase is a chaperone that allocates labile heme in cells"</li>
+<li>PMID:34972240 - "GAPDH is involved in the heme-maturation of myoglobin and hemoglobin"</li>
+<li>PMID:11785981 - "HSP90, HSP70, and GAPDH directly interact with the cytoplasmic domain of macrophage scavenger receptors"</li>
+</ul>
+<h3 id="s-pombe-stress-response"><em>S. pombe</em> Stress Response</h3>
+<ul>
+<li>PMID:9021126 - "Heat-shock response in Schizosaccharomyces pombe cells lacking cyclic AMP-dependent phosphorylation"</li>
+<li>PMID:16911510 - "Heat shock-inducible expression vectors for use in Schizosaccharomyces pombe"</li>
+</ul>
+<h3 id="database-resources">Database Resources</h3>
+<ul>
+<li>PomBase (pombase.org) - Gene annotations and ortholog curation</li>
+<li>STRING (string-db.org) - Protein interaction network analysis</li>
+<li>BioGRID (thebiogrid.org) - Genetic and physical interactions</li>
+<li>iPTMnet (research.bioinformatics.udel.edu/iptmnet) - PTM annotations</li>
+<li>UniProt (uniprot.org) - Protein sequence and functional information</li>
+</ul>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Folding Gemini</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(gpd3-deep-research-folding-gemini.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="O43026" data-a="DOC: Deep Research Folding Gemini" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="investigating-the-role-of-gpd3-in-protein-folding-and-homeostasis">Investigating the Role of Gpd3 in Protein Folding and Homeostasis</h1>
+<p>While the primary annotations for <code>gpd3</code> in <em>Schizosaccharomyces pombe</em> firmly establish its role in canonical glycolysis, the hypothesis that it is also involved in protein folding is supported by several lines of indirect and comparative evidence. There are no direct Gene Ontology (GO) annotations linking <em>S. pombe</em> Gpd3 to protein folding, the unfolded protein response (UPR), or chaperone activity. However, the extensive moonlighting functions of its orthologs and its integration with cellular stress responses provide a strong basis for this hypothesis.</p>
+<h2 id="the-chaperone-precedent-in-orthologs">The Chaperone Precedent in Orthologs</h2>
+<p>The most compelling evidence for a role in protein folding comes from studies of Gpd3 orthologs, particularly human GAPDH. It is now established that GAPDH can function as a molecular chaperone, a protein that assists in the folding and maturation of other proteins.</p>
+<p>Specifically, GAPDH has been identified as a crucial chaperone for heme, a prosthetic group essential for the function of many proteins <a href="https://pubmed.ncbi.nlm.nih.gov/30012884" title="Glyceraldehyde-3-phosphate dehydrogenase is a chaperone that allocates labile heme in cells">PMID:30012884</a>. It acts as a repository for labile heme, binding it and delivering it to target hemeproteins, including myoglobin and hemoglobin <a href="https://pubmed.ncbi.nlm.nih.gov/34972240" title="GAPDH is involved in the heme-maturation of myoglobin and hemoglobin">PMID:34972240</a>. This chaperone function is not limited to mammals; a study in yeast demonstrated that GAPDH is required for heme delivery to the nuclear transcription factor Hap1 <a href="https://pubmed.ncbi.nlm.nih.gov/30012884">PMID:30012884</a>. This established chaperone activity in a highly conserved ortholog provides a strong precedent for a similar, though perhaps uncharacterized, role for Gpd3 in <em>S. pombe</em>.</p>
+<h2 id="connection-to-protein-folding-stress-responses">Connection to Protein Folding Stress Responses</h2>
+<p>Cellular stress, particularly from heat shock or oxidative agents, is a primary cause of protein misfolding and aggregation. In <em>S. pombe</em>, the response to these conditions involves the rapid induction of transcriptional programs aimed at restoring homeostasis, including the expression of heat shock proteins (HSPs), which are canonical molecular chaperones <a href="https://pubmed.ncbi.nlm.nih.gov/9021126" title="Heat-shock response in Schizosaccharomyces pombe cells lacking cyclic AMP-dependent phosphorylation">PMID:9021126</a> <a href="https://pubmed.ncbi.nlm.nih.gov/16911510" title="Heat shock-inducible expression vectors for use in Schizosaccharomyces pombe">PMID:16911510</a>.</p>
+<p>Another critical pathway is the Unfolded Protein Response (UPR), which is activated by an accumulation of misfolded proteins in the endoplasmic reticulum (ER) and leads to the upregulation of ER-resident chaperones. While Gpd3 is implicated in the general stress response, there is no direct evidence linking it to the UPR in fission yeast. However, the overlap between general stress and protein folding stress suggests a potential connection.</p>
+<h2 id="interaction-with-the-chaperone-machinery-and-protein-aggregates">Interaction with the Chaperone Machinery and Protein Aggregates</h2>
+<p>Direct physical and genetic interaction data further support a role for Gpd3 in protein homeostasis:</p>
+<h3 id="interaction-with-chaperones">Interaction with Chaperones</h3>
+<p>Studies have documented direct interactions between GAPDH and the major molecular chaperones Hsp70 and Hsp90 <a href="https://pubmed.ncbi.nlm.nih.gov/11785981" title="HSP90, HSP70, and GAPDH directly interact with the cytoplasmic domain of macrophage scavenger receptors">PMID:11785981</a>. Hsp70 has been shown to prevent the aggregation of GAPDH that has been damaged by oxidative stress, indicating that GAPDH is a client protein of the chaperone system. Furthermore, Hsp90 forms a complex with GAPDH during the chaperone-mediated maturation of globins <a href="https://pubmed.ncbi.nlm.nih.gov/34972240">PMID:34972240</a>. These interactions place Gpd3 in direct contact with the cell's core machinery for protein folding and quality control.</p>
+<h3 id="a-dual-role-in-aggregation">A Dual Role in Aggregation</h3>
+<p>The relationship between GAPDH and protein aggregation is complex. Under severe oxidative stress, GAPDH itself is prone to misfolding and forming aggregates, which are associated with neurodegenerative diseases. This suggests it can be a source of proteotoxic stress. Conversely, other studies have shown that GAPDH can act to prevent the aggregation of other disease-related proteins, such as huntingtin and cytosolic prion proteins, effectively acting as a "shield" to maintain their solubility.</p>
+<h2 id="summary">Summary</h2>
+<p>While Gpd3 is not annotated as a canonical protein folding chaperone in <em>S. pombe</em>, a compelling hypothesis for its involvement can be constructed. The established chaperone function of its human ortholog, its role as a key stress-response protein, its physical interactions with Hsp70 and Hsp90, and its complex dual role in protein aggregation all point toward a non-canonical function for Gpd3 at the crossroads of metabolism and protein quality control.</p>
+<h2 id="references">References</h2>
+<p>Note: The following key publications support the hypothesis but may not all be available in the publications folder:</p>
+<ul>
+<li>PMID:30012884 - "Glyceraldehyde-3-phosphate dehydrogenase is a chaperone that allocates labile heme in cells" - Key evidence for GAPDH chaperone function</li>
+<li>PMID:34972240 - "GAPDH is involved in the heme-maturation of myoglobin and hemoglobin" - Direct role in heme protein maturation</li>
+<li>PMID:11785981 - "HSP90, HSP70, and GAPDH directly interact with the cytoplasmic domain of macrophage scavenger receptors" - Physical interaction with chaperones</li>
+<li>PMID:9021126 - "Heat-shock response in Schizosaccharomyces pombe cells lacking cyclic AMP-dependent phosphorylation" - S. pombe heat shock response</li>
+<li>PMID:16911510 - "Heat shock-inducible expression vectors for use in Schizosaccharomyces pombe" - Heat shock system in S. pombe</li>
+</ul>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Gemini</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(gpd3-deep-research-gemini.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="O43026" data-a="DOC: Deep Research Gemini" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="the-multifaceted-roles-of-glyceraldehyde-3-phosphate-dehydrogenase-3-gpd3-in-schizosaccharomyces-pombe-from-core-metabolism-to-a-nexus-of-cellular-regulation"><strong>The Multifaceted Roles of Glyceraldehyde-3-Phosphate Dehydrogenase 3 (Gpd3) in <em>Schizosaccharomyces pombe</em>: From Core Metabolism to a Nexus of Cellular Regulation</strong></h1>
+<h2 id="section-1-the-established-identity-of-gpd3-as-a-central-metabolic-enzyme"><strong>Section 1: The Established Identity of Gpd3 as a Central Metabolic Enzyme</strong></h2>
+<p>The gene gpd3 in the fission yeast <em>Schizosaccharomyces pombe</em> is annotated as a cornerstone of central carbon metabolism. However, a comprehensive analysis of curated databases, high-throughput experimental data, and the broader literature reveals a protein whose regulatory complexity far exceeds that of a simple "housekeeping" enzyme. This section establishes the canonical identity of Gpd3, critically evaluates the evidence for its direct catalytic function and physical associations, and introduces the post-translational modifications that point toward its integration into broader cellular signaling networks.</p>
+<h3 id="11-gene-and-protein-identity-disambiguation-and-core-annotation"><strong>1.1 Gene and Protein Identity: Disambiguation and Core Annotation</strong></h3>
+<p>The subject of this report is the protein-coding gene with the standard name gpd3, assigned the systematic ID SPBC354.12 and the UniProt accession O43026.1 The protein product is Glyceraldehyde-3-Phosphate Dehydrogenase 3 (Gpd3), a highly conserved enzyme central to glycolysis.</p>
+<p>A critical first step in analyzing the function of gpd3 is to disambiguate it from other genes in <em>S. pombe</em> with similar nomenclature, which can be a source of significant confusion when interpreting historical or high-throughput data. The gene gpd3 (SPBC354.12) must be clearly distinguished from:</p>
+<ul>
+<li><strong>gpd2 (SPAC23D3.04c):</strong> This gene encodes a glycerol-3-phosphate dehydrogenase, an enzyme involved in the synthesis and catabolism of glycerol, particularly in response to osmotic stress and for redox balance.4 It is functionally distinct from the glyceraldehyde-3-phosphate dehydrogenase activity of Gpd3.  </li>
+<li><strong>gmd3 (SPCC330.08):</strong> This is an obsolete synonym for the gene alg11. The alg11 gene encodes a GDP-Man:Man3GlcNAc2-PP-Dol alpha-1,2-mannosyltransferase, an enzyme involved in the N-linked glycosylation pathway in the endoplasmic reticulum.5 A study by Umeda et al. (2000) identified the<br />
+  gmd3 mutant based on defects in cell surface glycoproteins and demonstrated its functional homology with <em>Saccharomyces cerevisiae</em> ALG11, leading to its re-designation.5 Any literature referring to<br />
+  gmd3 pertains to this glycosylation function and is not relevant to the glycolytic enzyme Gpd3.</li>
+</ul>
+<p>With this clarification, all subsequent analysis will focus exclusively on gpd3 (SPBC354.12), the glyceraldehyde-3-phosphate dehydrogenase.</p>
+<h3 id="12-catalytic-function-in-glycolysis-and-gluconeogenesis"><strong>1.2 Catalytic Function in Glycolysis and Gluconeogenesis</strong></h3>
+<p>The primary, direct catalytic activity of Gpd3 is the reversible, NAD+-dependent oxidation and phosphorylation of glyceraldehyde-3-phosphate (G3P) to D-glycerate 1,3-bisphosphate (1,3-BPG).1 This reaction is assigned the Enzyme Commission (EC) number 1.2.1.12. The reaction proceeds as follows:</p>
+<p>D-glyceraldehyde 3-phosphate+NAD++Pi​⇌3-phospho-D-glyceroyl phosphate+NADH+H+<br />
+This enzymatic step is the sixth reaction in the canonical glycolytic pathway, a universally conserved process for the catabolism of glucose to generate ATP and precursor metabolites.8 The reaction is a critical energy-conserving step, as the high-energy acyl-phosphate bond in the product, 1,3-BPG, is subsequently used by phosphoglycerate kinase (</p>
+<p>pgk1) to generate the first ATP molecule of the glycolytic payoff phase.</p>
+<p>Due to its reversibility, Gpd3 also functions in the opposite direction during gluconeogenesis, the synthesis of glucose from non-carbohydrate precursors like glycerol, lactate, or certain amino acids.8 In this context, it catalyzes the reduction of 1,3-BPG to G3P, consuming ATP and NADH. This dual role places Gpd3 at a crucial metabolic junction, controlling flux for both energy production and biosynthesis. Its fundamental importance is reflected in its Gene Ontology (GO) annotations, which firmly place it in the biological processes of 'canonical glycolysis' (GO:0061621) and 'aerobic respiration' (GO:0009060), and localize it to the 'cytosol' (GO:0005829), the site of these pathways.1</p>
+<h3 id="13-the-gpd3-interactome-a-tightly-integrated-glycolytic-module"><strong>1.3 The Gpd3 Interactome: A Tightly Integrated Glycolytic Module</strong></h3>
+<p>Analysis of protein-protein interaction networks provides compelling evidence that Gpd3 does not function as an isolated enzyme but as a core component of a stable, physically associated multi-enzyme complex, often referred to as a metabolon. The STRING database reports a network of Gpd3 interactors with an exceptionally high degree of confidence, evidenced by a protein-protein interaction (PPI) enrichment p-value of 2.69×10−14.8 This extremely low p-value indicates that the observed interactions are profoundly non-random and reflect a biologically significant, co-evolved functional module.</p>
+<p>The identities of the high-confidence interactors are particularly revealing. They are not functionally diverse but are almost exclusively other enzymes of the glycolytic and pentose phosphate pathways (Table 1.1). This includes enzymes that catalyze steps immediately preceding or following the Gpd3 reaction, such as triosephosphate isomerase (tpi1) and phosphoglycerate kinase (pgk1), as well as enzymes from earlier in the pathway like fructose-bisphosphate aldolase (fba1) and glucose-6-phosphate isomerase (pgi1).8 The physical co-association of sequential enzymes within a metabolic pathway is the defining characteristic of a metabolon. Such structures are thought to enhance metabolic efficiency by facilitating substrate channeling, where the product of one enzyme is passed directly to the active site of the next, preventing diffusion of intermediates into the bulk cytosol and protecting unstable molecules.</p>
+<p>This structural context implies that Gpd3's function and regulation are intrinsically linked to its neighbors in the complex. Any regulatory event impinging on Gpd3, such as a post-translational modification or an allosteric interaction, has the potential to modulate the activity of the entire glycolytic machine, not just a single enzymatic step. Furthermore, the high-confidence interaction with its paralog, tdh1, suggests the potential for the formation of hetero-oligomeric complexes, which could provide an additional layer of regulatory complexity through combinatorial assembly.8 Therefore, any hypothesis regarding Gpd3's function, canonical or otherwise, must consider its deeply embedded nature within this stable metabolic supercomplex.</p>
+<p><strong>Table 1.1: High-Confidence Protein Interactors of <em>S. pombe</em> Gpd3 (UniProt O43026)</strong></p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Interactor Name</th>
+<th style="text-align: left;">Systematic ID</th>
+<th style="text-align: left;">UniProt ID</th>
+<th style="text-align: left;">Function/Pathway</th>
+<th style="text-align: left;">STRING Score</th>
+<th style="text-align: left;">Evidence</th>
+<th style="text-align: left;"></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">fba1</td>
+<td style="text-align: left;">SPBC19C2.07</td>
+<td style="text-align: left;">P36580</td>
+<td style="text-align: left;">Fructose-bisphosphate aldolase (Glycolysis)</td>
+<td style="text-align: left;">0.997</td>
+<td style="text-align: left;">Co-expression, Experiments, Textmining</td>
+<td style="text-align: left;"></td>
+</tr>
+<tr>
+<td style="text-align: left;">pgi1</td>
+<td style="text-align: left;">SPBC1604.05</td>
+<td style="text-align: left;">P78917</td>
+<td style="text-align: left;">Glucose-6-phosphate isomerase (Glycolysis)</td>
+<td style="text-align: left;">0.997</td>
+<td style="text-align: left;">Co-expression, Experiments, Textmining</td>
+<td style="text-align: left;"></td>
+</tr>
+<tr>
+<td style="text-align: left;">pgk1</td>
+<td style="text-align: left;">SPBC14F5.04c</td>
+<td style="text-align: left;">O60101</td>
+<td style="text-align: left;">Phosphoglycerate kinase (Glycolysis)</td>
+<td style="text-align: left;">0.986</td>
+<td style="text-align: left;">Co-expression, Experiments, Textmining</td>
+<td style="text-align: left;"></td>
+</tr>
+<tr>
+<td style="text-align: left;">tpi1</td>
+<td style="text-align: left;">SPCC24B10.21</td>
+<td style="text-align: left;">P07669</td>
+<td style="text-align: left;">Triosephosphate isomerase (Glycolysis)</td>
+<td style="text-align: left;">0.984</td>
+<td style="text-align: left;">Co-expression, Experiments, Textmining</td>
+<td style="text-align: left;"></td>
+</tr>
+<tr>
+<td style="text-align: left;">tkt1</td>
+<td style="text-align: left;">SPBC119.12</td>
+<td style="text-align: left;">Q9URM2</td>
+<td style="text-align: left;">Transketolase (Pentose Phosphate Pathway)</td>
+<td style="text-align: left;">0.961</td>
+<td style="text-align: left;">Co-expression, Experiments, Textmining</td>
+<td style="text-align: left;"></td>
+</tr>
+<tr>
+<td style="text-align: left;">tdh1</td>
+<td style="text-align: left;">SPBC32F12.11</td>
+<td style="text-align: left;">P78958</td>
+<td style="text-align: left;">Glyceraldehyde-3-phosphate dehydrogenase 1</td>
+<td style="text-align: left;">0.917</td>
+<td style="text-align: left;">Co-expression, Experiments, Textmining</td>
+<td style="text-align: left;"></td>
+</tr>
+<tr>
+<td style="text-align: left;">tal1</td>
+<td style="text-align: left;">SPAC2F7.01</td>
+<td style="text-align: left;">O42700</td>
+<td style="text-align: left;">Transaldolase (Pentose Phosphate Pathway)</td>
+<td style="text-align: left;">0.902</td>
+<td style="text-align: left;">Co-expression, Experiments, Textmining</td>
+<td style="text-align: left;"></td>
+</tr>
+<tr>
+<td style="text-align: left;">gcd1</td>
+<td style="text-align: left;">SPCC794.01c</td>
+<td style="text-align: left;">O59812</td>
+<td style="text-align: left;">Glucose-6-phosphate 1-dehydrogenase</td>
+<td style="text-align: left;">0.849</td>
+<td style="text-align: left;">Co-expression, Textmining</td>
+<td style="text-align: left;"></td>
+</tr>
+<tr>
+<td style="text-align: left;">SPBC24C6.09c</td>
+<td style="text-align: left;">SPBC24C6.09c</td>
+<td style="text-align: left;">O74770</td>
+<td style="text-align: left;">Probable phosphoketolase</td>
+<td style="text-align: left;">0.842</td>
+<td style="text-align: left;">Co-expression, Textmining</td>
+<td style="text-align: left;"></td>
+</tr>
+<tr>
+<td style="text-align: left;">Data compiled from STRING database analysis.8 Interaction scores reflect the confidence of the association, with 1.0 being the highest. Evidence types are based on a combination of experimental data, co-expression analysis, and text mining.</td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;"></td>
+</tr>
+</tbody>
+</table>
+<h3 id="14-expression-dynamics-and-post-translational-regulation"><strong>1.4 Expression Dynamics and Post-Translational Regulation</strong></h3>
+<p>Consistent with its central role in energy metabolism, proteomic analyses confirm that Gpd3 is a highly abundant protein in <em>S. pombe</em> cells, present in significant quantities during both active proliferation and in quiescent, non-dividing states.1 This high basal level of expression is characteristic of a "housekeeping" protein required for fundamental cellular maintenance. However, transcriptomic data reveal a more dynamic picture, showing that</p>
+<p>gpd3 mRNA levels are upregulated under specific conditions, including entry into quiescence and during the G1/S transcriptional wave that precedes DNA replication.2 This suggests that its expression is not merely constitutive but is actively regulated in response to cell cycle and metabolic state transitions.</p>
+<p>The most compelling evidence for dynamic regulation comes from multiple large-scale proteomics studies that have identified an extensive landscape of post-translational modifications (PTMs) on the Gpd3 protein. These experimentally verified modifications include multiple phosphorylation events on both serine and threonine residues, as well as ubiquitination at lysine residues.1 The consistent identification of these PTMs across different studies (e.g., PMIDs 18257517, 19547744, 26412298, 27298342, 30726745, 37970674) provides a high degree of confidence in their physiological relevance.</p>
+<p>The existence of such a rich PTM profile is fundamentally inconsistent with the notion of Gpd3 as a simple, passively regulated metabolic enzyme. Phosphorylation and ubiquitination are the primary languages of intracellular signaling, used by kinase cascades and ubiquitin ligases to rapidly alter a target protein's catalytic activity, subcellular localization, stability, or ability to interact with other proteins. The fact that Gpd3 is a prominent target for these modifications strongly indicates that it is a node where signaling pathways converge to control metabolic flux. This transforms the view of Gpd3 from a static component of the glycolytic machinery into a dynamically regulated hub, capable of integrating external and internal signals to modulate cellular energy production. These PTMs provide a direct mechanistic basis for the hypotheses of non-canonical and stress-regulatory functions that will be explored in subsequent sections.</p>
+<h2 id="section-2-an-evolutionary-and-comparative-genomics-perspective"><strong>Section 2: An Evolutionary and Comparative Genomics Perspective</strong></h2>
+<p>To fully comprehend the function of gpd3 in <em>S. pombe</em>, it is essential to place it within a broader evolutionary framework. The deep conservation of the GAPDH enzyme family highlights its fundamental importance, while the existence of paralogs within the fission yeast genome hints at functional specialization. By drawing comparisons with the well-characterized paralog system in the distantly related budding yeast, <em>Saccharomyces cerevisiae</em>, we can formulate powerful, evolutionarily-informed hypotheses regarding the specific roles of Gpd3.</p>
+<h3 id="21-deep-conservation-and-paralogy-of-the-gapdh-family"><strong>2.1 Deep Conservation and Paralogy of the GAPDH Family</strong></h3>
+<p>The gpd3 gene product belongs to a family of enzymes that is among the most highly conserved in all of biology. Orthologs are found across all domains of life, from bacteria to archaea and throughout the eukaryotic kingdom, including fungi, metazoa, and vertebrates.1 This profound evolutionary conservation is a testament to its indispensable role in glycolysis, a metabolic pathway that arose early in the history of life and remains central to energy production in nearly all known organisms. PomBase curation identifies human GAPDH and GAPDHS as orthologs of</p>
+<p><em>S. pombe</em> gpd3, establishing a direct evolutionary lineage that validates the use of findings from mammalian systems to generate hypotheses about its function in yeast.2</p>
+<p>Within <em>S. pombe</em>, the genome contains at least one paralog of gpd3, named tdh1 (SPBC32F12.11).8 Gene duplication events, which give rise to paralogs, are a primary driver of evolutionary innovation. The retention of both copies over evolutionary time implies that they are not fully redundant. The most likely scenarios are that the two genes have undergone sub-functionalization, where each paralog retains a subset of the ancestral gene's functions, or neo-functionalization, where one copy acquires a novel function while the other maintains the original role. The existence of the</p>
+<p>tdh1 paralog is a critical piece of information, as it immediately suggests that the functions of Gpd3 may be more specialized than simply carrying out the bulk of cellular glycolysis.</p>
+<h3 id="22-functional-divergence-in-ascomycota-a-hypothesis-framework-from-s-cerevisiae"><strong>2.2 Functional Divergence in Ascomycota: A Hypothesis Framework from <em>S. cerevisiae</em></strong></h3>
+<p>The budding yeast <em>S. cerevisiae</em>, which diverged from <em>S. pombe</em> over 400 million years ago, provides a powerful and well-documented paradigm for the functional specialization of paralogous metabolic enzymes. While <em>S. cerevisiae</em> also has multiple GAPDH paralogs (Tdh1, Tdh2, Tdh3), a more illustrative example of functional divergence in response to environmental cues is found in its two isoforms of NAD+-dependent glycerol-3-phosphate dehydrogenase, Gpd1 and Gpd2. These enzymes catalyze a key step in glycerol production, a process vital for both osmotic stress tolerance and anaerobic redox balance.</p>
+<p>Extensive genetic and physiological studies in <em>S. cerevisiae</em> have revealed a clear division of labor between these two paralogs 13:</p>
+<ul>
+<li><strong>Gpd1 (encoded by GPD1):</strong> This isoform is the primary effector of the osmotic stress response. Its transcription is strongly induced upon exposure to high external osmolarity, a process mediated by the High Osmolarity Glycerol (HOG) MAP kinase signaling pathway. Consequently, gpd1Δ deletion mutants are viable under normal conditions but are highly sensitive to osmotic stress, as they are unable to mount the rapid glycerol accumulation needed to prevent water loss.16  </li>
+<li><strong>Gpd2 (encoded by GPD2):</strong> This isoform is crucial for maintaining redox balance under anaerobic conditions. During fermentation, the conversion of glucose to ethanol generates a surplus of cytosolic NADH. Glycerol synthesis provides a critical "redox sink" to regenerate NAD+ by consuming this excess NADH. The expression of GPD2 is induced by anoxia, and gpd2Δ mutants exhibit severely impaired growth under anaerobic conditions due to this redox imbalance.16</li>
+</ul>
+<p>The phenotypes of the double mutant confirm this specialization. A gpd1Δ gpd2Δ strain is completely unable to produce glycerol; it is both acutely osmosensitive and incapable of anaerobic growth, demonstrating that the two paralogs have distinct, non-overlapping primary functions.13</p>
+<p>This clear example of sub-functionalization in a related ascomycete provides a compelling framework for understanding the <em>S. pombe</em> GAPDH paralogs. The fact that the gpd3Δ single deletion mutant is viable under standard laboratory conditions strongly implies that its essential role in glycolysis is functionally redundant with its paralog, tdh1.1 This lack of a severe growth defect under basal conditions is a hallmark of a specialized gene whose function is only required under specific circumstances. Drawing from the evolutionary precedent set by</p>
+<p><em>S. cerevisiae</em>, it is highly probable that a similar division of labor has occurred in <em>S. pombe</em>. This leads to a central, testable hypothesis: one of the GAPDH paralogs (tdh1 being the likely candidate due to its name homology with the major <em>S. cerevisiae</em> isoforms) is responsible for the bulk of "housekeeping" glycolytic flux, while gpd3 has evolved a specialized role, perhaps in responding to a particular class of environmental stress or in mediating a non-canonical function. This model predicts that a specific phenotype for the gpd3Δ mutant will only be revealed when the cells are challenged with the appropriate condition, a premise that forms the basis for the experimental strategy outlined in Section 4.</p>
+<h2 id="section-3-cutting-edge-hypotheses-non-canonical-functions-of-gpd3"><strong>Section 3: Cutting-Edge Hypotheses: Non-Canonical Functions of Gpd3</strong></h2>
+<p>While Gpd3's identity as a glycolytic enzyme is well-established, a growing body of evidence from diverse eukaryotic systems suggests that its functions extend far beyond central metabolism. The concept of "moonlighting proteins"—single polypeptides that perform multiple, often unrelated, functions—is now widely accepted, and glyceraldehyde-3-phosphate dehydrogenase (GAPDH) is considered a quintessential example. By integrating the known moonlighting roles of GAPDH in other species with specific experimental data from <em>S. pombe</em>, we can formulate cutting-edge hypotheses that position Gpd3 as a key regulatory molecule at the interface of metabolism, gene expression, and the cellular stress response.</p>
+<h3 id="31-the-moonlighting-precedent-gapdh-as-a-master-regulator-in-eukaryotes"><strong>3.1 The Moonlighting Precedent: GAPDH as a Master Regulator in Eukaryotes</strong></h3>
+<p>In mammalian cells, GAPDH is a well-documented moonlighting protein with a staggering array of non-glycolytic functions that are often dictated by its subcellular localization and post-translational modification status.20 These non-canonical roles include:</p>
+<ul>
+<li><strong>Nuclear Functions:</strong> In the nucleus, GAPDH is implicated in transcriptional regulation, the maintenance of DNA integrity, and the initiation of apoptosis. For instance, in response to cellular stress, nitric oxide can S-nitrosylate a cysteine residue in GAPDH, which triggers its binding to the E3 ubiquitin ligase Siah1. This complex then translocates to the nucleus, where Siah1 targets nuclear proteins for degradation, thereby initiating apoptosis.21  </li>
+<li><strong>Cytoplasmic Functions:</strong> In the cytoplasm, GAPDH can bind to the 3'-untranslated regions (3'-UTRs) of certain mRNAs, such as that of interferon-γ, to regulate their stability and translation.20 It is also involved in membrane trafficking between the endoplasmic reticulum and the Golgi apparatus.  </li>
+<li><strong>Extracellular and Membrane Functions:</strong> GAPDH can be found on the cell surface, where it can act as a receptor or adhesion molecule, mediating interactions with the extracellular matrix or with pathogens.21</li>
+</ul>
+<p>This functional plasticity is not restricted to mammals. In fungi, glycolytic enzymes, including GAPDH, have been identified as cell-surface proteins that play roles in adhesion and virulence, facilitating host-pathogen interactions.23 A key theme emerging from this body of work is that environmental cues, particularly oxidative stress, can trigger a switch in GAPDH function from metabolism to signaling, often mediated by PTMs on a reactive catalytic cysteine.21 This established precedent provides a strong rationale for investigating similar non-canonical roles for Gpd3 in</p>
+<p><em>S. pombe</em>.</p>
+<h3 id="32-hypothesis-i-gpd3-as-a-nuclear-effector-and-transcriptional-modulator"><strong>3.2 Hypothesis I: Gpd3 as a Nuclear Effector and Transcriptional Modulator</strong></h3>
+<p>The most direct experimental link to a non-canonical function for Gpd3 in <em>S. pombe</em> comes from a 2005 study by Mitsuzawa et al., which reported a physical association between Gpd3 and RNA Polymerase II (RNA Pol II).1 This finding is highly significant and, when combined with the established roles of nuclear GAPDH in other eukaryotes, forms the basis for a compelling hypothesis:</p>
+<p><strong>Gpd3 moonlights in the nucleus as a direct modulator of transcription, acting as a sensor that links the cell's metabolic state to the global gene expression program.</strong></p>
+<p>The physical interaction with the core transcriptional machinery suggests a role more profound than simple colocalization. Rather than being a passive bystander in the nucleus, Gpd3 may function as an integral, regulatory subunit or cofactor of the RNA Pol II complex. The catalytic cycle of Gpd3 is intrinsically linked to the central flux of carbon through glycolysis and the cellular redox state, as reflected by the NAD+/NADH ratio. It is plausible that changes in glycolytic flux or the redox environment could induce conformational changes in Gpd3 or alter its PTM status. These changes could, in turn, modulate its affinity for RNA Pol II or other transcription factors, thereby altering transcriptional initiation, elongation, or termination at specific gene loci. This mechanism would create a direct and elegant feedback loop, allowing the cell to rapidly adjust its transcriptional output in response to its real-time metabolic status. Such a model elevates Gpd3 from a mere metabolic enzyme to a sophisticated integrator of cellular economy and genetic information.</p>
+<h3 id="33-hypothesis-ii-gpd3-as-a-target-and-effector-of-the-stress-response"><strong>3.3 Hypothesis II: Gpd3 as a Target and Effector of the Stress Response</strong></h3>
+<p>As established in Section 1.4, Gpd3 is extensively modified by phosphorylation and ubiquitination.1 In</p>
+<p><em>S. pombe</em>, the principal signaling pathway that orchestrates the cellular response to a wide range of environmental stresses—including oxidative, osmotic, and heat stress—is the stress-activated protein kinase (SAPK) pathway, centered on the MAP kinase Sty1.27 The Sty1 pathway is a master regulator that controls both transcriptional reprogramming (via transcription factors Atf1 and Pap1) and more immediate physiological adjustments.31</p>
+<p>A parallel exists in human cells, where GAPDH functions as a critical metabolic switch under oxidative stress. Oxidative modification of GAPDH leads to its catalytic inactivation, which acutely re-routes metabolic flux away from glycolysis and into the pentose phosphate pathway (PPP). This shift is adaptive, as the PPP is the primary source of the antioxidant cofactor NADPH, which is required to regenerate reduced glutathione and thioredoxin and combat oxidative damage.21</p>
+<p>Connecting these lines of evidence leads to a second major hypothesis: <strong>Gpd3 is a key downstream target and effector of the Sty1 MAP kinase pathway in <em>S. pombe</em>. Upon stress activation, Sty1 (or a downstream kinase) directly phosphorylates Gpd3. This phosphorylation event serves as a molecular switch, either altering Gpd3's catalytic activity to rewire metabolic flux (e.g., towards the PPP) or promoting one of its non-canonical functions (e.g., nuclear translocation) to execute the stress response.</strong></p>
+<p>This hypothesis provides a specific, mechanistic link between the observed PTMs on Gpd3 and the cell's primary stress-sensing machinery. The phosphorylation sites on Gpd3 are not random events but can be viewed as a regulatory "barcode" written by stress-activated kinases. This barcode dictates a context-dependent switch in Gpd3's function, transforming it from a housekeeping enzyme under basal conditions into a specialized stress-response protein when the cell is under threat. This model elegantly integrates the PTM data, the known function of the Sty1 pathway, and the conserved role of GAPDH as a metabolic sensor, proposing that Gpd3 is a critical node for executing rapid metabolic and regulatory adaptations to environmental challenges.</p>
+<h2 id="section-4-an-experimental-roadmap-for-functional-elucidation"><strong>Section 4: An Experimental Roadmap for Functional Elucidation</strong></h2>
+<p>The hypotheses developed from the analysis of existing data—functional specialization of paralogs, nuclear moonlighting, and integration into stress signaling pathways—provide a clear framework for future investigation. This section outlines a prioritized and feasible experimental plan designed to rigorously test these hypotheses. It identifies the key outstanding questions, suggests necessary expert consultations, and details specific experimental designs to systematically dissect the multifaceted functions of Gpd3.</p>
+<h3 id="41-key-unanswered-questions-and-expert-consultations"><strong>4.1 Key Unanswered Questions and Expert Consultations</strong></h3>
+<p>To move forward, research should be focused on answering several fundamental questions:</p>
+<ol>
+<li><strong>Functional Specialization:</strong> Do gpd3 and its paralog tdh1 have distinct, non-redundant roles? Specifically, is gpd3 required for survival under specific stress conditions where tdh1 is not? Is the gpd3Δ tdh1Δ double deletion lethal, which would indicate overlapping essential functions?  </li>
+<li><strong>Role of PTMs:</strong> What are the precise functional consequences of the extensive phosphorylation and ubiquitination observed on Gpd3? Do these modifications regulate its catalytic activity, protein stability, subcellular localization, or its ability to interact with canonical or non-canonical partners?  </li>
+<li><strong>Nuclear Moonlighting:</strong> Does Gpd3 translocate to the nucleus in a regulated manner, for instance, in response to metabolic shifts or specific environmental stresses?  </li>
+<li><strong>Transcriptional Regulation:</strong> Is the physical interaction between Gpd3 and RNA Polymerase II dynamic? Does it change in response to stress, and what is its functional impact on the expression of specific gene sets?  </li>
+<li><strong>Upstream Signaling:</strong> Is Gpd3 a direct substrate of the Sty1 MAP kinase or other kinases in the stress response pathways? Which specific phosphorylation sites are targeted by which kinases?</li>
+</ol>
+<p>To effectively address these questions, collaboration with specialists in several key areas would be highly beneficial:</p>
+<ul>
+<li><strong>Proteomics and Mass Spectrometry Expert:</strong> Essential for designing and executing quantitative PTM mapping experiments. Techniques like Stable Isotope Labeling by Amino acids in Cell culture (SILAC) or Tandem Mass Tagging (TMT) would allow for precise quantification of changes in site-specific phosphorylation and ubiquitination of Gpd3 across a panel of stress conditions.  </li>
+<li><strong>Structural Biologist / Computational Modeler:</strong> To interpret the PTM data in a structural context. Mapping the identified phosphorylation sites onto the crystal structure of GAPDH could generate testable hypotheses about their impact on the NAD+ or substrate binding pockets, the oligomerization interface, or surfaces involved in binding to RNA Pol II or other partners.  </li>
+<li><strong>Metabolomics and Metabolic Flux Analysis Expert:</strong> To directly test the "metabolic switch" hypothesis. Using ¹³C-labeled glucose, it would be possible to trace the flow of carbon through central metabolism and precisely measure the relative flux into glycolysis versus the pentose phosphate pathway in wild-type, gpd3Δ, and Gpd3 phosphomutant strains under both basal and oxidative stress conditions.  </li>
+<li><strong>Chromatin Biology and Transcription Expert:</strong> To provide guidance on advanced techniques for probing Gpd3's nuclear function. This includes optimizing Chromatin Immunoprecipitation followed by sequencing (ChIP-seq) to map the genome-wide localization of Gpd3 and determine if it co-localizes with RNA Pol II at specific gene promoters or bodies.</li>
+</ul>
+<h3 id="42-high-priority-experimental-designs"><strong>4.2 High-Priority Experimental Designs</strong></h3>
+<p>The following experiments are proposed as a logical and prioritized path to testing the central hypotheses of this report.</p>
+<h4 id="421-experiment-1-systematic-phenotypic-profiling-of-deletion-mutants"><strong>4.2.1 Experiment 1: Systematic Phenotypic Profiling of Deletion Mutants</strong></h4>
+<ul>
+<li><strong>Rationale:</strong> This experiment directly addresses the hypothesis of functional specialization between the gpd3 and tdh1 paralogs (Insight 2.A). By systematically screening for conditions where the gpd3Δ mutant exhibits a phenotype, one can identify its specific, non-redundant roles.  </li>
+<li><strong>Methodology:</strong>  </li>
+<li><strong>Strain Construction:</strong> Obtain the gpd3Δ and tdh1Δ single haploid deletion mutants, which are available from the genome-wide <em>S. pombe</em> deletion collection.34 Construct a<br />
+     gpd3Δ tdh1Δ double mutant using standard genetic crossing and tetrad analysis to test for synthetic lethality or sickness.  </li>
+<li><strong>Phenotypic Array:</strong> Perform high-throughput phenotypic screening using spot assays on solid agar plates containing a wide array of chemical and environmental stressors. Follow up significant hits with quantitative liquid growth curve analysis.  </li>
+<li><strong>Proposed Conditions:</strong> The conditions for this screen should be chosen to specifically test the hypotheses derived from comparative genomics and the known moonlighting functions of GAPDH (Table 4.1).</li>
+</ul>
+<p><strong>Table 4.1: Proposed Phenotypic Array for gpd3 and tdh1 Deletion Mutants</strong></p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Stress Category</th>
+<th style="text-align: left;">Specific Agent</th>
+<th style="text-align: left;">Concentration Range</th>
+<th style="text-align: left;">Rationale / Hypothesis Tested</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Oxidative Stress</strong></td>
+<td style="text-align: left;">Hydrogen Peroxide (H2​O2​), Diamide</td>
+<td style="text-align: left;">0.1−2 mM, 0.5−2 mM</td>
+<td style="text-align: left;">Tests the "metabolic switch" hypothesis; sensitivity would suggest a role in generating NADPH for antioxidant defense, analogous to human GAPDH.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Osmotic Stress</strong></td>
+<td style="text-align: left;">Sorbitol, KCl</td>
+<td style="text-align: left;">0.5−1.5 M</td>
+<td style="text-align: left;">Tests for a specialized role in osmoadaptation, analogous to <em>S. cerevisiae</em> Gpd1.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>DNA Damage</strong></td>
+<td style="text-align: left;">Methyl Methanesulfonate (MMS), Hydroxyurea (HU)</td>
+<td style="text-align: left;">0.005−0.02%, 5−15 mM</td>
+<td style="text-align: left;">Tests for a non-canonical role in DNA repair/checkpoint signaling, a known moonlighting function of nuclear GAPDH.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Nutrient/Metabolic</strong></td>
+<td style="text-align: left;">Varied Carbon Sources (Glycerol, Ethanol), Glucose Limitation</td>
+<td style="text-align: left;">2%, Low Glucose (0.1%)</td>
+<td style="text-align: left;">Probes for specific roles in utilizing non-fermentable carbon sources and responding to metabolic shifts.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Temperature Stress</strong></td>
+<td style="text-align: left;">Heat Shock (37−39 °C), Cold Shock (18−20 °C)</td>
+<td style="text-align: left;">N/A</td>
+<td style="text-align: left;">General screen for roles in protein folding homeostasis and membrane fluidity, common stress responses.</td>
+</tr>
+</tbody>
+</table>
+<h4 id="422-experiment-2-investigating-the-role-of-post-translational-modifications"><strong>4.2.2 Experiment 2: Investigating the Role of Post-Translational Modifications</strong></h4>
+<ul>
+<li><strong>Rationale:</strong> This experiment aims to establish a causal link between the observed PTMs and Gpd3 function, directly testing the hypothesis that phosphorylation by stress kinases acts as a regulatory switch (Insight 1.B, Insight 3.B).  </li>
+<li><strong>Methodology:</strong>  </li>
+<li><strong>Site-Directed Mutagenesis:</strong> Based on mass spectrometry data, identify the most robustly regulated phosphorylation sites. Using CRISPR/Cas9-mediated genome editing for precision, create strains where the endogenous gpd3 locus is modified to express phosphomimetic (e.g., S→D or T→E) and phospho-dead (S→A or T→A) variants.  </li>
+<li><strong>Functional Assays:</strong> Subject these mutant strains to the phenotypic array described in Experiment 1. A phosphomimetic mutant that confers resistance to a stress, or a phospho-dead mutant that confers sensitivity, would provide strong evidence for that site's role in the stress response.  </li>
+<li><strong>Biochemical Characterization:</strong> Purify the mutant Gpd3 proteins and perform in vitro enzymatic assays to determine if the modifications directly alter catalytic activity (Km​ or Vmax​). Measure protein stability in vivo using cycloheximide chase experiments.</li>
+</ul>
+<h4 id="423-experiment-3-validating-and-characterizing-moonlighting-functions"><strong>4.2.3 Experiment 3: Validating and Characterizing Moonlighting Functions</strong></h4>
+<ul>
+<li><strong>Rationale:</strong> This experiment is designed to directly test the hypotheses of nuclear translocation and regulated interaction with the transcriptional machinery (Insight 3.A).  </li>
+<li><strong>Methodology:</strong>  </li>
+<li><strong>Subcellular Localization:</strong> Create a strain expressing a C-terminally tagged Gpd3-GFP fusion protein from its native promoter at the endogenous locus. Use quantitative live-cell fluorescence microscopy to monitor Gpd3 localization. Test whether Gpd3 translocates from the cytoplasm to the nucleus in response to specific stimuli identified in Experiment 1 (e.g., addition of H₂O₂).  </li>
+<li><strong>Stress-Dependent Interactome:</strong> Perform affinity purification coupled with mass spectrometry (AP-MS) using the tagged Gpd3-GFP strain. Compare the protein interactomes of Gpd3 purified from cells grown under basal conditions versus cells exposed to a key stressor (e.g., H₂O₂). This will validate the RNA Pol II interaction and, crucially, reveal whether this or other interactions are stress-dependent, providing a direct link between environmental signals and Gpd3's non-canonical associations.</li>
+</ul>
+<h2 id="section-5-synthesis-and-concluding-remarks"><strong>Section 5: Synthesis and Concluding Remarks</strong></h2>
+<p>The <em>Schizosaccharomyces pombe</em> gene gpd3 (SPBC354.12), encoding the enzyme Glyceraldehyde-3-Phosphate Dehydrogenase 3, presents a compelling case study in the hidden complexity of proteins traditionally labeled as "housekeeping." A superficial examination of its annotation reveals a canonical glycolytic enzyme, essential for the central metabolic task of energy production. However, a deeper, more critical synthesis of evidence from comparative genomics, high-throughput proteomics, and targeted molecular studies paints a far more nuanced picture. This report has systematically deconstructed the layers of Gpd3 function, moving from its established role to a series of evidence-based, cutting-edge hypotheses that position it as a sophisticated regulatory hub.</p>
+<p>The canonical function of Gpd3 within a highly organized glycolytic metabolon is undisputed. Yet, the presence of a paralog, tdh1, and the viability of the gpd3Δ single mutant strongly suggest a functional specialization has occurred, an evolutionary strategy well-documented in other fungi like <em>S. cerevisiae</em>. This leads to the compelling hypothesis that Gpd3 has evolved a primary role beyond basal glycolysis, one that is likely deployed only under specific physiological conditions.</p>
+<p>The most exciting frontiers for Gpd3 research lie in the exploration of its non-canonical, or "moonlighting," functions. The extensive landscape of experimentally verified post-translational modifications on Gpd3 is a clear indicator of dynamic regulation by intracellular signaling pathways. These modifications are not random noise but likely represent a sophisticated regulatory code. This report has consolidated this evidence into two major, testable hypotheses. First, based on its documented physical association with RNA Polymerase II, Gpd3 is hypothesized to function in the nucleus as a transcriptional co-regulator, directly linking the cell's metabolic state to its gene expression program. Second, drawing parallels with the function of its human ortholog and the central role of the Sty1 MAP kinase pathway in the fission yeast stress response, Gpd3 is proposed to be a key effector of this pathway. In this model, stress-induced phosphorylation acts as a molecular switch, altering Gpd3's function to rewire metabolism and execute an adaptive response.</p>
+<p>In conclusion, Gpd3 emerges not as a simple cog in the metabolic machine, but as a critical integration point between the cell's energy-producing core and its environmental sensing and response networks. Its function is likely context-dependent, shifting from a metabolic workhorse to a regulatory specialist in response to cellular needs and external threats. The experimental roadmap detailed herein provides a clear and logical strategy to dissect this complexity, with the potential to uncover novel principles of metabolic regulation, stress signaling, and the evolution of protein function. The study of Gpd3 offers a valuable opportunity to understand how cells embed sophisticated control mechanisms within their most fundamental biochemical pathways, a question of central importance to cell biology.</p>
+<h4 id="works-cited"><strong>Works cited</strong></h4>
+<ol>
+<li>protein coding gene - gpd3 (SPBC354.12) - glyceraldehyde 3-phosphate dehydrogenase Gpd3 - The Schizosaccharomyces pombe genome database - PomBase, accessed September 10, 2025, <a href="https://pombase.org/gene/SPBC354.12">https://pombase.org/gene/SPBC354.12</a>  </li>
+<li>protein coding gene - gpd3 (SPBC354.12) - glyceraldehyde 3-phosphate dehydrogenase Gpd3 - The Schizosaccharomyces pombe genome database - PomBase, accessed September 10, 2025, <a href="https://www.pombase.org/gene/SPBC354.12">https://www.pombase.org/gene/SPBC354.12</a>  </li>
+<li>gpd3 (SPBC354.12) Result Summary | BioGRID, accessed September 10, 2025, <a href="https://thebiogrid.org/277491/summary/schizosaccharomyces-pombe/gpd3.html">https://thebiogrid.org/277491/summary/schizosaccharomyces-pombe/gpd3.html</a>  </li>
+<li>protein coding gene - gpd2 (SPAC23D3.04c) - glycerol-3-phosphate dehydrogenase Gpd2, accessed September 10, 2025, <a href="https://www.pombase.org/gene/SPAC23D3.04c">https://www.pombase.org/gene/SPAC23D3.04c</a>  </li>
+<li>Schizosaccharomyces pombe gmd3(+)/alg11(+) is a functional homologue of Saccharomyces cerevisiae ALG11 which is involved in N-linked oligosaccharide synthesis - PubMed, accessed September 10, 2025, <a href="https://pubmed.ncbi.nlm.nih.gov/11015724/">https://pubmed.ncbi.nlm.nih.gov/11015724/</a>  </li>
+<li>protein coding gene - alg11 (SPCC330.08) - GDP-Man:Man3GlcNAc2-PP-Dol alpha-1,2-mannosyltransferase Alg11 - The Schizosaccharomyces pombe genome database - PomBase, accessed September 10, 2025, <a href="https://pombase.org/gene/SPCC330.08">https://pombase.org/gene/SPCC330.08</a>  </li>
+<li>PomBase - The Schizosaccharomyces pombe genome database, accessed September 10, 2025, <a href="https://www.pombase.org/term/GO:0043891">https://www.pombase.org/term/GO:0043891</a>  </li>
+<li>gpd3 protein (Schizosaccharomyces pombe) - STRING interaction ..., accessed September 10, 2025, <a href="https://string-db.org/network/284812.O43026">https://string-db.org/network/284812.O43026</a>  </li>
+<li>GO biological process ontology term - GO:0061621 - canonical glycolysis - PomBase, accessed September 10, 2025, <a href="https://www.pombase.org/term/GO:0061621">https://www.pombase.org/term/GO:0061621</a>  </li>
+<li>GO biological process ontology term - GO:0009060 - aerobic respiration - The Schizosaccharomyces pombe genome database - PomBase, accessed September 10, 2025, <a href="https://www.pombase.org/term/GO:0009060">https://www.pombase.org/term/GO:0009060</a>  </li>
+<li>Documentation - Ortholog curation - PomBase, accessed September 10, 2025, <a href="https://www.pombase.org/documentation/orthologs">https://www.pombase.org/documentation/orthologs</a>  </li>
+<li>Humans and yeast share thousands of orthologous genes. The Venn diagram... - ResearchGate, accessed September 10, 2025, <a href="https://www.researchgate.net/figure/Humans-and-yeast-share-thousands-of-orthologous-genes-The-Venn-diagram-illustrates_fig1_282575208">https://www.researchgate.net/figure/Humans-and-yeast-share-thousands-of-orthologous-genes-The-Venn-diagram-illustrates_fig1_282575208</a>  </li>
+<li>Gpd1 and Gpd2 Fine-Tuning for Sustainable Reduction of Glycerol Formation in Saccharomyces cerevisiae - PMC, accessed September 10, 2025, <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3165387/">https://pmc.ncbi.nlm.nih.gov/articles/PMC3165387/</a>  </li>
+<li>Gpd1 and Gpd2 fine-tuning for sustainable reduction of glycerol formation in Saccharomyces cerevisiae - the University of Groningen research portal, accessed September 10, 2025, <a href="https://research.rug.nl/en/publications/gpd1-and-gpd2-fine-tuning-for-sustainable-reduction-of-glycerol-f">https://research.rug.nl/en/publications/gpd1-and-gpd2-fine-tuning-for-sustainable-reduction-of-glycerol-f</a>  </li>
+<li>The two isoenzymes for yeast NAD+‐dependent glycerol 3‐phosphate dehydrogenase encoded by GPD1 and GPD2 have distinct roles in osmoadaptation and redox regulation - EMBO Press, accessed September 10, 2025, <a href="https://www.embopress.org/doi/abs/10.1093/emboj/16.9.2179">https://www.embopress.org/doi/abs/10.1093/emboj/16.9.2179</a>  </li>
+<li>The two isoenzymes for yeast NAD+-dependent glycerol 3-phosphate dehydrogenase encoded by GPD1 and GPD2 have distinct roles in osmoadaptation and redox regulation - PubMed, accessed September 10, 2025, <a href="https://pubmed.ncbi.nlm.nih.gov/9171333/">https://pubmed.ncbi.nlm.nih.gov/9171333/</a>  </li>
+<li>GPD1, which encodes glycerol-3-phosphate dehydrogenase, is essential for growth under osmotic stress in Saccharomyces cerevisiae, and its expression is regulated by the high-osmolarity glycerol response pathway - PubMed, accessed September 10, 2025, <a href="https://pubmed.ncbi.nlm.nih.gov/8196651/">https://pubmed.ncbi.nlm.nih.gov/8196651/</a>  </li>
+<li>GPD1 | SGD, accessed September 10, 2025, <a href="https://www.yeastgenome.org/locus/S000002180">https://www.yeastgenome.org/locus/S000002180</a>  </li>
+<li>GPD2 - Glycerol-3-phosphate dehydrogenase [NAD(+)] 2, mitochondrial - Saccharomyces cerevisiae (strain ATCC 204508 / S288c) (Baker's yeast) | UniProtKB | UniProt, accessed September 10, 2025, <a href="https://www.uniprot.org/uniprotkb/P41911/entry">https://www.uniprot.org/uniprotkb/P41911/entry</a>  </li>
+<li>Glyceraldehyde-3-Phosphate Dehydrogenase (GAPDH): The ..., accessed September 10, 2025, <a href="https://www.researchgate.net/publication/320853709_Glyceraldehyde-3-Phosphate_Dehydrogenase_GAPDH_The_Quintessential_Moonlighting_Protein_in_Normal_Cell_Function_and_in_Human_Disease">https://www.researchgate.net/publication/320853709_Glyceraldehyde-3-Phosphate_Dehydrogenase_GAPDH_The_Quintessential_Moonlighting_Protein_in_Normal_Cell_Function_and_in_Human_Disease</a>  </li>
+<li>Glyceraldehyde 3-phosphate dehydrogenase - Wikipedia, accessed September 10, 2025, <a href="https://en.wikipedia.org/wiki/Glyceraldehyde_3-phosphate_dehydrogenase">https://en.wikipedia.org/wiki/Glyceraldehyde_3-phosphate_dehydrogenase</a>  </li>
+<li>Pleiotropic effects of moonlighting glyceraldehyde-3-phosphate dehydrogenase (GAPDH) in cancer progression, invasiveness, and metastases - PubMed, accessed September 10, 2025, <a href="https://pubmed.ncbi.nlm.nih.gov/30209795/">https://pubmed.ncbi.nlm.nih.gov/30209795/</a>  </li>
+<li>The multifaceted roles of metabolic enzymes in the Paracoccidioides species complex, accessed September 10, 2025, <a href="https://www.frontiersin.org/journals/microbiology/articles/10.3389/fmicb.2014.00719/full">https://www.frontiersin.org/journals/microbiology/articles/10.3389/fmicb.2014.00719/full</a>  </li>
+<li>Moonlighting Proteins at the Candidal Cell Surface - MDPI, accessed September 10, 2025, <a href="https://www.mdpi.com/2076-2607/8/7/1046">https://www.mdpi.com/2076-2607/8/7/1046</a>  </li>
+<li>Moonlighting Proteins: Diverse Functions Found in Fungi - PMC, accessed September 10, 2025, <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10672435/">https://pmc.ncbi.nlm.nih.gov/articles/PMC10672435/</a>  </li>
+<li>Plant cytoplasmic GAPDH: redox post-translational modifications and moonlighting properties - Frontiers, accessed September 10, 2025, <a href="https://www.frontiersin.org/journals/plant-science/articles/10.3389/fpls.2013.00450/full">https://www.frontiersin.org/journals/plant-science/articles/10.3389/fpls.2013.00450/full</a>  </li>
+<li>(PDF) Oxidative stress in Schizosaccharomyces pombe: Different H ..., accessed September 10, 2025, <a href="https://www.researchgate.net/publication/6751508_Oxidative_stress_in_Schizosaccharomyces_pombe_Different_H_2O2_levels_different_response_pathways">https://www.researchgate.net/publication/6751508_Oxidative_stress_in_Schizosaccharomyces_pombe_Different_H_2O2_levels_different_response_pathways</a>  </li>
+<li>Regulation of Cell Cycle and Stress Responses to Hydrostatic Pressure in Fission Yeast, accessed September 10, 2025, <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC1995737/">https://pmc.ncbi.nlm.nih.gov/articles/PMC1995737/</a>  </li>
+<li>Distinct Regulatory Proteins Control the Graded Transcriptional Response to Increasing H2O2 Levels in Fission Yeast Schizosaccharomyces pombe - PubMed Central, accessed September 10, 2025, <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC99600/">https://pmc.ncbi.nlm.nih.gov/articles/PMC99600/</a>  </li>
+<li>Distinct Regulatory Proteins Control the Graded Transcriptional Response to Increasing H2O2 Levels in Fission Yeast Schizosaccharomyces pombe - Molecular Biology of the Cell (MBoC), accessed September 10, 2025, <a href="https://www.molbiolcell.org/doi/abs/10.1091/mbc.01-06-0288">https://www.molbiolcell.org/doi/abs/10.1091/mbc.01-06-0288</a>  </li>
+<li>Distinct regulatory proteins control the graded transcriptional response to increasing H(2)O(2) levels in fission yeast Schizosaccharomyces pombe - PubMed, accessed September 10, 2025, <a href="https://pubmed.ncbi.nlm.nih.gov/11907263/">https://pubmed.ncbi.nlm.nih.gov/11907263/</a>  </li>
+<li>Schizosaccharomyces pombe MAP kinase Sty1 promotes survival of Δppr10 cells with defective mitochondrial protein synthesis - PubMed, accessed September 10, 2025, <a href="https://pubmed.ncbi.nlm.nih.gov/36174923/">https://pubmed.ncbi.nlm.nih.gov/36174923/</a>  </li>
+<li>Mitogen-activated protein kinase sty1 - Schizosaccharomyces pombe (strain 972 / ATCC 24843) (Fission yeast) | UniProtKB | UniProt, accessed September 10, 2025, <a href="https://www.uniprot.org/uniprotkb/Q09892/entry">https://www.uniprot.org/uniprotkb/Q09892/entry</a>  </li>
+<li>The world's first S. pombe Genome-wide Deletion Mutant Library - Bioneer, accessed September 10, 2025, <a href="https://us.bioneer.com/products/spombe/spombeoverview.aspx">https://us.bioneer.com/products/spombe/spombeoverview.aspx</a></li>
+</ol>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Openai</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(gpd3-deep-research-openai.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="O43026" data-a="DOC: Deep Research Openai" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="gpd3-spbc35412-in-schizosaccharomyces-pombe">Gpd3 (SPBC354.12) in <em>Schizosaccharomyces pombe</em></h1>
+<p>Gpd3 (UniProt O43026) is a glyceraldehyde-3-phosphate dehydrogenase in fission yeast<a href="https://thebiogrid.org/277491/summary/schizosaccharomyces-pombe/gpd3.html#:~:text=">[1]</a>. It catalyzes the NAD⁺-dependent oxidation of glyceraldehyde-3-phosphate to 1,3-bisphosphoglycerate in glycolysis. BioGRID/GO annotations list “canonical glycolysis” and “glyceraldehyde-3-phosphate dehydrogenase (NAD+) (phosphorylating) activity” for Gpd3<a href="https://thebiogrid.org/277491/summary/schizosaccharomyces-pombe/gpd3.html#:~:text=">[1]</a>, and place it in the cytosol. Gpd3 is one of two GAPDH isoforms in <em>S. pombe</em> (the other is Tdh1); Gpd3 is less abundantly expressed under rich-growth conditions.</p>
+<h2 id="enzymatic-role-and-pathway-context">Enzymatic Role and Pathway Context</h2>
+<ul>
+<li>
+<p><strong>Glycolytic function:</strong> Gpd3’s primary role is as a glycolytic enzyme<a href="https://thebiogrid.org/277491/summary/schizosaccharomyces-pombe/gpd3.html#:~:text=">[1]</a>. It likely forms a homotetramer with a Rossmann-fold NAD-binding domain, similar to other GAPDHs. Its catalytic cysteine residue (analogous to Cys-152 in Tdh1) attacks glyceraldehyde-3-P to form a thiohemiacetal, generating NADH and 1,3-bisphosphoglycerate.</p>
+</li>
+<li>
+<p><strong>Metabolic integration:</strong> As part of the central carbon metabolism, Gpd3 works closely with triosephosphate isomerase, phosphoglycerate kinase, etc., to extract energy from glucose. It also influences the cellular NADH/NAD⁺ balance. STRING network data confirm Gpd3’s strong associations with glycolytic enzymes (e.g. tpi1, pgk1, fba1)<a href="https://string-db.org/network/284812.O43026#:~:text=tpi1">[2]</a><a href="https://string-db.org/network/284812.O43026#:~:text=tdh1">[3]</a>, reflecting its role in the glycolytic “metabolon.”</p>
+</li>
+<li>
+<p><strong>Isozyme redundancy:</strong> <em>S. pombe</em> has two GAPDH genes (TDH1 and GPD3). Tdh1 is expressed at high levels and is the major glycolytic isozyme, whereas Gpd3 is expressed at a much lower level. For example, Morigasaki <em>et al.</em> note that a <em>tdh1</em>Δ strain remains viable on glucose because <em>gpd3</em> is present as a second GAPDH gene<a href="https://pubmed.ncbi.nlm.nih.gov/18406331/#:~:text=protein%20and%20finally%20to%20the,sensitive%20cysteine%20residue%20may%20provide">[4]</a>. Thus Gpd3 provides backup glycolytic activity. It is presumed that a double <em>tdh1Δ gpd3Δ</em> would be inviable (complete loss of GAPDH), though this double mutant has not been reported.</p>
+</li>
+</ul>
+<h2 id="non-catalytic-moonlighting-and-regulatory-functions">Non-catalytic (“Moonlighting”) and Regulatory Functions</h2>
+<p>Evidence from fission yeast and other systems suggests Gpd3/GAPDH may have roles beyond metabolism:<br />
+- <strong>Stress signaling:</strong> GAPDH can act as a redox sensor. In <em>S. pombe</em>, Tdh1 (GAPDH1) was shown to bind components of a two-component MAPK cascade under H₂O₂ stress<a href="https://pubmed.ncbi.nlm.nih.gov/18406331/#:~:text=protein%20and%20finally%20to%20the,sensitive%20cysteine%20residue%20may%20provide">[4]</a>. Oxidation of Tdh1’s active-site Cys-152 upon peroxide exposure enhances its binding to the Mcs4 response regulator, which is required for downstream stress signaling<a href="https://pubmed.ncbi.nlm.nih.gov/18406331/#:~:text=protein%20and%20finally%20to%20the,sensitive%20cysteine%20residue%20may%20provide">[4]</a>. By analogy, Gpd3 likely has a corresponding cysteine and might similarly participate in redox signaling if activated.<br />
+- <strong>Transcriptional cofactor:</strong> Proteomic work revealed that GAPDH associates with RNA polymerase II subunits in <em>S. pombe</em>. Mitsuzawa <em>et al.</em> found GAPDH physically interacts with the Rpb7 subunit of Pol II; in fact, GAPDH was affinity-purified via an Rpb4/7 column<a href="https://pubmed.ncbi.nlm.nih.gov/15620689/#:~:text=implicated%20in%20transcriptional%20activation%20in,interaction%20between%20actin%20and%20Rpb7">[5]</a>. This suggests GAPDH can bind transcription machinery, potentially influencing gene expression. Although that study did not distinguish Tdh1 vs Gpd3, it indicates that <em>fission yeast</em> GAPDH can enter the nucleus and bind Pol II complexes. By extension, Gpd3 (the minor isozyme) may also engage in such interactions under certain conditions.<br />
+- <strong>RNA processing:</strong> Intriguingly, Gpd3 co-purified with the splicing factor Rbm10<a href="https://epigeneticsandchromatin.biomedcentral.com/articles/10.1186/s13072-021-00382-y/tables/1#:~:text=SPBC354">[6]</a>. In a mass-spectrometry survey of Rbm10-associated proteins, the Rbm10 pulldown included SPBC354.12 (Gpd3, “glyceraldehyde 3-phosphate dehydrogenase Gpd3”)<a href="https://epigeneticsandchromatin.biomedcentral.com/articles/10.1186/s13072-021-00382-y/tables/1#:~:text=SPBC354">[6]</a>. This implies a physical association between Gpd3 and the splicing apparatus, suggesting yet another nuclear role.<br />
+- <strong>Cytoskeleton/membrane:</strong> In budding yeast, GAPDH is known to bind actin and membranes; in <em>S. pombe</em>, actin was also found associated with Pol II<a href="https://pubmed.ncbi.nlm.nih.gov/15620689/#:~:text=implicated%20in%20transcriptional%20activation%20in,interaction%20between%20actin%20and%20Rpb7">[5]</a>. It is plausible Gpd3 interacts with the cytoskeleton or membranes under certain conditions, but direct evidence in fission yeast is lacking.</p>
+<h2 id="regulation-genetic-interactions-and-system-level-effects">Regulation, Genetic Interactions, and System-level Effects</h2>
+<ul>
+<li>
+<p><strong>Expression control:</strong> Gpd3 transcription appears constitutive; it is not sharply induced by stress. In fact, Gpd3 mRNA has been used as a “housekeeping” control in expression studies (for example, Gpd3 was the normalization standard in a thiamine/glucose study<a href="https://www.cellmolbiol.org/index.php/CMB/article/download/2679/1402/6665#:~:text=to%20gpd3%20gene,P%3C0%2C001">[7]</a>). Its promoter does not contain obvious stress-response elements known for <em>tdh1</em>. However, Gpd3 sits in a subtelomeric gene cluster repressed by chromatin factors: deletion of the Vtc4 polyphosphate polymerase (which normally contributes to heterochromatic silencing at telomeres) leads to de-repression of several subtelomeric genes including <em>gpd3</em>, and in vtc4Δ cells <em>gpd3</em> expression is down \~1.6-fold<a href="https://www.micropublication.org/static/pdf/micropub-biology-000744.pdf#:~:text=SPBC354.12%20gpd3%20glyceraldehyde%203,1.29">[8]</a>. This suggests that Gpd3 is normally repressed in that chromosomal region, possibly via TORC2/HDAC pathways.</p>
+</li>
+<li>
+<p><strong>Phenotypes and screens:</strong> A genome-wide MBF reporter screen (tracking G1/S transcription) found that <em>gpd3</em> deletion modestly elevates MBF-driven reporter expression (YFP/FSC ratio 1.57)<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4845923/#:~:text=SPBC354,56">[9]</a>. This implies Gpd3 normally dampens G1/S transcription or that loss of Gpd3 triggers a compensatory cell-cycle response. No obvious growth or cell-cycle arrest was reported for gpd3Δ alone, consistent with its redundant role. However, gpd3Δ might exhibit subtle stress or metabolic phenotypes (e.g. altered NADH/NAD⁺ ratio) that remain to be characterized. In other genetic studies (e.g. cohesin function screens<a href="https://research.bioinformatics.udel.edu/iptmnet/entry/O43026/#:~:text=K5%20%20Ubiquitination%20%20score1,Ubiquitination%20%20score1%20PomBase">[10]</a>, CLS studies), Gpd3 has not emerged as a strong hit, but it may still contribute to broader networks.</p>
+</li>
+<li>
+<p><strong>Interaction networks:</strong> The STRING database clusters Gpd3 with canonical glycolytic and NAD⁺/redox enzymes<a href="https://string-db.org/network/284812.O43026#:~:text=tpi1">[2]</a><a href="https://string-db.org/network/284812.O43026#:~:text=tdh1">[3]</a>, reaffirming its metabolic role. No high-confidence novel protein complexes are known for Gpd3 aside from the multi-enzyme glycolytic complexes.</p>
+</li>
+</ul>
+<h2 id="comparative-and-evolutionary-perspective">Comparative and Evolutionary Perspective</h2>
+<p>Gpd3 is a member of the universally conserved GAPDH family (PF00121). Multiple organisms have several GAPDH isoforms: for example, <em>S. cerevisiae</em> has three (Tdh1-3) and mammals have somatic vs sperm-specific GAPDH. In <em>S. pombe</em>, the two isoforms (Tdh1 and Gpd3) presumably arose by gene duplication. Sequence identity between Tdh1 and Gpd3 is high (likely \~70–80%), with conservation of catalytic residues. Orthologs of Gpd3 exist in other Schizosaccharomyces species (e.g. <em>S. japonicus</em> SJAG_03828) and in a wide range of fungi. Phylogenetically, yeast GAPDHs form a clade separate from bacterial GAPDHs. The retention of a second GAPDH isozyme in <em>S. pombe</em> suggests adaptive significance: possibly one isoform (Tdh1) is optimized for bulk glycolysis, while Gpd3 may be specialized for regulation or backup under specific conditions. The split into glycolytic vs glycerol-3-PDH enzymes also differs: <em>S. cerevisiae</em> uses Gpd1/2 for glycerol metabolism, whereas <em>S. pombe</em> uses separate genes (gpd1/SPBC215.05 and gpd2) for glycerol-3-PDH, so there is no confusion between “GPD” for glycerol-PDH vs “TDH/GPD3” for glycolysis.</p>
+<h2 id="open-questions-and-future-directions">Open Questions and Future Directions</h2>
+<p>Despite its clear glycolytic role, many aspects of Gpd3 remain unknown. Key questions include:</p>
+<ul>
+<li>
+<p><strong>Nuclear roles:</strong> Under what conditions does Gpd3 enter the nucleus or bind nuclear proteins? The Rbm10/Rpb7 associations suggest nuclear targeting – but is this condition-dependent (e.g. stress, cell cycle stage)? Does Gpd3 carry a nuclear localization signal or depend on other factors to relocate?</p>
+</li>
+<li>
+<p><strong>Crosstalk with Tdh1:</strong> Does Gpd3 compensate when Tdh1 is inactivated (e.g. by oxidation) or absent? For instance, is Gpd3 upregulated when Tdh1 is mutated? Conversely, does overexpressing Gpd3 rescue any <em>tdh1</em> phenotypes?</p>
+</li>
+<li>
+<p><strong>Regulation by signaling pathways:</strong> Is <em>gpd3</em> transcription or Gpd3 activity regulated by nutrient or stress-sensing kinases (e.g. TORC2, AMPK, Sty1)? The subtelomeric silencing hints at chromatin-level control; do glucose or oxidative signals modulate Gpd3 via post-translational modifications?</p>
+</li>
+<li>
+<p><strong>Physiological impact of loss:</strong> What phenotypes does <em>gpd3Δ</em> display in detailed assays? Possible experiments: measure growth on various carbon sources, sensitivity to H₂O₂ or other stresses, and changes in glycolytic flux or NAD⁺ levels. Given the MBF screen result, does <em>gpd3Δ</em> alter cell-cycle timing or S-phase entry?</p>
+</li>
+<li>
+<p><strong>Protein interactions:</strong> Are there additional, yet-unidentified binding partners of Gpd3 (e.g. metabolic enzymes, signaling proteins, RNA-binding proteins)? Does Gpd3 form mixed tetramers with Tdh1?</p>
+</li>
+<li>
+<p><strong>Evolutionary divergence:</strong> Do the extra sequences (or lack thereof) between Tdh1 and Gpd3 confer specific regulatory features (e.g. unique phosphorylation sites)? For example, iPTMnet annotations list predicted phosphorylation/sumoylation sites in Gpd3<a href="https://research.bioinformatics.udel.edu/iptmnet/entry/O43026/#:~:text=K5%20%20Ubiquitination%20%20score1,Ubiquitination%20%20score1%20PomBase">[10]</a><a href="https://research.bioinformatics.udel.edu/iptmnet/entry/O43026/#:~:text=K193%20%20Ubiquitination%20%20score1,PomBase%20UniProt%20%2018257517%2C%2030726745">[11]</a>; are any of these functionally relevant?</p>
+</li>
+</ul>
+<p><strong>Experimental priorities:</strong> To address these questions, useful approaches would be:<br />
+- <em>Localization studies:</em> Tag Gpd3 with GFP (or immunostain) to track subcellular distribution under different conditions (log vs stationary phase, +/– stress).<br />
+- <em>Protein complex mapping:</em> Perform Gpd3 co-immunoprecipitation followed by mass spectrometry in wild-type vs stress conditions to identify novel partners (e.g. splicing or transcription factors). Reciprocal pulldowns of Rbm10 or Rpb7 could confirm Gpd3 involvement.<br />
+- <em>Mutational analysis:</em> Create a catalytically inactive Gpd3 (Cys-to-Ser) to see if it retains non-catalytic functions (e.g. stress signaling). Conversely, overexpress Gpd3 or Cys mutants to test effects on stress response and metabolism.<br />
+- <em>Gene expression and metabolism:</em> Quantify <em>gpd3</em> mRNA/protein in mutants of chromatin regulators (vtc4Δ, sir2Δ, etc.) and nutrient shifts. Use ^13C-labeling or enzymatic assays to compare glycolytic flux and NADH/NAD⁺ ratio in WT vs <em>gpd3Δ</em>.<br />
+- <em>Phenotype screens:</em> Systematically test <em>gpd3Δ</em> (and double <em>tdh1Δ gpd3Δ</em>) for growth on various media, lifespan assays, and synthetic interactions with stress-signaling mutants. Monitor MBF-target gene expression and cell-cycle profiles in <em>gpd3Δ</em>.</p>
+<p>These studies would clarify Gpd3’s roles beyond glycolysis and how it integrates with cellular physiology.</p>
+<p><strong>References:</strong> Gpd3’s annotated glycolytic function is documented in PomBase/UniProt<a href="https://thebiogrid.org/277491/summary/schizosaccharomyces-pombe/gpd3.html#:~:text=">[1]</a>. Key findings on GAPDH moonlighting in <em>S. pombe</em> include Morigasaki <em>et al.</em> (2008), who showed GAPDH (Tdh1) is required for H₂O₂-activated MAPK signaling via its redox-sensitive Cys<a href="https://pubmed.ncbi.nlm.nih.gov/18406331/#:~:text=protein%20and%20finally%20to%20the,sensitive%20cysteine%20residue%20may%20provide">[4]</a>, and Mitsuzawa <em>et al.</em> (2005), who showed GAPDH binds RNA Pol II subunit Rpb7<a href="https://pubmed.ncbi.nlm.nih.gov/15620689/#:~:text=implicated%20in%20transcriptional%20activation%20in,interaction%20between%20actin%20and%20Rpb7">[5]</a>. Proteomic screens by Weigt <em>et al.</em> (2021) found Gpd3 in Rbm10 complexes<a href="https://epigeneticsandchromatin.biomedcentral.com/articles/10.1186/s13072-021-00382-y/tables/1#:~:text=SPBC354">[6]</a>. Recent functional screens uncovered a <em>gpd3</em>Δ effect on G1/S transcription<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4845923/#:~:text=SPBC354,56">[9]</a> and the linkage of <em>gpd3</em> to a subtelomeric silencing cluster<a href="https://www.micropublication.org/static/pdf/micropub-biology-000744.pdf#:~:text=SPBC354.12%20gpd3%20glyceraldehyde%203,1.29">[8]</a>. These sources underpin the views above.</p>
+<hr />
+<p><a href="https://thebiogrid.org/277491/summary/schizosaccharomyces-pombe/gpd3.html#:~:text=">[1]</a> gpd3 (SPBC354.12) Result Summary | BioGRID</p>
+<p><a href="https://thebiogrid.org/277491/summary/schizosaccharomyces-pombe/gpd3.html">https://thebiogrid.org/277491/summary/schizosaccharomyces-pombe/gpd3.html</a></p>
+<p><a href="https://string-db.org/network/284812.O43026#:~:text=tpi1">[2]</a> <a href="https://string-db.org/network/284812.O43026#:~:text=tdh1">[3]</a> gpd3 protein (Schizosaccharomyces pombe) - STRING interaction network</p>
+<p><a href="https://string-db.org/network/284812.O43026">https://string-db.org/network/284812.O43026</a></p>
+<p><a href="https://pubmed.ncbi.nlm.nih.gov/18406331/#:~:text=protein%20and%20finally%20to%20the,sensitive%20cysteine%20residue%20may%20provide">[4]</a> Glycolytic enzyme GAPDH promotes peroxide stress signaling through multistep phosphorelay to a MAPK cascade - PubMed</p>
+<p><a href="https://pubmed.ncbi.nlm.nih.gov/18406331/">https://pubmed.ncbi.nlm.nih.gov/18406331/</a></p>
+<p><a href="https://pubmed.ncbi.nlm.nih.gov/15620689/#:~:text=implicated%20in%20transcriptional%20activation%20in,interaction%20between%20actin%20and%20Rpb7">[5]</a> Glyceraldehyde-3-phosphate dehydrogenase and actin associate with RNA polymerase II and interact with its Rpb7 subunit - PubMed</p>
+<p><a href="https://pubmed.ncbi.nlm.nih.gov/15620689/">https://pubmed.ncbi.nlm.nih.gov/15620689/</a></p>
+<p><a href="https://epigeneticsandchromatin.biomedcentral.com/articles/10.1186/s13072-021-00382-y/tables/1#:~:text=SPBC354">[6]</a> Rbm10 facilitates heterochromatin assembly via the Clr6 HDAC complex | Epigenetics &amp; Chromatin | Full Text</p>
+<p><a href="https://epigeneticsandchromatin.biomedcentral.com/articles/10.1186/s13072-021-00382-y/tables/1">https://epigeneticsandchromatin.biomedcentral.com/articles/10.1186/s13072-021-00382-y/tables/1</a></p>
+<p><a href="https://www.cellmolbiol.org/index.php/CMB/article/download/2679/1402/6665#:~:text=to%20gpd3%20gene,P%3C0%2C001">[7]</a> cellmolbiol.org</p>
+<p><a href="https://www.cellmolbiol.org/index.php/CMB/article/download/2679/1402/6665">https://www.cellmolbiol.org/index.php/CMB/article/download/2679/1402/6665</a></p>
+<p><a href="https://www.micropublication.org/static/pdf/micropub-biology-000744.pdf#:~:text=SPBC354.12%20gpd3%20glyceraldehyde%203,1.29">[8]</a> micropublication.org</p>
+<p><a href="https://www.micropublication.org/static/pdf/micropub-biology-000744.pdf">https://www.micropublication.org/static/pdf/micropub-biology-000744.pdf</a></p>
+<p><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4845923/#:~:text=SPBC354,56">[9]</a>  A functional genome-wide genetic screening identifies new pathways controlling the G1/S transcriptional wave - PMC </p>
+<p><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4845923/">https://pmc.ncbi.nlm.nih.gov/articles/PMC4845923/</a></p>
+<p><a href="https://research.bioinformatics.udel.edu/iptmnet/entry/O43026/#:~:text=K5%20%20Ubiquitination%20%20score1,Ubiquitination%20%20score1%20PomBase">[10]</a> <a href="https://research.bioinformatics.udel.edu/iptmnet/entry/O43026/#:~:text=K193%20%20Ubiquitination%20%20score1,PomBase%20UniProt%20%2018257517%2C%2030726745">[11]</a> iPTMnet Report O43026 gpd3 </p>
+<p><a href="https://research.bioinformatics.udel.edu/iptmnet/entry/O43026/">https://research.bioinformatics.udel.edu/iptmnet/entry/O43026/</a></p>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: O43026
+gene_symbol: gpd3
+taxon:
+  id: NCBITaxon:4896
+  label: Schizosaccharomyces pombe
+description: &#39;Gpd3 is the minor isoform of glyceraldehyde-3-phosphate dehydrogenase in S. pombe, catalyzing the reversible NAD+-dependent oxidation of glyceraldehyde-3-phosphate to 1,3-bisphosphoglycerate in glycolysis. While its paralog Tdh1 handles bulk glycolytic flux, Gpd3 shows evidence of moonlighting functions including stress response signaling, transcriptional regulation through RNA Pol II interaction, and RNA processing via splicing factor association. The protein is extensively post-translationally modified and functions within a stable glycolytic metabolon.&#39;
+existing_annotations:
+- term:
+    id: GO:0004365
+    label: glyceraldehyde-3-phosphate dehydrogenase (NAD+) (phosphorylating) activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &#39;Core enzymatic function well-supported. Catalyzes the sixth reaction of glycolysis (EC 1.2.1.12), converting G3P to 1,3-BPG. Conserved catalytic cysteine residue analogous to Tdh1 Cys-152. High sequence identity with Tdh1 paralog (~70-80%).&#39;
+    action: ACCEPT
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &#39;Primary localization confirmed. Part of cytosolic glycolytic metabolon with high-confidence interactions (STRING PPI p-value 2.69×10^-14). Also supported by HDA evidence from PMID:16823372. Note: moonlighting functions suggest conditional nuclear localization.&#39;
+    action: ACCEPT
+- term:
+    id: GO:0006096
+    label: glycolytic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &#39;Essential glycolytic function confirmed. Functions as backup to major isoform Tdh1 - tdh1Δ strain remains viable due to gpd3 presence (PMID:18406331). Also functions in reverse direction during gluconeogenesis.&#39;
+    action: ACCEPT
+- term:
+    id: GO:0004365
+    label: glyceraldehyde-3-phosphate dehydrogenase (NAD+) (phosphorylating) activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &#39;Duplicate of above annotation with different evidence code. Core enzymatic function is correct.&#39;
+    action: ACCEPT
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: &#39;Parent term of cytosol. Less specific but not incorrect. The more specific cytosol annotation (GO:0005829) is preferred.&#39;
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0006006
+    label: glucose metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &#39;Broader term encompassing glycolysis. Valid but less specific than glycolytic process annotations.&#39;
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0006096
+    label: glycolytic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &#39;Duplicate annotation with different evidence code. Core function confirmed.&#39;
+    action: ACCEPT
+- term:
+    id: GO:0016491
+    label: oxidoreductase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;Correct but overly general parent term. The specific GAPDH activity (GO:0004365) is more informative.&#39;
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0016620
+    label: oxidoreductase activity, acting on the aldehyde or oxo group of donors,
+      NAD or NADP as acceptor
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &#39;Correct intermediate term between general oxidoreductase and specific GAPDH activity. Less specific than GO:0004365.&#39;
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0050661
+    label: NADP binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &#39;Incorrect annotation. GAPDH uses NAD+, not NADP+. This enzyme is strictly NAD+-dependent, not NADP+-dependent. Likely automated annotation error.&#39;
+    action: REMOVE
+- term:
+    id: GO:0051287
+    label: NAD binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &#39;Correct - NAD+ is the required cofactor for GAPDH enzymatic activity. Conserved Rossmann-fold NAD-binding domain.&#39;
+    action: ACCEPT
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: HDA
+  original_reference_id: PMID:16823372
+  review:
+    summary: &#39;High-throughput experimental confirmation of cytosolic localization. Strong evidence supporting primary localization.&#39;
+    action: ACCEPT
+- term:
+    id: GO:0061621
+    label: canonical glycolysis
+  evidence_type: ISO
+  original_reference_id: GO_REF:0000024
+  review:
+    summary: &#39;Specific involvement in canonical glycolytic pathway confirmed. Functions within glycolytic metabolon, provides backup glycolytic capacity when Tdh1 absent.&#39;
+    action: ACCEPT
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms.
+  findings: []
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs
+    by curator judgment of sequence similarity.
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt.
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods.
+  findings: []
+- id: PMID:16823372
+  title: ORFeome cloning and global analysis of protein localization in the fission
+    yeast Schizosaccharomyces pombe.
+  findings: []
+- id: PMID:18406331
+  title: Glycolytic enzyme GAPDH promotes peroxide stress signaling through multistep phosphorelay to a MAPK cascade
+  findings: []
+- id: PMID:15620689
+  title: Glyceraldehyde-3-phosphate dehydrogenase and actin associate with RNA polymerase II and interact with its Rpb7 subunit
+  findings: []
+core_functions:
+- description: Catalyzes the reversible NAD+-dependent oxidation of glyceraldehyde-3-phosphate to 1,3-bisphosphoglycerate as the minor GAPDH isoform in S. pombe
+  molecular_function:
+    id: GO:0004365
+    label: glyceraldehyde-3-phosphate dehydrogenase (NAD+) (phosphorylating) activity
+- description: Functions as metabolic backup providing essential glycolytic activity when major isoform Tdh1 is absent or inactivated
+  molecular_function:
+    id: GO:0004365
+    label: glyceraldehyde-3-phosphate dehydrogenase (NAD+) (phosphorylating) activity
+- description: Participates in glycolytic metabolon complex with high-confidence interactions with other glycolytic enzymes
+  molecular_function:
+    id: GO:0004365
+    label: glyceraldehyde-3-phosphate dehydrogenase (NAD+) (phosphorylating) activity
+- description: Shows potential moonlighting functions in transcriptional regulation through RNA Pol II interaction (requires validation)
+  molecular_function:
+    id: GO:0004365
+    label: glyceraldehyde-3-phosphate dehydrogenase (NAD+) (phosphorylating) activity
+- description: May participate in oxidative stress response signaling similar to paralog Tdh1 (requires experimental confirmation)
+  molecular_function:
+    id: GO:0004365
+    label: glyceraldehyde-3-phosphate dehydrogenase (NAD+) (phosphorylating) activity
+suggested_questions:
+- question: Should GO:0003723 (RNA binding) be added based on Rbm10 co-purification data from Weigt et al. 2021?
+  experts:
+  - RNA processing specialist
+  - S. pombe functional genomics expert
+- question: Is the RNA Pol II interaction (PMID:15620689) sufficient evidence for adding GO:0006357 (regulation of transcription by RNA polymerase II)?
+  experts:
+  - Transcription regulation expert
+  - S. pombe gene regulation specialist
+- question: Should GO:0005634 (nucleus) be added as conditional localization based on RNA Pol II and splicing factor interactions?
+  experts:
+  - Cell biology expert
+  - Protein localization specialist
+- question: Is oxidative stress response (GO:0034599) appropriate to infer from paralog Tdh1 evidence (PMID:18406331)?
+  experts:
+  - Stress response expert
+  - Comparative genomics specialist
+suggested_experiments:
+- experiment_type: Protein-protein interaction
+  hypothesis: Test if Gpd3 interacts with Hsp70 or Hsp90 chaperones in S. pombe (NOTE - this is highly speculative based on mammalian GAPDH data only)
+  description: Co-immunoprecipitation of Gpd3 with Hsp70/Hsp90 under normal and stress conditions. This tests the controversial hypothesis that Gpd3 might have chaperone-related functions like mammalian GAPDH, though there is currently NO evidence for this in S. pombe.
+- experiment_type: Protein aggregation assay
+  hypothesis: Test if Gpd3 affects protein aggregation under stress (HIGHLY SPECULATIVE - based solely on distant ortholog data)
+  description: Monitor protein aggregation in gpd3Δ vs WT under heat shock or oxidative stress using fluorescent aggregation reporters. This would test whether Gpd3 has any role in protein homeostasis, though this function is unvalidated in fungi.
+- experiment_type: Heme binding assay
+  hypothesis: Test if Gpd3 can bind heme like mammalian GAPDH (EXTREMELY SPECULATIVE)
+  description: In vitro heme binding assays with purified Gpd3 protein. Mammalian GAPDH acts as a heme chaperone (PMID:30012884), but this moonlighting function may not be conserved across such evolutionary distance.
+- experiment_type: Stress phenotyping
+  hypothesis: Test if gpd3Δ shows sensitivity to proteotoxic stress
+  description: Growth assays of gpd3Δ under conditions causing protein misfolding (heat shock, DTT, tunicamycin). Would reveal if Gpd3 contributes to protein quality control, though current evidence is lacking.
+- experiment_type: Subcellular localization
+  hypothesis: Test nuclear translocation of Gpd3 under various conditions
+  description: Live-cell imaging of Gpd3-GFP under oxidative stress, heat shock, or transcriptional stress to confirm potential nuclear moonlighting functions suggested by RNA Pol II interaction.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+    <div class="section">
+        <div class="pathway-link">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h2 class="section-title">🔗 Related Resources</h2>
+                <span class="vote-buttons" data-g="O43026" data-a="PATHWAY: gpd3 pathways" data-r="" data-act="PATHWAY">
+                    <button class="vote-btn" data-v="up" title="Pathway visualization is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="Pathway visualization needs improvement">👎</button>
+                </span>
+            </div>
+            <p>
+                <a href="gpd3-pathway.html" target="_blank" class="btn-link">
+                    📊 View Pathway Visualization
+                </a>
+                <span style="color: #666; font-size: 0.9rem; margin-left: 1rem;">
+                    Interactive pathway diagram with detailed annotations
+                </span>
+            </p>
+        </div>
+    </div>
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

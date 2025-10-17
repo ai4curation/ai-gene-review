@@ -15,7 +15,7 @@ Example:
 """
 
 from pathlib import Path
-from typing import List, Dict, Any, Optional, Tuple
+from typing import List, Dict, Any, Optional, Tuple, Callable
 import yaml
 import re
 import traceback
@@ -36,7 +36,7 @@ from ai_gene_review.validation.supporting_text_validator import SupportingTextVa
 
 
 @contextmanager
-def timer(name: str, callback: Optional[callable] = None):
+def timer(name: str, callback: Optional[Callable] = None):
     """Context manager for timing operations with optional progress callback."""
     start = time.perf_counter()
     if callback:
@@ -80,7 +80,7 @@ def validate_gene_review(
     check_best_practices: bool = True,
     check_goa: bool = True,
     check_supporting_text: bool = True,
-    progress_callback: Optional[callable] = None,
+    progress_callback: Optional[Callable] = None,
 ) -> ValidationReport:
     """Validate a gene review YAML file against the LinkML schema.
 
@@ -224,7 +224,7 @@ def check_best_practices_rules(
     report: ValidationReport,
     yaml_file: Optional[Path] = None,
     check_supporting_text: bool = True,
-    progress_callback: Optional[callable] = None,
+    progress_callback: Optional[Callable] = None,
 ) -> None:
     """Check for best practices and add soft failures (warnings).
 
@@ -460,6 +460,11 @@ def check_best_practices_rules(
         # Check for inconsistencies
         for term_id, actions_list in term_actions.items():
             if len(actions_list) > 1:
+                # Skip consistency check for GO:0005515 (protein binding) as it's a special case
+                # that typically requires with/extensions to be meaningful
+                if term_id == "GO:0005515":
+                    continue
+
                 # Get unique actions for this term (excluding PENDING which are already filtered out)
                 unique_actions = set(action for _, action, _ in actions_list)
 
@@ -489,6 +494,48 @@ def check_best_practices_rules(
                         check_type="inconsistent_review_actions"
                     )
     
+    # Check for usage of deep research results (including falcon, gemini, etc.)
+    if "existing_annotations" in data and data["existing_annotations"]:
+        # Check if any annotation uses ANY research files (pattern: *research*.md)
+        has_research_support = False
+
+        for annotation in data["existing_annotations"]:
+            if isinstance(annotation, dict):
+                review = annotation.get("review", {})
+                if isinstance(review, dict):
+                    supported_by_list = review.get("supported_by", [])
+                    for sb in supported_by_list:
+                        if isinstance(sb, dict) and "reference_id" in sb:
+                            ref_id = sb["reference_id"]
+                            # Check if this references ANY research file (pattern: *research*.md)
+                            # This includes deep-research, falcon-research, gemini-research, etc.
+                            if ref_id.startswith("file:") and "research" in ref_id and ref_id.endswith(".md"):
+                                has_research_support = True
+                                break
+                    if has_research_support:
+                        break
+
+        if not has_research_support:
+            # Check if ANY research files exist for this gene
+            if yaml_file is not None:
+                # Look for ANY *research*.md files in the same directory as the YAML file
+                research_files = list(yaml_file.parent.glob("*research*.md"))
+                if research_files:
+                    # Found research files but NONE are referenced
+                    research_file_names = [f.name for f in research_files[:3]]  # Show up to 3 examples
+                    examples = ", ".join(research_file_names)
+                    if len(research_files) > 3:
+                        examples += f" and {len(research_files) - 3} more"
+
+                    report.add_issue(
+                        ValidationSeverity.WARNING,
+                        f"No annotations reference available deep research files ({examples})",
+                        path="existing_annotations",
+                        suggestion="Consider using deep research findings to support annotation decisions where relevant",
+                        validation_category="BestPractices",
+                        check_type="no_deep_research_results"
+                    )
+
     # Check for missing core functions
     if "core_functions" not in data or not data["core_functions"]:
         report.add_issue(

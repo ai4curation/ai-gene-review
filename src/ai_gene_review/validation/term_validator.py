@@ -72,6 +72,7 @@ class TermValidator:
             "SO": "so",  # Sequence Ontology
             "PATO": "pato",  # Phenotype And Trait Ontology
             "NCBITaxon": "ncbitaxon",  # NCBI Taxonomy
+            "RHEA": "rhea",  # RHEA biochemical reaction ontology
         }
     )
 

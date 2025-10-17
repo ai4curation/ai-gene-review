@@ -1,0 +1,1778 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>merB - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>merB</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/A0A1V0M5B3" target="_blank" class="term-link">
+                        A0A1V0M5B3
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas aeruginosa</span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "merB";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="A0A1V0M5B3" data-a="DESCRIPTION: Organomercurial lyase (MerB) is a monomeric ~22 kD..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Organomercurial lyase (MerB) is a monomeric ~22 kDa cytoplasmic enzyme that catalyzes the protonolytic cleavage of carbon-mercury bonds in organomercury compounds, converting toxic organomercurials like methylmercury and phenylmercury into inorganic Hg(II) and releasing the organic moiety as a hydrocarbon. Functions as the first step in broad-spectrum mercury resistance, working sequentially with MerA to detoxify organomercurials. Contains essential catalytic cysteines (Cys96, Cys159) that coordinate mercury through bis-thiolate binding. Possesses a unique protein fold with no known paralogs outside mercury resistance systems. Expression is tightly regulated by MerR as part of the mer operon, induced specifically by mercury exposure.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0018836" target="_blank" class="term-link">
+                                    GO:0018836
+                                </a>
+                            </span>
+                            <span class="term-label">alkylmercury lyase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A0A1V0M5B3" data-a="GO:0018836" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the correct and most specific molecular function for MerB. Extensive biochemical evidence confirms MerB catalyzes the cleavage of carbon-mercury bonds in organomercurials.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Direct experimental evidence confirms alkylmercury lyase as MerB&#39;s primary molecular function
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEAI/merB/merB-deep-research.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">MerB is an organomercurial lyase enzyme that catalyzes the protonolytic cleavage of the carbon–mercury bond in organomercury compounds. MerB converts toxic organomercurials (such as methylmercury or phenylmercury compounds) into an inorganic mercuric ion (Hg^2+), while releasing the organic moiety as a hydrocarbon (e.g. methane from methylmercury).</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016829" target="_blank" class="term-link">
+                                    GO:0016829
+                                </a>
+                            </span>
+                            <span class="term-label">lyase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="A0A1V0M5B3" data-a="GO:0016829" data-r="GO_REF:0000043" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is correct but too general. MerB is indeed a lyase, but the more specific term GO:0018836 (alkylmercury lyase activity) should be used as the primary annotation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Too general - more specific alkylmercury lyase term available
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEAI/merB/merB-deep-research.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">MerB functions as a proton-transfer enzyme that directly breaks the Hg–C bond (a rare lyase reaction) without requiring external cofactors.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046689" target="_blank" class="term-link">
+                                    GO:0046689
+                                </a>
+                            </span>
+                            <span class="term-label">response to mercury ion</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A0A1V0M5B3" data-a="GO:0046689" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct and well-supported biological process. MerB expression is specifically induced by mercury and is essential for the cellular response to organomercury compounds.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> MerB expression is specifically induced by mercury exposure via MerR regulation as part of mercury resistance response
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEAI/merB/merB-deep-research.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Expression of the mer operon is tightly regulated and induced in the presence of mercury ions. merB expression is inducible and tightly regulated: it remains virtually off in the absence of mercury and is highly upregulated when mercury (or certain organomercurials that release Hg^2+) is present.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12829275" target="_blank" class="term-link">
+                                        PMID:12829275
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Bacterial resistance to inorganic and organic mercury compounds (HgR) is one of the most widely observed phenotypes in eubacteria</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="A0A1V0M5B3" data-a="GO:0005737" data-r="" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> MerB is located in the cytoplasm lacking signal peptides or membrane-spanning domains, consistent with its function as a cytosolic enzyme.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This cellular component term reflects MerB&#39;s established subcellular localization to the cytoplasm where it cleaves organomercury compounds.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEAI/merB/merB-deep-research.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">MerB is located in the cytoplasm of the bacterial cell. It lacks any signal peptide or membrane-spanning domains, and it contains no disulfide bonds, consistent with a cytosolic enzyme that functions in the reducing environment of the cytosol</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050787" target="_blank" class="term-link">
+                                    GO:0050787
+                                </a>
+                            </span>
+                            <span class="term-label">detoxification of mercury ion</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="A0A1V0M5B3" data-a="GO:0050787" data-r="" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> MerB detoxifies organomercury compounds by cleaving carbon-mercury bonds to produce less toxic inorganic mercury that can be further reduced by MerA.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This biological process term captures MerB&#39;s essential role in mercury detoxification as the first step in converting toxic organomercurials to inorganic mercury.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12829275" target="_blank" class="term-link">
+                                        PMID:12829275
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">MerB enables broad-spectrum mercury resistance by degrading organomercurials through protonolysis</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEAI/merB/merB-deep-research.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">MerB converts toxic organomercurials (such as methylmercury or phenylmercury compounds) into an inorganic mercuric ion (Hg^2+), enabling mercury detoxification and bioremediation</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Enzymatic cleavage of carbon-mercury bonds in organomercury compounds for mercury detoxification</h3>
+                <span class="vote-buttons" data-g="A0A1V0M5B3" data-a="FUNCTION: Enzymatic cleavage of carbon-mercury bonds in orga..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0018836" target="_blank" class="term-link">
+                            alkylmercury lyase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050787" target="_blank" class="term-link">
+                                detoxification of mercury ion
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046689" target="_blank" class="term-link">
+                                response to mercury ion
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12829275" target="_blank" class="term-link">
+                                PMID:12829275
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Supporting evidence for merB function</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEAI/merB/merB-deep-research.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">Bioinformatics evidence for merB function</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12829275" target="_blank" class="term-link">
+                            PMID:12829275
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Bacterial mercury resistance from atoms to ecosystems</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">MerB enables broad-spectrum mercury resistance by converting organomercurials to Hg(II)</div>
+                        
+                        <div class="finding-text">"that degrades organomercurials by protonolysis, and one or more additional"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEAI/merB/merB-deep-research.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep Research Report on merB gene</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">MerB is a cytoplasmic enzyme that cleaves carbon-mercury bonds in organomercurials</div>
+                        
+                        <div class="finding-text">"MerB is located in the cytoplasm of the bacterial cell. It lacks any signal peptide or membrane-spanning domains, and it contains no disulfide bonds, consistent with a cytosolic enzyme that functions in the reducing environment of the cytosol."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">MerB uses essential cysteine residues for catalysis</div>
+                        
+                        <div class="finding-text">"Two cysteine residues (conserved as Cys96 and Cys159 in E. coli MerB numbering) are essential for catalysis, forming a bis-thiolated Hg^2+ intermediate and likely delivering the proton to the bound organic group."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">MerB has a unique protein fold specific to mercury resistance</div>
+                        
+                        <div class="finding-text">"MerB is a single-domain enzyme with a unique protein fold not found in other protein families. Solution NMR and crystal structure studies revealed that MerB consists of three small β-sheets surrounded by six α-helices, forming a compact globular protein."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">MerB expression is tightly regulated by MerR in response to mercury</div>
+                        
+                        <div class="finding-text">"The merB gene in P. aeruginosa is typically co-transcribed as part of the mer operon, under the control of the MerR regulatory protein. When Hg^2+ is present, MerR binds the ion and undergoes a conformational change that activates transcription of the operon."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">MerB enables bioremediation of mercury-contaminated environments</div>
+                        
+                        <div class="finding-text">"mercury-resistant pseudomonads with MerB can thrive in mercury-polluted soils, waters, or industrial effluents where they degrade organomercurials that would otherwise accumulate in the food chain. MerB-possessing bacteria have been explored as agents of bioremediation for mercury pollution."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the molecular mechanism by which MerB cleaves the C-Hg bond without requiring cofactors or external energy sources?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="A0A1V0M5B3" data-a="Q: What is the molecular mechanism by which MerB clea..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How does MerB achieve substrate specificity for different organomercury compounds (methylmercury vs phenylmercury)?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="A0A1V0M5B3" data-a="Q: How does MerB achieve substrate specificity for di..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What determines the efficiency of MerB-MerA coupling in different bacterial species and environmental conditions?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="A0A1V0M5B3" data-a="Q: What determines the efficiency of MerB-MerA coupli..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Time-resolved crystallography to capture the transition state during C-Hg bond cleavage</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="A0A1V0M5B3" data-a="EXPERIMENT: Time-resolved crystallography to capture the trans..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Isotope labeling studies to trace the fate of carbon and mercury atoms during the lyase reaction</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="A0A1V0M5B3" data-a="EXPERIMENT: Isotope labeling studies to trace the fate of carb..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Engineering MerB variants for enhanced activity against specific organomercury pollutants in contaminated environments</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="A0A1V0M5B3" data-a="EXPERIMENT: Engineering MerB variants for enhanced activity ag..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(merB-deep-research.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="A0A1V0M5B3" data-a="DOC: Deep Research" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="deep-research-report-merb-pseai">Deep Research Report: merB (PSEAI)</h1>
+<p>Generated using OpenAI Deep Research API</p>
+<hr />
+<h1 id="merb-organomercurial-lyase-in-pseudomonas-aeruginosa">MerB (Organomercurial Lyase) in <em>Pseudomonas aeruginosa</em></h1>
+<h2 id="function-and-molecular-mechanism">Function and Molecular Mechanism</h2>
+<p>MerB is an organomercurial lyase enzyme that catalyzes the protonolytic cleavage of the carbon–mercury bond in organomercury compounds (<a href="https://ctdbase.org/detail.go?acc=GO%3A0018836&amp;type=go#:~:text=Definition%20%20,GO%3A0018836">ctdbase.org</a>). In practical terms, MerB converts toxic organomercurials (such as methylmercury or phenylmercury compounds) into an inorganic mercuric ion (Hg^2+), while releasing the organic moiety as a hydrocarbon (e.g. methane from methylmercury) (<a href="https://academic.oup.com/femsre/article/27/2-3/355/615559?login=false#:~:text=IncM%20plasmid%2C%20R831%2C%20only%20two,16">academic.oup.com</a>). This reaction is the first step in the bacterial mercury detoxification pathway: the Hg^2+ produced by MerB is subsequently reduced to elemental mercury (Hg^0) by mercuric reductase (MerA), which volatilizes and escapes from the cell (<a href="https://academic.oup.com/femsre/article/27/2-3/355/615559?login=false#:~:text=IncM%20plasmid%2C%20R831%2C%20only%20two,16">academic.oup.com</a>) (<a href="https://journals.asm.org/doi/full/10.1128/aem.00010-22#:~:text=The%20mer%20operon%20encodes%20enzymes,MeHg%20by%20MerB%2C%20independent%20of">journals.asm.org</a>). Together, MerB and MerA act sequentially to neutralize organomercurial toxins, conferring broad-spectrum mercury resistance to the bacterium (<a href="https://www.sciencedirect.com/science/article/abs/pii/S0964830512002739#:~:text=and%20merB%20confer%20broad,bioremediation%20at%20highly%20polluted%20mercury">www.sciencedirect.com</a>). Notably, MerB’s activity is only beneficial when MerA is present to remove Hg^2+; in the absence of MerA, MerB-mediated demethylation can release Hg^2+ intracellularly and increase toxicity (<a href="https://journals.asm.org/doi/full/10.1128/aem.00010-22#:~:text=The%20mer%20operon%20encodes%20enzymes,MeHg%20by%20MerB%2C%20independent%20of">journals.asm.org</a>). </p>
+<p>Mechanistically, MerB functions as a proton-transfer enzyme that <em>directly</em> breaks the Hg–C bond (a rare <strong>lyase</strong> reaction) without requiring external cofactors (<a href="https://academic.oup.com/femsre/article/27/2-3/355/615559?login=false#:~:text=Meticulous%20characterization%20of%20the%20MerB,slow%20for%20an%20enzyme%2C%20these">academic.oup.com</a>). It is a ~22 kDa monomeric protein that uses cysteine thiolate groups in its active site to bind mercury and facilitate bond cleavage (<a href="https://academic.oup.com/femsre/article/27/2-3/355/615559?login=false#:~:text=other%20Gram,physiological%20thiols%2C%20glutathione%20or%20cysteine">academic.oup.com</a>). Two cysteine residues (conserved as Cys96 and Cys159 in <em>E. coli</em> MerB numbering) are essential for catalysis, forming a bis-thiolated Hg^2+ intermediate and likely delivering the proton to the bound organic group (<a href="https://academic.oup.com/femsre/article/27/2-3/355/615559?login=false#:~:text=other%20Gram,physiological%20thiols%2C%20glutathione%20or%20cysteine">academic.oup.com</a>) (<a href="https://academic.oup.com/femsre/article/27/2-3/355/615559?login=false#:~:text=rates%20of%20organomercurials,protein%20thiol%20groups%20might%20be">academic.oup.com</a>). The reaction proceeds via direct protonolysis with retention of the substrate’s configuration (an S_E2 mechanism rather than a radical-mediated process), and kinetic studies show that proton transfer is the rate-limiting step (<a href="https://academic.oup.com/femsre/article/27/2-3/355/615559?login=false#:~:text=rates%20of%20organomercurials,protein%20thiol%20groups%20might%20be">academic.oup.com</a>). After the carbon–Hg bond is cleaved, MerB remains bound to Hg^2+ until two molecules of a small thiol (e.g. cysteine or glutathione in the cytosol) displace the mercury from the enzyme, regenerating the free enzyme (<a href="https://academic.oup.com/femsre/article/27/2-3/355/615559?login=false#:~:text=coordinated%20complex%20by%20Cys96%20or,actually%20inhibits%20MerB%2C%20possibly">academic.oup.com</a>) (<a href="https://academic.oup.com/femsre/article/27/2-3/355/615559?login=false#:~:text=other%20Gram,physiological%20thiols%2C%20glutathione%20or%20cysteine">academic.oup.com</a>). This reliance on cellular thiols is consistent with MerB’s requirement for a thiol-rich environment – the enzyme has an alkaline pH optimum (&gt;9) and shows greatly accelerated reaction rates in the presence of excess thiols (<a href="https://academic.oup.com/femsre/article/27/2-3/355/615559?login=false#:~:text=substrate%20specificity%2C%20MerB%20has%20very,Hg%20protonolysis%20by%20a%20compound">academic.oup.com</a>) (<a href="https://academic.oup.com/femsre/article/27/2-3/355/615559?login=false#:~:text=Meticulous%20characterization%20of%20the%20MerB,slow%20for%20an%20enzyme%2C%20these">academic.oup.com</a>). Overall, MerB’s unique catalytic strategy enables bacteria to enzymatically cleave organomercurial compounds at rates 10^6–10^7-fold faster than the spontaneous chemical breakdown, thereby initiating rapid mercury detoxification (<a href="https://academic.oup.com/femsre/article/27/2-3/355/615559?login=false#:~:text=very%20broad%20substrate%20tolerance%2C%20handling,effects%20were%20consistent%20with%20a">academic.oup.com</a>).</p>
+<h2 id="cellular-localization">Cellular Localization</h2>
+<p>MerB is located in the cytoplasm of the bacterial cell. It lacks any signal peptide or membrane-spanning domains, and it contains no disulfide bonds, consistent with a cytosolic enzyme that functions in the reducing environment of the cytosol (<a href="https://academic.oup.com/femsre/article/27/2-3/355/615559?login=false#:~:text=other%20Gram,physiological%20thiols%2C%20glutathione%20or%20cysteine">academic.oup.com</a>). In <em>Pseudomonas aeruginosa</em> and other Gram-negative bacteria, organomercurial compounds are sufficiently lipophilic to diffuse across cell membranes, so MerB can encounter and degrade its substrates inside the cell without needing a dedicated import system (<a href="https://academic.oup.com/femsre/article/27/2-3/355/615559?login=false#:~:text=permeability%20to%20phenylmercury%3B%20other%20mercurials,without%20a%20specific%20uptake%20system">academic.oup.com</a>). The enzyme thus operates in the intracellular space, often in tandem with MerA (which is also cytosolic) to detoxify mercury. Other components of the mercury resistance (mer) operon handle transport and sensing – for example, MerP and MerT are periplasmic and membrane proteins that import Hg^2+ ions, and some broad-spectrum operons encode MerG, a periplasmic protein that reduces uptake of organomercurials (<a href="https://academic.oup.com/femsre/article/27/2-3/355/615559?login=false#:~:text=The%20product%20of%20the%20merG,the%20periplasm%20and%20reduces%20cell">academic.oup.com</a>). However, MerB itself remains in the cytoplasm, where it cleaves incoming organomercurials and hands off the resulting Hg^2+ to MerA for reduction (<a href="https://academic.oup.com/femsre/article/27/2-3/355/615559?login=false#:~:text=although%2C%20with%20the%20exception%20of,We%20now%20consider">academic.oup.com</a>). The cytosolic localization of MerB is crucial, as it ensures proximity to abundant thiols (cysteine, glutathione) needed for its activity and for sequestering mercury until volatilization.</p>
+<h2 id="biological-processes-and-pathways">Biological Processes and Pathways</h2>
+<p>MerB is a key player in the bacterial <strong>mercury detoxification pathway</strong>, allowing <em>P. aeruginosa</em> to survive in mercury-contaminated environments. Bacteria possessing <strong>merB</strong> (in addition to <strong>merA</strong>) exhibit <strong>broad-spectrum mercury resistance</strong>, meaning they can detoxify both inorganic mercury (Hg^2+) and organic mercury compounds (<a href="https://academic.oup.com/femsre/article/27/2-3/355/615559?login=false#:~:text=Work%20on%20the%20mechanism%20of,Somewhat%20surprisingly%2C%20each%20operon%20had">academic.oup.com</a>) (<a href="https://www.sciencedirect.com/science/article/abs/pii/S0964830512002739#:~:text=and%20merB%20confer%20broad,bioremediation%20at%20highly%20polluted%20mercury">www.sciencedirect.com</a>). In contrast, bacteria with only <strong>merA</strong> (but no <strong>merB</strong>) have a <strong>narrow-spectrum resistance</strong> limited to inorganic Hg^2+ (<a href="https://academic.oup.com/femsre/article/27/2-3/355/615559?login=false#:~:text=both%20inorganic%20and%20organic%20mercury,spectrum%20Hg%20resistance%E2%80%99%20%5B11">academic.oup.com</a>) (<a href="https://www.sciencedirect.com/science/article/abs/pii/S0964830512002739#:~:text=and%20merB%20confer%20broad,bioremediation%20at%20highly%20polluted%20mercury">www.sciencedirect.com</a>). By cleaving organomercurials, MerB enables the cell to convert highly toxic species such as methylmercury and phenylmercury into less toxic forms that can be further detoxified (<a href="https://www.sciencedirect.com/science/article/abs/pii/S0964830512002739#:~:text=functional%20genes%20are%20merA%20and,almost%20nontoxic%20volatile%20elemental%20mercury">www.sciencedirect.com</a>). The coupled action of MerB and MerA ultimately results in the reduction of Hg^2+ to elemental mercury (Hg^0), which volatilizes out of the cell, effectively removing mercury from the cell and surrounding environment (<a href="https://www.mdpi.com/2673-8007/4/4/111#:~:text=and%20a%20periplasmic%20Hg%20binding,will%20act%20by%20regulating%20the">www.mdpi.com</a>). This <strong>volatilization of mercury</strong> is a distinctive biological process that bacteria use to detoxify mercury – MerB and MerA together catalyze the conversion of organomercury to volatile Hg^0, which is released into the atmosphere (<a href="https://www.mdpi.com/2673-8007/4/4/111#:~:text=and%20a%20periplasmic%20Hg%20binding,will%20act%20by%20regulating%20the">www.mdpi.com</a>) (<a href="https://www.mdpi.com/2673-8007/4/4/111#:~:text=reductase%20,presence%20of%20Hg%3B%20merD%20will">www.mdpi.com</a>). </p>
+<p>In <em>P. aeruginosa</em>, the <strong>merB</strong> gene is part of the <strong>mer operon</strong>, a cluster of mercury resistance genes typically including regulatory and transport components. Expression of the mer operon is tightly regulated and induced in the presence of mercury ions (see below), ensuring that MerB (and MerA) are produced when needed for detoxification (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11049809/#:~:text=Since%20the%20MerR%20family%20is,genes%20to%20investigate%20the%20expression">pmc.ncbi.nlm.nih.gov</a>). The biological processes involving MerB include <strong>organomercury catabolic processes</strong> – essentially the breakdown of organic mercury compounds – and the broader <strong>cellular response to mercury stress</strong>. These processes are ecologically significant: mercury-resistant pseudomonads with MerB can thrive in mercury-polluted soils, waters, or industrial effluents where they degrade organomercurials that would otherwise accumulate in the food chain (<a href="https://www.sciencedirect.com/science/article/abs/pii/S0964830512002739#:~:text=and%20merB%20confer%20broad,bioremediation%20at%20highly%20polluted%20mercury">www.sciencedirect.com</a>). Because of this capability, MerB-possessing bacteria have been explored as agents of <strong>bioremediation</strong> for mercury pollution, leveraging their enzymatic machinery to detoxify contaminated sites (<a href="https://www.sciencedirect.com/science/article/abs/pii/S0964830512002739#:~:text=and%20merB%20confer%20broad,bioremediation%20at%20highly%20polluted%20mercury">www.sciencedirect.com</a>). In summary, MerB’s physiological role is to confer the ability to <strong>transform organomercurials and contribute to mercury detoxification</strong>, an essential survival function in certain environments.</p>
+<h2 id="disease-associations-and-phenotypes">Disease Associations and Phenotypes</h2>
+<p>MerB itself is not known to be directly involved in pathogenesis or virulence in <em>P. aeruginosa</em>, but its presence can have important <strong>phenotypic and epidemiological implications</strong>. The primary phenotype associated with <strong>merB</strong> is the ability to grow and survive in the presence of organomercurial compounds that would normally be bactericidal. For example, MerB expression confers resistance to toxic organomercurial antiseptics such as phenylmercuric acetate (a mercurial disinfectant), allowing <em>Pseudomonas</em> cells to degrade this compound and thus tolerate concentrations that are lethal to other bacteria (<a href="https://academic.oup.com/femsre/article/27/2-3/355/615559?login=false#:~:text=Work%20on%20the%20mechanism%20of,Somewhat%20surprisingly%2C%20each%20operon%20had">academic.oup.com</a>). Strains of <em>P. aeruginosa</em> carrying a functional mer operon (including merB) can therefore persist in mercury-rich environments – whether in industrial waste, contaminated soils, or even in clinical settings where mercurial compounds have been used as preservatives or disinfectants. </p>
+<p>While MerB does not cause disease, the <strong>co-occurrence of mercury resistance with antibiotic resistance</strong> is a noted concern. Mercury resistance genes like <strong>merB</strong> often reside on plasmids or transposons that can also carry antibiotic resistance genes, leading to <strong>co-selection</strong> of multidrug-resistant strains in mercury-contaminated environments (<a href="https://www.mdpi.com/2673-8007/4/4/111#:~:text=may%20be%20a%20correlation%20between,such%20as%20a%20plasmid%20or">www.mdpi.com</a>). Exposure to mercury can select for bacteria harboring these mobile genetic elements, indirectly promoting the survival of antibiotic-resistant <em>P. aeruginosa</em> in hospitals or the environment (<a href="https://www.mdpi.com/2673-8007/4/4/111#:~:text=may%20be%20a%20correlation%20between,such%20as%20a%20plasmid%20or">www.mdpi.com</a>). Indeed, studies have found mercury-resistant bacteria (including <em>P. aeruginosa</em>) in clinical samples and environments heavily impacted by pollution, suggesting a link between metal resistance and the adaptability of opportunistic pathogens (<a href="https://academic.oup.com/femsre/article/27/2-3/355/615559?login=false#:~:text=metal%20resistances%20owing%20to%20concerns,and%20general%20themes%20arising%20from">academic.oup.com</a>) (<a href="https://www.mdpi.com/2673-8007/4/4/111#:~:text=merA%2C%20merD%2C%20merR%2C%20merP%2C%20merT,Myroides%20odoratus%2C%20Serratia%20liquefaciens%2C%20Vibrio">www.mdpi.com</a>). In summary, <strong>MerB’s “disease association” is indirect</strong> – it contributes to a survival trait (mercury resistance) that may enhance the persistence of <em>P. aeruginosa</em> in certain settings, potentially compounding infection control challenges when such strains also carry drug resistance. The key phenotype to note is <strong>broad-spectrum mercury resistance</strong>, which is useful for environmental survival and bioremediation, but in a clinical context may correlate with hardier, more drug-resistant bacterial populations.</p>
+<h2 id="protein-domains-and-structural-features">Protein Domains and Structural Features</h2>
+<p>MerB is a single-domain enzyme with a <strong>unique protein fold</strong> not found in other protein families (<a href="https://www.rcsb.org/structure/1S6L#:~:text=is%20characterized%20by%20a%20novel,the%20broad%20substrate%20specificity%20of">www.rcsb.org</a>). Solution NMR and crystal structure studies revealed that MerB consists of three small β-sheets surrounded by six α-helices, forming a compact globular protein (<a href="https://www.rcsb.org/structure/1S6L#:~:text=is%20characterized%20by%20a%20novel,the%20broad%20substrate%20specificity%20of">www.rcsb.org</a>). This fold creates a specialized active-site region built around <strong>two key cysteine residues</strong> (Cys96 and Cys159 in the <em>E. coli</em> MerB, which is homologous to Pseudomonas MerB) (<a href="https://www.rcsb.org/structure/1S6L#:~:text=is%20characterized%20by%20a%20novel,the%20broad%20substrate%20specificity%20of">www.rcsb.org</a>) (<a href="https://www.rcsb.org/structure/1S6L#:~:text=data%20of%20free%20MerB%20and,broad%20substrate%20specificity%20of%20MerB">www.rcsb.org</a>). These two cysteines are positioned such that they can simultaneously coordinate a mercury ion; they form a bi-coordinate Hg^2+-binding site that is critical for catalysis (<a href="https://www.rcsb.org/structure/1S6L#:~:text=data%20of%20free%20MerB%20and,broad%20substrate%20specificity%20of%20MerB">www.rcsb.org</a>). A third conserved cysteine (Cys117 in <em>E. coli</em> numbering) lies nearby; studies indicate this residue is not directly involved in the chemical reaction but helps maintain the structural integrity of the active site (a structural cysteine) (<a href="https://academic.oup.com/femsre/article/27/2-3/355/615559?login=false#:~:text=other%20Gram,physiological%20thiols%2C%20glutathione%20or%20cysteine">academic.oup.com</a>). Together, these conserved cysteine residues define the <strong>metal-binding motif</strong> of MerB, distinguishing it as a mercury-binding enzyme. </p>
+<p>Around the catalytic cysteines, MerB has an <strong>extensive hydrophobic groove or pocket</strong> that accommodates the organic (alkyl or aryl) portion of the organomercurial substrates (<a href="https://www.rcsb.org/structure/1S6L#:~:text=data%20of%20free%20MerB%20and,broad%20substrate%20specificity%20of%20MerB">www.rcsb.org</a>). This hydrophobic pocket is thought to enable the enzyme’s broad substrate specificity, allowing it to bind various organomercury compounds of different sizes and hydrophobicities (<a href="https://www.rcsb.org/structure/1S6L#:~:text=data%20of%20free%20MerB%20and,broad%20substrate%20specificity%20of%20MerB">www.rcsb.org</a>). For instance, MerB can degrade both short-chain alkylmercurials (like methylmercury) and aromatic organomercurials (like phenylmercury) with only a slight preference for aryl substrates (<a href="https://academic.oup.com/femsre/article/27/2-3/355/615559?login=false#:~:text=Meticulous%20characterization%20of%20the%20MerB,slow%20for%20an%20enzyme%2C%20these">academic.oup.com</a>) (<a href="https://academic.oup.com/femsre/article/27/2-3/355/615559?login=false#:~:text=very%20broad%20substrate%20tolerance%2C%20handling,effects%20were%20consistent%20with%20a">academic.oup.com</a>). The protein’s active site architecture positions the substrate’s carbon–Hg bond in proximity to the cysteine thiols, facilitating attack on the bond and protonation. Notably, MerB does <em>not</em> require any cofactors (such as metal clusters or organic coenzymes) – the mercury is directly coordinated by the protein’s own cysteine residues, and the proton needed for cleavage is provided by amino acid side chains or solvent, not an external cofactor (<a href="https://academic.oup.com/femsre/article/27/2-3/355/615559?login=false#:~:text=Meticulous%20characterization%20of%20the%20MerB,slow%20for%20an%20enzyme%2C%20these">academic.oup.com</a>). This <strong>cofactor-independent metal-binding capability</strong> is a special feature of MerB. The enzyme’s overall size and composition (~215 amino acids, monomeric) and the presence of multiple conserved cysteines define it as a distinct family (often referred to simply as the MerB family). Importantly, MerB has no close relatives outside mercury resistance systems – it represents a novel fold and function that evolved specifically for organomercury degradation (<a href="https://academic.oup.com/femsre/article/27/2-3/355/615559?login=false#:~:text=Recent%20phylogenetic%20analysis%20makes%20it,several%20subgroups%20distinguishable%20on%20the">academic.oup.com</a>). Its structure is optimized for stability in the intracellular reducing environment (no disulfides, as mentioned) and for reversible binding of a toxic metal. Structural studies continue to provide insight into how MerB stabilizes mercury intermediates and how it achieves catalytic cleavage of a very stable Hg–C bond.</p>
+<h2 id="expression-patterns-and-regulation">Expression Patterns and Regulation</h2>
+<p>The <strong>merB</strong> gene in <em>P. aeruginosa</em> is typically co-transcribed as part of the <strong>mer operon</strong>, under the control of the <strong>MerR</strong> regulatory protein. In mercury-free conditions, MerR (a metal-responsive transcriptional regulator) binds to the mer operon promoter and keeps it inactive. When Hg^2+ is present, MerR binds the ion and undergoes a conformational change that activates transcription of the operon (<a href="https://www.mdpi.com/2673-8007/4/4/111#:~:text=reductase%20,presence%20of%20Hg%3B%20merD%20will">www.mdpi.com</a>). A distinctive feature of the mer operon promoter (exemplified by the well-studied Tn501 operon from <em>P. aeruginosa</em>) is an unusually long 19-base-pair spacer between the -35 and -10 elements of the promoter, which is crucial for MerR-mediated activation via DNA distortion (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11049809/#:~:text=Since%20the%20MerR%20family%20is,genes%20to%20investigate%20the%20expression">pmc.ncbi.nlm.nih.gov</a>). Upon Hg^2+ binding, MerR bends and unwinds the promoter DNA to align these motifs, enabling RNA polymerase to initiate transcription of merA, merB, and other downstream genes (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11049809/#:~:text=Since%20the%20MerR%20family%20is,genes%20to%20investigate%20the%20expression">pmc.ncbi.nlm.nih.gov</a>). Thus, <strong>merB expression is inducible</strong> and tightly regulated: it remains virtually off in the absence of mercury and is highly upregulated when mercury (or certain organomercurials that release Hg^2+) is present. </p>
+<p>The regulatory circuit often includes MerD, a secondary regulator that can bind the mer operator and dampen MerR activation, thus fine-tuning the response (<a href="https://academic.oup.com/femsre/article/27/2-3/355/615559?login=false#:~:text=match%20at%20L618%20increase%20in,detoxification%20mechanism%20in%20its%20most">academic.oup.com</a>). In <em>P. aeruginosa</em> and other bacteria with broad-spectrum operons, the gene order can vary, but merR (regulator) usually lies upstream of the structural genes, and merB is found downstream typically after merA (or in some cases separated by additional genes such as merC or merG) (<a href="https://academic.oup.com/femsre/article/27/2-3/355/615559?login=false#:~:text=neurotoxic%20agent%20,relationships%20in%20many%20of%20these">academic.oup.com</a>) (<a href="https://academic.oup.com/femsre/article/27/2-3/355/615559?login=false#:~:text=The%20product%20of%20the%20merG,the%20periplasm%20and%20reduces%20cell">academic.oup.com</a>). For instance, on Tn501 (a transposon originally from <em>P. aeruginosa</em>), the operon includes <em>merTPCAD</em> (narrow spectrum), whereas broad-spectrum transposons like Tn5053 or plasmids like pMR26 include <em>merB</em> (and sometimes <em>merG</em>) after <em>merA</em> (<a href="https://academic.oup.com/femsre/article/27/2-3/355/615559?login=false#:~:text=The%20product%20of%20the%20merG,the%20periplasm%20and%20reduces%20cell">academic.oup.com</a>). All these genes share a common promoter controlled by MerR, making their expression synchronous upon induction. <em>P. aeruginosa</em> can therefore swiftly respond to mercury stress by producing MerB (and other Mer proteins) as needed. In terms of expression patterns, merB is generally silent during routine growth and is only expressed under conditions of mercury exposure. Laboratory studies using reporters have shown that mer operon expression can increase dramatically (tens to hundreds of fold) in the presence of submicromolar concentrations of Hg^2+ (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11049809/#:~:text=Since%20the%20MerR%20family%20is,genes%20to%20investigate%20the%20expression">pmc.ncbi.nlm.nih.gov</a>). This tightly regulated inducible expression minimizes any fitness cost to the bacterium, as MerB (and MerA) are produced only when their detoxification function is required.</p>
+<h2 id="evolutionary-conservation-and-diversity">Evolutionary Conservation and Diversity</h2>
+<p>MerB is an enzyme that appears across a broad range of bacterial species, but its distribution is patchy and largely influenced by <strong>horizontal gene transfer</strong>. The merB gene is typically found on plasmids, transposons, or integrative elements that can move between bacteria, rather than being a core, vertically inherited gene. As a result, the phylogenetic relationships of MerB proteins do not correspond to the phylogeny of the host bacteria – MerB sequences from distantly related bacteria often cluster together, indicating common mobile genetic origins (<a href="https://academic.oup.com/femsre/article/27/2-3/355/615559?login=false#:~:text=its%20carriage%20by%20transferrable%20plasmids%2C,essential%20for%20catalysis%20and%20Cys117">academic.oup.com</a>). In fact, <strong>MerB is a unique enzyme with no known paralogs outside of mercury resistance contexts</strong>, and sequence analyses suggest it has evolved into several subgroups that are more closely related to each other than to their hosts’ lineage (<a href="https://academic.oup.com/femsre/article/27/2-3/355/615559?login=false#:~:text=basis%20of%20their%20primary%20and,essential%20for%20catalysis%20and%20Cys117">academic.oup.com</a>). This reflects the strong selective pressure in mercury-rich niches and the transfer of merB among microbial communities. </p>
+<p>In terms of conservation, MerB proteins from different bacteria share the critical cysteine residues (and surrounding motifs) required for function, underscoring the importance of these residues (e.g. the Cys-x_x-Cys motif corresponding to positions ~96 and ~159) (<a href="https://academic.oup.com/femsre/article/27/2-3/355/615559?login=false#:~:text=other%20Gram,physiological%20thiols%2C%20glutathione%20or%20cysteine">academic.oup.com</a>). However, outside these key regions, MerB sequences can diverge significantly, and overall identity between MerB from disparate bacteria can be modest. Most <strong>Gram-positive mercury-resistant bacteria</strong> characterized to date carry <strong>broad-spectrum mer operons</strong> (including merB), whereas in <strong>Gram-negative bacteria</strong> the presence of merB is somewhat less frequent (<a href="https://academic.oup.com/femsre/article/27/2-3/355/615559?login=false#:~:text=Most%20described%20Gram,243%5D.%20Interestingly%2C%20in">academic.oup.com</a>). One survey found that roughly 20% of mercury-resistant Gram-negative strains had a merB gene, compared to a majority of Gram-positive strains (<a href="https://academic.oup.com/femsre/article/27/2-3/355/615559?login=false#:~:text=Most%20described%20Gram,243%5D.%20Interestingly%2C%20in">academic.oup.com</a>). <em>Pseudomonas aeruginosa</em> and other pseudomonads are among the Gram-negatives that commonly acquire broad-spectrum mer genes when needed. For example, <em>Pseudomonas strain K-62</em> (a soil isolate) harbors a plasmid with a complete broad-spectrum mer operon (<em>merTPCAGB</em>), enabling degradation of phenylmercury and other organomercurials (<a href="https://academic.oup.com/femsre/article/27/2-3/355/615559?login=false#:~:text=The%20product%20of%20the%20merG,the%20periplasm%20and%20reduces%20cell">academic.oup.com</a>). Environmental isolates of <em>P. aeruginosa</em> from mercury-contaminated sites have indeed been found to carry merA and merB, demonstrating that this pathogen can tap into the horizontal gene pool for mercury resistance when under heavy metal stress (<a href="https://www.mdpi.com/2673-8007/4/4/111#:~:text=merA%2C%20merD%2C%20merR%2C%20merP%2C%20merT,Myroides%20odoratus%2C%20Serratia%20liquefaciens%2C%20Vibrio">www.mdpi.com</a>). Additionally, some strains can possess multiple mer operons; plasmids like R831 (in <em>E. coli</em>) or pDU1358 have two distinct mer modules (one narrow-spectrum, one broad-spectrum) on the same replicon , highlighting the mosaic and duplicative nature of mercury resistance loci. </p>
+<p>From an evolutionary standpoint, <strong>merB appears to have evolved under strong selective pressure in environments with organomercury exposure</strong>. Its presence in diverse genera (Proteobacteria, Actinobacteria, Firmicutes, etc.) and association with transposable elements suggest that merB has been disseminated widely due to human activities (e.g. use of mercury compounds) and natural mercury cycling (<a href="https://academic.oup.com/femsre/article/27/2-3/355/615559?login=false#:~:text=Work%20on%20the%20mechanism%20of,Somewhat%20surprisingly%2C%20each%20operon%20had">academic.oup.com</a>) (<a href="https://academic.oup.com/femsre/article/27/2-3/355/615559?login=false#:~:text=its%20carriage%20by%20transferrable%20plasmids%2C,essential%20for%20catalysis%20and%20Cys117">academic.oup.com</a>). Despite this diversity, the enzyme’s function has remained conserved – all known MerB proteins catalyze the same fundamental reaction of breaking Hg–carbon bonds. The conservation of function and critical residues across evolutionary distances underscores MerB’s importance and the convergent evolutionary solution it provides to the challenge of organomercury toxicity.</p>
+<h2 id="relevant-go-terms-for-merb">Relevant GO Terms for MerB</h2>
+<ul>
+<li>
+<p><strong>Molecular Function – Alkylmercury lyase activity (GO:0018836):</strong> MerB’s enzymatic function corresponds to alkylmercury lyase activity, defined as catalyzing the reaction <em>“an alkylmercury + H^+ → an alkane + Hg^2+”</em> (<a href="https://ctdbase.org/detail.go?acc=GO%3A0018836&amp;type=go#:~:text=Definition%20%20,GO%3A0018836">ctdbase.org</a>). This is the specific activity of organomercurial lyase, breaking the carbon–mercury bond and liberating Hg^2+. </p>
+</li>
+<li>
+<p><strong>Biological Process – Organomercury catabolic process (GO:0046413) and detoxification of mercury ion (GO:0050787):</strong> MerB is involved in the catabolism (breakdown) of organomercury compounds as part of the cell’s response to mercury. By converting organomercurials to inorganic mercury, MerB contributes to the broader process of mercury detoxification – any process that reduces mercury toxicity, including enzymatic conversion and volatilization of Hg^0 (<a href="https://ctdbase.org/detail.go?acc=GO%3A0050787&amp;type=go#:~:text=Definition%20%20,0">ctdbase.org</a>). In GO annotation, this is captured by terms for organomercury compound catabolism and mercury ion detoxification. </p>
+</li>
+<li>
+<p><strong>Cellular Component – Cytoplasm (GO:0005737):</strong> The cellular localization of MerB is the cytoplasm (intracellular space) of <em>P. aeruginosa</em>. MerB lacks secretion signals and operates in the cytosolic compartment (<a href="https://academic.oup.com/femsre/article/27/2-3/355/615559?login=false#:~:text=other%20Gram,physiological%20thiols%2C%20glutathione%20or%20cysteine">academic.oup.com</a>), where it interacts with mercury substrates and partners like MerA. Thus, the appropriate GO term for its location is cytoplasm. </p>
+</li>
+</ul>
+<p>Each of the above GO terms is supported by experimental evidence: the enzymatic activity has been biochemically characterized (<a href="https://academic.oup.com/femsre/article/27/2-3/355/615559?login=false#:~:text=IncM%20plasmid%2C%20R831%2C%20only%20two,16">academic.oup.com</a>), the biological role in mercury detoxification is well documented (<a href="https://academic.oup.com/femsre/article/27/2-3/355/615559?login=false#:~:text=although%2C%20with%20the%20exception%20of,We%20now%20consider">academic.oup.com</a>), and the cytosolic localization is inferred from the protein’s sequence features and functional assays (<a href="https://academic.oup.com/femsre/article/27/2-3/355/615559?login=false#:~:text=other%20Gram,physiological%20thiols%2C%20glutathione%20or%20cysteine">academic.oup.com</a>). These GO annotations help describe MerB’s role in mercury resistance at the molecular, process, and cellular levels. </p>
+<p><strong>References:</strong> The information above is drawn from studies on mercury resistance operons and MerB in <em>Pseudomonas</em> and other bacteria, including mechanistic biochemical analyses (<a href="https://academic.oup.com/femsre/article/27/2-3/355/615559?login=false#:~:text=Meticulous%20characterization%20of%20the%20MerB,slow%20for%20an%20enzyme%2C%20these">academic.oup.com</a>) (<a href="https://academic.oup.com/femsre/article/27/2-3/355/615559?login=false#:~:text=rates%20of%20organomercurials,protein%20thiol%20groups%20might%20be">academic.oup.com</a>), structural biology findings (<a href="https://www.rcsb.org/structure/1S6L#:~:text=is%20characterized%20by%20a%20novel,the%20broad%20substrate%20specificity%20of">www.rcsb.org</a>), and comprehensive reviews of bacterial mercury detoxification systems (<a href="https://academic.oup.com/femsre/article/27/2-3/355/615559?login=false#:~:text=Work%20on%20the%20mechanism%20of,Somewhat%20surprisingly%2C%20each%20operon%20had">academic.oup.com</a>) (<a href="https://www.sciencedirect.com/science/article/abs/pii/S0964830512002739#:~:text=functional%20genes%20are%20merA%20and,almost%20nontoxic%20volatile%20elemental%20mercury">www.sciencedirect.com</a>). This collected evidence underpins the GO annotations and our understanding of MerB as a crucial enzyme for organomercury detoxification in <em>Pseudomonas aeruginosa</em>.</p>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: A0A1V0M5B3
+gene_symbol: merB
+taxon:
+  id: NCBITaxon:287
+  label: Pseudomonas aeruginosa
+description: Organomercurial lyase (MerB) is a monomeric ~22 kDa cytoplasmic enzyme
+  that catalyzes the protonolytic cleavage of carbon-mercury bonds in organomercury
+  compounds, converting toxic organomercurials like methylmercury and phenylmercury
+  into inorganic Hg(II) and releasing the organic moiety as a hydrocarbon. Functions
+  as the first step in broad-spectrum mercury resistance, working sequentially with
+  MerA to detoxify organomercurials. Contains essential catalytic cysteines (Cys96,
+  Cys159) that coordinate mercury through bis-thiolate binding. Possesses a unique
+  protein fold with no known paralogs outside mercury resistance systems. Expression
+  is tightly regulated by MerR as part of the mer operon, induced specifically by
+  mercury exposure.
+existing_annotations:
+- term:
+    id: GO:0018836
+    label: alkylmercury lyase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: This is the correct and most specific molecular function for MerB. Extensive
+      biochemical evidence confirms MerB catalyzes the cleavage of carbon-mercury
+      bonds in organomercurials.
+    action: ACCEPT
+    reason: Direct experimental evidence confirms alkylmercury lyase as MerB&#39;s primary
+      molecular function
+    supported_by:
+    - reference_id: file:PSEAI/merB/merB-deep-research.md
+      supporting_text: MerB is an organomercurial lyase enzyme that catalyzes the
+        protonolytic cleavage of the carbon–mercury bond in organomercury compounds.
+        MerB converts toxic organomercurials (such as methylmercury or phenylmercury
+        compounds) into an inorganic mercuric ion (Hg^2+), while releasing the organic
+        moiety as a hydrocarbon (e.g. methane from methylmercury).
+      reference_section_type: RESULTS
+- term:
+    id: GO:0016829
+    label: lyase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: This is correct but too general. MerB is indeed a lyase, but the more
+      specific term GO:0018836 (alkylmercury lyase activity) should be used as the
+      primary annotation.
+    action: KEEP_AS_NON_CORE
+    reason: Too general - more specific alkylmercury lyase term available
+    supported_by:
+    - reference_id: file:PSEAI/merB/merB-deep-research.md
+      supporting_text: MerB functions as a proton-transfer enzyme that directly breaks
+        the Hg–C bond (a rare lyase reaction) without requiring external cofactors.
+- term:
+    id: GO:0046689
+    label: response to mercury ion
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: Correct and well-supported biological process. MerB expression is specifically
+      induced by mercury and is essential for the cellular response to organomercury
+      compounds.
+    action: ACCEPT
+    reason: MerB expression is specifically induced by mercury exposure via MerR regulation
+      as part of mercury resistance response
+    supported_by:
+    - reference_id: file:PSEAI/merB/merB-deep-research.md
+      supporting_text: &#39;Expression of the mer operon is tightly regulated and induced
+        in the presence of mercury ions. merB expression is inducible and tightly
+        regulated: it remains virtually off in the absence of mercury and is highly
+        upregulated when mercury (or certain organomercurials that release Hg^2+)
+        is present.&#39;
+      reference_section_type: RESULTS
+    - reference_id: PMID:12829275
+      supporting_text: Bacterial resistance to inorganic and organic mercury compounds
+        (HgR) is one of the most widely observed phenotypes in eubacteria
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  review:
+    summary: MerB is located in the cytoplasm lacking signal peptides or membrane-spanning domains, consistent with its function as a cytosolic enzyme.
+    action: NEW
+    reason: This cellular component term reflects MerB&#39;s established subcellular localization to the cytoplasm where it cleaves organomercury compounds.
+    supported_by:
+    - reference_id: file:PSEAI/merB/merB-deep-research.md
+      supporting_text: MerB is located in the cytoplasm of the bacterial cell. It lacks any signal peptide or membrane-spanning domains, and it contains no disulfide bonds, consistent with a cytosolic enzyme that functions in the reducing environment of the cytosol
+- term:
+    id: GO:0050787
+    label: detoxification of mercury ion
+  evidence_type: IEA
+  review:
+    summary: MerB detoxifies organomercury compounds by cleaving carbon-mercury bonds to produce less toxic inorganic mercury that can be further reduced by MerA.
+    action: NEW
+    reason: This biological process term captures MerB&#39;s essential role in mercury detoxification as the first step in converting toxic organomercurials to inorganic mercury.
+    supported_by:
+    - reference_id: PMID:12829275
+      supporting_text: MerB enables broad-spectrum mercury resistance by degrading organomercurials through protonolysis
+    - reference_id: file:PSEAI/merB/merB-deep-research.md
+      supporting_text: MerB converts toxic organomercurials (such as methylmercury or phenylmercury compounds) into an inorganic mercuric ion (Hg^2+), enabling mercury detoxification and bioremediation
+references:
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  full_text_unavailable: false
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods.
+  full_text_unavailable: false
+  findings: []
+- id: PMID:12829275
+  title: Bacterial mercury resistance from atoms to ecosystems
+  full_text_unavailable: true
+  findings:
+  - statement: MerB enables broad-spectrum mercury resistance by converting organomercurials
+      to Hg(II)
+    supporting_text: that degrades organomercurials by protonolysis, and one or more
+      additional
+    reference_section_type: ABSTRACT
+- id: file:PSEAI/merB/merB-deep-research.md
+  title: Deep Research Report on merB gene
+  full_text_unavailable: false
+  findings:
+  - statement: MerB is a cytoplasmic enzyme that cleaves carbon-mercury bonds in organomercurials
+    supporting_text: MerB is located in the cytoplasm of the bacterial cell. It lacks
+      any signal peptide or membrane-spanning domains, and it contains no disulfide
+      bonds, consistent with a cytosolic enzyme that functions in the reducing environment
+      of the cytosol.
+    reference_section_type: ABSTRACT
+  - statement: MerB uses essential cysteine residues for catalysis
+    supporting_text: Two cysteine residues (conserved as Cys96 and Cys159 in E. coli
+      MerB numbering) are essential for catalysis, forming a bis-thiolated Hg^2+ intermediate
+      and likely delivering the proton to the bound organic group.
+    reference_section_type: ABSTRACT
+  - statement: MerB has a unique protein fold specific to mercury resistance
+    supporting_text: MerB is a single-domain enzyme with a unique protein fold not
+      found in other protein families. Solution NMR and crystal structure studies
+      revealed that MerB consists of three small β-sheets surrounded by six α-helices,
+      forming a compact globular protein.
+    reference_section_type: ABSTRACT
+  - statement: MerB expression is tightly regulated by MerR in response to mercury
+    supporting_text: The merB gene in P. aeruginosa is typically co-transcribed as
+      part of the mer operon, under the control of the MerR regulatory protein. When
+      Hg^2+ is present, MerR binds the ion and undergoes a conformational change that
+      activates transcription of the operon.
+    reference_section_type: ABSTRACT
+  - statement: MerB enables bioremediation of mercury-contaminated environments
+    supporting_text: mercury-resistant pseudomonads with MerB can thrive in mercury-polluted
+      soils, waters, or industrial effluents where they degrade organomercurials that
+      would otherwise accumulate in the food chain. MerB-possessing bacteria have
+      been explored as agents of bioremediation for mercury pollution.
+    reference_section_type: ABSTRACT
+core_functions:
+- description: Enzymatic cleavage of carbon-mercury bonds in organomercury compounds
+    for mercury detoxification
+  molecular_function:
+    id: GO:0018836
+    label: alkylmercury lyase activity
+  directly_involved_in:
+  - id: GO:0050787
+    label: detoxification of mercury ion
+  - id: GO:0046689
+    label: response to mercury ion
+  locations:
+  - id: GO:0005737
+    label: cytoplasm
+  supported_by:
+  - reference_id: PMID:12829275
+    supporting_text: Supporting evidence for merB function
+  - reference_id: file:PSEAI/merB/merB-deep-research.md
+    supporting_text: Bioinformatics evidence for merB function
+suggested_questions:
+- question: What is the molecular mechanism by which MerB cleaves the C-Hg bond without
+    requiring cofactors or external energy sources?
+- question: How does MerB achieve substrate specificity for different organomercury
+    compounds (methylmercury vs phenylmercury)?
+- question: What determines the efficiency of MerB-MerA coupling in different bacterial
+    species and environmental conditions?
+suggested_experiments:
+- description: Time-resolved crystallography to capture the transition state during
+    C-Hg bond cleavage
+- description: Isotope labeling studies to trace the fate of carbon and mercury atoms
+    during the lyase reaction
+- description: Engineering MerB variants for enhanced activity against specific organomercury
+    pollutants in contaminated environments
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+    <div class="section">
+        <div class="pathway-link">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h2 class="section-title">🔗 Related Resources</h2>
+                <span class="vote-buttons" data-g="A0A1V0M5B3" data-a="PATHWAY: merB pathways" data-r="" data-act="PATHWAY">
+                    <button class="vote-btn" data-v="up" title="Pathway visualization is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="Pathway visualization needs improvement">👎</button>
+                </span>
+            </div>
+            <p>
+                <a href="merB-pathway.html" target="_blank" class="btn-link">
+                    📊 View Pathway Visualization
+                </a>
+                <span style="color: #666; font-size: 0.9rem; margin-left: 1rem;">
+                    Interactive pathway diagram with detailed annotations
+                </span>
+            </p>
+        </div>
+    </div>
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

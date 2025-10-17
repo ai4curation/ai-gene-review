@@ -110,10 +110,12 @@ class JSONExporter:
         row["gene_symbol"] = gene_review.gene_symbol
         row["taxon_id"] = gene_review.taxon.id if gene_review.taxon else None
         row["taxon_label"] = gene_review.taxon.label if gene_review.taxon else None
+        row["tags"] = gene_review.tags if gene_review.tags else []
 
         # Add link fields
         row["uniprot_link"] = f"https://www.uniprot.org/uniprotkb/{gene_review.id}" if gene_review.id else None
         row["pathway_link"] = self._generate_pathway_link(gene_review)
+        row["review_html_link"] = self._generate_review_html_link(gene_review)
 
         # Term information
         if annotation.term:
@@ -297,6 +299,78 @@ class JSONExporter:
         abs_path = Path("genes") / organism_dir / gene_review.gene_symbol / f"{gene_review.gene_symbol}-pathway.html"
         if abs_path.exists():
             return pathway_path
+
+        return None
+
+    def _generate_review_html_link(self, gene_review: GeneReview) -> Optional[str]:
+        """
+        Generate a relative link to the gene review HTML page.
+
+        Args:
+            gene_review: The GeneReview object
+
+        Returns:
+            Relative link to the review HTML if it exists, None otherwise
+        """
+        if not gene_review.gene_symbol:
+            return None
+
+        # We need to determine the organism/species directory from the taxon
+        # This is a heuristic mapping - we'll use common patterns
+        organism_mapping = {
+            "NCBITaxon:9606": "human",
+            "NCBITaxon:10090": "mouse",
+            "NCBITaxon:559292": "yeast",
+            "NCBITaxon:4896": "pombe",
+            "NCBITaxon:7227": "fly",
+            "NCBITaxon:6239": "worm",
+            "NCBITaxon:8355": "XENTR",  # Xenopus tropicalis
+            "NCBITaxon:3702": "ARATH",  # Arabidopsis thaliana
+        }
+
+        # Try to map taxon to organism directory
+        organism_dir = None
+        if gene_review.taxon and gene_review.taxon.id:
+            organism_dir = organism_mapping.get(gene_review.taxon.id)
+
+        # If no mapping found, try to find the review file in all directories
+        if not organism_dir:
+            # Look for review file in multiple possible locations
+            possible_paths = [
+                f"../genes/human/{gene_review.gene_symbol}/{gene_review.gene_symbol}-ai-review.html",
+                f"../genes/mouse/{gene_review.gene_symbol}/{gene_review.gene_symbol}-ai-review.html",
+                f"../genes/yeast/{gene_review.gene_symbol}/{gene_review.gene_symbol}-ai-review.html",
+                f"../genes/pombe/{gene_review.gene_symbol}/{gene_review.gene_symbol}-ai-review.html",
+                f"../genes/fly/{gene_review.gene_symbol}/{gene_review.gene_symbol}-ai-review.html",
+                f"../genes/worm/{gene_review.gene_symbol}/{gene_review.gene_symbol}-ai-review.html",
+                f"../genes/XENTR/{gene_review.gene_symbol}/{gene_review.gene_symbol}-ai-review.html",
+            ]
+
+            # Check if any of these files exist
+            for path in possible_paths:
+                # Convert relative path to absolute to check existence
+                abs_path = Path("genes") / path.replace("../genes/", "")
+                if abs_path.exists():
+                    return path
+
+            # If none found, try organism codes (BPZF4, ARATH, etc.)
+            # This is for bacterial/other organism codes
+            gene_symbol = gene_review.gene_symbol
+            for org_path in Path("genes").iterdir():
+                if org_path.is_dir():
+                    possible_file = org_path / gene_symbol / f"{gene_symbol}-ai-review.html"
+                    if possible_file.exists():
+                        return f"../genes/{org_path.name}/{gene_symbol}/{gene_symbol}-ai-review.html"
+
+            return None
+
+        # Use mapped organism directory
+        review_path = f"../genes/{organism_dir}/{gene_review.gene_symbol}/{gene_review.gene_symbol}-ai-review.html"
+
+        # Check if the file exists
+        abs_path = Path("genes") / organism_dir / gene_review.gene_symbol / f"{gene_review.gene_symbol}-ai-review.html"
+        if abs_path.exists():
+            return review_path
 
         return None
 
