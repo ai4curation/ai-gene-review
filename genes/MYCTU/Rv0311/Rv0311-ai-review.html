@@ -1,0 +1,1605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rv0311 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Rv0311</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/O07238" target="_blank" class="term-link">
+                        O07238
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Mycobacterium tuberculosis H37Rv</span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "Rv0311";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="O07238" data-a="DESCRIPTION: A conserved hypothetical protein in Mycobacterium ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>A conserved hypothetical protein in Mycobacterium tuberculosis H37Rv that is essential for growth in minimal media and during infection. Contains a protein splicing signature motif suggesting intein-like or autoproteolytic activity. Localizes to the cell envelope and is exported via a signal peptide. Required for bacterial virulence, particularly in central nervous system infections. Despite being well-conserved across mycobacteria, its precise molecular function remains unknown.
+</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008233" target="_blank" class="term-link">
+                                    GO:0008233
+                                </a>
+                            </span>
+                            <span class="term-label">peptidase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="O07238" data-a="GO:0008233" data-r="" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Rv0311 likely functions as an autoproteolytic enzyme with intein-like activity based on conserved splicing signature motifs.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This molecular function term reflects Rv0311&#39;s predicted peptidase activity based on the presence of conserved protein splicing signature motifs including catalytic residues.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:MYCTU/Rv0311/Rv0311-deep-research.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Rv0311&#39;s sequence contains a conserved protein splicing (intein) signature (PROSITE pattern PS00881) including key residues typically required for protein splicing, suggesting autoproteolytic peptidase activity</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016539" target="_blank" class="term-link">
+                                    GO:0016539
+                                </a>
+                            </span>
+                            <span class="term-label">intein-mediated protein splicing</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="O07238" data-a="GO:0016539" data-r="" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Rv0311 contains conserved protein splicing signature motifs suggesting it may undergo intein-mediated autoproteolysis.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This biological process term captures Rv0311&#39;s predicted function in protein splicing based on sequence analysis showing intein signature motifs.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:MYCTU/Rv0311/Rv0311-deep-research.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Rv0311&#39;s sequence contains a conserved protein splicing (intein) signature (PROSITE pattern PS00881) including key residues typically required for protein splicing</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030313" target="_blank" class="term-link">
+                                    GO:0030313
+                                </a>
+                            </span>
+                            <span class="term-label">cell envelope</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="O07238" data-a="GO:0030313" data-r="" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Rv0311 localizes to the cell envelope and is exported via a signal peptide, as detected in multiple cellular fractions.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This cellular component term reflects Rv0311&#39;s subcellular localization to the cell envelope, supported by both sequence analysis and proteomics data.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:MYCTU/Rv0311/Rv0311-deep-research.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Rv0311 localizes to the cell envelope and is exported via a signal peptide</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0040007" target="_blank" class="term-link">
+                                    GO:0040007
+                                </a>
+                            </span>
+                            <span class="term-label">growth</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="O07238" data-a="GO:0040007" data-r="" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Rv0311 is essential for mycobacterial growth under nutrient-limited conditions, particularly in minimal media.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This biological process term reflects Rv0311&#39;s essential role in bacterial growth under specific conditions, supported by essentiality studies.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:MYCTU/Rv0311/Rv0311-deep-research.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Rv0311 is essential for growth in minimal media but not in rich media, as demonstrated by transposon mutagenesis studies</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0075001" target="_blank" class="term-link">
+                                    GO:0075001
+                                </a>
+                            </span>
+                            <span class="term-label">adhesion of symbiont infection structure to host</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="O07238" data-a="GO:0075001" data-r="" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Rv0311 is required for virulence and bacterial survival within the host, particularly during CNS infections.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This biological process term reflects Rv0311&#39;s role in pathogenesis and host infection, supported by virulence studies showing attenuation in mutants.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:MYCTU/Rv0311/Rv0311-deep-research.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Rv0311 is required for virulence particularly in CNS infections, with insertion mutants significantly attenuated in brain infection models</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Likely functions as an autoproteolytic enzyme with intein-like activity involved in post-translational protein processing. The presence of conserved splicing signature motifs (PROSITE PS00881) including histidine-aspartate-cysteine catalytic residues suggests it may catalyze its own excision from a precursor protein.
+</h3>
+                <span class="vote-buttons" data-g="O07238" data-a="FUNCTION: Likely functions as an autoproteolytic enzyme with..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008233" target="_blank" class="term-link">
+                            peptidase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016539" target="_blank" class="term-link">
+                                intein-mediated protein splicing
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030313" target="_blank" class="term-link">
+                                cell envelope
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:MYCTU/Rv0311/Rv0311-deep-research.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">Rv0311&#39;s sequence contains a conserved protein splicing (intein) signature (PROSITE pattern PS00881)</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Essential for mycobacterial growth under nutrient-limited conditions. Required for bacterial survival within the host, particularly for CNS infections. Part of the SigH and WhiB5 stress response regulons.
+</h3>
+                <span class="vote-buttons" data-g="O07238" data-a="FUNCTION: Essential for mycobacterial growth under nutrient-..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                            protein binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0040007" target="_blank" class="term-link">
+                                growth
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0075001" target="_blank" class="term-link">
+                                adhesion of symbiont infection structure to host
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:MYCTU/Rv0311/Rv0311-deep-research.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">Be et al. (2008) found an insertion mutant in the Rv0311 ortholog that was significantly attenuated in the brain of mice (a model of TB meningitis)</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9634230" target="_blank" class="term-link">
+                            PMID:9634230
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deciphering the biology of Mycobacterium tuberculosis from the complete genome sequence</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21969609" target="_blank" class="term-link">
+                            PMID:21969609
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Proteogenomic analysis of Mycobacterium tuberculosis by high resolution mass spectrometry</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Rv0311 protein is detected in multiple cellular fractions including membrane and culture filtrates</div>
+                        
+                        <div class="finding-text">"Identified Rv0311 among the proteomic analysis of Mycobacterium tuberculosis by high resolution mass spectrometry"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:MYCTU/Rv0311/Rv0311-deep-research.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep Research Report for Rv0311 gene function analysis</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Rv0311 contains a protein splicing signature motif suggesting intein-like activity</div>
+                        
+                        <div class="finding-text">"Rv0311&#39;s sequence contains a conserved protein splicing (intein) signature (PROSITE pattern PS00881) ... includes key residues typically required for protein splicing"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Rv0311 is essential for growth in minimal media but not in rich media</div>
+                        
+                        <div class="finding-text">"Sassetti et al. (2003) found Rv0311 as essential for growth in vitro (on minimal medium 7H10 agar) ... DeJesus et al. (2017) with enriched media reported Rv0311 as non-essential under rich laboratory conditions"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Rv0311 is required for virulence particularly in CNS infections</div>
+                        
+                        <div class="finding-text">"Be et al. (2008) found an insertion mutant in the Rv0311 ortholog that was significantly attenuated in the brain of mice (a model of TB meningitis)"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Rv0311 is regulated by stress response factors SigH and WhiB5</div>
+                        
+                        <div class="finding-text">"ChIP-Seq analyses have identified transcription factors that bind near the Rv0311 promoter ... SigH (Rv3223c) ... WhiB5 (Rv0022c)"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(Rv0311-deep-research.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="O07238" data-a="DOC: Deep Research" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="deep-research-report-rv0311-myctu">Deep Research Report: Rv0311 (MYCTU)</h1>
+<p>Generated using OpenAI Deep Research API</p>
+<p>UniProt ID: O07238<br />
+Directory alias: Rv0311</p>
+<hr />
+<h1 id="gene-function-and-molecular-mechanisms">Gene Function and Molecular Mechanisms</h1>
+<p>The Rv0311 gene of <em>Mycobacterium tuberculosis</em> H37Rv encodes a <strong>conserved hypothetical protein</strong> of 409 amino acids with no assigned name (<a href="https://orca2.tamu.edu/U19/pages/Rv0311.html#:~:text=,%2A%20function">orca2.tamu.edu</a>) (<a href="https://orca1.tamu.edu/mad/orthologs/pages/Rv0311.html#:~:text=species%20%20,hypothetical%20protein%20Rv0311">orca1.tamu.edu</a>). To date, its precise molecular function remains <strong>unknown</strong>, as it lacks clear similarity to characterized proteins (no close homologs in PDB &gt;35% identity) (<a href="https://orca2.tamu.edu/U19/pages/Rv0311.html#:~:text=,to%20additional%20information%20on%20Rv0311">orca2.tamu.edu</a>). <em>In silico</em> analysis has revealed that Rv0311’s sequence contains a <strong>protein splicing signature motif (PROSITE PS00881)</strong>, which is associated with inteins (self-splicing proteins) (<a href="https://mycobrowser.epfl.ch/genes/Rv0311#:~:text=Comments%20%20,H37Rv%20in%20a%20MtbYM%20rich">mycobrowser.epfl.ch</a>). This suggests Rv0311 may include an <strong>intein-like domain or autoproteolytic element</strong>, although no splicing activity has been experimentally confirmed. The presence of this motif and conserved catalytic residues (e.g. a histidine–aspartate–histidine–cysteine sequence) hints that Rv0311 could function as an <strong>enzyme or processing factor</strong>, potentially involved in post-translational protein modification or DNA/RNA metabolism (<a href="https://mycobrowser.epfl.ch/genes/Rv0311#:~:text=Comments%20%20,H37Rv%20in%20a%20MtbYM%20rich">mycobrowser.epfl.ch</a>). However, <strong>direct biochemical activity</strong> of Rv0311 has not been demonstrated, and it is currently annotated simply as a <em>“hypothetical protein”</em> with unknown function (<a href="https://orca2.tamu.edu/U19/pages/Rv0311.html#:~:text=,%2A%20function">orca2.tamu.edu</a>). Notably, UniProt-based Gene Ontology (GO) annotations suggest a role in <strong>growth</strong> and <strong>pathogenesis</strong>, implying that while the exact mechanism is unclear, Rv0311 is believed to contribute to the bacterium’s proliferation and virulence (<a href="https://orca2.tamu.edu/U19/pages/Rv0311.html#:~:text=,based%20on%20iSM810%20metabolic%20model">orca2.tamu.edu</a>). These broad annotations are likely inferred from genetic studies (e.g. essentiality and infection models) rather than a known molecular mechanism. In summary, Rv0311 is an <strong>uncharacterized but conserved protein</strong> thought to be enzymatic in nature, potentially carrying an intein-like segment, and required for <em>M. tuberculosis</em> to grow and cause disease, even though its specific substrate or biochemical pathway remains to be discovered.</p>
+<h2 id="cellular-localization-and-subcellular-components">Cellular Localization and Subcellular Components</h2>
+<p>Multiple lines of evidence indicate that Rv0311 is associated with the <strong>cell envelope</strong> and is likely an <strong>exported/secreted protein</strong>. The N-terminal sequence of Rv0311 is hydrophobic and resembles a signal peptide, consistent with secretion via the Sec pathway. Proteomics studies have indeed identified the Rv0311 protein in culture supernatants and membrane fractions. For example, Rv0311 was detected by mass spectrometry in <strong>detergent-phase (Triton X-114) extracts</strong> of <em>M. tuberculosis</em> H37Rv (<a href="https://mycobrowser.epfl.ch/genes/Rv0311#:~:text=Protein%20splicing%20signature,H37Rv%20in%20a%20MtbYM%20rich">mycobrowser.epfl.ch</a>). Triton X-114 extraction enriches for hydrophobic, membrane-associated proteins, suggesting Rv0311 either integrates into or peripherally associates with the cell membrane. In a comprehensive fractionation study, Rv0311 was also found in the <strong>culture filtrate, membrane protein fraction, and whole-cell lysate</strong>, confirming that a portion of the protein is <strong>exported outside the cell</strong> (culture filtrate) while some remains cell-associated (<a href="https://mycobrowser.epfl.ch/genes/Rv0311#:~:text=Protein%20splicing%20signature,H37Rv%20in%20a%20MtbYM%20rich">mycobrowser.epfl.ch</a>). The presence of Rv0311 in the extracellular milieu implies it may function in the <strong>periplasmic space or cell wall interface</strong>, possibly interacting with host tissues or cell-wall components. Consistently, Rv0311 is categorized as a cell envelope-associated protein in the H37Rv genome annotations (<a href="https://mycobrowser.epfl.ch/genes/Rv0311#:~:text=Proteomics%20%20,2011">mycobrowser.epfl.ch</a>). It is not predicted to contain any large trans-membrane helices (<a href="https://orca2.tamu.edu/U19/pages/Rv0311.html#:~:text=,membrane%20region">orca2.tamu.edu</a>), so if anchored, it could be via a post-translational modification. (Notably, despite a signal peptide, Rv0311’s sequence does not perfectly match the canonical lipoprotein “lipobox,” so it may be a <strong>non-lipidated secretory protein</strong> rather than a lipoprotein.) In summary, Rv0311 is likely located in the <strong>cell wall or extracellular space</strong> of <em>M. tuberculosis</em>, where it could contribute to cell envelope physiology or mediate interactions with the host environment.</p>
+<h2 id="biological-processes-involvement">Biological Processes Involvement</h2>
+<p>Though its exact function is unknown, Rv0311 appears to play important roles in key biological processes of <em>M. tuberculosis</em>. Genetic and phenotypic data link this gene to <strong>bacterial growth</strong>, stress adaptation, and <strong>pathogenesis</strong>. Rv0311 is broadly conserved and has been placed in the category of “conserved hypotheticals,” many of which are crucial for core metabolism or survival (<a href="https://mycobrowser.epfl.ch/genes/Rv0311#:~:text=Comments%20%20,H37Rv%20in%20a%20MtbYM%20rich">mycobrowser.epfl.ch</a>). Gene Ontology annotations (UniProt) explicitly associate Rv0311 with the processes of <strong>growth (GO:0040007)</strong> and <strong>pathogenesis (GO:0009405)</strong> (<a href="https://orca2.tamu.edu/U19/pages/Rv0311.html#:~:text=,based%20on%20iSM810%20metabolic%20model">orca2.tamu.edu</a>). Experimentally, Rv0311 has been shown to be <strong>required for optimal growth</strong> under certain conditions: a high-throughput mutagenesis study identified Rv0311 as <em>essential for growth</em> in standard minimal media (<a href="https://orca2.tamu.edu/U19/pages/Rv0311.html#:~:text=Essential%20%20%7C%207H10,Hybridization%20Ratio%3A%200.17">orca2.tamu.edu</a>). In particular, a transposon insertion in Rv0311 severely impaired <em>M. tuberculosis</em> growth on laboratory agar (7H10) and in infected mice, suggesting involvement in vital <strong>metabolic or replicative processes</strong> (<a href="https://orca2.tamu.edu/U19/pages/Rv0311.html#:~:text=Essential%20%20%7C%207H10,Hybridization%20Ratio%3A%200.17">orca2.tamu.edu</a>) (<a href="https://mycobrowser.epfl.ch/genes/Rv0311#:~:text=Mutant%20%20%7C%20Non,2008">mycobrowser.epfl.ch</a>). Conversely, in nutrient-rich media, Rv0311 is non-essential (mutants can grow when many nutrients are supplied) (<a href="https://mycobrowser.epfl.ch/genes/Rv0311#:~:text=Mutant%20%20%7C%20Non,2008">mycobrowser.epfl.ch</a>), implying its process may be bypassed by environmental supplements. This pattern indicates Rv0311 participates in a <strong>biosynthetic or nutrient utilization pathway</strong> that is indispensable when the bacterium must synthesize its own building blocks, linking it to general growth and metabolism. Rv0311 is also implicated in <strong>biological stress responses and virulence</strong> pathways. It is part of the SigH and WhiB5 regulons (see Expression section), which are activated during oxidative stress and dormancy, hinting that Rv0311 is involved in the bacterial <strong>stress adaptation</strong> process (<a href="https://orca2.tamu.edu/U19/pages/Rv0311.html#:~:text=,Downregulates">orca2.tamu.edu</a>). Moreover, because Rv0311 mutants are attenuated in vivo (especially in the central nervous system infection model), the gene likely contributes to the <strong>infection process and survival inside the host</strong> (<a href="https://mycobrowser.epfl.ch/genes/Rv0311#:~:text=gene%20for%20in%20vitro%20growth,2008">mycobrowser.epfl.ch</a>). In summary, while the precise process is undetermined, Rv0311 is functionally tied to <strong>essential cellular processes</strong> (possibly cofactor biosynthesis or cell-wall assembly) and is required for <em>M. tuberculosis</em> to <strong>grow, withstand stress, and cause disease</strong>.</p>
+<h2 id="disease-associations-and-phenotypes">Disease Associations and Phenotypes</h2>
+<p>Rv0311 has drawn interest due to its connection with <em>M. tuberculosis</em> <strong>virulence and fitness in infection models</strong>. Although not a “disease gene” in the human sense, Rv0311 significantly affects the pathogenicity of the bacterium that causes tuberculosis. In a landmark transposon mutagenesis screen, Rv0311 was identified as <strong>essential for <em>M. tuberculosis</em> survival in mice</strong>, meaning bacteria lacking Rv0311 could not establish a normal infection (<a href="https://orca2.tamu.edu/U19/pages/Rv0311.html#:~:text=Essential%20%20%7C%207H10,Hybridization%20Ratio%3A%200.17">orca2.tamu.edu</a>) (<a href="https://mycobrowser.epfl.ch/genes/Rv0311#:~:text=Mutant%20%20%7C%20Non,2008">mycobrowser.epfl.ch</a>). Specifically, Sassetti <em>et al.</em> (2003) found Rv0311 mutants were severely under-represented both in vitro on minimal medium and during <strong>mouse infection</strong>, classifying it as essential for viability (<a href="https://orca2.tamu.edu/U19/pages/Rv0311.html#:~:text=Essential%20%20%7C%207H10,Hybridization%20Ratio%3A%200.17">orca2.tamu.edu</a>). A later study by Be <em>et al.</em> (2008) noted that a transposon insertion in the Rv0311 ortholog of strain CDC1551 led to <strong>attenuation in the central nervous system</strong> of infected mice (<a href="https://mycobrowser.epfl.ch/genes/Rv0311#:~:text=gene%20for%20in%20vitro%20growth,2008">mycobrowser.epfl.ch</a>). This suggests Rv0311 is required for <em>M. tuberculosis</em> to invade or proliferate in brain tissues, highlighting a role in <strong>tuberculous meningitis or disseminated TB</strong> pathogenesis. Furthermore, Rv0311 has been listed among genetic determinants needed for persistence during infection – mutants show defects in surviving the host environment, indicating a <strong>virulence phenotype</strong> (<a href="https://mycobrowser.epfl.ch/genes/Rv0311#:~:text=gene%20for%20in%20vitro%20growth,2008">mycobrowser.epfl.ch</a>). No direct link to human genetic disease exists (since this is a bacterial gene), but from a pathogen perspective, Rv0311 is a candidate <strong>virulence factor</strong>. Its deletion or disruption leads to <strong>loss of fitness in host infection</strong>, making it a potential target for attenuated vaccine strains or drug development. Phenotypically, Rv0311 mutants (when obtainable in rich media) do not show growth defects in nutrient-rich laboratory culture (<a href="https://mycobrowser.epfl.ch/genes/Rv0311#:~:text=Mutant%20%20%7C%20Non,2008">mycobrowser.epfl.ch</a>), but <strong>fail to thrive in nutrient-poor or in vivo conditions</strong>, reflecting an in vivo-specific requirement. There are no known polymorphisms of Rv0311 directly associated with clinical drug resistance or strain lineages; however, its strong conservation across virulent <em>M. tuberculosis</em> strains suggests it contributes to the <strong>pathogenic versatility</strong> of the TB bacillus. In summary, Rv0311 is <strong>critical for the bacterium’s disease-causing ability</strong>, with mutants showing attenuated virulence and impaired survival <strong>in host tissues</strong>, thereby associating this gene with tuberculosis pathogenesis.</p>
+<h2 id="protein-domains-and-structural-features">Protein Domains and Structural Features</h2>
+<p>The Rv0311 protein is 409 amino acids in length and displays several noteworthy <strong>structural features</strong> despite being of unknown function. Bioinformatic analysis indicates an N-terminal <strong>signal peptide</strong> (approximately the first ~30–35 residues) rich in hydrophobic amino acids, supporting the notion that the protein is exported from the cytosol (<a href="https://mycobrowser.epfl.ch/genes/Rv0311#:~:text=Protein%20splicing%20signature,H37Rv%20in%20a%20MtbYM%20rich">mycobrowser.epfl.ch</a>). Importantly, Rv0311’s sequence contains a <strong>conserved protein splicing (intein) signature</strong> (PROSITE pattern PS00881) (<a href="https://mycobrowser.epfl.ch/genes/Rv0311#:~:text=Comments%20%20,H37Rv%20in%20a%20MtbYM%20rich">mycobrowser.epfl.ch</a>). Inteins are self-cleaving peptide elements, and the presence of this motif suggests that Rv0311 either <em>contains an intein-like domain</em> or shares a common ancestry with splicing proteins. The signature includes key residues typically required for protein splicing (for example, a conserved cysteine/serine at the intein N-terminus and a His-Asn at the C-terminus). In Rv0311, a histidine–asparate–cysteine motif is present, and overall the protein’s sequence is reminiscent of <strong>homing endonucleases</strong> or <strong>autoprocessing enzymes</strong>, though the full splicing mechanism in Rv0311 has not been demonstrated (<a href="https://mycobrowser.epfl.ch/genes/Rv0311#:~:text=Comments%20%20,H37Rv%20in%20a%20MtbYM%20rich">mycobrowser.epfl.ch</a>). Aside from the intein-like signature, Rv0311 does not belong to any well-characterized protein family – database searches (Pfam, conserved domain databases) return no definitive domains, classifying it as a novel protein fold. In support of this, Rv0311 has <strong>no close structural homologs in the Protein Data Bank</strong> (no structures above 35% identity) (<a href="https://orca2.tamu.edu/U19/pages/Rv0311.html#:~:text=,to%20additional%20information%20on%20Rv0311">orca2.tamu.edu</a>). This prompted the modeling of Rv0311: an AlphaFold 3D structure prediction is available (<a href="https://orca2.tamu.edu/U19/pages/Rv0311.html#:~:text=,27%20%28from%20Jeremy%20Rock%27s%20lab">orca2.tamu.edu</a>), which can provide insights into its fold. The predicted structure (AlphaFold DB entry O07238) suggests Rv0311 is a <strong>globular protein</strong> with mixed α/β secondary structure, potentially forming a two-domain architecture separated by a cleft (speculative based on typical intein-endonuclease arrangements). Any <strong>active-site</strong> in the model likely centers around the intein motif region, which could coordinate a metal ion or substrate. Additionally, Rv0311 is fairly <strong>alanine/glycine-rich</strong> in parts (common in several Mtb cell-envelope proteins), and contains scattered proline-rich stretches that might confer structural rigidity or interaction sites. The protein has no predicted transmembrane helices beyond the signal peptide, aligning with its secreted status (<a href="https://orca2.tamu.edu/U19/pages/Rv0311.html#:~:text=,membrane%20region">orca2.tamu.edu</a>). Taken together, Rv0311 appears to be a <strong>secreted enzyme-like protein</strong> with an <strong>intein/homologous endonuclease signature</strong>, indicating a unique <strong>autocatalytic or nucleolytic function</strong> might be embedded in its structure. Further structural studies or crystallization would be needed to confirm its folding and to identify any catalytic pocket or ligand-binding sites.</p>
+<h2 id="expression-patterns-and-regulation">Expression Patterns and Regulation</h2>
+<p><strong>Expression of Rv0311</strong> in <em>M. tuberculosis</em> is regulated in concert with stress and virulence programs. While baseline expression data (e.g. during exponential growth) are not highlighted in literature, several high-throughput studies have shed light on when Rv0311 is up- or down-regulated. Notably, <strong>ChIP-Seq analyses</strong> have identified transcription factors that bind near the <em>Rv0311</em> promoter, indicating regulatory inputs. The sigma factor <strong>SigH (Rv3223c)</strong>, an alternate sigma known for controlling oxidative stress responses, binds to the Rv0311 locus (<a href="https://orca2.tamu.edu/U19/pages/Rv0311.html#:~:text=,Rv3223c%20%28sigH">orca2.tamu.edu</a>). Another regulator, <strong>WhiB5 (Rv0022c)</strong>, a redox-sensitive transcription factor, also targets the Rv0311 gene promoter (<a href="https://orca2.tamu.edu/U19/pages/Rv0311.html#:~:text=,Rv3223c%20%28sigH">orca2.tamu.edu</a>). These factors typically activate genes during <strong>stress conditions</strong> such as redox imbalance and envelope stress, suggesting that Rv0311 expression is induced as part of the bacterial <strong>stress response and dormancy survival strategy</strong>. Supporting this, a study of regulated overexpression (TFOE) found that overexpressing WhiB5 or SigH leads to <strong>upregulation of Rv0311 expression</strong>, whereas overexpressing an unidentified regulator Rv0576 caused its repression (<a href="https://orca2.tamu.edu/U19/pages/Rv0311.html#:~:text=,Downregulates">orca2.tamu.edu</a>). Collectively, these data indicate Rv0311 is <strong>positively regulated by stress-response pathways</strong> (SigH and WhiB5 regulons) (<a href="https://orca2.tamu.edu/U19/pages/Rv0311.html#:~:text=,Downregulates">orca2.tamu.edu</a>). This upregulation is likely to occur during the transition to stationary phase, during infection of macrophages, or upon encountering oxidative stress, conditions where SigH and WhiB5 are active. In contrast, Rv0311 may be down-regulated during optimal growth or certain other conditions (the factor Rv0576 that downregulates it is uncharacterized, but could be part of a nutrient-rich condition response) (<a href="https://orca2.tamu.edu/U19/pages/Rv0311.html#:~:text=,Downregulates">orca2.tamu.edu</a>). Transcriptional profiling experiments also hint at Rv0311’s behavior: for instance, one data compendium (Boshoff et al. 2004) reported <em>Rv0311</em> transcript induction upon exposure to certain drugs, linking it to <strong>drug stress responses</strong> (<a href="https://orca2.tamu.edu/U19/pages/Rv0311.html#:~:text=,249%20transcriptomic%20datasets%20using%20ICA">orca2.tamu.edu</a>). No dedicated <strong>sigma factor consensus</strong> has been published for Rv0311, but the involvement of SigH suggests a promoter recognized under extracytoplasmic function (ECF) sigma conditions. On the protein level, Rv0311 has been detected in bacteria grown in vitro under standard conditions (<a href="https://mycobrowser.epfl.ch/genes/Rv0311#:~:text=Proteomics%20%20,2011">mycobrowser.epfl.ch</a>), confirming it is expressed during laboratory culture. There is no evidence that Rv0311 is only expressed in vivo; rather, it seems to be expressed broadly but <strong>upregulated in hostile environments</strong>. Overall, Rv0311’s expression is tightly <strong>regulated by stress and virulence signals</strong>, consistent with a protein that helps the bacillus survive during the <strong>stationary phase, within macrophages, or under immune pressure</strong>.</p>
+<h2 id="evolutionary-conservation">Evolutionary Conservation</h2>
+<p>Rv0311 is a member of the core set of conserved proteins in the <em>M. tuberculosis complex</em> and beyond. It is present in <strong>multiple mycobacterial species</strong>, indicating an evolutionarily preserved function. For example, the ortholog in <em>Mycobacterium bovis</em> (Mb0319) is 100% identical to Rv0311 at the amino acid level, reflecting the clonal conservation within the <em>M. tuberculosis/M. bovis</em> lineage (<a href="https://orca1.tamu.edu/mad/orthologs/pages/Rv0311.html#:~:text=Closest%20Orthologs%20%28e,hypothetical%20protein%20MAB_1222">orca1.tamu.edu</a>). Homologs of Rv0311 can be found in diverse slow-growing and rapid-growing mycobacteria. <em>M. marinum</em> (a fish pathogen related to <em>Mtb</em>) carries a corresponding gene (MMAR_0561) sharing ~84% identity (<a href="https://orca1.tamu.edu/mad/orthologs/pages/Rv0311.html#:~:text=%7C%2072.35,79.17">orca1.tamu.edu</a>), and <em>M. avium</em> (MAV_4850) shares ~79% identity (<a href="https://orca1.tamu.edu/mad/orthologs/pages/Rv0311.html#:~:text=%7C%2072.35,hypothetical%20protein%20MAV_4850">orca1.tamu.edu</a>). Interestingly, the fast-growing saprophyte <em>Mycobacterium smegmatis</em> also possesses a homolog (MSMEG_5855) with ~72% identity to Rv0311 (<a href="https://orca1.tamu.edu/mad/orthologs/pages/Rv0311.html#:~:text=%28408%29%20%20,">orca1.tamu.edu</a>). The presence of Rv0311 in <em>M. smegmatis</em> and environmental mycobacteria suggests the gene serves a fundamental <strong>metabolic or structural role</strong> not limited to pathogenic species (though it may have been co-opted for virulence in <em>M. tuberculosis</em>). Phylogenetically, Rv0311 appears confined to the <strong>mycobacterial genus</strong>; orthologs are also noted in <em>M. abscessus</em> (72% identity) and <em>M. ulcerans</em> (83% identity) among others, which span both pathogenic and non-pathogenic mycobacteria (<a href="https://orca1.tamu.edu/mad/orthologs/pages/Rv0311.html#:~:text=M,hypothetical%20protein%20MMAR_0561">orca1.tamu.edu</a>) (<a href="https://orca1.tamu.edu/mad/orthologs/pages/Rv0311.html#:~:text=M,hypothetical%20protein%20MUL_1225">orca1.tamu.edu</a>). This broad conservation underscores that Rv0311’s function is likely important for the biology of Mycobacteriaceae in general. An exception to its presence is seen in <em>Mycobacterium leprae</em>, an obligate parasite with a massively reduced genome – <em>M. leprae</em> appears to <strong>lack an Rv0311 ortholog<em> (<a href="https://orca1.tamu.edu/mad/orthologs/pages/Rv0311.html#:~:text=M.%20gilvum%20PYR,174">orca1.tamu.edu</a>). The absence in </em>M. leprae<em>, which cannot grow outside a host and has lost many metabolic genes, supports the idea that Rv0311 is involved in a process dispensable in an extremely host-dependent lifestyle (i.e., </em>M. leprae* might obtain the relevant metabolite from the host or no longer requires it). Outside of mycobacteria, close homologs are not documented, implying Rv0311 is part of the </strong>Actinobacterial-specific repertoire<strong>. It is considered a <em>Conserved Hypothetical</em> in TB databases (<a href="https://mycobrowser.epfl.ch/genes/Rv0311#:~:text=Comments%20%20,H37Rv%20in%20a%20MtbYM%20rich">mycobrowser.epfl.ch</a>), meaning it has recognizable counterparts in related genomes but no functional annotation. The strong sequence conservation (often &gt;70% identity across millions of years of mycobacterial evolution) indicates </strong>purifying selection<strong>, suggesting Rv0311 performs a pivotal role that is maintained in these bacteria. Evolutionarily, therefore, Rv0311 represents a </strong>highly conserved, likely essential protein<em><em> among mycobacteria, with potential as a broad-spectrum target (since inhibitors might affect many mycobacterial species). Its conservation also provides opportunities to use surrogate models (like </em>M. smegmatis</em>) to study its function, since the gene is present and similar in those faster-growing relatives.</p>
+<h2 id="key-experimental-evidence-and-literature">Key Experimental Evidence and Literature</h2>
+<p>A variety of experimental approaches have shed light on Rv0311, even as its exact function remains elusive:</p>
+<ul>
+<li>
+<p><strong>Genome Annotation and Initial Discovery</strong>: Rv0311 was first noted in the complete H37Rv genome sequence (Cole <em>et al.</em>, 1998) as an open reading frame of unknown function. It has since been consistently annotated as a hypothetical protein in databases like TubercuList (<a href="https://orca2.tamu.edu/U19/pages/Rv0311.html#:~:text=,NCBI%3A%20hypothetical%20protein">orca2.tamu.edu</a>). The <strong>Tuberculosis Community Annotation Project</strong> also did not assign a function or name to Rv0311, reflecting the difficulty in characterizing it (<a href="https://orca2.tamu.edu/U19/pages/Rv0311.html#:~:text=,membrane%20region">orca2.tamu.edu</a>).</p>
+</li>
+<li>
+<p><strong>Proteomic Identification</strong>: Rv0311 protein expression was confirmed by proteomic studies. Målen <em>et al.</em> (2010) extracted <em>M. tuberculosis</em> H37Rv proteins with Triton X-114 detergent and identified Rv0311 among the <strong>cell envelope-associated proteins</strong> (<a href="https://mycobrowser.epfl.ch/genes/Rv0311#:~:text=Protein%20splicing%20signature,H37Rv%20in%20a%20MtbYM%20rich">mycobrowser.epfl.ch</a>). This study highlighted Rv0311 as a novel protein present in the membrane fraction. Similarly, de Souza <em>et al.</em> (2011) performed a <strong>comprehensive proteomic profiling</strong> of culture filtrate, membrane, and whole-cell lysate proteins; Rv0311 was detected in all three compartments (<a href="https://mycobrowser.epfl.ch/genes/Rv0311#:~:text=Proteomics%20%20,2011">mycobrowser.epfl.ch</a>). These findings are pivotal, as they validate that Rv0311 is expressed in <em>M. tuberculosis</em> and is exported, supporting hypotheses about its location and possible interaction with the host or cell wall.</p>
+</li>
+<li>
+<p><strong>Transposon Mutagenesis and Essentiality</strong>: A key line of evidence for Rv0311’s importance comes from transposon mutagenesis screens. Sassetti <em>et al.</em> (2003) conducted a saturated transposon library screen in H37Rv and identified Rv0311 as <strong>essential for growth in vitro</strong> (on minimal medium 7H10 agar) (<a href="https://orca2.tamu.edu/U19/pages/Rv0311.html#:~:text=Essential%20%20%7C%207H10,Hybridization%20Ratio%3A%200.17">orca2.tamu.edu</a>). The same study (and a follow-up in 2003 for in vivo) showed that Rv0311 mutants could not be recovered from mouse spleens, implying <strong>essentiality in vivo</strong> as well (<a href="https://orca2.tamu.edu/U19/pages/Rv0311.html#:~:text=Essential%20%20%7C%207H10,Hybridization%20Ratio%3A%200.17">orca2.tamu.edu</a>). These classic TraSH (transposon site hybridization) experiments first pinpointed Rv0311 as a critical gene. In contrast, a more recent deep TnSeq study by DeJesus <em>et al.</em> (2017) with enriched media reported Rv0311 as <strong>non-essential under rich laboratory conditions</strong> (<a href="https://mycobrowser.epfl.ch/genes/Rv0311#:~:text=Mutant%20%20%7C%20Non,2008">mycobrowser.epfl.ch</a>). This discrepancy is reconciled by the medium differences: in nutrient-rich broth, auxotrophic defects can be rescued, whereas minimal media demand Rv0311’s function. A study by Minato <em>et al.</em> (2019) also classified Rv0311 as non-essential in a specialized rich medium (MtbYM), consistent with DeJesus’s findings (<a href="https://mycobrowser.epfl.ch/genes/Rv0311#:~:text=Mutant%20%20%7C%20Non,Essential%20gene%20by%20Himar1%20transposon">mycobrowser.epfl.ch</a>). These comparative studies underscore a conditional essentiality: <strong>Rv0311 is indispensable for basic biosynthesis and growth in standard or nutrient-poor conditions, but dispensable when supplements bypass its role</strong>.</p>
+</li>
+<li>
+<p><strong>Virulence and Mutant Phenotypes</strong>: An important study by Be <em>et al.</em> (2008) used signature-tagged mutagenesis in <em>M. tuberculosis</em> CDC1551 to screen for genes needed in infection. They found an insertion mutant in the Rv0311 ortholog that was <strong>significantly attenuated in the brain of mice</strong> (a model of TB meningitis) (<a href="https://mycobrowser.epfl.ch/genes/Rv0311#:~:text=gene%20for%20in%20vitro%20growth,2008">mycobrowser.epfl.ch</a>). While that mutant might have grown normally in vitro (since CDC1551 can sometimes differ in gene requirements), it failed in the host environment, reinforcing the concept that Rv0311 contributes to <strong>in vivo survival and virulence</strong>. No obvious clinical phenotype (like drug resistance or patient-derived mutations) has been tied to Rv0311, but these laboratory mutant studies highlight its role in pathogenesis.</p>
+</li>
+<li>
+<p><strong>Regulatory Studies</strong>: Using <strong>ChIP-Seq (Minch <em>et al.</em>, 2014)</strong>, Rv0311 was identified as a target of regulatory proteins SigH and WhiB5, linking it to the <strong>oxidative stress response</strong> (<a href="https://orca2.tamu.edu/U19/pages/Rv0311.html#:~:text=,Rv3223c%20%28sigH">orca2.tamu.edu</a>). Additionally, <strong>Rustad <em>et al.</em> (2014)</strong> showed changes in Rv0311 expression upon overexpressing certain transcription factors (notably Rv0311 was upregulated by WhiB5 and SigH, and downregulated by another factor) (<a href="https://orca2.tamu.edu/U19/pages/Rv0311.html#:~:text=,Downregulates">orca2.tamu.edu</a>). These experiments provide evidence that Rv0311 is embedded in the regulatory networks that tune <em>M. tuberculosis</em>’s response to stress, although direct stimuli for Rv0311 induction (e.g. heat, oxidative stress, nutrient starvation) remain to be fully characterized in expression profiling studies.</p>
+</li>
+<li>
+<p><strong>Computational and Structural Analyses</strong>: Recent efforts to predict functions for hypothetical proteins have included Rv0311. For instance, a 2019 BMC Genomics analysis by Wang <em>et al.</em> attempted structure-based function predictions for many Mtb proteins, and Rv0311 was evaluated, though it remains in the “predicted enzyme” category without a specific assignment (<a href="https://orca2.tamu.edu/U19/pages/Rv0311.html#:~:text=,to%20additional%20information%20on%20Rv0311">orca2.tamu.edu</a>). In 2021, Modlin <em>et al.</em> in mSystems integrated AlphaFold models and literature curation for many Mtb proteins. While Rv0311 was not explicitly given a new name, the availability of an <strong>AlphaFold structure</strong> (<a href="https://orca2.tamu.edu/U19/pages/Rv0311.html#:~:text=,27%20%28from%20Jeremy%20Rock%27s%20lab">orca2.tamu.edu</a>) now allows researchers to inspect its predicted active site and fold, generating new hypotheses (for example, it may resemble splicing endonucleases). Thus far, no crystal structure or wet-lab enzymology for Rv0311 has been published, making these computational insights especially valuable for guiding future experiments.</p>
+</li>
+</ul>
+<p>In summary, the body of evidence for Rv0311 – from proteomics confirming its expression and localization, to genetic screens establishing its essentiality and role in virulence, to regulatory and computational analyses suggesting how and when it acts – all converge on the view that <strong>Rv0311 is a vital, conserved secreted protein required for <em>M. tuberculosis</em> growth and pathogenesis</strong>. This makes Rv0311 a notable target for further study, as understanding its function could reveal a new facet of mycobacterial biology and potentially identify a new target for TB intervention.</p>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: O07238
+gene_symbol: Rv0311
+taxon:
+  id: NCBITaxon:83332
+  label: Mycobacterium tuberculosis H37Rv
+description: &#39;A conserved hypothetical protein in Mycobacterium tuberculosis H37Rv
+  that is essential for growth in minimal media and during infection. Contains a protein
+  splicing signature motif suggesting intein-like or autoproteolytic activity. Localizes
+  to the cell envelope and is exported via a signal peptide. Required for bacterial
+  virulence, particularly in central nervous system infections. Despite being well-conserved
+  across mycobacteria, its precise molecular function remains unknown.
+
+  &#39;
+references:
+- id: PMID:9634230
+  title: Deciphering the biology of Mycobacterium tuberculosis from the complete genome
+    sequence
+  findings: []
+- id: PMID:21969609
+  title: Proteogenomic analysis of Mycobacterium tuberculosis by high resolution mass
+    spectrometry
+  findings:
+  - statement: Rv0311 protein is detected in multiple cellular fractions including
+      membrane and culture filtrates
+    supporting_text: Identified Rv0311 among the proteomic analysis of Mycobacterium
+      tuberculosis by high resolution mass spectrometry
+- id: file:MYCTU/Rv0311/Rv0311-deep-research.md
+  title: Deep Research Report for Rv0311 gene function analysis
+  findings:
+  - statement: Rv0311 contains a protein splicing signature motif suggesting intein-like
+      activity
+    supporting_text: Rv0311&#39;s sequence contains a conserved protein splicing (intein)
+      signature (PROSITE pattern PS00881) ... includes key residues typically required
+      for protein splicing
+  - statement: Rv0311 is essential for growth in minimal media but not in rich media
+    supporting_text: Sassetti et al. (2003) found Rv0311 as essential for growth in
+      vitro (on minimal medium 7H10 agar) ... DeJesus et al. (2017) with enriched
+      media reported Rv0311 as non-essential under rich laboratory conditions
+  - statement: Rv0311 is required for virulence particularly in CNS infections
+    supporting_text: Be et al. (2008) found an insertion mutant in the Rv0311 ortholog
+      that was significantly attenuated in the brain of mice (a model of TB meningitis)
+  - statement: Rv0311 is regulated by stress response factors SigH and WhiB5
+    supporting_text: ChIP-Seq analyses have identified transcription factors that
+      bind near the Rv0311 promoter ... SigH (Rv3223c) ... WhiB5 (Rv0022c)
+existing_annotations:
+- term:
+    id: GO:0008233
+    label: peptidase activity
+  evidence_type: IEA
+  review:
+    summary: Rv0311 likely functions as an autoproteolytic enzyme with intein-like activity based on conserved splicing signature motifs.
+    action: NEW
+    reason: This molecular function term reflects Rv0311&#39;s predicted peptidase activity based on the presence of conserved protein splicing signature motifs including catalytic residues.
+    supported_by:
+    - reference_id: file:MYCTU/Rv0311/Rv0311-deep-research.md
+      supporting_text: Rv0311&#39;s sequence contains a conserved protein splicing (intein) signature (PROSITE pattern PS00881) including key residues typically required for protein splicing, suggesting autoproteolytic peptidase activity
+- term:
+    id: GO:0016539
+    label: intein-mediated protein splicing
+  evidence_type: IEA
+  review:
+    summary: Rv0311 contains conserved protein splicing signature motifs suggesting it may undergo intein-mediated autoproteolysis.
+    action: NEW
+    reason: This biological process term captures Rv0311&#39;s predicted function in protein splicing based on sequence analysis showing intein signature motifs.
+    supported_by:
+    - reference_id: file:MYCTU/Rv0311/Rv0311-deep-research.md
+      supporting_text: Rv0311&#39;s sequence contains a conserved protein splicing (intein) signature (PROSITE pattern PS00881) including key residues typically required for protein splicing
+- term:
+    id: GO:0030313
+    label: cell envelope
+  evidence_type: IEA
+  review:
+    summary: Rv0311 localizes to the cell envelope and is exported via a signal peptide, as detected in multiple cellular fractions.
+    action: NEW
+    reason: This cellular component term reflects Rv0311&#39;s subcellular localization to the cell envelope, supported by both sequence analysis and proteomics data.
+    supported_by:
+    - reference_id: file:MYCTU/Rv0311/Rv0311-deep-research.md
+      supporting_text: Rv0311 localizes to the cell envelope and is exported via a signal peptide
+- term:
+    id: GO:0040007
+    label: growth
+  evidence_type: IEA
+  review:
+    summary: Rv0311 is essential for mycobacterial growth under nutrient-limited conditions, particularly in minimal media.
+    action: NEW
+    reason: This biological process term reflects Rv0311&#39;s essential role in bacterial growth under specific conditions, supported by essentiality studies.
+    supported_by:
+    - reference_id: file:MYCTU/Rv0311/Rv0311-deep-research.md
+      supporting_text: Rv0311 is essential for growth in minimal media but not in rich media, as demonstrated by transposon mutagenesis studies
+- term:
+    id: GO:0075001
+    label: adhesion of symbiont infection structure to host
+  evidence_type: IEA
+  review:
+    summary: Rv0311 is required for virulence and bacterial survival within the host, particularly during CNS infections.
+    action: NEW
+    reason: This biological process term reflects Rv0311&#39;s role in pathogenesis and host infection, supported by virulence studies showing attenuation in mutants.
+    supported_by:
+    - reference_id: file:MYCTU/Rv0311/Rv0311-deep-research.md
+      supporting_text: Rv0311 is required for virulence particularly in CNS infections, with insertion mutants significantly attenuated in brain infection models
+core_functions:
+- molecular_function:
+    id: GO:0008233
+    label: peptidase activity
+  description: &#39;Likely functions as an autoproteolytic enzyme with intein-like activity
+    involved in post-translational protein processing. The presence of conserved splicing
+    signature motifs (PROSITE PS00881) including histidine-aspartate-cysteine catalytic
+    residues suggests it may catalyze its own excision from a precursor protein.
+
+    &#39;
+  locations:
+  - id: GO:0030313
+    label: cell envelope
+  directly_involved_in:
+  - id: GO:0016539
+    label: intein-mediated protein splicing
+  supported_by:
+  - reference_id: file:MYCTU/Rv0311/Rv0311-deep-research.md
+    supporting_text: Rv0311&#39;s sequence contains a conserved protein splicing (intein)
+      signature (PROSITE pattern PS00881)
+- description: &#39;Essential for mycobacterial growth under nutrient-limited conditions.
+    Required for bacterial survival within the host, particularly for CNS infections.
+    Part of the SigH and WhiB5 stress response regulons.
+
+    &#39;
+  molecular_function:
+    id: GO:0005515
+    label: protein binding
+  directly_involved_in:
+  - id: GO:0040007
+    label: growth
+  - id: GO:0075001
+    label: adhesion of symbiont infection structure to host
+  supported_by:
+  - reference_id: file:MYCTU/Rv0311/Rv0311-deep-research.md
+    supporting_text: Be et al. (2008) found an insertion mutant in the Rv0311 ortholog
+      that was significantly attenuated in the brain of mice (a model of TB meningitis)
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

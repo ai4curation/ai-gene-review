@@ -1,0 +1,2823 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FT - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>FT</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q9SXZ2" target="_blank" class="term-link">
+                        Q9SXZ2
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Arabidopsis thaliana</span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "FT";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q9SXZ2" data-a="DESCRIPTION: FT encodes a 20-kDa protein belonging to the phosp..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>FT encodes a 20-kDa protein belonging to the phosphatidylethanolamine-binding protein (PEBP) family that functions as the mobile floral stimulus (florigen) in Arabidopsis thaliana. FT integrates environmental cues—particularly long-day photoperiods and temperature signals—with endogenous timing mechanisms to orchestrate the transition from vegetative to reproductive growth. The protein is synthesized in the leaf cytoplasm, specifically in phloem companion cells, following transcriptional activation by CONSTANS (CO) under long-day conditions. After synthesis, FT is actively loaded into sieve tube elements and transported via the phloem vascular system to the shoot apical meristem (SAM). At the SAM, FT is imported into the nucleus where it interacts with bZIP transcription factors FD/BZIP14 and FDP/BZIP27 to form the florigen activation complex (FAC). The FAC binds to promoters of floral meristem identity genes including APETALA1 (AP1), FRUITFULL (FUL), and SEPALLATA3 (SEP3), ultimately committing the meristem to flower formation. FT also interacts with regulatory proteins including FTIP1/MCTP1 (which facilitates phloem transport), 14-3-3 adaptor proteins (which mediate nuclear import), and NAKR1 (which modulates subcellular trafficking). The protein undergoes proteasome-dependent degradation for tight regulation and is subject to chromatin-level control through histone modifications at its locus. This non-cell-autonomous signaling mechanism ensures synchrony between environmental response and developmental decision-making, making FT a critical molecular integrator in flowering time control.</p>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Proposed New Ontology Terms</h2>
+        
+        <div class="proposed-term">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>florigen activation complex assembly</h3>
+                <span class="vote-buttons" data-g="Q9SXZ2" data-a="florigen activation complex assembly" data-r="" data-act="NEW">
+                    <button class="vote-btn" data-v="up" title="Agree this term should be created">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with creating this term">👎</button>
+                </span>
+            </div>
+
+            
+            <p><strong>Definition:</strong> The formation of a transcriptional activation complex containing florigen (FT) and bZIP transcription factors that activates floral meristem identity gene expression</p>
+            
+
+            
+            <p><strong>Justification:</strong> FT forms the florigen activation complex (FAC) with FD/FDP transcription factors, which is essential for activating floral development genes</p>
+            
+
+            
+            <p><strong>Parent term:</strong>
+                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009909" target="_blank" class="term-link">
+                    regulation of flower development
+                </a>
+            </p>
+            
+
+            
+
+            
+            <p><strong>Supporting Evidence:</strong></p>
+            <ul style="margin-left: 1rem;">
+                
+                <li>
+                    
+                    file:/Users/cjm/repos/ai-gene-review/genes/ARATH/FT/FT-falcon-research.md
+                    
+                    
+                    : In the SAM, FT interacts with the bZIP transcription factor FD (and its homolog FDP) to form a complex known as the florigen activation complex (FAC). The FAC then binds to the promoters of floral meristem identity genes
+                    
+                </li>
+                
+            </ul>
+            
+        </div>
+        
+        <div class="proposed-term">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>phloem-mediated long-distance protein transport</h3>
+                <span class="vote-buttons" data-g="Q9SXZ2" data-a="phloem-mediated long-distance protein transport" data-r="" data-act="NEW">
+                    <button class="vote-btn" data-v="up" title="Agree this term should be created">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with creating this term">👎</button>
+                </span>
+            </div>
+
+            
+            <p><strong>Definition:</strong> The process by which proteins synthesized in source tissues are loaded into and transported through the phloem to target tissues for non-cell-autonomous signaling</p>
+            
+
+            
+            <p><strong>Justification:</strong> FT represents a paradigm for long-distance protein signaling through the phloem vascular system from leaves to the shoot apical meristem</p>
+            
+
+            
+            <p><strong>Parent term:</strong>
+                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015031" target="_blank" class="term-link">
+                    protein transport
+                </a>
+            </p>
+            
+
+            
+
+            
+            <p><strong>Supporting Evidence:</strong></p>
+            <ul style="margin-left: 1rem;">
+                
+                <li>
+                    
+                    file:/Users/cjm/repos/ai-gene-review/genes/ARATH/FT/FT-falcon-research.md
+                    
+                    
+                    : Following synthesis, the mature FT protein is actively loaded into the sieve tube elements of the phloem. This loading process is mediated by interacting proteins such as FTIP1, which are essential for the translocation of FT through the vascular system
+                    
+                </li>
+                
+            </ul>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9SXZ2" data-a="GO:0005634" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FT is transported to the nucleus at the shoot apical meristem where it interacts with bZIP transcription factors to activate floral meristem identity genes. Nuclear localization is essential for its function.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9SXZ2" data-a="GO:0005737" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FT is synthesized in the leaf cytoplasm, particularly in phloem companion cells, before being transported to the shoot apical meristem. UniProt confirms cytoplasmic localization.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005783" target="_blank" class="term-link">
+                                    GO:0005783
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9SXZ2" data-a="GO:0005783" data-r="GO_REF:0000044" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> No evidence for endoplasmic reticulum localization. FT functions primarily in cytoplasm and nucleus. This appears to be an incorrect computational prediction.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009908" target="_blank" class="term-link">
+                                    GO:0009908
+                                </a>
+                            </span>
+                            <span class="term-label">flower development</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9SXZ2" data-a="GO:0009908" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FT promotes the transition from vegetative to reproductive development and is essential for flower development. It activates floral meristem identity genes at the shoot apical meristem.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030154" target="_blank" class="term-link">
+                                    GO:0030154
+                                </a>
+                            </span>
+                            <span class="term-label">cell differentiation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9SXZ2" data-a="GO:0030154" data-r="GO_REF:0000043" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This term is too broad and non-specific for FT function. FT has a specific role in flowering time control and meristem identity, not general cell differentiation.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16099979" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16099979
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    FD, a bZIP protein mediating signals from the floral pathway...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9SXZ2" data-a="GO:0005515" data-r="PMID:16099979" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FT interacts with FD bZIP transcription factors, which is crucial for its function. However, this generic protein binding term is not informative about specific function.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17189287" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17189287
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Molecular basis of late-flowering phenotype caused by domina...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9SXZ2" data-a="GO:0005515" data-r="PMID:17189287" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic protein binding term lacks specificity about FT molecular function. More specific terms better describe its activities.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19656342" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19656342
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Genetic and spatial interactions between FT, TSF and SVP dur...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9SXZ2" data-a="GO:0005515" data-r="PMID:19656342" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Non-specific protein binding term does not capture FT specific molecular function as florigen and PEBP family member.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/29259105" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:29259105
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Characterization of Multiple C2 Domain and Transmembrane Reg...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9SXZ2" data-a="GO:0005515" data-r="PMID:29259105" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic protein binding annotation lacks specificity about FT molecular function. Remove in favor of more specific terms.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010022" target="_blank" class="term-link">
+                                    GO:0010022
+                                </a>
+                            </span>
+                            <span class="term-label">meristem determinacy</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IGI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/30943325" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:30943325
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Genetic interactions reveal the antagonistic roles of FT/TSF...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9SXZ2" data-a="GO:0010022" data-r="PMID:30943325" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FT plays a role in determining inflorescence meristem identity and fate. Genetic interaction studies show FT antagonizes TFL1 in meristem determinacy control.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22529749" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22529749
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    FTIP1 is an essential regulator required for florigen transp...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9SXZ2" data-a="GO:0005515" data-r="PMID:22529749" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic protein binding term is not informative about FT specific function as mobile flowering signal.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010119" target="_blank" class="term-link">
+                                    GO:0010119
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of stomatal movement</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21737277" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21737277
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    FLOWERING LOCUS T regulates stomatal opening.
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9SXZ2" data-a="GO:0010119" data-r="PMID:21737277" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This appears to be a peripheral function not central to FT role as florigen. FT primary function is flowering time control, not stomatal regulation.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009909" target="_blank" class="term-link">
+                                    GO:0009909
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of flower development</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IGI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20626659" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20626659
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Arabidopsis BLADE-ON-PETIOLE1 and 2 promote floral meristem ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9SXZ2" data-a="GO:0009909" data-r="PMID:20626659" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FT regulates flower development by promoting floral meristem fate and determinacy. This is a core function of FT as the mobile flowering signal.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16099980" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16099980
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Integration of spatial and temporal information during flora...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9SXZ2" data-a="GO:0005515" data-r="PMID:16099980" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Non-specific protein binding term does not describe FT specific molecular activities. More specific molecular function terms are preferred.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16099979" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16099979
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    FD, a bZIP protein mediating signals from the floral pathway...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9SXZ2" data-a="GO:0005634" data-r="PMID:16099979" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental evidence confirms FT nuclear localization at the shoot apical meristem where it interacts with FD transcription factors. This is essential for function.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16099979" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16099979
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    FD, a bZIP protein mediating signals from the floral pathway...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9SXZ2" data-a="GO:0005737" data-r="PMID:16099979" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental evidence confirms FT cytoplasmic localization. FT is synthesized in leaf cytoplasm before transport to the shoot apical meristem.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0048573" target="_blank" class="term-link">
+                                    GO:0048573
+                                </a>
+                            </span>
+                            <span class="term-label">photoperiodism, flowering</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17446353" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17446353
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    FT protein movement contributes to long-distance signaling i...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9SXZ2" data-a="GO:0048573" data-r="PMID:17446353" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FT is a key component of the photoperiodic flowering pathway. It integrates long-day photoperiod signals and promotes flowering. This is a core function of FT.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008429" target="_blank" class="term-link">
+                                    GO:0008429
+                                </a>
+                            </span>
+                            <span class="term-label">phosphatidylethanolamine binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10583961" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10583961
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Activation tagging of the floral inducer FT.
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9SXZ2" data-a="GO:0008429" data-r="PMID:10583961" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FT belongs to the PEBP (phosphatidylethanolamine-binding protein) family. This molecular function is characteristic of the protein family and represents its biochemical activity.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009911" target="_blank" class="term-link">
+                                    GO:0009911
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of flower development</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10583960" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10583960
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A pair of related genes with antagonistic roles in mediating...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9SXZ2" data-a="GO:0009911" data-r="PMID:10583960" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the core function of FT. It acts as the mobile floral stimulus (florigen) that promotes flowering by activating floral meristem identity genes. Strong experimental support.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009911" target="_blank" class="term-link">
+                                    GO:0009911
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of flower development</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10583961" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10583961
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Activation tagging of the floral inducer FT.
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9SXZ2" data-a="GO:0009911" data-r="PMID:10583961" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core function of FT as florigen. Promotes transition from vegetative to reproductive development by activating floral meristem identity genes. Experimental evidence confirms this essential role.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Mobile floral stimulus (florigen) that promotes flowering by transporting from leaves to shoot apical meristem and activating floral meristem identity genes</h3>
+                <span class="vote-buttons" data-g="Q9SXZ2" data-a="FUNCTION: Mobile floral stimulus (florigen) that promotes fl..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008429" target="_blank" class="term-link">
+                            phosphatidylethanolamine binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Integrates photoperiodic signals to control flowering time by promoting transition from vegetative to reproductive development</h3>
+                <span class="vote-buttons" data-g="Q9SXZ2" data-a="FUNCTION: Integrates photoperiodic signals to control flower..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008429" target="_blank" class="term-link">
+                            phosphatidylethanolamine binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Interacts with bZIP transcription factors at the shoot apical meristem to regulate meristem determinacy and flower development</h3>
+                <span class="vote-buttons" data-g="Q9SXZ2" data-a="FUNCTION: Interacts with bZIP transcription factors at the s..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008429" target="_blank" class="term-link">
+                            phosphatidylethanolamine binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10583960" target="_blank" class="term-link">
+                            PMID:10583960
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A pair of related genes with antagonistic roles in mediating flowering signals.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10583961" target="_blank" class="term-link">
+                            PMID:10583961
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Activation tagging of the floral inducer FT.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16099979" target="_blank" class="term-link">
+                            PMID:16099979
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">FD, a bZIP protein mediating signals from the floral pathway integrator FT at the shoot apex.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16099980" target="_blank" class="term-link">
+                            PMID:16099980
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Integration of spatial and temporal information during floral induction in Arabidopsis.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17189287" target="_blank" class="term-link">
+                            PMID:17189287
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Molecular basis of late-flowering phenotype caused by dominant epi-alleles of the FWA locus in Arabidopsis.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17446353" target="_blank" class="term-link">
+                            PMID:17446353
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">FT protein movement contributes to long-distance signaling in floral induction of Arabidopsis.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19656342" target="_blank" class="term-link">
+                            PMID:19656342
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Genetic and spatial interactions between FT, TSF and SVP during the early stages of floral induction in Arabidopsis.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20626659" target="_blank" class="term-link">
+                            PMID:20626659
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Arabidopsis BLADE-ON-PETIOLE1 and 2 promote floral meristem fate and determinacy in a previously undefined pathway targeting APETALA1 and AGAMOUS-LIKE24.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21737277" target="_blank" class="term-link">
+                            PMID:21737277
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">FLOWERING LOCUS T regulates stomatal opening.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22529749" target="_blank" class="term-link">
+                            PMID:22529749
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">FTIP1 is an essential regulator required for florigen transport.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/29259105" target="_blank" class="term-link">
+                            PMID:29259105
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Characterization of Multiple C2 Domain and Transmembrane Region Proteins in Arabidopsis.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/30943325" target="_blank" class="term-link">
+                            PMID:30943325
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Genetic interactions reveal the antagonistic roles of FT/TSF and TFL1 in the determination of inflorescence meristem identity in Arabidopsis.</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon Research</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(FT-falcon-research.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9SXZ2" data-a="DOC: Falcon Research" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="falcon-research-report-ft-arath">Falcon Research Report: FT (ARATH)</h1>
+<p>Generated using FutureHouse Falcon API</p>
+<hr />
+<p>Question: You are a molecular biologist and gene annotation expert conducting comprehensive research to support GO annotation curation.</p>
+<p>Provide detailed, well-cited information focusing on:<br />
+1. Gene function and molecular mechanisms<br />
+2. Cellular localization and subcellular components<br />
+3. Biological processes involvement<br />
+4. Disease associations and phenotypes<br />
+5. Protein domains and structural features<br />
+6. Expression patterns and regulation<br />
+7. Evolutionary conservation<br />
+8. Key experimental evidence and literature</p>
+<p>Format as a comprehensive research report with citations suitable for Gene Ontology annotation curation.</p>
+<p>Research the Arabidopsis thaliana gene FT.</p>
+<p>=== UNIPROT METADATA ===<br />
+UniProt ID: Q9SXZ2<br />
+Entry Name: FT_ARATH<br />
+Gene Name: FT<br />
+Locus Tag: At1g65480 {ECO:0000312|Araport:AT1G65480}<br />
+Protein Name: Protein FLOWERING LOCUS T<br />
+Organism: Arabidopsis thaliana (Mouse-ear cress)<br />
+NCBI Taxonomy ID: 3702<br />
+Function: Component of the mobile flower-promoting signal (floral stimulus or florigen). Promotes the transition from vegetative growth to flowering. Required for 'SEPALLATA3' (SEP3) and 'FRUITFULL' (FUL) accumulation in mature rosette leaves. Seems to acts in parallel with 'LEAFY' to induce flowering by regulating 'APETALA1'. Translated in leaves and then transported to the shoot apical meristem where it activates the transcription of several floral meristem identity genes. May play a role in both the autonomous and the long-day flowering pathways.<br />
+Subcellular Location: Cytoplasm<br />
+Subunit: Interacts with FD/BZIP14 and FDP/BZIP27 (PubMed:16099979, PubMed:16099980). Interacts with FTIP1/MCTP1 in phloem companion cells (PubMed:22529749, PubMed:29259105). Interacts with NAKR1 (PubMed:27255839).<br />
+======================</p>
+<p>Provide a comprehensive report covering function, localization, processes, domains, disease associations, expression, conservation, and relevant GO terms.</p>
+<p>IMPORTANT: Focus specifically on the gene identified by the metadata above, particularly the UniProt ID, locus tag, and protein description if provided.</p>
+<p>Sometimes different genes in the same organism have the same name. In this case, the gene being reviewed is the one identified by the metadata above.</p>
+<p>Below is the comprehensive research report on the Arabidopsis thaliana FT gene (UniProt Q9SXZ2, At1g65480), formatted in a style appropriate for Gene Ontology annotation curation. All statements are supported by literature from the provided context.</p>
+<p>────────────────────────────────────────────────────────────────────────────<br />
+I. Abstract<br />
+The FLOWERING LOCUS T (FT) gene encodes a 20‐kDa protein belonging to the phosphatidylethanolamine‐binding protein (PEBP) family and functions as the mobile floral stimulus (florigen) in Arabidopsis thaliana. FT integrates environmental cues—most notably long-day photoperiods and temperature signals—with endogenous timing mechanisms to orchestrate the transition from vegetative to reproductive growth. Synthesized in the leaf cytoplasm, particularly in phloem companion cells, the FT protein is trafficked via the vascular system to the shoot apical meristem (SAM), where it interacts with bZIP transcription factors (FD, FDP) and other regulatory proteins (e.g., FTIP1, NAKR1) to initiate floral meristem identity gene expression. Its activity is tightly regulated at multiple levels including transcriptional activation by CONSTANS, chromatin remodeling, protein stability, and protein–protein interactions. Moreover, FT is evolutionarily conserved across angiosperms, underscoring its fundamental role in reproductive development. This report details FT’s gene function, localization, involvement in biological processes, phenotypic consequences of altered activity, its protein structural features, expression regulation, and the extensive experimental evidence underlying these findings (narayan2019analysisofthe pages 11-15, pin2012themultifacetedroles pages 2-3).</p>
+<p>────────────────────────────────────────────────────────────────────────────<br />
+II. Introduction<br />
+Flowering is a decisive developmental event in the life cycle of plants and is tightly regulated by both external environmental cues and internal genetic programs. Arabidopsis thaliana has served as a model organism to dissect the molecular underpinnings of this transition, and at the centre of this regulatory network lies the FT gene. FT encodes a protein that serves as a mobile signal, or florigen, that is produced in the leaves and transported to the SAM—a process that ensures the synchrony of environmental response with developmental decision‐making (narayan2019analysisofthe pages 11-15, pin2012themultifacetedroles pages 2-3). The gene’s expression is modulated by the CONSTANS (CO) protein, which, under long-day conditions, induces FT transcription in a circadian‐regulated fashion. This temporal regulation is critical as it ensures that FT expression is coupled with the ideal light period for flowering induction (komeda2004geneticregulationof pages 6-8, turck2008regulationandidentity pages 6-8).  </p>
+<p>Over the past two decades, multiple studies have illuminated the network of genes and proteins that interact with FT, revealing its pivotal role not only in floral induction but also in coordinating other developmental processes such as shoot architecture and even certain aspects of stomatal regulation. The multifaceted roles of FT and its mode of action—as a protein that is synthesized in one tissue and acts in another—present a paradigm for non–cell‐autonomous signaling in plants. Such insights bear significant implications on how flowering time is controlled and have driven efforts toward detailed Gene Ontology (GO) annotations to capture these complexities (golembeski2015photoperiodicregulationof pages 10-11, lebedeva2020theevolutionaryaspects pages 1-2).  </p>
+<p>Because flowering time has a direct impact on seed production and crop yield, clarifying FT’s underlying molecular mechanisms promises to inform both basic developmental biology and applied agricultural practices. This report integrates evidence relating to FT’s gene function, cellular localization, involvement in core biological processes, structural features, expression patterns, evolutionary conservation, and key experiments validating its role, thereby providing a resource for refining GO annotation for FT in Arabidopsis thaliana (narayan2019analysisofthe pages 11-15, pin2012themultifacetedroles pages 2-3).</p>
+<p>────────────────────────────────────────────────────────────────────────────<br />
+III. Gene Function and Molecular Mechanisms<br />
+FT functions as a master regulator of the flowering transition by transducing signals that arise from both the light environment and the plant’s internal clock. Under long-day conditions, the accumulation of CO in the leaf leads to the transcriptional activation of FT. Once the FT transcript is produced, the protein is synthesized in the cytoplasm of the phloem companion cells (narayan2019analysisofthe pages 11-15, pin2012themultifacetedroles pages 2-3). The integration of photoperiodic signals into FT expression is crucial; CO’s regulation by light and circadian rhythms ensures that FT is produced only when day-length conditions are optimal for flowering. As such, FT serves as the key output of the photoperiod pathway and links external light conditions to the developmental switch from vegetative to reproductive growth (komeda2004geneticregulationof pages 6-8, pin2012themultifacetedroles pages 2-3).</p>
+<p>After synthesis, FT is exported from leaf cells via the phloem, and experimental grafting studies have demonstrated that its movement—not that of the mRNA—is required for flowering induction. This observation underscores the non–cell–autonomous nature of FT action. In the SAM, FT interacts with the bZIP transcription factor FD (and its homolog FDP) to form a complex known as the florigen activation complex (FAC). The FAC then binds to the promoters of floral meristem identity genes such as APETALA1 (AP1), FRUITFULL (FUL), and SEPALLATA3 (SEP3), ultimately committing the meristem to flower formation (golembeski2015photoperiodicregulationof pages 10-11, wigge2011ftamobile pages 2-3).</p>
+<p>Regulatory feedback loops further refine FT activity. For instance, FT’s interaction with 14-3-3 adaptor proteins facilitates its nuclear import in conjunction with FD (narayan2019analysisofthe pages 15-19). Additionally, negative regulators such as TERMINAL FLOWER 1 (TFL1) compete with FT for FD binding, thereby delaying flowering when conditions are not ideal (golembeski2015photoperiodicregulationof pages 11-12, wickland2015thefloweringlocus pages 1-6). Post-translational control mechanisms play a role as well—FT protein stability is modulated by proteasome–dependent degradation, particularly through signals embedded in its C-terminal region, ensuring that its levels remain tightly correlated with updated environmental inputs (takagi2023photoperiodicfloweringin pages 13-14, narayan2019analysisofthe pages 15-19).</p>
+<p>Chromatin-level regulation also factors into FT’s molecular control. Histone modifications, such as H3K27 trimethylation and H3K4 demethylation, are essential for maintaining the appropriate chromatin state of the FT locus, thus balancing activation and repression in response to developmental cues and environmental changes (pin2012themultifacetedroles pages 2-3, wigge2011ftamobile pages 2-3). In summary, FT operates as a molecular integrator, converting light signals via CO activation, ensuring proper spatial-temporal protein transport, and engaging in a network of protein–protein interactions to trigger the expression of floral identity genes—a process that is indispensable for the floral transition (narayan2019analysisofthe pages 11-15, golembeski2015photoperiodicregulationof pages 10-11, komeda2004geneticregulationof pages 6-8).</p>
+<p>────────────────────────────────────────────────────────────────────────────<br />
+IV. Cellular Localization and Subcellular Components<br />
+The spatial distribution of FT is critical for its function as a mobile flowering signal. FT mRNA is predominantly transcribed in the leaves, specifically in specialized phloem companion cells where it is targeted for translation (narayan2019analysisofthe pages 11-15, pin2012themultifacetedroles pages 2-3). Immunolocalization studies and cell fractionation experiments have confirmed that FT is localized in the cytoplasm within these cells, consistent with its initial synthesis in a non-nuclear compartment (takagi2023photoperiodicfloweringin pages 13-14).  </p>
+<p>Following synthesis, the mature FT protein is actively loaded into the sieve tube elements of the phloem. This loading process is mediated by interacting proteins such as FTIP1, which are essential for the translocation of FT through the vascular system (turck2008regulationandidentity pages 11-12, narayan2019analysisofthe pages 15-19). Once within the phloem, FT is capable of moving long distances by traveling via the plasmodesmata, thus ensuring that the signal reaches distal tissues like the shoot apical meristem (mathieu2007exportofft pages 1-2, matsoukas2015florigensandantiflorigens pages 3-5). At the SAM, the protein is imported into the nucleus where it interacts with FD; the nuclear localization of FD, a transcription factor, underscores the significance of FT’s regulated movement (turck2008regulationandidentity pages 11-12, wigge2011ftamobile pages 2-3).</p>
+<p>The efficiency of FT transport may also be influenced by membrane-associated factors. For example, the interaction with FTIP1 suggests that FT may transiently associate with endomembrane systems, which could facilitate its movement from the phloem companion cells into the sieve elements (turck2008regulationandidentity pages 1-2, xu2012recentadvancesof pages 3-5). Additionally, evidence indicates that FT can interact with other proteins, such as NAKR1, which may modulate its subcellular trafficking and help direct the protein to its target site in the SAM (turck2008regulationandidentity pages 1-2, narayan2019analysisofthe pages 15-19).  </p>
+<p>Overall, FT’s subcellular distribution—from initial cytoplasmic synthesis in leaf cells, through its phloem-based transport, to its nuclear function in the SAM—illustrates how precise localization underpins its role as a systemic signal that coordinates developmental transitions in response to environmental inputs (turck2008regulationandidentity pages 11-12, mathieu2007exportofft pages 1-2).</p>
+<p>────────────────────────────────────────────────────────────────────────────<br />
+V. Biological Processes Involvement<br />
+FT is a central component in the regulation of flowering time—a process that is vital to plant reproductive success. It is at the core of the photoperiod pathway, where it integrates circadian clock signals with external light cues to promote the floral transition. Under long-day conditions, FT expression is induced following the accumulation of CONSTANS, and its subsequent translation and movement to the SAM ensure that floral meristem identity genes are activated precisely when environmental conditions are favorable (narayan2019analysisofthe pages 11-15, komeda2004geneticregulationof pages 6-8).</p>
+<p>In the shoot apical meristem, the formation of a complex between FT and FD initiates a cascade of gene expression changes, including the upregulation of APETALA1 (AP1), FRUITFULL (FUL), and SEPALLATA3 (SEP3). These genes are responsible for determining floral organ identity, meaning that FT is indirectly responsible for defining the structure and function of the flower (wigge2011ftamobile pages 2-3, turck2008regulationandidentity pages 11-12). In this way, FT functions as a switch that reprograms the growth of the meristem from producing leaf primordia to generating floral buds (komeda2004geneticregulationof pages 6-8, golembeski2015photoperiodicregulationof pages 10-11).</p>
+<p>Beyond its canonical role in flowering, FT also influences other aspects of plant development. It has been implicated in the regulation of shoot architecture, including lateral bud growth and branching, thereby contributing to overall plant morphology. For instance, FT-mediated suppression of axillary bud outgrowth ensures that resources are devoted to the production of a cohesive inflorescence rather than dispersing into the formation of additional vegetative structures (pin2012themultifacetedroles pages 3-7, pin2012themultifacetedroles pages 14-14). Moreover, emerging evidence suggests that FT may be involved in light-induced stomatal opening, linking photosynthetic efficiency and water regulation with developmental timing (pin2012themultifacetedroles pages 2-3, wigge2011ftamobile pages 1-2).</p>
+<p>From an ecological and evolutionary perspective, the tight coordination between FT-regulated flowering and environmental cues such as daylength and temperature is essential for reproductive fitness. Flowering at the optimal time ensures efficient pollination and seed set, which are key for propagation in variable climates (lebedeva2020theevolutionaryaspects pages 1-2, putterill2016ftandflorigen pages 4-5). Thus, FT is not only a mediator of developmental timing but is also at the heart of how plants adapt to and exploit their environments for reproductive success (turck2008regulationandidentity pages 1-2, golembeski2015photoperiodicregulationof pages 10-11).</p>
+<p>Collectively, the biological processes governed by FT encompass a spectrum of developmental events—from the transition to flowering to modulation of shoot architecture and stress responses—all of which are finely tuned to environmental signals. This functional versatility highlights the importance of FT as a central node in the plant’s developmental network (narayan2019analysisofthe pages 11-15, komeda2004geneticregulationof pages 6-8).</p>
+<p>────────────────────────────────────────────────────────────────────────────<br />
+VI. Disease Associations and Phenotypes<br />
+Although the term “disease” is not traditionally applied to plant developmental mutants, disruptions in FT function produce distinct phenotypes that can be considered deleterious, particularly in agricultural contexts. In Arabidopsis thaliana, loss-of-function mutants in FT display pronounced delays in flowering under inductive long-day conditions. Such delays can lead to extended vegetative growth periods, ultimately impacting reproductive success and yield. Conversely, constitutive or ectopic expression of FT results in precocious flowering and can lead to abnormal floral morphology, as well as alterations in overall shoot architecture (komeda2004geneticregulationof pages 6-8, wigge2011ftamobile pages 2-3).</p>
+<p>These phenotypes underscore the importance of balanced FT expression. In controlled experiments, ft mutants have consistently exhibited a late flowering phenotype compared to wild-type plants, demonstrating the gene’s pivotal role in promoting the transition to flowering (komeda2004geneticregulationof pages 6-8, pin2012themultifacetedroles pages 2-3). In experimental contexts, precise manipulation of FT levels has been shown to either delay or accelerate flowering, a feature that has practical implications for crop breeding. Alterations in flowering time affect not only the developmental stage of the plant but may also influence fruit set and seed production—a relationship that can have broad economic impacts in agricultural systems (putterill2016ftandflorigen pages 1-2, mathieu2007exportofft pages 1-2).</p>
+<p>Furthermore, the antagonistic dynamics between FT and TFL1 are critical for maintaining the balance between vegetative and reproductive growth. Because TFL1 functions as a repressor of flowering by competing with FT for binding partners, disruptions in their relative levels can result in profound morphological defects. Such imbalances could be harnessed to improve crop productivity; however, inadvertent perturbations may lead to developmental defects resembling “disease‐like” syndromes in plants (golembeski2015photoperiodicregulationof pages 11-12, wickland2015thefloweringlocus pages 1-6).  </p>
+<p>In summary, while FT is not associated with human disease in the strict sense, its misregulation in plants results in abnormal growth and developmental timing that can be detrimental to plant fitness and yield, mirroring the impact of disease phenotypes in other biological systems (komeda2004geneticregulationof pages 6-8, pin2012themultifacetedroles pages 2-3).</p>
+<p>────────────────────────────────────────────────────────────────────────────<br />
+VII. Protein Domains and Structural Features<br />
+FT is a member of the PEBP family, and its structural features reflect its function as a critical signaling molecule. Crystallographic and sequence analyses have revealed that FT possesses a highly conserved globular structure composed of a central β-sheet flanked by α-helices (turck2008regulationandidentity pages 6-8, turck2008regulationandidentity pages 11-12). This structural motif is essential not only for maintaining the integrity of the protein but also for mediating its interactions with other key regulatory partners such as FD and 14-3-3 proteins (narayan2019analysisofthe pages 15-19, wigge2011ftamobile pages 2-3).</p>
+<p>Critical studies have identified specific amino acid residues within FT that are necessary for its activity as an inducer of flowering. For example, a tyrosine residue at position 134 and a tryptophan at position 138 have been shown to distinguish functional inducer FTs from repressor homologs, suggesting that these residues form part of an anion-binding pocket essential for FT’s biological activity (wickland2015thefloweringlocus pages 15-16, wickland2015thefloweringlocus pages 6-9). These conserved residues are maintained across FT homologs in diverse plant species, highlighting the evolutionary constraints imposed on the FT protein structure for its role in floral induction.</p>
+<p>Further structural insights have come from studies examining the interactions between FT and its partners. The binding interface formed between FT and FD is critical for the assembly of the florigen activation complex, and surface features of FT—such as charge distribution and loop flexibility—are thought to facilitate this protein–protein interaction (narayan2019analysisofthe pages 15-19, turck2008regulationandidentity pages 8-9). Additionally, FT has been suggested to interact with lipid molecules; its phosphatidylethanolamine-binding capacity may influence its association with membrane compartments during transport (golembeski2015photoperiodicregulationof pages 11-12, wigge2011ftamobile pages 1-2).  </p>
+<p>The conservation of the PEBP fold in FT not only reinforces its functional role in flowering regulation but also provides a structural framework that can guide mutational analyses. By altering key residues or loops, researchers have been able to dissect the functional domains necessary for FT’s interaction with FD and other components, thereby further refining the models of FT function (wickland2015thefloweringlocus pages 15-16, wickland2015thefloweringlocus pages 6-9). This level of structural detail is indispensable for Gene Ontology annotations that seek to capture both the molecular function and the interaction capacity of FT in the context of non–cell–autonomous signaling (narayan2019analysisofthe pages 15-19, turck2008regulationandidentity pages 6-8).</p>
+<p>────────────────────────────────────────────────────────────────────────────<br />
+VIII. Expression Patterns and Regulation<br />
+FT expression is subject to a complex regulatory network that integrates temporal, spatial, and environmental cues. In Arabidopsis thaliana, FT is predominantly expressed in the leaves—especially within the phloem companion cells—under long-day photoperiodic conditions (narayan2019analysisofthe pages 11-15, komeda2004geneticregulationof pages 6-8). The transcription factor CONSTANS (CO) plays an indispensable role in this regulation: CO accumulates in the late afternoon when light conditions are favorable, binding to the FT promoter and activating transcription (pin2012themultifacetedroles pages 2-3, turck2008regulationandidentity pages 6-8). This finely tuned regulation underpins the entrainment of the circadian clock with flowering time, ensuring that FT expression peaks at the appropriate time of day.</p>
+<p>The photoperiodic regulation of FT is further modulated by chromatin remodeling and epigenetic marks. Histone modifications such as acetylation and methylation influence the accessibility of the FT promoter, thereby amplifying or attenuating the transcriptional response to CO and other activators (pin2012themultifacetedroles pages 2-3, wigge2011ftamobile pages 2-3). These epigenetic mechanisms enable rapid adjustments in FT expression in response to shifts in environmental conditions, such as temperature fluctuations or changes in light quality (lebedeva2020theevolutionaryaspects pages 1-2, turck2008regulationandidentity pages 1-2).  </p>
+<p>Post-transcriptional regulation also plays a role; for instance, microRNAs and RNA-binding proteins have been implicated in the fine-tuning of FT mRNA stability, ensuring that only appropriate levels of the transcript are available for translation (narayan2019analysisofthe pages 15-19, wickland2015thefloweringlocus pages 9-12). In this context, although FT mRNA is confined to the tissue of synthesis, its protein product becomes the far–ranging signal that ultimately triggers flowering (mathieu2007exportofft pages 1-2, matsoukas2015florigensandantiflorigens pages 3-5).</p>
+<p>Spatial regulation is critical as well. Although FT transcription is robust in the leaves, its function is exerted at the SAM, and experiments have shown that the transcript itself is not mobile; instead, the mobile FT protein, generated in leaves, is responsible for delivering the flowering signal (mathieu2007exportofft pages 1-2, matsoukas2015florigensandantiflorigens pages 3-5). This delineation between the site of mRNA production and the site of protein function is central to the non–cell–autonomous mechanism of FT action.</p>
+<p>Additionally, light receptors such as phytochromes and cryptochromes have been found to influence FT expression indirectly through interactions with CO and other components of the light signaling network, thereby integrating external photic cues into the transcriptional regulation of FT (turck2008regulationandidentity pages 1-2, komeda2004geneticregulationof pages 6-8).  </p>
+<p>In summary, FT expression is orchestrated by a multilayered network comprising transcriptional activators, chromatin remodelers, post-transcriptional regulators, and light-sensing receptors. This coordinated regulation ensures that FT is expressed at the right time, in the right cells, and in the appropriate amounts to effectively initiate flowering (narayan2019analysisofthe pages 11-15, pin2012themultifacetedroles pages 2-3).</p>
+<p>────────────────────────────────────────────────────────────────────────────<br />
+IX. Evolutionary Conservation<br />
+The FT gene is one of the most highly conserved regulators of flowering in the plant kingdom. Homologs of FT have been identified in a wide range of angiosperms, from herbaceous dicots to major cereal crops, highlighting its primordial role in floral induction (lebedeva2020theevolutionaryaspects pages 1-2, putterill2016ftandflorigen pages 4-5). Cross-species functional studies have shown that FT-like proteins can substitute for Arabidopsis FT in mutant backgrounds, thereby restoring normal flowering time—even when derived from evolutionarily distant species (matsoukas2015florigensandantiflorigens pages 3-5, prewitt2021interspeciesfunctionalcompatibility pages 1-2).</p>
+<p>In phylogenetic analyses, FT is grouped with other members of the PEBP family, such as TWIN SISTER OF FT (TSF) and TERMINAL FLOWER 1 (TFL1). Although TFL1 functions antagonistically by repressing flowering, the high sequence conservation among these family members underscores the evolutionary constraints on these proteins. Notably, specific residues critical for FT’s activity, such as those delineated in mutational studies (e.g., tyrosine 134 and tryptophan 138), are maintained across species, suggesting that the mechanism of flowering induction via FT is fundamentally conserved (wickland2015thefloweringlocus pages 15-16, wickland2015thefloweringlocus pages 6-9).</p>
+<p>Additionally, the regulatory elements within the FT promoter that respond to photoperiod and environmental signals exhibit conservation across plant species, further reinforcing the notion that the underlying genetic circuitry for flowering is ancient and evolutionarily stable (golembeski2015photoperiodicregulationof pages 10-11, komeda2004geneticregulationof pages 6-8). The conservation of these cis-regulatory elements ensures that FT homologs retain a similar responsiveness to environmental conditions, thereby conferring adaptive advantages across diverse ecological niches.</p>
+<p>The evolutionary conservation of FT extends beyond its sequence and regulatory elements to include its cellular behavior. The mechanism whereby FT is synthesized in leaves and transported to the SAM is a conserved trait among angiosperms, indicating that the non–cell–autonomous function of FT as a mobile signal is a deeply embedded evolutionary innovation (mathieu2007exportofft pages 1-2, matsoukas2015florigensandantiflorigens pages 3-5). This level of functional conservation not only validates FT’s role in flowering but also underscores its potential as an evolutionary benchmark for developing GO annotations in plant biology (putterill2016ftandflorigen pages 4-5, wickland2015thefloweringlocus pages 6-9).</p>
+<p>────────────────────────────────────────────────────────────────────────────<br />
+X. Key Experimental Evidence and Literature<br />
+Our current understanding of FT is built on a robust foundation of experimental evidence from diverse approaches. Seminal grafting experiments have unequivocally demonstrated that the FT protein, rather than its mRNA, is the transmissible signal required to induce flowering in recipient plants. In these experiments, the transfer of FT from donor to scion was sufficient to trigger floral development, providing strong evidence for its role as a mobile signal (mathieu2007exportofft pages 1-2, matsoukas2015florigensandantiflorigens pages 3-5).</p>
+<p>Molecular interaction studies have been equally informative. Techniques such as yeast two-hybrid screening, co-immunoprecipitation, and Förster resonance energy transfer–fluorescence lifetime imaging microscopy (FRET-FLIM) have confirmed direct physical interactions between FT and key transcription factors like FD and FDP. These interactions are essential for the formation of the florigen activation complex that mediates the transcriptional activation of downstream floral meristem identity genes (narayan2019analysisofthe pages 15-19, turck2008regulationandidentity pages 11-12). Furthermore, mutant analyses provide compelling functional evidence: Arabidopsis ft mutants robustly display delayed flowering, while constitutive overexpression leads to precocious flowering—outcomes that unequivocally place FT at the heart of flowering regulation (komeda2004geneticregulationof pages 6-8, pin2012themultifacetedroles pages 2-3).</p>
+<p>Structural studies have also advanced our understanding of FT. High-resolution X-ray crystallography has revealed that FT adopts a conserved PEBP fold; this conserved structure is critical for its interaction with both small ligands and protein partners. Mutagenesis studies focused on conserved residues have underscored the functional importance of the FT structure in mediating its signal transduction role (wickland2015thefloweringlocus pages 15-16, turck2008regulationandidentity pages 6-8).</p>
+<p>Gene expression analyses, employing RNA sequencing and in situ hybridization, have established that FT is expressed predominantly in the phloem companion cells under long-day conditions. These spatial and temporal expression patterns have been further corroborated by promoter–GUS fusions and quantitative RT-PCR assays, which together provide a detailed picture of FT’s regulation in vivo (narayan2019analysisofthe pages 11-15, komeda2004geneticregulationof pages 6-8). Chromatin immunoprecipitation (ChIP) assays have also provided data on the epigenetic modifications at the FT locus, demonstrating that histone marks correlate with its activation status and linking environmental signals to chromatin state modulation (pin2012themultifacetedroles pages 2-3, wigge2011ftamobile pages 2-3).</p>
+<p>Collectively, these diverse experimental approaches—from grafting and genetic mutant analysis to molecular interaction assays and structural biology—form a comprehensive body of evidence supporting the role of FT as a central regulator of flowering in Arabidopsis thaliana. This experimental foundation is critical for the accurate assignment of Gene Ontology terms to FT, ensuring that its annotated functions capture the complexity and integration of environmental and developmental signals (golembeski2015photoperiodicregulationof pages 10-11, mathieu2007exportofft pages 1-2, matsoukas2015florigensandantiflorigens pages 3-5).</p>
+<p>────────────────────────────────────────────────────────────────────────────<br />
+XI. Concluding Remarks<br />
+In summary, the FT gene (UniProt Q9SXZ2, At1g65480) in Arabidopsis thaliana is a linchpin of flowering regulation. Acting as the mobile florigen, FT is synthesized in the leaves and is translocated through the phloem to the shoot apical meristem, where it exerts its regulatory functions by interacting with transcription factors like FD. This interaction culminates in the activation of floral meristem identity genes and thus directly promotes the transition from vegetative to reproductive growth (narayan2019analysisofthe pages 11-15, wigge2011ftamobile pages 2-3).  </p>
+<p>FT’s function is governed by a multi-tiered regulatory network. At the transcriptional level, its expression is driven by the photoperiodic regulator CO, while chromatin modifications and post-transcriptional events further refine its transcriptional output. The post-translational fate of FT, including its stability and subcellular trafficking, ensures that its activity is both timely and spatially precise. Moreover, the dynamic balance between FT and antagonistic regulators such as TFL1 reinforces the need for tight control over the flowering process (komeda2004geneticregulationof pages 6-8, pin2012themultifacetedroles pages 2-3).</p>
+<p>Protein structural studies have revealed that FT’s conserved PEBP fold and key amino acid residues are indispensable for its role as a mobile signal; these features underlie its capacity to interact with both partner proteins and, potentially, lipid molecules that may assist in its transport. The evolutionary conservation of FT, evident from its homologues in species ranging from cereals to woody perennials, further highlights its central role in orchestrating flowering across angiosperms (wickland2015thefloweringlocus pages 15-16, wickland2015thefloweringlocus pages 6-9).</p>
+<p>The extensive experimental evidence—from grafting studies to molecular interaction assays and structural analyses—not only validates FT’s role but also provides a rich set of data for its GO annotation. Accurately capturing FT’s diverse functions, complex regulatory mechanisms, and non–cell–autonomous behavior in GO terms is crucial for advancing our overall understanding of plant developmental biology and for the practical manipulation of flowering times in crop improvement strategies (mathieu2007exportofft pages 1-2, matsoukas2015florigensandantiflorigens pages 3-5, turck2008regulationandidentity pages 1-2).</p>
+<p>────────────────────────────────────────────────────────────────────────────<br />
+XII. Future Outlook and Implications for Gene Ontology Annotation<br />
+Research on FT continues to yield novel insights into integrated signaling networks that determine flowering time. Future studies are poised to further elucidate the subtleties of FT transport mechanisms—possibly involving additional regulatory proteins, differential splicing variants, or interactions with cellular lipids—and to explore the interplay between FT-mediated signaling and other growth-regulatory pathways. This forthcoming research promises to refine existing models and thereby enhance the resolution of GO annotations for FT and other florigenic components (narayan2019analysisofthe pages 81-85, wickland2015thefloweringlocus pages 6-9).</p>
+<p>The continued acclimatization of plants to changing environmental conditions through adjustments in flowering time is of paramount importance both in wild ecosystems and in agriculture. As global climate patterns shift, a deeper understanding of FT’s regulation will be indispensable for crop improvement and sustainable agriculture. Moreover, the FT paradigm provides a model for studying mobile signals in multicellular organisms, and careful GO annotation of FT will facilitate comparative genomics studies that extend these insights to other organisms (narayan2019analysisofthe pages 11-15, pin2012themultifacetedroles pages 2-3).</p>
+<p>In conclusion, a comprehensive view of FT underscores its role as a central, multifaceted regulator of flowering time. Its function, cellular dynamics, and evolutionary history not only exemplify the elegant integration of environmental signals with developmental processes but also provide critical parameters for annotating gene function within the Gene Ontology framework. Continued interdisciplinary research on FT will remain essential for updating and refining genomic databases, ensuring that the annotations accurately reflect the complex biology of flowering (golembeski2015photoperiodicregulationof pages 10-11, komeda2004geneticregulationof pages 6-8).</p>
+<p>────────────────────────────────────────────────────────────────────────────<br />
+This report, synthesized from multiple studies in Arabidopsis thaliana (narayan2019analysisofthe pages 11-15, pin2012themultifacetedroles pages 2-3, takagi2023photoperiodicfloweringin pages 13-14, golembeski2015photoperiodicregulationof pages 10-11, komeda2004geneticregulationof pages 6-8, lebedeva2020theevolutionaryaspects pages 1-2, mathieu2007exportofft pages 1-2, matsoukas2015florigensandantiflorigens pages 3-5, narayan2019analysisofthe pages 15-19, pin2012themultifacetedroles pages 1-2, pin2012themultifacetedroles pages 3-7, wigge2011ftamobile pages 2-3, wickland2015thefloweringlocus pages 15-16, wickland2015thefloweringlocus pages 6-9), offers a detailed analysis of FT’s functions, localization, biological roles, structural properties, regulatory mechanisms, and evolutionary conservation. This integrated knowledge base provides crucial support for the precise GO annotation of FT, ensuring that its description encapsulates its central role as a mobile floral signal in regulating the transition from vegetative growth to flowering in Arabidopsis thaliana.</p>
+<p>────────────────────────────────────────────────────────────────────────────<br />
+End of Report</p>
+<p>All key information is supported by the indicated citations in the normal flow of the text.</p>
+<p>References</p>
+<ol>
+<li>
+<p>(narayan2019analysisofthe pages 11-15): Om Narayan. Analysis of the bzip transcription factor fdp and its interaction with floral regulators in arabidopsis thaliana. ArXiv, Feb 2019. URL: https://doi.org/10.15496/publikation-27683, doi:10.15496/publikation-27683. This article has 0 citations.</p>
+</li>
+<li>
+<p>(pin2012themultifacetedroles pages 2-3): P. A. PIN and O. NILSSON. The multifaceted roles of flowering locus t in plant development. Plant, cell &amp; environment, 35 10:1742-55, Oct 2012. URL: https://doi.org/10.1111/j.1365-3040.2012.02558.x, doi:10.1111/j.1365-3040.2012.02558.x. This article has 403 citations.</p>
+</li>
+<li>
+<p>(komeda2004geneticregulationof pages 6-8): Yoshibumi Komeda. Genetic regulation of time to flower in <i>arabidopsis thaliana</i>. Annual Review of Plant Biology, 55:521-535, Jun 2004. URL: https://doi.org/10.1146/annurev.arplant.55.031903.141644, doi:10.1146/annurev.arplant.55.031903.141644. This article has 422 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(turck2008regulationandidentity pages 6-8): Franziska Turck, Fabio Fornara, and George Coupland. Regulation and identity of florigen: flowering locus t moves center stage. Annual Review of Plant Biology, 59:573-594, Jun 2008. URL: https://doi.org/10.1146/annurev.arplant.59.032607.092755, doi:10.1146/annurev.arplant.59.032607.092755. This article has 1217 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(golembeski2015photoperiodicregulationof pages 10-11): Greg S Golembeski and T. Imaizumi. Photoperiodic regulation of florigen function in arabidopsis thaliana. Unknown journal, Jun 2015. URL: https://doi.org/10.1199/tab.0178, doi:10.1199/tab.0178.</p>
+</li>
+<li>
+<p>(lebedeva2020theevolutionaryaspects pages 1-2): M. A. Lebedeva, I. E. Dodueva, M. S. Gancheva, V. E. Tvorogova, K. A. Kuznetsova, and L. A. Lutova. The evolutionary aspects of flowering control: florigens and anti-florigens. Russian Journal of Genetics, 56:1323-1344, Nov 2020. URL: https://doi.org/10.1134/s102279542011006x, doi:10.1134/s102279542011006x. This article has 9 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(wigge2011ftamobile pages 2-3): Philip A. Wigge. Ft, a mobile developmental signal in plants. Current Biology, 21:R374-R378, May 2011. URL: https://doi.org/10.1016/j.cub.2011.03.038, doi:10.1016/j.cub.2011.03.038. This article has 189 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(narayan2019analysisofthe pages 15-19): Om Narayan. Analysis of the bzip transcription factor fdp and its interaction with floral regulators in arabidopsis thaliana. ArXiv, Feb 2019. URL: https://doi.org/10.15496/publikation-27683, doi:10.15496/publikation-27683. This article has 0 citations.</p>
+</li>
+<li>
+<p>(golembeski2015photoperiodicregulationof pages 11-12): Greg S Golembeski and T. Imaizumi. Photoperiodic regulation of florigen function in arabidopsis thaliana. Unknown journal, Jun 2015. URL: https://doi.org/10.1199/tab.0178, doi:10.1199/tab.0178.</p>
+</li>
+<li>
+<p>(wickland2015thefloweringlocus pages 1-6): Daniel P. Wickland and Yoshie Hanzawa. The flowering locus t/terminal flower 1 gene family: functional evolution and molecular mechanisms. Molecular plant, 8 7:983-97, Jul 2015. URL: https://doi.org/10.1016/j.molp.2015.01.007, doi:10.1016/j.molp.2015.01.007. This article has 446 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(takagi2023photoperiodicfloweringin pages 13-14): Hiroshi Takagi, Andrew K. Hempton, and Takato Imaizumi. Photoperiodic flowering in arabidopsis: multilayered regulatory mechanisms of constans and the florigen flowering locus t. Plant Communications, 4:100552, May 2023. URL: https://doi.org/10.1016/j.xplc.2023.100552, doi:10.1016/j.xplc.2023.100552. This article has 124 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(turck2008regulationandidentity pages 11-12): Franziska Turck, Fabio Fornara, and George Coupland. Regulation and identity of florigen: flowering locus t moves center stage. Annual Review of Plant Biology, 59:573-594, Jun 2008. URL: https://doi.org/10.1146/annurev.arplant.59.032607.092755, doi:10.1146/annurev.arplant.59.032607.092755. This article has 1217 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(mathieu2007exportofft pages 1-2): Johannes Mathieu, Norman Warthmann, Frank Küttner, and Markus Schmid. Export of ft protein from phloem companion cells is sufficient for floral induction in arabidopsis. Current Biology, 17:1055-1060, Jun 2007. URL: https://doi.org/10.1016/j.cub.2007.05.009, doi:10.1016/j.cub.2007.05.009. This article has 723 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(matsoukas2015florigensandantiflorigens pages 3-5): Ianis G. Matsoukas. Florigens and antiflorigens: a molecular genetic understanding. Essays in biochemistry, 58:133-49, Sep 2015. URL: https://doi.org/10.48550/arxiv.1509.06419, doi:10.48550/arxiv.1509.06419. This article has 22 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(turck2008regulationandidentity pages 1-2): Franziska Turck, Fabio Fornara, and George Coupland. Regulation and identity of florigen: flowering locus t moves center stage. Annual Review of Plant Biology, 59:573-594, Jun 2008. URL: https://doi.org/10.1146/annurev.arplant.59.032607.092755, doi:10.1146/annurev.arplant.59.032607.092755. This article has 1217 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(xu2012recentadvancesof pages 3-5): Feng Xu, Xiaofeng Rong, Xiaohua Huang, and Shuiyuan Cheng. Recent advances of flowering locus t gene in higher plants. International Journal of Molecular Sciences, 13:3773-3781, Mar 2012. URL: https://doi.org/10.3390/ijms13033773, doi:10.3390/ijms13033773. This article has 47 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(pin2012themultifacetedroles pages 3-7): P. A. PIN and O. NILSSON. The multifaceted roles of flowering locus t in plant development. Plant, cell &amp; environment, 35 10:1742-55, Oct 2012. URL: https://doi.org/10.1111/j.1365-3040.2012.02558.x, doi:10.1111/j.1365-3040.2012.02558.x. This article has 403 citations.</p>
+</li>
+<li>
+<p>(pin2012themultifacetedroles pages 14-14): P. A. PIN and O. NILSSON. The multifaceted roles of flowering locus t in plant development. Plant, cell &amp; environment, 35 10:1742-55, Oct 2012. URL: https://doi.org/10.1111/j.1365-3040.2012.02558.x, doi:10.1111/j.1365-3040.2012.02558.x. This article has 403 citations.</p>
+</li>
+<li>
+<p>(wigge2011ftamobile pages 1-2): Philip A. Wigge. Ft, a mobile developmental signal in plants. Current Biology, 21:R374-R378, May 2011. URL: https://doi.org/10.1016/j.cub.2011.03.038, doi:10.1016/j.cub.2011.03.038. This article has 189 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(putterill2016ftandflorigen pages 4-5): Joanna Putterill and Erika Varkonyi-Gasic. Ft and florigen long-distance flowering control in plants. Current opinion in plant biology, 33:77-82, Oct 2016. URL: https://doi.org/10.1016/j.pbi.2016.06.008, doi:10.1016/j.pbi.2016.06.008. This article has 188 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(putterill2016ftandflorigen pages 1-2): Joanna Putterill and Erika Varkonyi-Gasic. Ft and florigen long-distance flowering control in plants. Current opinion in plant biology, 33:77-82, Oct 2016. URL: https://doi.org/10.1016/j.pbi.2016.06.008, doi:10.1016/j.pbi.2016.06.008. This article has 188 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(wickland2015thefloweringlocus pages 15-16): Daniel P. Wickland and Yoshie Hanzawa. The flowering locus t/terminal flower 1 gene family: functional evolution and molecular mechanisms. Molecular plant, 8 7:983-97, Jul 2015. URL: https://doi.org/10.1016/j.molp.2015.01.007, doi:10.1016/j.molp.2015.01.007. This article has 446 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(wickland2015thefloweringlocus pages 6-9): Daniel P. Wickland and Yoshie Hanzawa. The flowering locus t/terminal flower 1 gene family: functional evolution and molecular mechanisms. Molecular plant, 8 7:983-97, Jul 2015. URL: https://doi.org/10.1016/j.molp.2015.01.007, doi:10.1016/j.molp.2015.01.007. This article has 446 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(turck2008regulationandidentity pages 8-9): Franziska Turck, Fabio Fornara, and George Coupland. Regulation and identity of florigen: flowering locus t moves center stage. Annual Review of Plant Biology, 59:573-594, Jun 2008. URL: https://doi.org/10.1146/annurev.arplant.59.032607.092755, doi:10.1146/annurev.arplant.59.032607.092755. This article has 1217 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(wickland2015thefloweringlocus pages 9-12): Daniel P. Wickland and Yoshie Hanzawa. The flowering locus t/terminal flower 1 gene family: functional evolution and molecular mechanisms. Molecular plant, 8 7:983-97, Jul 2015. URL: https://doi.org/10.1016/j.molp.2015.01.007, doi:10.1016/j.molp.2015.01.007. This article has 446 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(prewitt2021interspeciesfunctionalcompatibility pages 1-2): S. F. Prewitt, A. Shalit-Kaneh, S. N. Maximova, and M. J. Guiltinan. Inter-species functional compatibility of the theobroma cacao and arabidopsis ft orthologs: 90 million years of functional conservation of meristem identity genes. BMC Plant Biology, May 2021. URL: https://doi.org/10.1186/s12870-021-02982-y, doi:10.1186/s12870-021-02982-y. This article has 7 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(narayan2019analysisofthe pages 81-85): Om Narayan. Analysis of the bzip transcription factor fdp and its interaction with floral regulators in arabidopsis thaliana. ArXiv, Feb 2019. URL: https://doi.org/10.15496/publikation-27683, doi:10.15496/publikation-27683. This article has 0 citations.</p>
+</li>
+<li>
+<p>(pin2012themultifacetedroles pages 1-2): P. A. PIN and O. NILSSON. The multifaceted roles of flowering locus t in plant development. Plant, cell &amp; environment, 35 10:1742-55, Oct 2012. URL: https://doi.org/10.1111/j.1365-3040.2012.02558.x, doi:10.1111/j.1365-3040.2012.02558.x. This article has 403 citations.</p>
+</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q9SXZ2
+gene_symbol: FT
+taxon:
+  id: NCBITaxon:3702
+  label: Arabidopsis thaliana
+description: &#39;FT encodes a 20-kDa protein belonging to the phosphatidylethanolamine-binding protein (PEBP) family that functions as the mobile floral stimulus (florigen) in Arabidopsis thaliana. FT integrates environmental cues—particularly long-day photoperiods and temperature signals—with endogenous timing mechanisms to orchestrate the transition from vegetative to reproductive growth. The protein is synthesized in the leaf cytoplasm, specifically in phloem companion cells, following transcriptional activation by CONSTANS (CO) under long-day conditions. After synthesis, FT is actively loaded into sieve tube elements and transported via the phloem vascular system to the shoot apical meristem (SAM). At the SAM, FT is imported into the nucleus where it interacts with bZIP transcription factors FD/BZIP14 and FDP/BZIP27 to form the florigen activation complex (FAC). The FAC binds to promoters of floral meristem identity genes including APETALA1 (AP1), FRUITFULL (FUL), and SEPALLATA3 (SEP3), ultimately committing the meristem to flower formation. FT also interacts with regulatory proteins including FTIP1/MCTP1 (which facilitates phloem transport), 14-3-3 adaptor proteins (which mediate nuclear import), and NAKR1 (which modulates subcellular trafficking). The protein undergoes proteasome-dependent degradation for tight regulation and is subject to chromatin-level control through histone modifications at its locus. This non-cell-autonomous signaling mechanism ensures synchrony between environmental response and developmental decision-making, making FT a critical molecular integrator in flowering time control.&#39;
+existing_annotations:
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: &#39;FT is transported to the nucleus at the shoot apical meristem where it interacts with bZIP transcription factors to activate floral meristem identity genes. Nuclear localization is essential for its function.&#39;
+    action: ACCEPT
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: &#39;FT is synthesized in the leaf cytoplasm, particularly in phloem companion cells, before being transported to the shoot apical meristem. UniProt confirms cytoplasmic localization.&#39;
+    action: ACCEPT
+- term:
+    id: GO:0005783
+    label: endoplasmic reticulum
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: &#39;No evidence for endoplasmic reticulum localization. FT functions primarily in cytoplasm and nucleus. This appears to be an incorrect computational prediction.&#39;
+    action: REMOVE
+- term:
+    id: GO:0009908
+    label: flower development
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;FT promotes the transition from vegetative to reproductive development and is essential for flower development. It activates floral meristem identity genes at the shoot apical meristem.&#39;
+    action: ACCEPT
+- term:
+    id: GO:0030154
+    label: cell differentiation
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;This term is too broad and non-specific for FT function. FT has a specific role in flowering time control and meristem identity, not general cell differentiation.&#39;
+    action: REMOVE
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:16099979
+  review:
+    summary: &#39;FT interacts with FD bZIP transcription factors, which is crucial for its function. However, this generic protein binding term is not informative about specific function.&#39;
+    action: REMOVE
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:17189287
+  review:
+    summary: &#39;Generic protein binding term lacks specificity about FT molecular function. More specific terms better describe its activities.&#39;
+    action: REMOVE
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:19656342
+  review:
+    summary: &#39;Non-specific protein binding term does not capture FT specific molecular function as florigen and PEBP family member.&#39;
+    action: REMOVE
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:29259105
+  review:
+    summary: &#39;Generic protein binding annotation lacks specificity about FT molecular function. Remove in favor of more specific terms.&#39;
+    action: REMOVE
+- term:
+    id: GO:0010022
+    label: meristem determinacy
+  evidence_type: IGI
+  original_reference_id: PMID:30943325
+  review:
+    summary: &#39;FT plays a role in determining inflorescence meristem identity and fate. Genetic interaction studies show FT antagonizes TFL1 in meristem determinacy control.&#39;
+    action: ACCEPT
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:22529749
+  review:
+    summary: &#39;Generic protein binding term is not informative about FT specific function as mobile flowering signal.&#39;
+    action: REMOVE
+- term:
+    id: GO:0010119
+    label: regulation of stomatal movement
+  evidence_type: IMP
+  original_reference_id: PMID:21737277
+  review:
+    summary: &#39;This appears to be a peripheral function not central to FT role as florigen. FT primary function is flowering time control, not stomatal regulation.&#39;
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0009909
+    label: regulation of flower development
+  evidence_type: IGI
+  original_reference_id: PMID:20626659
+  review:
+    summary: &#39;FT regulates flower development by promoting floral meristem fate and determinacy. This is a core function of FT as the mobile flowering signal.&#39;
+    action: ACCEPT
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:16099980
+  review:
+    summary: &#39;Non-specific protein binding term does not describe FT specific molecular activities. More specific molecular function terms are preferred.&#39;
+    action: REMOVE
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IDA
+  original_reference_id: PMID:16099979
+  review:
+    summary: &#39;Experimental evidence confirms FT nuclear localization at the shoot apical meristem where it interacts with FD transcription factors. This is essential for function.&#39;
+    action: ACCEPT
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IDA
+  original_reference_id: PMID:16099979
+  review:
+    summary: &#39;Experimental evidence confirms FT cytoplasmic localization. FT is synthesized in leaf cytoplasm before transport to the shoot apical meristem.&#39;
+    action: ACCEPT
+- term:
+    id: GO:0048573
+    label: photoperiodism, flowering
+  evidence_type: IEP
+  original_reference_id: PMID:17446353
+  review:
+    summary: &#39;FT is a key component of the photoperiodic flowering pathway. It integrates long-day photoperiod signals and promotes flowering. This is a core function of FT.&#39;
+    action: ACCEPT
+- term:
+    id: GO:0008429
+    label: phosphatidylethanolamine binding
+  evidence_type: ISS
+  original_reference_id: PMID:10583961
+  review:
+    summary: &#39;FT belongs to the PEBP (phosphatidylethanolamine-binding protein) family. This molecular function is characteristic of the protein family and represents its biochemical activity.&#39;
+    action: ACCEPT
+- term:
+    id: GO:0009911
+    label: positive regulation of flower development
+  evidence_type: IMP
+  original_reference_id: PMID:10583960
+  review:
+    summary: &#39;This is the core function of FT. It acts as the mobile floral stimulus (florigen) that promotes flowering by activating floral meristem identity genes. Strong experimental support.&#39;
+    action: ACCEPT
+- term:
+    id: GO:0009911
+    label: positive regulation of flower development
+  evidence_type: IMP
+  original_reference_id: PMID:10583961
+  review:
+    summary: &#39;Core function of FT as florigen. Promotes transition from vegetative to reproductive development by activating floral meristem identity genes. Experimental evidence confirms this essential role.&#39;
+    action: ACCEPT
+references:
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt.
+  findings: []
+- id: PMID:10583960
+  title: A pair of related genes with antagonistic roles in mediating flowering signals.
+  findings: []
+- id: PMID:10583961
+  title: &#39;Activation tagging of the floral inducer FT.&#39;
+  findings: []
+- id: PMID:16099979
+  title: FD, a bZIP protein mediating signals from the floral pathway integrator FT
+    at the shoot apex.
+  findings: []
+- id: PMID:16099980
+  title: &#39;Integration of spatial and temporal information during floral induction in Arabidopsis.&#39;
+  findings: []
+- id: PMID:17189287
+  title: Molecular basis of late-flowering phenotype caused by dominant epi-alleles
+    of the FWA locus in Arabidopsis.
+  findings: []
+- id: PMID:17446353
+  title: FT protein movement contributes to long-distance signaling in floral induction
+    of Arabidopsis.
+  findings: []
+- id: PMID:19656342
+  title: &#39;Genetic and spatial interactions between FT, TSF and SVP during the early stages of floral induction in Arabidopsis.&#39;
+  findings: []
+- id: PMID:20626659
+  title: Arabidopsis BLADE-ON-PETIOLE1 and 2 promote floral meristem fate and determinacy
+    in a previously undefined pathway targeting APETALA1 and AGAMOUS-LIKE24.
+  findings: []
+- id: PMID:21737277
+  title: &#39;FLOWERING LOCUS T regulates stomatal opening.&#39;
+  findings: []
+- id: PMID:22529749
+  title: &#39;FTIP1 is an essential regulator required for florigen transport.&#39;
+  findings: []
+- id: PMID:29259105
+  title: &#39;Characterization of Multiple C2 Domain and Transmembrane Region Proteins in Arabidopsis.&#39;
+  findings: []
+- id: PMID:30943325
+  title: Genetic interactions reveal the antagonistic roles of FT/TSF and TFL1 in
+    the determination of inflorescence meristem identity in Arabidopsis.
+  findings: []
+proposed_new_terms:
+  - proposed_name: &#34;florigen activation complex assembly&#34;
+    proposed_definition: &#34;The formation of a transcriptional activation complex containing florigen (FT) and bZIP transcription factors that activates floral meristem identity gene expression&#34;
+    proposed_parent:
+      id: GO:0009909
+      label: regulation of flower development
+    justification: &#34;FT forms the florigen activation complex (FAC) with FD/FDP transcription factors, which is essential for activating floral development genes&#34;
+    supported_by:
+      - reference_id: file:/Users/cjm/repos/ai-gene-review/genes/ARATH/FT/FT-falcon-research.md
+        supporting_text: &#34;In the SAM, FT interacts with the bZIP transcription factor FD (and its homolog FDP) to form a complex known as the florigen activation complex (FAC). The FAC then binds to the promoters of floral meristem identity genes&#34;
+  - proposed_name: &#34;phloem-mediated long-distance protein transport&#34;
+    proposed_definition: &#34;The process by which proteins synthesized in source tissues are loaded into and transported through the phloem to target tissues for non-cell-autonomous signaling&#34;
+    proposed_parent:
+      id: GO:0015031
+      label: protein transport
+    justification: &#34;FT represents a paradigm for long-distance protein signaling through the phloem vascular system from leaves to the shoot apical meristem&#34;
+    supported_by:
+      - reference_id: file:/Users/cjm/repos/ai-gene-review/genes/ARATH/FT/FT-falcon-research.md
+        supporting_text: &#34;Following synthesis, the mature FT protein is actively loaded into the sieve tube elements of the phloem. This loading process is mediated by interacting proteins such as FTIP1, which are essential for the translocation of FT through the vascular system&#34;
+core_functions:
+- description: &#39;Mobile floral stimulus (florigen) that promotes flowering by transporting from leaves to shoot apical meristem and activating floral meristem identity genes&#39;
+  molecular_function:
+    id: GO:0008429
+    label: phosphatidylethanolamine binding
+- description: &#39;Integrates photoperiodic signals to control flowering time by promoting transition from vegetative to reproductive development&#39;
+  molecular_function:
+    id: GO:0008429
+    label: phosphatidylethanolamine binding
+- description: &#39;Interacts with bZIP transcription factors at the shoot apical meristem to regulate meristem determinacy and flower development&#39;
+  molecular_function:
+    id: GO:0008429
+    label: phosphatidylethanolamine binding
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

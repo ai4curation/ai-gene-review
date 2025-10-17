@@ -69,13 +69,15 @@ linkml_meta = LinkMLMeta({'default_prefix': 'gene_review',
                     'review of all existing annotations. It also contains a list '
                     'of core functions, which are GO-CAM-like annotons describing '
                     'the core evolved functions of the gene.',
-     'id': 'https://w3id.org/ai4curation/gene_review',
+     'id': 'https://ai4curation.io/ai-gene-review',
      'imports': ['linkml:types'],
-     'name': 'gene_curation',
+     'name': 'gene_review',
      'prefixes': {'ECO': {'prefix_prefix': 'ECO',
                           'prefix_reference': 'http://purl.obolibrary.org/obo/ECO_'},
                   'IAO': {'prefix_prefix': 'IAO',
                           'prefix_reference': 'http://purl.obolibrary.org/obo/IAO_'},
+                  'SO': {'prefix_prefix': 'SO',
+                         'prefix_reference': 'http://purl.obolibrary.org/obo/SO_'},
                   'dcat': {'prefix_prefix': 'dcat',
                            'prefix_reference': 'http://www.w3.org/ns/dcat#'},
                   'dcterms': {'prefix_prefix': 'dcterms',
@@ -276,6 +278,63 @@ class GOProteinContainingComplexEnum(str):
     pass
 
 
+class ROTermEnum(str):
+    """
+    A term in the relation ontology
+    """
+    pass
+
+
+class ProductTypeEnum(str, Enum):
+    """
+    Type of gene product
+    """
+    PROTEIN = "PROTEIN"
+    """
+    Protein-coding gene
+    """
+    MIRNA = "MIRNA"
+    """
+    microRNA
+    """
+    LNCRNA = "LNCRNA"
+    """
+    Long non-coding RNA
+    """
+    SNORNA = "SNORNA"
+    """
+    Small nucleolar RNA
+    """
+    SNRNA = "SNRNA"
+    """
+    Small nuclear RNA
+    """
+    TRNA = "TRNA"
+    """
+    Transfer RNA
+    """
+    RRNA = "RRNA"
+    """
+    Ribosomal RNA
+    """
+    PIRNA = "PIRNA"
+    """
+    PIWI-interacting RNA
+    """
+    ANTISENSE_RNA = "ANTISENSE_RNA"
+    """
+    Antisense RNA
+    """
+    PSEUDOGENE = "PSEUDOGENE"
+    """
+    Pseudogene
+    """
+    OTHER_NCRNA = "OTHER_NCRNA"
+    """
+    Other non-coding RNA
+    """
+
+
 class ManuscriptSection(str, Enum):
     """
     Sections of a scientific manuscript or publication
@@ -339,13 +398,19 @@ class GeneReview(ConfiguredBaseModel):
     """
     Complete review for a gene
     """
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://w3id.org/ai4curation/gene_review', 'tree_root': True})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://ai4curation.io/ai-gene-review', 'tree_root': True})
 
     id: str = Field(default=..., json_schema_extra = { "linkml_meta": {'alias': 'id', 'domain_of': ['GeneReview', 'Term', 'Reference']} })
     gene_symbol: str = Field(default=..., description="""Symbol of the gene""", json_schema_extra = { "linkml_meta": {'alias': 'gene_symbol', 'domain_of': ['GeneReview']} })
+    product_type: Optional[ProductTypeEnum] = Field(default=None, description="""Type of gene product (protein, ncRNA, etc.)""", json_schema_extra = { "linkml_meta": {'alias': 'product_type',
+         'comments': ['currently not required, assumed PROTEIN by default, but this '
+                      'may be explicit in future'],
+         'domain_of': ['GeneReview']} })
     aliases: Optional[list[str]] = Field(default=None, json_schema_extra = { "linkml_meta": {'alias': 'aliases', 'domain_of': ['GeneReview']} })
+    tags: Optional[list[str]] = Field(default=None, description="""Tags associated with the gene for categorization and organization""", json_schema_extra = { "linkml_meta": {'alias': 'tags', 'domain_of': ['GeneReview']} })
     description: Optional[str] = Field(default=None, description="""Description of the entity""", json_schema_extra = { "linkml_meta": {'alias': 'description',
-         'domain_of': ['GeneReview', 'Term', 'CoreFunction', 'Experiment']} })
+         'domain_of': ['GeneReview', 'Term', 'CoreFunction', 'Experiment'],
+         'slot_uri': 'dcterms:description'} })
     taxon: Optional[Term] = Field(default=None, json_schema_extra = { "linkml_meta": {'alias': 'taxon', 'domain_of': ['GeneReview']} })
     references: Optional[list[Reference]] = Field(default=None, json_schema_extra = { "linkml_meta": {'alias': 'references', 'domain_of': ['GeneReview']} })
     existing_annotations: Optional[list[ExistingAnnotation]] = Field(default=None, json_schema_extra = { "linkml_meta": {'alias': 'existing_annotations', 'domain_of': ['GeneReview']} })
@@ -359,12 +424,17 @@ class Term(ConfiguredBaseModel):
     """
     A term in a specific ontology
     """
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://w3id.org/ai4curation/gene_review'})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://ai4curation.io/ai-gene-review',
+         'slot_usage': {'id': {'description': 'An OBO CURIE for a term in GO, CL, '
+                                              'CHEBI, etc.',
+                               'name': 'id'},
+                        'label': {'description': 'the term name', 'name': 'label'}}})
 
-    id: str = Field(default=..., json_schema_extra = { "linkml_meta": {'alias': 'id', 'domain_of': ['GeneReview', 'Term', 'Reference']} })
-    label: str = Field(default=..., description="""Human readable name of the entity""", json_schema_extra = { "linkml_meta": {'alias': 'label', 'domain_of': ['Term']} })
+    id: str = Field(default=..., description="""An OBO CURIE for a term in GO, CL, CHEBI, etc.""", json_schema_extra = { "linkml_meta": {'alias': 'id', 'domain_of': ['GeneReview', 'Term', 'Reference']} })
+    label: str = Field(default=..., description="""the term name""", json_schema_extra = { "linkml_meta": {'alias': 'label', 'domain_of': ['Term'], 'slot_uri': 'rdfs:label'} })
     description: Optional[str] = Field(default=None, description="""Description of the entity""", json_schema_extra = { "linkml_meta": {'alias': 'description',
-         'domain_of': ['GeneReview', 'Term', 'CoreFunction', 'Experiment']} })
+         'domain_of': ['GeneReview', 'Term', 'CoreFunction', 'Experiment'],
+         'slot_uri': 'dcterms:description'} })
     ontology: Optional[str] = Field(default=None, description="""Ontology of the term. E.g `go`, `cl`, `hp`""", json_schema_extra = { "linkml_meta": {'alias': 'ontology', 'domain_of': ['Term']} })
 
 
@@ -372,7 +442,7 @@ class Reference(ConfiguredBaseModel):
     """
     A reference is a published text  that describes a finding or a method. References might be formal publications (where the ID is a PMID), or for methods, a GO_REF. Additionally, a reference to a local ad-hoc analysis or review can be made by using the `file:` prefix.
     """
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://w3id.org/ai4curation/gene_review'})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://ai4curation.io/ai-gene-review'})
 
     id: str = Field(default=..., json_schema_extra = { "linkml_meta": {'alias': 'id', 'domain_of': ['GeneReview', 'Term', 'Reference']} })
     title: str = Field(default=..., description="""Title of the entity""", json_schema_extra = { "linkml_meta": {'alias': 'title', 'domain_of': ['Reference'], 'slot_uri': 'dcterms:title'} })
@@ -386,7 +456,7 @@ class Finding(ConfiguredBaseModel):
     """
     A finding is a statement about a gene, which is supported by a reference. Similar to \"comments\" in uniprot
     """
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://w3id.org/ai4curation/gene_review'})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://ai4curation.io/ai-gene-review'})
 
     statement: Optional[str] = Field(default=None, description="""Concise statement describing an aspect of the gene""", json_schema_extra = { "linkml_meta": {'alias': 'statement', 'domain_of': ['Finding']} })
     supporting_text: Optional[str] = Field(default=None, description="""Supporting text from the publication. This should be exact substrings. Different substrings can be broken up by '...'s. These substrings will be checked against the actual text of the paper. If editorialization is necessary, put this in square brackets (this is not checked). For example, you can say '...[CFAP300 shows] transport within cilia is IFT dependent...'""", json_schema_extra = { "linkml_meta": {'alias': 'supporting_text',
@@ -401,7 +471,7 @@ class SupportingTextInReference(ConfiguredBaseModel):
     """
     A supporting text in a reference.
     """
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://w3id.org/ai4curation/gene_review'})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://ai4curation.io/ai-gene-review'})
 
     reference_id: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'alias': 'reference_id', 'domain_of': ['SupportingTextInReference']} })
     supporting_text: Optional[str] = Field(default=None, description="""Supporting text from the publication. This should be exact substrings. Different substrings can be broken up by '...'s. These substrings will be checked against the actual text of the paper. If editorialization is necessary, put this in square brackets (this is not checked). For example, you can say '...[CFAP300 shows] transport within cilia is IFT dependent...'""", json_schema_extra = { "linkml_meta": {'alias': 'supporting_text',
@@ -416,7 +486,7 @@ class ExistingAnnotation(ConfiguredBaseModel):
     """
     An existing annotation from the GO database, plus a review of the annotation.
     """
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://w3id.org/ai4curation/gene_review',
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://ai4curation.io/ai-gene-review',
          'slot_usage': {'term': {'bindings': [{'binds_value_of': 'id',
                                                'obligation_level': 'REQUIRED',
                                                'range': 'GOTermEnum'}],
@@ -431,6 +501,7 @@ class ExistingAnnotation(ConfiguredBaseModel):
     negated: Optional[bool] = Field(default=None, description="""Whether the term is negated""", json_schema_extra = { "linkml_meta": {'alias': 'negated', 'domain_of': ['ExistingAnnotation']} })
     evidence_type: Optional[EvidenceType] = Field(default=None, description="""Evidence code (e.g., IDA, IBA, ISS, TAS)""", json_schema_extra = { "linkml_meta": {'alias': 'evidence_type', 'domain_of': ['ExistingAnnotation']} })
     original_reference_id: Optional[str] = Field(default=None, description="""ID of the original reference""", json_schema_extra = { "linkml_meta": {'alias': 'original_reference_id', 'domain_of': ['ExistingAnnotation']} })
+    retired: Optional[bool] = Field(default=None, description="""Whether the annotation is retired or replaced""", json_schema_extra = { "linkml_meta": {'alias': 'retired', 'domain_of': ['ExistingAnnotation']} })
     supporting_entities: Optional[list[str]] = Field(default=None, description="""IDs of the supporting entities""", json_schema_extra = { "linkml_meta": {'alias': 'supporting_entities', 'domain_of': ['ExistingAnnotation']} })
     review: Optional[Review] = Field(default=None, description="""Review of the gene""", json_schema_extra = { "linkml_meta": {'alias': 'review', 'domain_of': ['ExistingAnnotation'], 'recommended': True} })
 
@@ -439,7 +510,7 @@ class Review(ConfiguredBaseModel):
     """
     A review of an existing annotation.
     """
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://w3id.org/ai4curation/gene_review',
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://ai4curation.io/ai-gene-review',
          'rules': [{'postconditions': {'slot_conditions': {'proposed_replacement_terms': {'name': 'proposed_replacement_terms',
                                                                                           'required': True}}},
                     'preconditions': {'slot_conditions': {'action': {'equals_string': 'MODIFY',
@@ -458,7 +529,7 @@ class CoreFunction(ConfiguredBaseModel):
     """
     A core function is a GO-CAM-like annotation of the core evolved functions of a gene. This is a synthesis of the reviewed core annotations, brought together into a unified GO-CAM-like representation.
     """
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://w3id.org/ai4curation/gene_review'})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://ai4curation.io/ai-gene-review'})
 
     description: Optional[str] = Field(default=None, description="""Description of the core function""", json_schema_extra = { "linkml_meta": {'alias': 'description',
          'domain_of': ['GeneReview', 'Term', 'CoreFunction', 'Experiment']} })
@@ -485,21 +556,42 @@ class CoreFunction(ConfiguredBaseModel):
 
 
 class AnnotationExtension(ConfiguredBaseModel):
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://w3id.org/ai4curation/gene_review'})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://ai4curation.io/ai-gene-review',
+         'slot_usage': {'predicate': {'bindings': [{'binds_value_of': 'id',
+                                                    'obligation_level': 'REQUIRED',
+                                                    'range': 'ROTermEnum'}],
+                                      'name': 'predicate'}}})
 
-    predicate: Optional[str] = Field(default=None, description="""Predicate of the extension""", json_schema_extra = { "linkml_meta": {'alias': 'predicate', 'domain_of': ['AnnotationExtension']} })
+    predicate: Optional[str] = Field(default=None, description="""Predicate of the extension""", json_schema_extra = { "linkml_meta": {'alias': 'predicate',
+         'bindings': [{'binds_value_of': 'id',
+                       'obligation_level': 'REQUIRED',
+                       'range': 'ROTermEnum'}],
+         'domain_of': ['AnnotationExtension', 'TermMapping'],
+         'slot_uri': 'rdf:predicate'} })
     term: Optional[Term] = Field(default=None, description="""Term to be annotated""", json_schema_extra = { "linkml_meta": {'alias': 'term', 'domain_of': ['ExistingAnnotation', 'AnnotationExtension']} })
+
+
+class TermMapping(ConfiguredBaseModel):
+    """
+    A mapping between the proposed term and an equivalent term in another ontology
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://ai4curation.io/ai-gene-review'})
+
+    predicate: str = Field(default=..., description="""Mapping predicate (e.g., 'skos:exactMatch', 'skos:closeMatch', 'skos:broadMatch', 'skos:narrowMatch')""", json_schema_extra = { "linkml_meta": {'alias': 'predicate', 'domain_of': ['AnnotationExtension', 'TermMapping']} })
+    target_term: Term = Field(default=..., description="""The target term in another ontology""", json_schema_extra = { "linkml_meta": {'alias': 'target_term', 'domain_of': ['TermMapping']} })
 
 
 class ProposedOntologyTerm(ConfiguredBaseModel):
     """
     A proposed new ontology term that should exist but doesn't currently
     """
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://w3id.org/ai4curation/gene_review'})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://ai4curation.io/ai-gene-review'})
 
     proposed_name: str = Field(default=..., description="""Proposed name for the new term""", json_schema_extra = { "linkml_meta": {'alias': 'proposed_name', 'domain_of': ['ProposedOntologyTerm']} })
     proposed_definition: str = Field(default=..., description="""Proposed definition for the new term""", json_schema_extra = { "linkml_meta": {'alias': 'proposed_definition', 'domain_of': ['ProposedOntologyTerm']} })
     justification: Optional[str] = Field(default=None, description="""Justification for why this term is needed""", json_schema_extra = { "linkml_meta": {'alias': 'justification', 'domain_of': ['ProposedOntologyTerm']} })
+    proposed_parent: Optional[Term] = Field(default=None, description="""Proposed parent term in the ontology hierarchy""", json_schema_extra = { "linkml_meta": {'alias': 'proposed_parent', 'domain_of': ['ProposedOntologyTerm']} })
+    proposed_mappings: Optional[list[TermMapping]] = Field(default=None, description="""Proposed mappings to equivalent terms in other ontologies""", json_schema_extra = { "linkml_meta": {'alias': 'proposed_mappings', 'domain_of': ['ProposedOntologyTerm']} })
     supported_by: Optional[list[SupportingTextInReference]] = Field(default=None, json_schema_extra = { "linkml_meta": {'alias': 'supported_by',
          'domain_of': ['Review', 'CoreFunction', 'ProposedOntologyTerm']} })
 
@@ -508,7 +600,7 @@ class Experiment(ConfiguredBaseModel):
     """
     A suggested experiment to answer a question about the gene
     """
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://w3id.org/ai4curation/gene_review'})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://ai4curation.io/ai-gene-review'})
 
     hypothesis: Optional[str] = Field(default=None, description="""Hypothesis to be investigated""", json_schema_extra = { "linkml_meta": {'alias': 'hypothesis', 'domain_of': ['Experiment'], 'recommended': True} })
     description: str = Field(default=..., description="""Detailed description of the experiment to be performed""", json_schema_extra = { "linkml_meta": {'alias': 'description',
@@ -520,7 +612,7 @@ class Question(ConfiguredBaseModel):
     """
     A question to be answered about the gene
     """
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://w3id.org/ai4curation/gene_review'})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://ai4curation.io/ai-gene-review'})
 
     question: str = Field(default=..., description="""Question to be answered""", json_schema_extra = { "linkml_meta": {'alias': 'question', 'domain_of': ['Question']} })
     experts: Optional[list[str]] = Field(default=None, description="""Experts to answer the question. These should be drawn from the authors of relevant publications already referenced. If no suitable experts are available, it's OK to leave this as an empty list!""", json_schema_extra = { "linkml_meta": {'alias': 'experts', 'domain_of': ['Question']} })
@@ -537,6 +629,7 @@ ExistingAnnotation.model_rebuild()
 Review.model_rebuild()
 CoreFunction.model_rebuild()
 AnnotationExtension.model_rebuild()
+TermMapping.model_rebuild()
 ProposedOntologyTerm.model_rebuild()
 Experiment.model_rebuild()
 Question.model_rebuild()

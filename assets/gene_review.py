@@ -1,8 +1,8 @@
 # Auto generated from gene_review.yaml by pythongen.py version: 0.0.1
-# Generation date: 2025-09-10T11:02:04
-# Schema: gene_curation
+# Generation date: 2025-10-16T22:08:01
+# Schema: gene_review
 #
-# id: https://w3id.org/ai4curation/gene_review
+# id: https://ai4curation.io/ai-gene-review
 # description: Schema for gene curation Top level entity is a GeneReview, which is about a single gene (and its equivalent swiss-prot entry). It contains a high level summary of the gene, plus a review of all existing annotations. It also contains a list of core functions, which are GO-CAM-like annotons describing the core evolved functions of the gene.
 # license: https://creativecommons.org/publicdomain/zero/1.0/
 
@@ -65,6 +65,7 @@ version = None
 # Namespaces
 ECO = CurieNamespace('ECO', 'http://purl.obolibrary.org/obo/ECO_')
 IAO = CurieNamespace('IAO', 'http://purl.obolibrary.org/obo/IAO_')
+SO = CurieNamespace('SO', 'http://purl.obolibrary.org/obo/SO_')
 DCAT = CurieNamespace('dcat', 'http://www.w3.org/ns/dcat#')
 DCTERMS = CurieNamespace('dcterms', 'http://purl.org/dc/terms/')
 GENE_REVIEW = CurieNamespace('gene_review', 'https://w3id.org/ai4curation/gene_review/')
@@ -106,13 +107,17 @@ class GeneReview(YAMLRoot):
 
     id: Union[str, GeneReviewId] = None
     gene_symbol: str = None
+    product_type: Optional[Union[str, "ProductTypeEnum"]] = None
     aliases: Optional[Union[str, list[str]]] = empty_list()
+    tags: Optional[Union[str, list[str]]] = empty_list()
     description: Optional[str] = None
     taxon: Optional[Union[dict, "Term"]] = None
     references: Optional[Union[dict[Union[str, ReferenceId], Union[dict, "Reference"]], list[Union[dict, "Reference"]]]] = empty_dict()
     existing_annotations: Optional[Union[Union[dict, "ExistingAnnotation"], list[Union[dict, "ExistingAnnotation"]]]] = empty_list()
     core_functions: Optional[Union[Union[dict, "CoreFunction"], list[Union[dict, "CoreFunction"]]]] = empty_list()
     proposed_new_terms: Optional[Union[Union[dict, "ProposedOntologyTerm"], list[Union[dict, "ProposedOntologyTerm"]]]] = empty_list()
+    suggested_questions: Optional[Union[Union[dict, "Question"], list[Union[dict, "Question"]]]] = empty_list()
+    suggested_experiments: Optional[Union[Union[dict, "Experiment"], list[Union[dict, "Experiment"]]]] = empty_list()
 
     def __post_init__(self, *_: str, **kwargs: Any):
         if self._is_empty(self.id):
@@ -125,9 +130,16 @@ class GeneReview(YAMLRoot):
         if not isinstance(self.gene_symbol, str):
             self.gene_symbol = str(self.gene_symbol)
 
+        if self.product_type is not None and not isinstance(self.product_type, ProductTypeEnum):
+            self.product_type = ProductTypeEnum(self.product_type)
+
         if not isinstance(self.aliases, list):
             self.aliases = [self.aliases] if self.aliases is not None else []
         self.aliases = [v if isinstance(v, str) else str(v) for v in self.aliases]
+
+        if not isinstance(self.tags, list):
+            self.tags = [self.tags] if self.tags is not None else []
+        self.tags = [v if isinstance(v, str) else str(v) for v in self.tags]
 
         if self.description is not None and not isinstance(self.description, str):
             self.description = str(self.description)
@@ -141,11 +153,13 @@ class GeneReview(YAMLRoot):
             self.existing_annotations = [self.existing_annotations] if self.existing_annotations is not None else []
         self.existing_annotations = [v if isinstance(v, ExistingAnnotation) else ExistingAnnotation(**as_dict(v)) for v in self.existing_annotations]
 
-        if not isinstance(self.core_functions, list):
-            self.core_functions = [self.core_functions] if self.core_functions is not None else []
-        self.core_functions = [v if isinstance(v, CoreFunction) else CoreFunction(**as_dict(v)) for v in self.core_functions]
+        self._normalize_inlined_as_dict(slot_name="core_functions", slot_type=CoreFunction, key_name="molecular_function", keyed=False)
 
         self._normalize_inlined_as_dict(slot_name="proposed_new_terms", slot_type=ProposedOntologyTerm, key_name="proposed_name", keyed=False)
+
+        self._normalize_inlined_as_dict(slot_name="suggested_questions", slot_type=Question, key_name="question", keyed=False)
+
+        self._normalize_inlined_as_dict(slot_name="suggested_experiments", slot_type=Experiment, key_name="description", keyed=False)
 
         super().__post_init__(**kwargs)
 
@@ -314,6 +328,7 @@ class ExistingAnnotation(YAMLRoot):
     negated: Optional[Union[bool, Bool]] = None
     evidence_type: Optional[Union[str, "EvidenceType"]] = None
     original_reference_id: Optional[Union[str, ReferenceId]] = None
+    retired: Optional[Union[bool, Bool]] = None
     supporting_entities: Optional[Union[str, list[str]]] = empty_list()
     review: Optional[Union[dict, "Review"]] = None
 
@@ -333,6 +348,9 @@ class ExistingAnnotation(YAMLRoot):
 
         if self.original_reference_id is not None and not isinstance(self.original_reference_id, ReferenceId):
             self.original_reference_id = ReferenceId(self.original_reference_id)
+
+        if self.retired is not None and not isinstance(self.retired, Bool):
+            self.retired = Bool(self.retired)
 
         if not isinstance(self.supporting_entities, list):
             self.supporting_entities = [self.supporting_entities] if self.supporting_entities is not None else []
@@ -399,9 +417,9 @@ class CoreFunction(YAMLRoot):
     class_name: ClassVar[str] = "CoreFunction"
     class_model_uri: ClassVar[URIRef] = GENE_REVIEW.CoreFunction
 
+    molecular_function: Union[dict, Term] = None
     description: Optional[str] = None
     supported_by: Optional[Union[Union[dict, SupportingTextInReference], list[Union[dict, SupportingTextInReference]]]] = empty_list()
-    molecular_function: Optional[Union[dict, Term]] = None
     directly_involved_in: Optional[Union[dict[Union[str, TermId], Union[dict, Term]], list[Union[dict, Term]]]] = empty_dict()
     locations: Optional[Union[dict[Union[str, TermId], Union[dict, Term]], list[Union[dict, Term]]]] = empty_dict()
     anatomical_locations: Optional[Union[dict[Union[str, TermId], Union[dict, Term]], list[Union[dict, Term]]]] = empty_dict()
@@ -409,15 +427,17 @@ class CoreFunction(YAMLRoot):
     in_complex: Optional[Union[dict, Term]] = None
 
     def __post_init__(self, *_: str, **kwargs: Any):
+        if self._is_empty(self.molecular_function):
+            self.MissingRequiredField("molecular_function")
+        if not isinstance(self.molecular_function, Term):
+            self.molecular_function = Term(**as_dict(self.molecular_function))
+
         if self.description is not None and not isinstance(self.description, str):
             self.description = str(self.description)
 
         if not isinstance(self.supported_by, list):
             self.supported_by = [self.supported_by] if self.supported_by is not None else []
         self.supported_by = [v if isinstance(v, SupportingTextInReference) else SupportingTextInReference(**as_dict(v)) for v in self.supported_by]
-
-        if self.molecular_function is not None and not isinstance(self.molecular_function, Term):
-            self.molecular_function = Term(**as_dict(self.molecular_function))
 
         self._normalize_inlined_as_list(slot_name="directly_involved_in", slot_type=Term, key_name="id", keyed=True)
 
@@ -456,6 +476,35 @@ class AnnotationExtension(YAMLRoot):
 
 
 @dataclass(repr=False)
+class TermMapping(YAMLRoot):
+    """
+    A mapping between the proposed term and an equivalent term in another ontology
+    """
+    _inherited_slots: ClassVar[list[str]] = []
+
+    class_class_uri: ClassVar[URIRef] = GENE_REVIEW["TermMapping"]
+    class_class_curie: ClassVar[str] = "gene_review:TermMapping"
+    class_name: ClassVar[str] = "TermMapping"
+    class_model_uri: ClassVar[URIRef] = GENE_REVIEW.TermMapping
+
+    predicate: str = None
+    target_term: Union[dict, Term] = None
+
+    def __post_init__(self, *_: str, **kwargs: Any):
+        if self._is_empty(self.predicate):
+            self.MissingRequiredField("predicate")
+        if not isinstance(self.predicate, str):
+            self.predicate = str(self.predicate)
+
+        if self._is_empty(self.target_term):
+            self.MissingRequiredField("target_term")
+        if not isinstance(self.target_term, Term):
+            self.target_term = Term(**as_dict(self.target_term))
+
+        super().__post_init__(**kwargs)
+
+
+@dataclass(repr=False)
 class ProposedOntologyTerm(YAMLRoot):
     """
     A proposed new ontology term that should exist but doesn't currently
@@ -470,6 +519,8 @@ class ProposedOntologyTerm(YAMLRoot):
     proposed_name: str = None
     proposed_definition: str = None
     justification: Optional[str] = None
+    proposed_parent: Optional[Union[dict, Term]] = None
+    proposed_mappings: Optional[Union[Union[dict, TermMapping], list[Union[dict, TermMapping]]]] = empty_list()
     supported_by: Optional[Union[Union[dict, SupportingTextInReference], list[Union[dict, SupportingTextInReference]]]] = empty_list()
 
     def __post_init__(self, *_: str, **kwargs: Any):
@@ -485,6 +536,13 @@ class ProposedOntologyTerm(YAMLRoot):
 
         if self.justification is not None and not isinstance(self.justification, str):
             self.justification = str(self.justification)
+
+        if self.proposed_parent is not None and not isinstance(self.proposed_parent, Term):
+            self.proposed_parent = Term(**as_dict(self.proposed_parent))
+
+        if not isinstance(self.proposed_mappings, list):
+            self.proposed_mappings = [self.proposed_mappings] if self.proposed_mappings is not None else []
+        self.proposed_mappings = [v if isinstance(v, TermMapping) else TermMapping(**as_dict(v)) for v in self.proposed_mappings]
 
         if not isinstance(self.supported_by, list):
             self.supported_by = [self.supported_by] if self.supported_by is not None else []
@@ -505,20 +563,18 @@ class Experiment(YAMLRoot):
     class_name: ClassVar[str] = "Experiment"
     class_model_uri: ClassVar[URIRef] = GENE_REVIEW.Experiment
 
-    hypothesis: str = None
     description: str = None
+    hypothesis: Optional[str] = None
     experiment_type: Optional[str] = None
 
     def __post_init__(self, *_: str, **kwargs: Any):
-        if self._is_empty(self.hypothesis):
-            self.MissingRequiredField("hypothesis")
-        if not isinstance(self.hypothesis, str):
-            self.hypothesis = str(self.hypothesis)
-
         if self._is_empty(self.description):
             self.MissingRequiredField("description")
         if not isinstance(self.description, str):
             self.description = str(self.description)
+
+        if self.hypothesis is not None and not isinstance(self.hypothesis, str):
+            self.hypothesis = str(self.hypothesis)
 
         if self.experiment_type is not None and not isinstance(self.experiment_type, str):
             self.experiment_type = str(self.experiment_type)
@@ -745,6 +801,69 @@ class GOProteinContainingComplexEnum(EnumDefinitionImpl):
         description="A protein-containing complex term in the GO ontology",
     )
 
+class ROTermEnum(EnumDefinitionImpl):
+    """
+    A term in the relation ontology
+    """
+    _defn = EnumDefinition(
+        name="ROTermEnum",
+        description="A term in the relation ontology",
+    )
+
+class ProductTypeEnum(EnumDefinitionImpl):
+    """
+    Type of gene product
+    """
+    PROTEIN = PermissibleValue(
+        text="PROTEIN",
+        description="Protein-coding gene",
+        meaning=SO["0001217"])
+    MIRNA = PermissibleValue(
+        text="MIRNA",
+        description="microRNA",
+        meaning=SO["0000276"])
+    LNCRNA = PermissibleValue(
+        text="LNCRNA",
+        description="Long non-coding RNA",
+        meaning=SO["0001877"])
+    SNORNA = PermissibleValue(
+        text="SNORNA",
+        description="Small nucleolar RNA",
+        meaning=SO["0000275"])
+    SNRNA = PermissibleValue(
+        text="SNRNA",
+        description="Small nuclear RNA",
+        meaning=SO["0000274"])
+    TRNA = PermissibleValue(
+        text="TRNA",
+        description="Transfer RNA",
+        meaning=SO["0000253"])
+    RRNA = PermissibleValue(
+        text="RRNA",
+        description="Ribosomal RNA",
+        meaning=SO["0000252"])
+    PIRNA = PermissibleValue(
+        text="PIRNA",
+        description="PIWI-interacting RNA",
+        meaning=SO["0001035"])
+    ANTISENSE_RNA = PermissibleValue(
+        text="ANTISENSE_RNA",
+        description="Antisense RNA",
+        meaning=SO["0000644"])
+    PSEUDOGENE = PermissibleValue(
+        text="PSEUDOGENE",
+        description="Pseudogene",
+        meaning=SO["0000336"])
+    OTHER_NCRNA = PermissibleValue(
+        text="OTHER_NCRNA",
+        description="Other non-coding RNA",
+        meaning=SO["0000655"])
+
+    _defn = EnumDefinition(
+        name="ProductTypeEnum",
+        description="Type of gene product",
+    )
+
 class ManuscriptSection(EnumDefinitionImpl):
     """
     Sections of a scientific manuscript or publication
@@ -793,6 +912,9 @@ class ManuscriptSection(EnumDefinitionImpl):
         text="SUPPLEMENTARY_MATERIAL",
         description="Supplementary material",
         meaning=IAO["0000326"])
+    DATABASE_ENTRY = PermissibleValue(
+        text="DATABASE_ENTRY",
+        description="Database entry")
     OTHER = PermissibleValue(
         text="OTHER",
         description="Other main text section")
@@ -809,11 +931,14 @@ class slots:
 slots.id = Slot(uri=GENE_REVIEW.id, name="id", curie=GENE_REVIEW.curie('id'),
                    model_uri=GENE_REVIEW.id, domain=None, range=URIRef)
 
-slots.label = Slot(uri=GENE_REVIEW.label, name="label", curie=GENE_REVIEW.curie('label'),
+slots.label = Slot(uri=RDFS.label, name="label", curie=RDFS.curie('label'),
                    model_uri=GENE_REVIEW.label, domain=None, range=str)
 
 slots.gene_symbol = Slot(uri=GENE_REVIEW.gene_symbol, name="gene_symbol", curie=GENE_REVIEW.curie('gene_symbol'),
                    model_uri=GENE_REVIEW.gene_symbol, domain=None, range=str)
+
+slots.product_type = Slot(uri=GENE_REVIEW.product_type, name="product_type", curie=GENE_REVIEW.curie('product_type'),
+                   model_uri=GENE_REVIEW.product_type, domain=None, range=Optional[Union[str, "ProductTypeEnum"]])
 
 slots.title = Slot(uri=DCTERMS.title, name="title", curie=DCTERMS.curie('title'),
                    model_uri=GENE_REVIEW.title, domain=None, range=str)
@@ -821,7 +946,10 @@ slots.title = Slot(uri=DCTERMS.title, name="title", curie=DCTERMS.curie('title')
 slots.aliases = Slot(uri=GENE_REVIEW.aliases, name="aliases", curie=GENE_REVIEW.curie('aliases'),
                    model_uri=GENE_REVIEW.aliases, domain=None, range=Optional[Union[str, list[str]]])
 
-slots.description = Slot(uri=GENE_REVIEW.description, name="description", curie=GENE_REVIEW.curie('description'),
+slots.tags = Slot(uri=GENE_REVIEW.tags, name="tags", curie=GENE_REVIEW.curie('tags'),
+                   model_uri=GENE_REVIEW.tags, domain=None, range=Optional[Union[str, list[str]]])
+
+slots.description = Slot(uri=DCTERMS.description, name="description", curie=DCTERMS.curie('description'),
                    model_uri=GENE_REVIEW.description, domain=None, range=Optional[str])
 
 slots.statement = Slot(uri=GENE_REVIEW.statement, name="statement", curie=GENE_REVIEW.curie('statement'),
@@ -851,7 +979,7 @@ slots.evidence_type = Slot(uri=GENE_REVIEW.evidence_type, name="evidence_type", 
 slots.term = Slot(uri=GENE_REVIEW.term, name="term", curie=GENE_REVIEW.curie('term'),
                    model_uri=GENE_REVIEW.term, domain=None, range=Optional[Union[dict, Term]])
 
-slots.predicate = Slot(uri=GENE_REVIEW.predicate, name="predicate", curie=GENE_REVIEW.curie('predicate'),
+slots.predicate = Slot(uri=RDF.predicate, name="predicate", curie=RDF.curie('predicate'),
                    model_uri=GENE_REVIEW.predicate, domain=None, range=Optional[str])
 
 slots.taxon = Slot(uri=GENE_REVIEW.taxon, name="taxon", curie=GENE_REVIEW.curie('taxon'),
@@ -883,6 +1011,9 @@ slots.reference_id = Slot(uri=GENE_REVIEW.reference_id, name="reference_id", cur
 
 slots.original_reference_id = Slot(uri=GENE_REVIEW.original_reference_id, name="original_reference_id", curie=GENE_REVIEW.curie('original_reference_id'),
                    model_uri=GENE_REVIEW.original_reference_id, domain=None, range=Optional[Union[str, ReferenceId]])
+
+slots.retired = Slot(uri=GENE_REVIEW.retired, name="retired", curie=GENE_REVIEW.curie('retired'),
+                   model_uri=GENE_REVIEW.retired, domain=None, range=Optional[Union[bool, Bool]])
 
 slots.review = Slot(uri=GENE_REVIEW.review, name="review", curie=GENE_REVIEW.curie('review'),
                    model_uri=GENE_REVIEW.review, domain=None, range=Optional[Union[dict, Review]])
@@ -918,7 +1049,7 @@ slots.coreFunction__supported_by = Slot(uri=GENE_REVIEW.supported_by, name="core
                    model_uri=GENE_REVIEW.coreFunction__supported_by, domain=None, range=Optional[Union[Union[dict, SupportingTextInReference], list[Union[dict, SupportingTextInReference]]]])
 
 slots.coreFunction__molecular_function = Slot(uri=GENE_REVIEW.molecular_function, name="coreFunction__molecular_function", curie=GENE_REVIEW.curie('molecular_function'),
-                   model_uri=GENE_REVIEW.coreFunction__molecular_function, domain=None, range=Optional[Union[dict, Term]])
+                   model_uri=GENE_REVIEW.coreFunction__molecular_function, domain=None, range=Union[dict, Term])
 
 slots.coreFunction__directly_involved_in = Slot(uri=GENE_REVIEW.directly_involved_in, name="coreFunction__directly_involved_in", curie=GENE_REVIEW.curie('directly_involved_in'),
                    model_uri=GENE_REVIEW.coreFunction__directly_involved_in, domain=None, range=Optional[Union[dict[Union[str, TermId], Union[dict, Term]], list[Union[dict, Term]]]])
@@ -935,6 +1066,12 @@ slots.coreFunction__substrates = Slot(uri=GENE_REVIEW.substrates, name="coreFunc
 slots.coreFunction__in_complex = Slot(uri=GENE_REVIEW.in_complex, name="coreFunction__in_complex", curie=GENE_REVIEW.curie('in_complex'),
                    model_uri=GENE_REVIEW.coreFunction__in_complex, domain=None, range=Optional[Union[dict, Term]])
 
+slots.termMapping__predicate = Slot(uri=GENE_REVIEW.predicate, name="termMapping__predicate", curie=GENE_REVIEW.curie('predicate'),
+                   model_uri=GENE_REVIEW.termMapping__predicate, domain=None, range=str)
+
+slots.termMapping__target_term = Slot(uri=GENE_REVIEW.target_term, name="termMapping__target_term", curie=GENE_REVIEW.curie('target_term'),
+                   model_uri=GENE_REVIEW.termMapping__target_term, domain=None, range=Union[dict, Term])
+
 slots.proposedOntologyTerm__proposed_name = Slot(uri=GENE_REVIEW.proposed_name, name="proposedOntologyTerm__proposed_name", curie=GENE_REVIEW.curie('proposed_name'),
                    model_uri=GENE_REVIEW.proposedOntologyTerm__proposed_name, domain=None, range=str)
 
@@ -944,11 +1081,17 @@ slots.proposedOntologyTerm__proposed_definition = Slot(uri=GENE_REVIEW.proposed_
 slots.proposedOntologyTerm__justification = Slot(uri=GENE_REVIEW.justification, name="proposedOntologyTerm__justification", curie=GENE_REVIEW.curie('justification'),
                    model_uri=GENE_REVIEW.proposedOntologyTerm__justification, domain=None, range=Optional[str])
 
+slots.proposedOntologyTerm__proposed_parent = Slot(uri=GENE_REVIEW.proposed_parent, name="proposedOntologyTerm__proposed_parent", curie=GENE_REVIEW.curie('proposed_parent'),
+                   model_uri=GENE_REVIEW.proposedOntologyTerm__proposed_parent, domain=None, range=Optional[Union[dict, Term]])
+
+slots.proposedOntologyTerm__proposed_mappings = Slot(uri=GENE_REVIEW.proposed_mappings, name="proposedOntologyTerm__proposed_mappings", curie=GENE_REVIEW.curie('proposed_mappings'),
+                   model_uri=GENE_REVIEW.proposedOntologyTerm__proposed_mappings, domain=None, range=Optional[Union[Union[dict, TermMapping], list[Union[dict, TermMapping]]]])
+
 slots.proposedOntologyTerm__supported_by = Slot(uri=GENE_REVIEW.supported_by, name="proposedOntologyTerm__supported_by", curie=GENE_REVIEW.curie('supported_by'),
                    model_uri=GENE_REVIEW.proposedOntologyTerm__supported_by, domain=None, range=Optional[Union[Union[dict, SupportingTextInReference], list[Union[dict, SupportingTextInReference]]]])
 
 slots.experiment__hypothesis = Slot(uri=GENE_REVIEW.hypothesis, name="experiment__hypothesis", curie=GENE_REVIEW.curie('hypothesis'),
-                   model_uri=GENE_REVIEW.experiment__hypothesis, domain=None, range=str)
+                   model_uri=GENE_REVIEW.experiment__hypothesis, domain=None, range=Optional[str])
 
 slots.experiment__description = Slot(uri=GENE_REVIEW.description, name="experiment__description", curie=GENE_REVIEW.curie('description'),
                    model_uri=GENE_REVIEW.experiment__description, domain=None, range=str)
@@ -962,5 +1105,14 @@ slots.question__question = Slot(uri=GENE_REVIEW.question, name="question__questi
 slots.question__experts = Slot(uri=GENE_REVIEW.experts, name="question__experts", curie=GENE_REVIEW.curie('experts'),
                    model_uri=GENE_REVIEW.question__experts, domain=None, range=Optional[Union[str, list[str]]])
 
+slots.Term_id = Slot(uri=GENE_REVIEW.id, name="Term_id", curie=GENE_REVIEW.curie('id'),
+                   model_uri=GENE_REVIEW.Term_id, domain=Term, range=Union[str, TermId])
+
+slots.Term_label = Slot(uri=RDFS.label, name="Term_label", curie=RDFS.curie('label'),
+                   model_uri=GENE_REVIEW.Term_label, domain=Term, range=str)
+
 slots.ExistingAnnotation_term = Slot(uri=GENE_REVIEW.term, name="ExistingAnnotation_term", curie=GENE_REVIEW.curie('term'),
                    model_uri=GENE_REVIEW.ExistingAnnotation_term, domain=ExistingAnnotation, range=Optional[Union[dict, Term]])
+
+slots.AnnotationExtension_predicate = Slot(uri=RDF.predicate, name="AnnotationExtension_predicate", curie=RDF.curie('predicate'),
+                   model_uri=GENE_REVIEW.AnnotationExtension_predicate, domain=AnnotationExtension, range=Optional[str])

@@ -1,0 +1,2375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>shc1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>shc1</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/B6K412" target="_blank" class="term-link">
+                        B6K412
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Schizosaccharomyces japonicus yFS275</span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "shc1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="B6K412" data-a="DESCRIPTION: Squalene-hopene cyclase enzyme catalyzing oxygen-i..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Squalene-hopene cyclase enzyme catalyzing oxygen-independent cyclization of squalene to hopanoids, enabling anaerobic growth in S. japonicus. Horizontally acquired from Acetobacter bacteria, this enzyme provides sterol surrogates when oxygen-dependent ergosterol biosynthesis is impaired.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051007" target="_blank" class="term-link">
+                                    GO:0051007
+                                </a>
+                            </span>
+                            <span class="term-label">squalene-hopene cyclase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="B6K412" data-a="GO:0051007" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This molecular function annotation is strongly supported by experimental evidence. Shc1 catalyzes the oxygen-independent cyclization of squalene to hopanoids (PMID:34353908, PMID:40195311), with enzyme activity directly validated through heterologous expression in S. cerevisiae and knockout studies.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The squalene-hopene cyclase activity is the core molecular function of Shc1, validated by multiple lines of evidence including functional expression studies, knockout phenotypes, and detection of hopanoid products. This is the primary and defining molecular function of the enzyme.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/34353908" target="_blank" class="term-link">
+                                        PMID:34353908
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Mass spectrometry of lipid fractions of anaerobically grown Sch. japonicus showed the presence of hopanoids, a class of cyclic triterpenoids not previously detected in yeasts, including hop-22(29)-ene, hop-17(21)-ene, hop-21(22)-ene, and hopan-22-ol</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/40195311" target="_blank" class="term-link">
+                                        PMID:40195311
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The S. japonicus shc1Δ mutant did not produce hopanoids, demonstrating that Shc1 is indeed responsible for hopanoid synthesis in this organism</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005811" target="_blank" class="term-link">
+                                    GO:0005811
+                                </a>
+                            </span>
+                            <span class="term-label">lipid droplet</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="B6K412" data-a="GO:0005811" data-r="GO_REF:0000002" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> No experimental evidence supports lipid droplet localization. Shc1-sfGFP localization studies show membrane association (ER, nuclear envelope, plasma membrane, vacuolar membrane) but not lipid droplets (PMID:40195311).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The IEA annotation likely derives from InterPro domain predictions, but experimental localization data clearly shows Shc1 at membrane sites involved in lipid biosynthesis, not lipid storage organelles. The enzyme functions in membrane lipid production, not storage.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/40195311" target="_blank" class="term-link">
+                                        PMID:40195311
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Shc1 tagged at its endogenous locus with superfolder GFP (Shc1-sfGFP) localized to cellular membranes, including the nuclear envelope (NE), cortical endoplasmic reticulum (ER) and/or the plasma membrane, and the vacuolar membranes</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008610" target="_blank" class="term-link">
+                                    GO:0008610
+                                </a>
+                            </span>
+                            <span class="term-label">lipid biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="B6K412" data-a="GO:0008610" data-r="GO_REF:0000117" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Accurate but overly general. Shc1 specifically catalyzes hopanoid biosynthesis, a specialized form of triterpenoid lipid biosynthesis (PMID:34353908, PMID:40195311).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While technically correct, this term is too broad. The more specific term GO:0019746 (hopanoid biosynthetic process) precisely captures the enzyme function. Hopanoids are a specific class of pentacyclic triterpenoid lipids.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019746" target="_blank" class="term-link">
+                                    hopanoid biosynthetic process
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/34353908" target="_blank" class="term-link">
+                                        PMID:34353908
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">In anaerobic cultures, the content of diplopterol, the major hopanoid detected in Sch. japonicus, was similar to the ergosterol content of sterol-supplemented anaerobic cultures</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016104" target="_blank" class="term-link">
+                                    GO:0016104
+                                </a>
+                            </span>
+                            <span class="term-label">triterpenoid biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="B6K412" data-a="GO:0016104" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct general classification but could be more specific. Hopanoids are pentacyclic triterpenoids, and the specific process (hopanoid biosynthesis) is well-characterized (PMID:34353908, PMID:40195311).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While accurate, GO:0019746 (hopanoid biosynthetic process) is more specific and informative. Hopanoids are a distinct class of triterpenoids with specific biological functions as sterol surrogates.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019746" target="_blank" class="term-link">
+                                    hopanoid biosynthetic process
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/40195311" target="_blank" class="term-link">
+                                        PMID:40195311
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">hopanoids are cyclized from squalene in a single, oxygen-independent step catalyzed by a squalene-hopene cyclase (SHC)</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016829" target="_blank" class="term-link">
+                                    GO:0016829
+                                </a>
+                            </span>
+                            <span class="term-label">lyase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="B6K412" data-a="GO:0016829" data-r="GO_REF:0000043" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Technically incorrect. Squalene-hopene cyclases are not lyases but transferases (intramolecular transferases). The reaction involves intramolecular rearrangement and cyclization, not cleavage (PMID:40195311).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Lyases catalyze cleavage reactions. Shc1 catalyzes cyclization through intramolecular rearrangement without bond cleavage. The proper molecular function is squalene-hopene cyclase activity (GO:0051007), which is a type of intramolecular transferase activity.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/40195311" target="_blank" class="term-link">
+                                        PMID:40195311
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">hopanoids are cyclized from squalene in a single, oxygen-independent step catalyzed by a squalene-hopene cyclase (SHC)</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016853" target="_blank" class="term-link">
+                                    GO:0016853
+                                </a>
+                            </span>
+                            <span class="term-label">isomerase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="B6K412" data-a="GO:0016853" data-r="GO_REF:0000043" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Partially correct but imprecise. While squalene-hopene cyclases do perform intramolecular rearrangements, they are specifically classified as intramolecular transferases that catalyze cyclization reactions (PMID:40195311).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Isomerase activity is too broad. The enzyme specifically performs intramolecular transferase activity (GO:0016866) during cyclization. The specific activity is already captured by GO:0051007 (squalene-hopene cyclase activity).
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016866" target="_blank" class="term-link">
+                                    intramolecular transferase activity
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/40195311" target="_blank" class="term-link">
+                                        PMID:40195311
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">SHCs synthesize hopanoids in an oxygen-independent manner</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016866" target="_blank" class="term-link">
+                                    GO:0016866
+                                </a>
+                            </span>
+                            <span class="term-label">intramolecular transferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="B6K412" data-a="GO:0016866" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct molecular function classification. Squalene-hopene cyclases are intramolecular transferases that catalyze the cyclization of squalene through intramolecular rearrangement (PMID:40195311).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the correct broad molecular function category for squalene-hopene cyclases. These enzymes catalyze intramolecular rearrangements to form cyclic structures. GO:0051007 (squalene-hopene cyclase activity) is a child term of this category.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/40195311" target="_blank" class="term-link">
+                                        PMID:40195311
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">hopanoids are cyclized from squalene in a single, oxygen-independent step catalyzed by a squalene-hopene cyclase (SHC)</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005774" target="_blank" class="term-link">
+                                    GO:0005774
+                                </a>
+                            </span>
+                            <span class="term-label">vacuolar membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/40195311" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:40195311
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Horizontal acquisition of prokaryotic hopanoid biosynthesis ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="B6K412" data-a="GO:0005774" data-r="PMID:40195311" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimentally validated localization. Shc1-sfGFP fluorescence microscopy directly demonstrated vacuolar membrane localization (PMID:40195311).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Direct experimental evidence from endogenous Shc1-sfGFP tagging shows clear vacuolar membrane localization. This is consistent with the enzyme role in membrane lipid metabolism.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/40195311" target="_blank" class="term-link">
+                                        PMID:40195311
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Shc1 tagged at its endogenous locus with superfolder GFP (Shc1-sfGFP) localized to cellular membranes, including the nuclear envelope (NE), cortical endoplasmic reticulum (ER) and/or the plasma membrane, and the vacuolar membranes</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005783" target="_blank" class="term-link">
+                                    GO:0005783
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/40195311" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:40195311
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Horizontal acquisition of prokaryotic hopanoid biosynthesis ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="B6K412" data-a="GO:0005783" data-r="PMID:40195311" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimentally validated localization. Shc1-sfGFP shows clear ER localization including cortical ER and nuclear envelope (PMID:40195311).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Direct experimental evidence from fluorescence microscopy of endogenously tagged Shc1-sfGFP demonstrates ER localization. This is the expected location for lipid biosynthetic enzymes working with squalene substrate.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/40195311" target="_blank" class="term-link">
+                                        PMID:40195311
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Shc1 tagged at its endogenous locus with superfolder GFP (Shc1-sfGFP) localized to cellular membranes, including the nuclear envelope (NE), cortical endoplasmic reticulum (ER)</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/40195311" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:40195311
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Horizontal acquisition of prokaryotic hopanoid biosynthesis ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="B6K412" data-a="GO:0005886" data-r="PMID:40195311" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimentally observed but interpretation is ambiguous. The study notes cortical ER and/or plasma membrane localization, suggesting difficulty distinguishing these closely apposed membranes (PMID:40195311).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While the authors note uncertainty between cortical ER versus plasma membrane signal, some plasma membrane localization is observed. This could represent ER-PM contact sites or direct PM localization for local hopanoid incorporation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/40195311" target="_blank" class="term-link">
+                                        PMID:40195311
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Shc1 tagged at its endogenous locus with superfolder GFP (Shc1-sfGFP) localized to cellular membranes, including the nuclear envelope (NE), cortical endoplasmic reticulum (ER) and/or the plasma membrane</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006629" target="_blank" class="term-link">
+                                    GO:0006629
+                                </a>
+                            </span>
+                            <span class="term-label">lipid metabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/40195311" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:40195311
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Horizontal acquisition of prokaryotic hopanoid biosynthesis ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="B6K412" data-a="GO:0006629" data-r="PMID:40195311" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimentally validated but overly broad. The study specifically demonstrates hopanoid biosynthesis through GC-MS detection of hopanoid products (PMID:40195311).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While correct, this term is too general. The experimental evidence specifically shows hopanoid biosynthesis (GO:0019746), which is a more informative annotation for this specialized lipid biosynthetic function.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019746" target="_blank" class="term-link">
+                                    hopanoid biosynthetic process
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/40195311" target="_blank" class="term-link">
+                                        PMID:40195311
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">S. japonicus wild-type cells produced high levels of hopanoids even in the presence of oxygen, with diplopterol being the most abundant. We also detected the hopenes hop-22(29)-ene and hop-17(21)-ene</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071454" target="_blank" class="term-link">
+                                    GO:0071454
+                                </a>
+                            </span>
+                            <span class="term-label">cellular response to anoxia</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/40195311" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:40195311
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Horizontal acquisition of prokaryotic hopanoid biosynthesis ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="B6K412" data-a="GO:0071454" data-r="PMID:40195311" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> New annotation based on knockout phenotype. shc1 deletion is lethal under anaerobic conditions, demonstrating essential role in response to anoxia (PMID:40195311).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This critical function was not captured in existing annotations. The enzyme enables cellular adaptation to anoxic conditions by producing hopanoids as sterol surrogates when oxygen-dependent ergosterol biosynthesis cannot occur.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/40195311" target="_blank" class="term-link">
+                                        PMID:40195311
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Unlike the wild-type or Shc1-sfGFP-expressing cells, S. japonicus mutant lacking shc1 was unable to grow in the absence of oxygen (Fig. 1c), demonstrating the requirement for Shc1 in S. japonicus anaerobic growth</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019746" target="_blank" class="term-link">
+                                    GO:0019746
+                                </a>
+                            </span>
+                            <span class="term-label">hopanoid biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="B6K412" data-a="GO:0019746" data-r="" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core biological process catalyzed by Shc1
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Shc1 specifically catalyzes the biosynthesis of hopanoids from squalene. This is the precise biological process for this enzyme but was missing from existing annotations.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Catalyzes oxygen-independent cyclization of squalene to hopanoids enabling anaerobic growth</h3>
+                <span class="vote-buttons" data-g="B6K412" data-a="FUNCTION: Catalyzes oxygen-independent cyclization of squale..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051007" target="_blank" class="term-link">
+                            squalene-hopene cyclase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019746" target="_blank" class="term-link">
+                                hopanoid biosynthetic process
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071454" target="_blank" class="term-link">
+                                cellular response to anoxia
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/40195311" target="_blank" class="term-link">
+                                PMID:40195311
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">S. japonicus mutant lacking shc1 was unable to grow in the absence of oxygen (Fig. 1c), demonstrating the requirement for Shc1 in S. japonicus anaerobic growth</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34353908" target="_blank" class="term-link">
+                                PMID:34353908
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Expression of the Sch. japonicus SHC gene (Sjshc1) in Saccharomyces cerevisiae enabled hopanoid synthesis and stimulated anaerobic growth in sterol-free media</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/40195311" target="_blank" class="term-link">
+                            PMID:40195311
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Horizontal acquisition of prokaryotic hopanoid biosynthesis reorganizes membrane physiology driving lifestyle innovation in a eukaryote.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">shc1 knockout is lethal under anaerobic conditions</div>
+                        
+                        <div class="finding-text">"S. japonicus mutant lacking shc1 was unable to grow in the absence of oxygen"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Shc1-sfGFP localizes to ER, nuclear envelope, plasma membrane, and vacuolar membrane</div>
+                        
+                        <div class="finding-text">"Shc1-sfGFP localized to cellular membranes, including the nuclear envelope (NE), cortical endoplasmic reticulum (ER) and/or the plasma membrane, and the vacuolar membranes"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">S. japonicus produces hopanoids including diplopterol and hopenes</div>
+                        
+                        <div class="finding-text">"S. japonicus wild-type cells produced high levels of hopanoids even in the presence of oxygen, with diplopterol being the most abundant. We also detected the hopenes hop-22(29)-ene and hop-17(21)-ene"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Hopanoids substitute for sterols during anaerobic growth</div>
+                        
+                        <div class="finding-text">"hopanoids increased profoundly when ergosterol synthesis was inhibited either by erg1Δ mutation or the growth in anoxia"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/34353908" target="_blank" class="term-link">
+                            PMID:34353908
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A squalene-hopene cyclase in Schizosaccharomyces japonicus represents a eukaryotic adaptation to sterol-limited anaerobic environments.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Functional validation showing S. japonicus produces hopanoids</div>
+                        
+                        <div class="finding-text">"Mass spectrometry of lipid fractions of anaerobically grown Sch. japonicus showed the presence of hopanoids, a class of cyclic triterpenoids not previously detected in yeasts, including hop-22(29)-ene, hop-17(21)-ene, hop-21(22)-ene, and hopan-22-ol"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Expression of shc1 in S. cerevisiae conferred hopanoid production and anaerobic growth</div>
+                        
+                        <div class="finding-text">"Expression of the Sch. japonicus SHC gene (Sjshc1) in Saccharomyces cerevisiae enabled hopanoid synthesis and stimulated anaerobic growth in sterol-free media"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Phylogenetic analysis confirmed horizontal transfer from Acetobacter</div>
+                        
+                        <div class="finding-text">"A putative gene in Sch. japonicus showed high similarity to bacterial squalene-hopene cyclase (SHC) genes and in particular to those of Acetobacter species"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(shc1-deep-research.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="B6K412" data-a="DOC: Deep Research" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="deep-research-report-shc1-schjy">Deep Research Report: shc1 (SCHJY)</h1>
+<p>Generated using OpenAI Deep Research API</p>
+<hr />
+<h2 id="gene-function-and-molecular-mechanisms">Gene Function and Molecular Mechanisms</h2>
+<p>The <strong>shc1</strong> gene of <em>S. japonicus</em> encodes a squalene–hopene cyclase (SHC), an enzyme that catalyzes the cyclization of squalene into hopanoid lipids (e.g. hopene and hopanol) (<a href="https://ctdbase.org/detail.go?acc=GO%3A0051007&amp;type=go#:~:text=Name%20%20%7C%20squalene,GO%3A0051007%20External%20Links">ctdbase.org</a>). This reaction produces pentacyclic triterpenoids (hopanoids) that can substitute for sterols in cellular membranes (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8364164/#:~:text=detected%20in%20yeasts%2C%20including%20hop,Use%20of%20hopanoids%20as">pmc.ncbi.nlm.nih.gov</a>). Unlike the conventional sterol biosynthesis pathway, which requires molecular oxygen at multiple steps, the SHC enzyme performs an oxygen-independent cyclization of squalene (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11976957/#:~:text=synthesize%20hopanoids%2C%20Shc1%20is%20predicted,synthesize%20hopanoids%20in%20an%20oxygen">pmc.ncbi.nlm.nih.gov</a>). Mechanistically, Shc1 is a <strong>terpene cyclase</strong> that likely generates a carbocation intermediate and facilitates ring closure of squalene into hopene/hopanol in a single step, analogous to bacterial hopene cyclases. The enzyme’s activity enables <em>S. japonicus</em> to produce hopanoids that mimic eukaryotic sterols and maintain membrane integrity when oxygen-dependent sterol synthesis is impaired (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11976957/#:~:text=Horizontal%20gene%20transfer%20is%20a,sterols%20and%20hopanoids%20in%20membranes">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8364164/#:~:text=detected%20in%20yeasts%2C%20including%20hop,Use%20of%20hopanoids%20as">pmc.ncbi.nlm.nih.gov</a>). Expression of the <em>S. japonicus</em> shc1 gene in <em>S. cerevisiae</em> has experimentally confirmed its function: the heterologous SHC conferred production of hopanoid compounds and allowed sterol-independent anaerobic growth in yeast (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8364164/#:~:text=bacterial%20squalene%E2%80%93hopene%20cyclase%20,Use%20of%20hopanoids%20as">pmc.ncbi.nlm.nih.gov</a>). Thus, Shc1’s molecular function is <strong>squalene-hopene cyclase activity (GO:0051007)</strong>, and it plays a crucial role in an alternative triterpenoid biosynthetic route, bypassing the need for oxygen in sterol biosynthesis (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11976957/#:~:text=synthesize%20hopanoids%2C%20Shc1%20is%20predicted,synthesize%20hopanoids%20in%20an%20oxygen">pmc.ncbi.nlm.nih.gov</a>). </p>
+<h2 id="cellular-localization-and-subcellular-components">Cellular Localization and Subcellular Components</h2>
+<p>Shc1 is associated with internal cellular membranes. Fluorescent tagging of the endogenous Shc1 (Shc1-sfGFP) in <em>S. japonicus</em> showed that the protein localizes to the <strong>nuclear envelope</strong>, <strong>endoplasmic reticulum (ER)</strong> (including cortical ER at the cell periphery), the <strong>plasma membrane</strong>, and <strong>vacuolar membranes</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11976957/#:~:text=independent%20manner,type%20or">pmc.ncbi.nlm.nih.gov</a>). This distribution suggests Shc1 is an ER-associated enzyme that traffics or anchors at multiple membrane sites, consistent with its lipophilic substrate (squalene) being synthesized in the ER and its hopanoid products inserting into membranes. The presence at the nuclear envelope and cortical ER indicates Shc1 likely resides in the <strong>ER membrane (GO:0005789)</strong> or ER-plasma membrane contact sites, while its detection at vacuolar membranes and the cell periphery suggests a broad membrane association within the endomembrane system (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11976957/#:~:text=independent%20manner,type%20or">pmc.ncbi.nlm.nih.gov</a>). The protein contains a hydrophobic N-terminus that likely serves as a membrane anchor, targeting Shc1 to the ER or other intracellular membranes. In summary, Shc1 is a membrane-bound enzyme, predominantly localized to the <strong>ER and inner nuclear membrane</strong>, with extensions to the <strong>plasma membrane</strong> and <strong>vacuole membrane</strong>, reflecting its role in lipid metabolism at these sites (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11976957/#:~:text=independent%20manner,type%20or">pmc.ncbi.nlm.nih.gov</a>). </p>
+<h2 id="biological-processes-involvement">Biological Processes Involvement</h2>
+<p>Shc1 is fundamentally involved in the <strong>hopanoid biosynthetic process (GO:0019746)</strong> and cellular adaptation to anaerobic conditions. By catalyzing hopanoid formation, Shc1 enables <em>S. japonicus</em> to produce these surrogate sterols as a replacement for ergosterol during oxygen-limited growth (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8364164/#:~:text=detected%20in%20yeasts%2C%20including%20hop,Use%20of%20hopanoids%20as">pmc.ncbi.nlm.nih.gov</a>). In aerobic, normoxic conditions <em>S. japonicus</em> produces both ergosterol (via the usual pathway) and a low level of hopanoids, but under anoxic conditions it switches almost entirely to hopanoid production to sustain its membranes (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11976957/#:~:text=Shc1%20appears%20to%20be%20deeply,support%20membrane%20function%20in%20eukaryotic">pmc.ncbi.nlm.nih.gov</a>). Thus, Shc1 is directly tied to the <strong>response to oxygen deprivation</strong> at the cellular level – it provides an alternative lipid when oxygen-dependent sterol synthesis (via squalene epoxidase Erg1 and downstream steps) ceases. Indeed, Shc1’s hopanoid products allow <em>S. japonicus</em> cells to <strong>thrive anaerobically without exogenous sterols or unsaturated fatty acids</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11976957/#:~:text=Horizontal%20gene%20transfer%20is%20a,sterols%20and%20hopanoids%20in%20membranes">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8364164/#:~:text=bacterial%20squalene%E2%80%93hopene%20cyclase%20,Use%20of%20hopanoids%20as">pmc.ncbi.nlm.nih.gov</a>). This unique ability places Shc1 at the center of an anaerobic growth adaptation: the enzyme works alongside the conventional sterol pathway, stepping in when oxygen is low to maintain membrane fluidity and integrity (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11976957/#:~:text=hopene%20cyclase%20Shc1%20through%20horizontal,profound%20reorganization%20of%20the%20host">pmc.ncbi.nlm.nih.gov</a>). In broader terms, Shc1 contributes to <strong>membrane lipid homeostasis</strong> and <strong>sterol metabolic process</strong> under varying oxygen levels. The presence of hopanoids, which are typically bacterial lipids, in <em>S. japonicus</em> membranes also required cellular adjustments – for example, this yeast maintains unusually high fatty acid saturation and asymmetry in its phospholipids to accommodate hopanoids in the bilayer (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11976957/#:~:text=hopene%20cyclase%20Shc1%20through%20horizontal,profound%20reorganization%20of%20the%20host">pmc.ncbi.nlm.nih.gov</a>). Overall, Shc1 is pivotal for the biological processes of <strong>hopanoid biosynthesis</strong> and <strong>anaerobic growth</strong> in <em>S. japonicus</em>, effectively expanding the organism’s metabolic repertoire to survive in sterol-limited (low oxygen) environments. </p>
+<h2 id="disease-associations-and-phenotypes">Disease Associations and Phenotypes</h2>
+<p>Because <em>S. japonicus</em> is a non-pathogenic fission yeast, <strong>shc1</strong> is not directly associated with human disease. There are no known human homologs of this gene (human <em>SHC1</em> is an unrelated adaptor protein), and thus no human disease phenotypes tied to <em>S. japonicus</em> Shc1. In its native context, however, Shc1’s activity (or loss thereof) produces distinct phenotypes. Notably, <strong>shc1 is required for anaerobic viability</strong>: <em>S. japonicus</em> cells lacking shc1 (shc1∆ mutants) are <strong>unable to grow in the absence of oxygen</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11976957/#:~:text=match%20at%20L121%20Shc1,japonicus%20anaerobic%20growth">pmc.ncbi.nlm.nih.gov</a>), confirming that hopanoid synthesis via Shc1 is essential when sterol synthesis is blocked by anoxia. This lethal phenotype under anaerobic conditions underscores Shc1’s role as an adaptive survival factor rather than a housekeeping gene. Under normal aerobic conditions, an shc1∆ mutant is viable, but exhibits subtle growth and morphology phenotypes. Deletion of shc1 leads to <strong>perturbed cell geometry</strong> – mutant cells are slightly longer at division and have altered cell width, indicating a mild effect on cell cycle or membrane properties (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11976957/#:~:text=match%20at%20L237%20but%20maintaining,1k%2C%20l">pmc.ncbi.nlm.nih.gov</a>). Shc1-lacking cells grow at near-normal rates in rich media with oxygen (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11976957/#:~:text=but%20maintaining%20its%20aspect%20ratio,1k%2C%20l">pmc.ncbi.nlm.nih.gov</a>), since they can still rely on ergosterol, but they show <strong>reduced long-term survival in stationary phase</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11976957/#:~:text=match%20at%20L242%20medium%20,Erg1%20led%20to%20more%20pronounced">pmc.ncbi.nlm.nih.gov</a>). This suggests that even in oxygenated conditions, the presence of hopanoids (or the metabolic balance Shc1 provides) contributes to optimal cell fitness during stress or nutrient depletion. No diseases are associated with Shc1, but its loss produces a clear stress-sensitive phenotype in yeast. In a broader context, the ability of Shc1 to confer anaerobic growth is of biotechnological interest – for instance, strains with Shc1 could be used as robust bio-production platforms in anaerobic fermentation without sterol supplementation (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8364164/#:~:text=in%20other%20yeast%20species,application%20in%20anaerobic%20industrial%20processes">pmc.ncbi.nlm.nih.gov</a>). This trait is industrially relevant rather than a disease link, highlighting Shc1’s importance for applied yeast physiology rather than pathology. </p>
+<h2 id="protein-domains-and-structural-features">Protein Domains and Structural Features</h2>
+<p>The Shc1 protein is a large triterpene cyclase that shares structural hallmarks with bacterial squalene-hopene cyclases and eukaryotic oxidosqualene cyclases. It is typically on the order of ~700–800 amino acids and has a modular architecture crucial for its catalytic function. A prominent feature of Shc1 (and all SHCs) is the presence of multiple <strong>conserved QW motifs</strong> – short repeats rich in glutamine (Q) and tryptophan (W). In fact, squalene-hopene cyclases are characterized by <strong>eight tandem QW motifs</strong> that span the protein (<a href="https://patents.google.com/patent/WO2023245039A1/en#:~:text=characterized%20by%20eight%20QW%20motifs,barrels">patents.google.com</a>). These QW motifs play a structural role, interconnecting the numerous α-helices that make up the enzyme’s core. The overall fold of Shc1 is a <strong>dual α-domain (α/α-barrel) structure</strong>: the protein forms two stacked α-barrel domains that create a deep internal cavity (<a href="https://patents.google.com/patent/WO2023245039A1/en#:~:text=characterized%20by%20eight%20QW%20motifs,barrels">patents.google.com</a>). The active site lies buried within this hydrophobic cavity at the interface of the barrel domains, where it accommodates the linear squalene substrate. Like other terpene cyclases, Shc1 contains an <strong>aspartate-rich catalytic motif</strong> (in oxidosqualene cyclases, this is typically the DXDD sequence) that is thought to protonate the terminal double bond of squalene to initiate the cyclization cascade. The enzyme likely stabilizes a series of pentacarbocation intermediates as the squalene molecule folds and cyclizes into the hopane skeleton. The active-site cavity in SHC enzymes is highly pre-organized and constrains squalene’s conformation, ensuring a specific polycyclization outcome (hop-22(29)-ene and related hopanoids) (<a href="https://ctdbase.org/detail.go?acc=GO%3A0051007&amp;type=go#:~:text=Exact%20Synonym%20%20,GO%3A0051007%20External%20Links">ctdbase.org</a>). Structurally, Shc1 is quite robust: the multiple QW motif repeats contribute to the <strong>stability of the α-helical barrels</strong> and help maintain the precise geometry of the active site (<a href="https://patents.google.com/patent/WO2023245039A1/en#:~:text=characterized%20by%20eight%20QW%20motifs,barrels">patents.google.com</a>). At the N-terminus, Shc1 appears to have a hydrophobic segment that serves as a <strong>membrane anchor</strong>, given that eukaryotic sterol cyclases (like lanosterol synthase) have one or more transmembrane helices anchoring them to the ER. In Shc1, bioinformatic analyses (hydropathy profile) indicate an N-terminal signal peptide or membrane-spanning helix, which is consistent with its ER membrane localization. In summary, Shc1’s structure consists of membrane-targeting elements and a conserved cyclase core with <strong>eight QW motifs and a buried active site</strong>, optimized for converting squalene into the hopanoid pentacyclic structure (<a href="https://patents.google.com/patent/WO2023245039A1/en#:~:text=characterized%20by%20eight%20QW%20motifs,barrels">patents.google.com</a>). These structural features underlie its catalytic efficiency and are conserved from its prokaryotic SHC counterparts. </p>
+<h2 id="expression-patterns-and-regulation">Expression Patterns and Regulation</h2>
+<p><strong>shc1</strong> in <em>S. japonicus</em> is expressed as part of the normal cellular program and is not merely induced under special conditions – evidence shows that hopanoids are produced even during normoxic growth, albeit at lower levels relative to sterols (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11976957/#:~:text=Shc1%20appears%20to%20be%20deeply,support%20membrane%20function%20in%20eukaryotic">pmc.ncbi.nlm.nih.gov</a>). In standard aerobic culture, <em>S. japonicus</em> cells synthesize predominantly ergosterol, but also some hopanoid (diplopterol and hopene), indicating that the Shc1 enzyme is expressed and active alongside the conventional sterol pathway (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11976957/#:~:text=Shc1%20appears%20to%20be%20deeply,support%20membrane%20function%20in%20eukaryotic">pmc.ncbi.nlm.nih.gov</a>). When oxygen is removed, the sterol pathway enzymes (like Erg1, the squalene epoxidase) become inactive and sterol synthesis halts; under these conditions Shc1 activity takes over, and hopanoid production dramatically increases to compensate (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11976957/#:~:text=Shc1%20appears%20to%20be%20deeply,support%20membrane%20function%20in%20eukaryotic">pmc.ncbi.nlm.nih.gov</a>). It’s not yet clear if <em>shc1</em> transcription is <strong>upregulated by low oxygen</strong> or if the enzyme’s increased contribution is purely due to substrate availability (since oxygen-dependent competitors are inactive). The current evidence leans toward the latter: <em>S. japonicus</em> seems to maintain Shc1 at a functional level constitutively, and the key regulatory shift is that in anaerobic conditions squalene is no longer diverted into sterol synthesis and instead is channeled to hopanoid synthesis (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11976957/#:~:text=that%20both%20Shc1%20and%20the,4e%2C%20and">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11976957/#:~:text=Shc1%20appears%20to%20be%20deeply,support%20membrane%20function%20in%20eukaryotic">pmc.ncbi.nlm.nih.gov</a>). Interestingly, <em>S. japonicus</em> appears to have adapted its sterol pathway to coexist with Shc1: the abundance of Erg1 (squalene epoxidase) in <em>S. japonicus</em> is naturally lower than that in <em>S. pombe</em>, which may reduce competition for squalene and favor hopanoid production when needed (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11976957/#:~:text=that%20both%20Shc1%20and%20the,4e%2C%20and">pmc.ncbi.nlm.nih.gov</a>). This suggests a form of metabolic balancing – possibly at the level of protein expression or stability – to allow efficient flux through Shc1. However, specific regulators of <em>shc1</em> expression have not been reported. There is no known homolog of the hypoxic transcription factors (like Rox1 of <em>S. cerevisiae</em>) in <em>S. japonicus</em> that specifically targets <em>shc1</em>. Instead, Shc1’s expression pattern seems relatively constitutive, with regulation occurring at the metabolic level (via oxygen availability and substrate partitioning). During the yeast-to-hypha transition in <em>S. japonicus</em> (a dimorphic switch unrelated to oxygen levels), <em>shc1</em> did not show strong differential expression, implying it is not tied to developmental programs but rather to metabolic conditions. In summary, <em>shc1</em> is expressed in both oxic and anoxic environments, ensuring <em>S. japonicus</em> is pre-equipped with the enzyme; the dramatic effect of oxygen deprivation on its activity is due to the <strong>regulatory intersection of oxygen-dependent and oxygen-independent pathways</strong> rather than large transcriptional induction of <em>shc1</em>. This strategy guarantees that when oxygen becomes limiting, Shc1 is already present to promptly generate hopanoids and support anaerobic growth. </p>
+<h2 id="evolutionary-conservation">Evolutionary Conservation</h2>
+<p>Shc1 is a striking example of a <strong>horizontally acquired gene</strong> in a eukaryote. It is <strong>not conserved in other yeasts or fungi</strong> – extensive genomic comparisons show that none of the other Schizosaccharomyces species (including <em>S. pombe</em>, <em>S. octosporus</em>, <em>S. cryophilus</em>) possess an SHC homolog (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8364164/#:~:text=and%20hopan,Use%20of%20hopanoids%20as">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8364164/#:~:text=Horizontal%20gene%20transfer%20from%20Acetobacter,predicted%20proteomes%20of%20Schizosaccharomycetes%20other">pmc.ncbi.nlm.nih.gov</a>). The presence of shc1 is a unique feature of <em>S. japonicus</em>. Sequence analysis revealed that <em>S. japonicus</em> Shc1 is most similar to bacterial squalene-hopene cyclases, particularly those from acetic acid bacteria of the genus <em>Acetobacter</em> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8364164/#:~:text=and%20hopan,Use%20of%20hopanoids%20as">pmc.ncbi.nlm.nih.gov</a>). In fact, phylogenetic studies strongly suggest that an ancestral <em>S. japonicus</em> (or its relative) <strong>acquired the shc1 gene via horizontal gene transfer (HGT)</strong> from an <em>Acetobacter</em> species (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8364164/#:~:text=Horizontal%20gene%20transfer%20from%20Acetobacter,predicted%20proteomes%20of%20Schizosaccharomycetes%20other">pmc.ncbi.nlm.nih.gov</a>). <em>Acetobacter</em> and related Alphaproteobacteria synthesize hopanoids as part of their membranes, and an HGT event likely transferred this capability to <em>S. japonicus</em>. The transferred <em>Acetobacter</em> SHC gene has since been “domesticated” in the yeast lineage, evidenced by the integration of Shc1 into <em>S. japonicus</em>’ physiology (e.g. membrane adaptation and coordination with sterol synthesis). This represents a rare case of a eukaryote adopting a prokaryotic enzyme to expand its metabolic range. <strong>No orthologs of Shc1 exist in other model yeasts</strong>, and even across fungi generally, SHC enzymes are absent except in certain anaerobic protists/fungi that independently acquired analogous cyclases. Notably, anaerobic rumen fungi (Neocallimastigomycetes) have a <strong>squalene-tetrahymanol cyclase (STC)</strong> acquired from bacteria, which serves a similar function (producing tetrahymanol as a sterol surrogate) – this is an instance of convergent evolution in a separate lineage (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8364164/#:~:text=sequences%20from%20Acetobacter%20species%20identifies,convergent%20evolution%20toward%20an%20anaerobic">pmc.ncbi.nlm.nih.gov</a>). The <em>S. japonicus</em> Shc1 and the fungal STC are evolutionary analogues, each gained independently via HGT to address the challenge of sterol synthesis in anaerobic environments (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8364164/#:~:text=sequences%20from%20Acetobacter%20species%20identifies,convergent%20evolution%20toward%20an%20anaerobic">pmc.ncbi.nlm.nih.gov</a>). Aside from the bacterial source alignment (Shc1 shares ~35–40% identity with bacterial SHCs, and retains the characteristic motifs of the enzyme family (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8364164/#:~:text=AaShc,%E2%88%92139%7D%20%20%7C%2037.8">pmc.ncbi.nlm.nih.gov</a>)), the gene has diverged enough to function in the eukaryotic context (e.g., acquiring necessary signals for expression and membrane targeting in yeast). In summary, Shc1 is <strong>highly conserved with bacterial hopene cyclases</strong> but is an evolutionary novelty in fungi – its conservation is limited to <em>S. japonicus</em> itself (no paralogs in its genome) and it represents a case of horizontal acquisition rather than vertical descent. This lack of distribution among other species underscores Shc1’s unique evolutionary origin and its role in enabling a distinctive phenotype exclusive to <em>S. japonicus</em>. </p>
+<h2 id="key-experimental-evidence-and-literature">Key Experimental Evidence and Literature</h2>
+<p>The discovery and characterization of Shc1 in <em>S. japonicus</em> are supported by several key studies and experimental findings:</p>
+<ul>
+<li>
+<p><strong>Anaerobic Growth Observation (1971):</strong> The ability of <em>S. japonicus</em> to grow without oxygen or sterol supplements was first noted in the early 1970s by C. J. E. A. Bulder (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8364164/#:~:text=cyclase%2C%20acts%20as%20a%20sterol,in%20particular%20to%20those%20of">pmc.ncbi.nlm.nih.gov</a>). Bulder’s work reported an unusual yeast that did not require external sterols for anaerobic growth, hinting that <em>S. japonicus</em> might possess an alternative mechanism to satisfy sterol function. This finding went unexplained for decades.</p>
+</li>
+<li>
+<p><strong>Genome Identification of shc1:</strong> The <em>S. japonicus</em> genome (strain yFS275) was sequenced and annotated in recent years. A putative gene, <strong>SJAG_03360</strong>, encoding a ~731 amino acid protein, was noted for its high similarity to bacterial squalene-hopene cyclases (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8364164/#:~:text=detected%20in%20yeasts%2C%20including%20hop,Use%20of%20hopanoids%20as">pmc.ncbi.nlm.nih.gov</a>). This gene was named <strong>shc1</strong> by homology (SHC for squalene-hopene cyclase). No ortholog was found in <em>S. pombe</em> or other yeasts (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8364164/#:~:text=and%20hopan,Use%20of%20hopanoids%20as">pmc.ncbi.nlm.nih.gov</a>), raising the possibility of horizontal transfer. Papp et al. (2021) in <em>Current Genetics</em> catalogued <em>S. japonicus</em>–specific genes, likely including shc1, though they focused on dimorphism rather than anaerobiosis.</p>
+</li>
+<li>
+<p><strong>PNAS 2021 (Bouwknegt <em>et al.</em> 2021):</strong> Jonna Bouwknegt and colleagues provided the first functional validation of shc1 (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8364164/#:~:text=Biosynthesis%20of%20sterols%20requires%20oxygen,eukaryotic%20membranes%20and%20into%20the">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8364164/#:~:text=detected%20in%20yeasts%2C%20including%20hop,Use%20of%20hopanoids%20as">pmc.ncbi.nlm.nih.gov</a>). In this study (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8364164/#:~:text=Biosynthesis%20of%20sterols%20requires%20oxygen,eukaryotic%20membranes%20and%20into%20the">pmc.ncbi.nlm.nih.gov</a>), the authors confirmed that <em>S. japonicus</em> can indeed grow anaerobically without sterols and identified hopanoid compounds in its cells. They detected <strong>hop-22(29)-ene, hop-17(21)-ene, hop-21(22)-ene, and hopan-22-ol (diplopterol)</strong> in lipid extracts of anaerobic <em>S. japonicus</em>, using gas chromatography–mass spectrometry (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8364164/#:~:text=anaerobically%20on%20synthetic%20media%20lacking,hopanoid%20synthesis%20and%20stimulated%20anaerobic">pmc.ncbi.nlm.nih.gov</a>). This was the first time hopanoids were detected in a yeast, confirming the biochemical activity of Shc1. The study also cloned the <em>S. japonicus</em> shc1 gene (dubbed <strong>Sjshc1</strong>) and expressed it in <em>Saccharomyces cerevisiae</em>. Remarkably, <em>S. cerevisiae</em> expressing SjShc1 gained the ability to produce hopanoids and showed improved growth under anaerobic, sterol-free conditions (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8364164/#:~:text=bacterial%20squalene%E2%80%93hopene%20cyclase%20,Use%20of%20hopanoids%20as">pmc.ncbi.nlm.nih.gov</a>). This experiment directly demonstrated Shc1’s enzymatic function and its physiological role as a sterol surrogate. The PNAS paper further conducted phylogenetic analyses, concluding that the shc1 gene was acquired from <em>Acetobacter</em>. They noted the absence of any shc1 homolog in other fungi and highlighted this horizontal gene transfer as a unique evolutionary adaptation (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8364164/#:~:text=Horizontal%20gene%20transfer%20from%20Acetobacter,predicted%20proteomes%20of%20Schizosaccharomycetes%20other">pmc.ncbi.nlm.nih.gov</a>). This study provided foundational evidence linking Shc1 to hopanoid biosynthesis and anaerobic growth in <em>S. japonicus</em>.</p>
+</li>
+<li>
+<p><strong>Nature Communications 2023 (Dasari Rao <em>et al.</em> 2023):</strong> Bhagyashree Dasari Rao, Snezhana Oliferenko, and colleagues expanded on these findings by exploring how Shc1 is integrated into <em>S. japonicus</em> cell biology (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11976957/#:~:text=Horizontal%20gene%20transfer%20is%20a,sterols%20and%20hopanoids%20in%20membranes">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11976957/#:~:text=hopene%20cyclase%20Shc1%20through%20horizontal,profound%20reorganization%20of%20the%20host">pmc.ncbi.nlm.nih.gov</a>). They confirmed via <strong>gene knockout experiments</strong> that <em>shc1 is indispensable for anaerobic growth</em> – shc1∆ mutants failed to grow without oxygen (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11976957/#:~:text=match%20at%20L121%20Shc1,japonicus%20anaerobic%20growth">pmc.ncbi.nlm.nih.gov</a>), definitively proving Shc1’s necessity for anoxia survival. They also created a Shc1-sfGFP fusion at the native locus to study localization, revealing Shc1’s presence on the nuclear envelope, ER, plasma membrane, and vacuole (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11976957/#:~:text=independent%20manner,type%20or">pmc.ncbi.nlm.nih.gov</a>). This provided insight into how a bacterial enzyme adapts to eukaryotic cell organization (localizing to membranes and possibly organelle contact sites). The study examined <strong>lipidomic and cell physiology</strong> changes due to Shc1. For example, using cryo-EM and lipid analysis, they showed <em>S. japonicus</em> membranes have a high degree of saturated fatty acid asymmetry – a trait that helps accommodate hopanoids alongside ergosterol (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11976957/#:~:text=hopene%20cyclase%20Shc1%20through%20horizontal,profound%20reorganization%20of%20the%20host">pmc.ncbi.nlm.nih.gov</a>). They also performed “re-engineering” experiments: introducing Shc1 into <em>S. pombe</em>. While <em>S. pombe</em> expressing Shc1 did produce diplopterol, the yield was much lower than in <em>S. japonicus</em> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11976957/#:~:text=To%20this%20end%2C%20we%20integrated,We%20did%20not%20detect%20two">pmc.ncbi.nlm.nih.gov</a>). The authors found this was due to competition with <em>S. pombe</em>’s robust sterol pathway; by reducing the expression of <em>S. pombe</em>’s Erg1, hopanoid production increased, highlighting the interplay between the two pathways (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11976957/#:~:text=that%20both%20Shc1%20and%20the,4e%2C%20and">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11976957/#:~:text=suggest%20that%2C%20at%20least%20in,Accordingly%2C%20we%20observe">pmc.ncbi.nlm.nih.gov</a>). This work underscored that acquisition of shc1 required adjustments in <em>S. japonicus</em>’ lipid metabolism – essentially a rewiring of membrane composition and regulation to fully exploit the hopanoid pathway (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11976957/#:~:text=hopene%20cyclase%20Shc1%20through%20horizontal,profound%20reorganization%20of%20the%20host">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11976957/#:~:text=japonicus%20to%20thrive%20in%20anoxia%2C,the%20host%20metabolism%20and%20physiology">pmc.ncbi.nlm.nih.gov</a>). The 2023 study is a key reference for understanding not just the enzyme’s function, but its broader physiological impact and integration.</p>
+</li>
+<li>
+<p><strong>Protein Structure Studies:</strong> While no crystal structure of <em>S. japonicus</em> Shc1 has been published yet, knowledge is drawn from bacterial SHC structures (e.g. <em>Alicyclobacillus acidocaldarius</em> SHC). Wendt <em>et al.</em> (1999) solved the structure of a bacterial SHC, revealing the double–α-barrel and QW motifs (<a href="https://patents.google.com/patent/WO2023245039A1/en#:~:text=characterized%20by%20eight%20QW%20motifs,barrels">patents.google.com</a>). Mutagenesis studies (Sato <em>et al.</em>, 1998) on bacterial SHCs identified critical residues (including the Asp-rich motif and catalytic base) and confirmed the 8 QW motif pattern (<a href="https://patents.google.com/patent/WO2023245039A1/en#:~:text=characterized%20by%20eight%20QW%20motifs,barrels">patents.google.com</a>). These foundational studies help model the Shc1 protein. In addition, patented research on SHC variants for industrial biochemistry has provided insights into active-site residues and mechanism (<a href="https://patents.google.com/patent/WO2023245039A1/en#:~:text=characterized%20by%20eight%20QW%20motifs,barrels">patents.google.com</a>) (<a href="https://patents.google.com/patent/WO2023245039A1/en#:~:text=dimensional%20arrangement,barrels%20domains%20and">patents.google.com</a>). Such studies reinforce our understanding of Shc1’s structure–function relationships by analogy.</p>
+</li>
+<li>
+<p><strong>Evolutionary analyses:</strong> Murphy <em>et al.</em> (2019) discussed horizontal gene transfer in anaerobic fungi, and Bouwknegt <em>et al.</em> (2021) similarly discuss <em>S. japonicus</em>’ case (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8364164/#:~:text=sequences%20from%20Acetobacter%20species%20identifies,convergent%20evolution%20toward%20an%20anaerobic">pmc.ncbi.nlm.nih.gov</a>). Together, these highlight the convergent evolution of anaerobic survival strategies in eukaryotes by acquiring bacterial cyclase genes. Comparative genomics by Rhind <em>et al.</em> (2011) and others had noted that <em>S. japonicus</em> diverges significantly from <em>S. pombe</em>, but only with the specific identification of shc1 did one clearly understand a major physiological difference.</p>
+</li>
+</ul>
+<p>In summary, the body of literature – from Bulder’s classic observation, to genome sequencing, to synthetic biology experiments – provides a comprehensive picture of Shc1. Key evidence includes <strong>lipid profiling</strong> (showing hopanoids are made by Shc1) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8364164/#:~:text=Mass%20spectrometry%20of%20lipid%20fractions,or%20more%20of%20the%20hopanoids">pmc.ncbi.nlm.nih.gov</a>), <strong>genetic tests</strong> (shc1 deletion and expression studies proving its necessity and sufficiency for anaerobic growth) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11976957/#:~:text=match%20at%20L121%20Shc1,japonicus%20anaerobic%20growth">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8364164/#:~:text=bacterial%20squalene%E2%80%93hopene%20cyclase%20,Use%20of%20hopanoids%20as">pmc.ncbi.nlm.nih.gov</a>), and <strong>cell biology assays</strong> (localization and membrane effects) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11976957/#:~:text=independent%20manner,type%20or">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11976957/#:~:text=hopene%20cyclase%20Shc1%20through%20horizontal,profound%20reorganization%20of%20the%20host">pmc.ncbi.nlm.nih.gov</a>). These findings are well documented in peer-reviewed sources, making Shc1 one of the best-characterized examples of horizontal gene transfer endowing a new metabolic function in a eukaryote. The convergence of evidence solidly supports annotations of Shc1’s role in <strong>hopanoid biosynthesis</strong>, <strong>membrane adaptation to anaerobic conditions</strong>, and its identity as a <strong>squalene-hopene cyclase</strong> crucial for <em>S. japonicus</em> physiology. </p>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: B6K412
+gene_symbol: shc1
+taxon:
+  id: NCBITaxon:402676
+  label: Schizosaccharomyces japonicus yFS275
+description: &#39;Squalene-hopene cyclase enzyme catalyzing oxygen-independent cyclization of squalene to hopanoids, enabling anaerobic growth in S. japonicus. Horizontally acquired from Acetobacter bacteria, this enzyme provides sterol surrogates when oxygen-dependent ergosterol biosynthesis is impaired.&#39;
+existing_annotations:
+- term:
+    id: GO:0051007
+    label: squalene-hopene cyclase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &#39;This molecular function annotation is strongly supported by experimental evidence. Shc1 catalyzes the oxygen-independent cyclization of squalene to hopanoids (PMID:34353908, PMID:40195311), with enzyme activity directly validated through heterologous expression in S. cerevisiae and knockout studies.&#39;
+    action: ACCEPT
+    reason: &#39;The squalene-hopene cyclase activity is the core molecular function of Shc1, validated by multiple lines of evidence including functional expression studies, knockout phenotypes, and detection of hopanoid products. This is the primary and defining molecular function of the enzyme.&#39;
+    supported_by:
+      - reference_id: PMID:34353908
+        supporting_text: &#39;Mass spectrometry of lipid fractions of anaerobically grown Sch. japonicus showed the presence of hopanoids, a class of cyclic triterpenoids not previously detected in yeasts, including hop-22(29)-ene, hop-17(21)-ene, hop-21(22)-ene, and hopan-22-ol&#39;
+      - reference_id: PMID:40195311
+        supporting_text: &#39;The S. japonicus shc1Δ mutant did not produce hopanoids, demonstrating that Shc1 is indeed responsible for hopanoid synthesis in this organism&#39;
+- term:
+    id: GO:0005811
+    label: lipid droplet
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &#39;No experimental evidence supports lipid droplet localization. Shc1-sfGFP localization studies show membrane association (ER, nuclear envelope, plasma membrane, vacuolar membrane) but not lipid droplets (PMID:40195311).&#39;
+    action: REMOVE
+    reason: &#39;The IEA annotation likely derives from InterPro domain predictions, but experimental localization data clearly shows Shc1 at membrane sites involved in lipid biosynthesis, not lipid storage organelles. The enzyme functions in membrane lipid production, not storage.&#39;
+    supported_by:
+      - reference_id: PMID:40195311
+        supporting_text: &#39;Shc1 tagged at its endogenous locus with superfolder GFP (Shc1-sfGFP) localized to cellular membranes, including the nuclear envelope (NE), cortical endoplasmic reticulum (ER) and/or the plasma membrane, and the vacuolar membranes&#39;
+- term:
+    id: GO:0008610
+    label: lipid biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  review:
+    summary: &#39;Accurate but overly general. Shc1 specifically catalyzes hopanoid biosynthesis, a specialized form of triterpenoid lipid biosynthesis (PMID:34353908, PMID:40195311).&#39;
+    action: MODIFY
+    reason: &#39;While technically correct, this term is too broad. The more specific term GO:0019746 (hopanoid biosynthetic process) precisely captures the enzyme function. Hopanoids are a specific class of pentacyclic triterpenoid lipids.&#39;
+    proposed_replacement_terms:
+      - id: GO:0019746
+        label: hopanoid biosynthetic process
+    supported_by:
+      - reference_id: PMID:34353908
+        supporting_text: &#39;In anaerobic cultures, the content of diplopterol, the major hopanoid detected in Sch. japonicus, was similar to the ergosterol content of sterol-supplemented anaerobic cultures&#39;
+- term:
+    id: GO:0016104
+    label: triterpenoid biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &#39;Correct general classification but could be more specific. Hopanoids are pentacyclic triterpenoids, and the specific process (hopanoid biosynthesis) is well-characterized (PMID:34353908, PMID:40195311).&#39;
+    action: MODIFY
+    reason: &#39;While accurate, GO:0019746 (hopanoid biosynthetic process) is more specific and informative. Hopanoids are a distinct class of triterpenoids with specific biological functions as sterol surrogates.&#39;
+    proposed_replacement_terms:
+      - id: GO:0019746
+        label: hopanoid biosynthetic process
+    supported_by:
+      - reference_id: PMID:40195311
+        supporting_text: &#39;hopanoids are cyclized from squalene in a single, oxygen-independent step catalyzed by a squalene-hopene cyclase (SHC)&#39;
+- term:
+    id: GO:0016829
+    label: lyase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;Technically incorrect. Squalene-hopene cyclases are not lyases but transferases (intramolecular transferases). The reaction involves intramolecular rearrangement and cyclization, not cleavage (PMID:40195311).&#39;
+    action: REMOVE
+    reason: &#39;Lyases catalyze cleavage reactions. Shc1 catalyzes cyclization through intramolecular rearrangement without bond cleavage. The proper molecular function is squalene-hopene cyclase activity (GO:0051007), which is a type of intramolecular transferase activity.&#39;
+    supported_by:
+      - reference_id: PMID:40195311
+        supporting_text: &#39;hopanoids are cyclized from squalene in a single, oxygen-independent step catalyzed by a squalene-hopene cyclase (SHC)&#39;
+- term:
+    id: GO:0016853
+    label: isomerase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;Partially correct but imprecise. While squalene-hopene cyclases do perform intramolecular rearrangements, they are specifically classified as intramolecular transferases that catalyze cyclization reactions (PMID:40195311).&#39;
+    action: MODIFY
+    reason: &#39;Isomerase activity is too broad. The enzyme specifically performs intramolecular transferase activity (GO:0016866) during cyclization. The specific activity is already captured by GO:0051007 (squalene-hopene cyclase activity).&#39;
+    proposed_replacement_terms:
+      - id: GO:0016866
+        label: intramolecular transferase activity
+    supported_by:
+      - reference_id: PMID:40195311
+        supporting_text: &#39;SHCs synthesize hopanoids in an oxygen-independent manner&#39;
+- term:
+    id: GO:0016866
+    label: intramolecular transferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &#39;Correct molecular function classification. Squalene-hopene cyclases are intramolecular transferases that catalyze the cyclization of squalene through intramolecular rearrangement (PMID:40195311).&#39;
+    action: ACCEPT
+    reason: &#39;This is the correct broad molecular function category for squalene-hopene cyclases. These enzymes catalyze intramolecular rearrangements to form cyclic structures. GO:0051007 (squalene-hopene cyclase activity) is a child term of this category.&#39;
+    supported_by:
+      - reference_id: PMID:40195311
+        supporting_text: &#39;hopanoids are cyclized from squalene in a single, oxygen-independent step catalyzed by a squalene-hopene cyclase (SHC)&#39;
+- term:
+    id: GO:0005774
+    label: vacuolar membrane
+  evidence_type: EXP
+  original_reference_id: PMID:40195311
+  review:
+    summary: &#39;Experimentally validated localization. Shc1-sfGFP fluorescence microscopy directly demonstrated vacuolar membrane localization (PMID:40195311).&#39;
+    action: ACCEPT
+    reason: &#39;Direct experimental evidence from endogenous Shc1-sfGFP tagging shows clear vacuolar membrane localization. This is consistent with the enzyme role in membrane lipid metabolism.&#39;
+    supported_by:
+      - reference_id: PMID:40195311
+        supporting_text: &#39;Shc1 tagged at its endogenous locus with superfolder GFP (Shc1-sfGFP) localized to cellular membranes, including the nuclear envelope (NE), cortical endoplasmic reticulum (ER) and/or the plasma membrane, and the vacuolar membranes&#39;
+- term:
+    id: GO:0005783
+    label: endoplasmic reticulum
+  evidence_type: EXP
+  original_reference_id: PMID:40195311
+  review:
+    summary: &#39;Experimentally validated localization. Shc1-sfGFP shows clear ER localization including cortical ER and nuclear envelope (PMID:40195311).&#39;
+    action: ACCEPT
+    reason: &#39;Direct experimental evidence from fluorescence microscopy of endogenously tagged Shc1-sfGFP demonstrates ER localization. This is the expected location for lipid biosynthetic enzymes working with squalene substrate.&#39;
+    supported_by:
+      - reference_id: PMID:40195311
+        supporting_text: &#39;Shc1 tagged at its endogenous locus with superfolder GFP (Shc1-sfGFP) localized to cellular membranes, including the nuclear envelope (NE), cortical endoplasmic reticulum (ER)&#39;
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: EXP
+  original_reference_id: PMID:40195311
+  review:
+    summary: &#39;Experimentally observed but interpretation is ambiguous. The study notes cortical ER and/or plasma membrane localization, suggesting difficulty distinguishing these closely apposed membranes (PMID:40195311).&#39;
+    action: ACCEPT
+    reason: &#39;While the authors note uncertainty between cortical ER versus plasma membrane signal, some plasma membrane localization is observed. This could represent ER-PM contact sites or direct PM localization for local hopanoid incorporation.&#39;
+    supported_by:
+      - reference_id: PMID:40195311
+        supporting_text: &#39;Shc1 tagged at its endogenous locus with superfolder GFP (Shc1-sfGFP) localized to cellular membranes, including the nuclear envelope (NE), cortical endoplasmic reticulum (ER) and/or the plasma membrane&#39;
+- term:
+    id: GO:0006629
+    label: lipid metabolic process
+  evidence_type: EXP
+  original_reference_id: PMID:40195311
+  review:
+    summary: &#39;Experimentally validated but overly broad. The study specifically demonstrates hopanoid biosynthesis through GC-MS detection of hopanoid products (PMID:40195311).&#39;
+    action: MODIFY
+    reason: &#39;While correct, this term is too general. The experimental evidence specifically shows hopanoid biosynthesis (GO:0019746), which is a more informative annotation for this specialized lipid biosynthetic function.&#39;
+    proposed_replacement_terms:
+      - id: GO:0019746
+        label: hopanoid biosynthetic process
+    supported_by:
+      - reference_id: PMID:40195311
+        supporting_text: &#39;S. japonicus wild-type cells produced high levels of hopanoids even in the presence of oxygen, with diplopterol being the most abundant. We also detected the hopenes hop-22(29)-ene and hop-17(21)-ene&#39;
+- term:
+    id: GO:0071454
+    label: cellular response to anoxia
+  evidence_type: EXP
+  original_reference_id: PMID:40195311
+  review:
+    summary: &#39;New annotation based on knockout phenotype. shc1 deletion is lethal under anaerobic conditions, demonstrating essential role in response to anoxia (PMID:40195311).&#39;
+    action: NEW
+    reason: &#39;This critical function was not captured in existing annotations. The enzyme enables cellular adaptation to anoxic conditions by producing hopanoids as sterol surrogates when oxygen-dependent ergosterol biosynthesis cannot occur.&#39;
+    supported_by:
+      - reference_id: PMID:40195311
+        supporting_text: &#39;Unlike the wild-type or Shc1-sfGFP-expressing cells, S. japonicus mutant lacking shc1 was unable to grow in the absence of oxygen (Fig. 1c), demonstrating the requirement for Shc1 in S. japonicus anaerobic growth&#39;
+- term:
+    id: GO:0019746
+    label: hopanoid biosynthetic process
+  evidence_type: IEA
+  review:
+    summary: Core biological process catalyzed by Shc1
+    action: NEW
+    reason: Shc1 specifically catalyzes the biosynthesis of hopanoids from squalene. This is the precise biological process for this enzyme but was missing from existing annotations.
+    supported_by: []
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms.
+  findings: []
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods.
+  findings: []
+- id: PMID:40195311
+  title: Horizontal acquisition of prokaryotic hopanoid biosynthesis reorganizes membrane
+    physiology driving lifestyle innovation in a eukaryote.
+  findings:
+    - statement: &#39;shc1 knockout is lethal under anaerobic conditions&#39;
+      supporting_text: &#39;S. japonicus mutant lacking shc1 was unable to grow in the absence of oxygen&#39;
+    - statement: &#39;Shc1-sfGFP localizes to ER, nuclear envelope, plasma membrane, and vacuolar membrane&#39;
+      supporting_text: &#39;Shc1-sfGFP localized to cellular membranes, including the nuclear envelope (NE), cortical endoplasmic reticulum (ER) and/or the plasma membrane, and the vacuolar membranes&#39;
+    - statement: &#39;S. japonicus produces hopanoids including diplopterol and hopenes&#39;
+      supporting_text: &#39;S. japonicus wild-type cells produced high levels of hopanoids even in the presence of oxygen, with diplopterol being the most abundant. We also detected the hopenes hop-22(29)-ene and hop-17(21)-ene&#39;
+    - statement: &#39;Hopanoids substitute for sterols during anaerobic growth&#39;
+      supporting_text: &#39;hopanoids increased profoundly when ergosterol synthesis was inhibited either by erg1Δ mutation or the growth in anoxia&#39;
+- id: PMID:34353908
+  title: &#39;A squalene-hopene cyclase in Schizosaccharomyces japonicus represents a eukaryotic adaptation to sterol-limited anaerobic environments.&#39;
+  findings:
+    - statement: &#39;Functional validation showing S. japonicus produces hopanoids&#39;
+      supporting_text: &#39;Mass spectrometry of lipid fractions of anaerobically grown Sch. japonicus showed the presence of hopanoids, a class of cyclic triterpenoids not previously detected in yeasts, including hop-22(29)-ene, hop-17(21)-ene, hop-21(22)-ene, and hopan-22-ol&#39;
+    - statement: &#39;Expression of shc1 in S. cerevisiae conferred hopanoid production and anaerobic growth&#39;
+      supporting_text: &#39;Expression of the Sch. japonicus SHC gene (Sjshc1) in Saccharomyces cerevisiae enabled hopanoid synthesis and stimulated anaerobic growth in sterol-free media&#39;
+    - statement: &#39;Phylogenetic analysis confirmed horizontal transfer from Acetobacter&#39;
+      supporting_text: &#39;A putative gene in Sch. japonicus showed high similarity to bacterial squalene-hopene cyclase (SHC) genes and in particular to those of Acetobacter species&#39;
+core_functions:
+  - description: &#39;Catalyzes oxygen-independent cyclization of squalene to hopanoids enabling anaerobic growth&#39;
+    molecular_function:
+      id: GO:0051007
+      label: squalene-hopene cyclase activity
+    directly_involved_in:
+      - id: GO:0019746
+        label: hopanoid biosynthetic process
+      - id: GO:0071454
+        label: cellular response to anoxia
+    supported_by:
+      - reference_id: PMID:40195311
+        supporting_text: &#39;S. japonicus mutant lacking shc1 was unable to grow in the absence of oxygen (Fig. 1c), demonstrating the requirement for Shc1 in S. japonicus anaerobic growth&#39;
+      - reference_id: PMID:34353908
+        supporting_text: &#39;Expression of the Sch. japonicus SHC gene (Sjshc1) in Saccharomyces cerevisiae enabled hopanoid synthesis and stimulated anaerobic growth in sterol-free media&#39;
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+    <div class="section">
+        <div class="pathway-link">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h2 class="section-title">🔗 Related Resources</h2>
+                <span class="vote-buttons" data-g="B6K412" data-a="PATHWAY: shc1 pathways" data-r="" data-act="PATHWAY">
+                    <button class="vote-btn" data-v="up" title="Pathway visualization is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="Pathway visualization needs improvement">👎</button>
+                </span>
+            </div>
+            <p>
+                <a href="shc1-pathway.html" target="_blank" class="btn-link">
+                    📊 View Pathway Visualization
+                </a>
+                <span style="color: #666; font-size: 0.9rem; margin-left: 1rem;">
+                    Interactive pathway diagram with detailed annotations
+                </span>
+            </p>
+        </div>
+    </div>
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

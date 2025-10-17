@@ -10,6 +10,19 @@ all: validate-all test
 fetch-gene organism gene *args="":
     uv run ai-gene-review fetch-gene {{organism}} {{gene}} --output-dir . {{args}}
 
+# Fetch ncRNA gene data from RNAcentral
+# Use --alias to specify a custom directory name and file prefix
+# Use --force to overwrite existing RNAcentral files
+# Example: just fetch-ncrna human SNORD3A
+# Example: just fetch-ncrna human XIST --alias lncRNA-XIST
+# Example: just fetch-ncrna human U1 --rnacentral-id URS000012345_9606
+fetch-ncrna organism gene *args="":
+    uv run ai-gene-review fetch-ncrna {{organism}} {{gene}} --output-dir . {{args}}
+
+# Fetch ncRNA gene data from RNAcentral (alias for consistency)
+fetch-rna-gene organism gene *args="":
+    uv run ai-gene-review fetch-ncrna {{organism}} {{gene}} --output-dir . {{args}}
+
 # Conduct deep research on a gene using OpenAI Deep Research API
 # Use --alias to specify a custom directory name and file prefix
 # Example: just deep-research human CFAP300
@@ -220,17 +233,17 @@ check-missing-goa organism:
 
 # ============== Rendering ==============
 
-# Render a single gene review YAML as markdown
+# Render a single gene review YAML as HTML (custom renderer)
 render organism gene:
-    uv run python scripts/render_review.py genes/{{organism}}/{{gene}}/{{gene}}-ai-review.yaml
+    uv run python -m ai_gene_review.render genes/{{organism}}/{{gene}}/{{gene}}-ai-review.yaml
 
-# Render all gene reviews for an organism as markdown
+# Render all gene reviews for an organism as HTML
 render-organism organism:
-    uv run python scripts/render_review.py --all genes/{{organism}}
+    uv run python -m ai_gene_review.render --all genes/{{organism}}
 
-# Render all gene reviews as markdown
+# Render all gene reviews as HTML
 render-all:
-    uv run python scripts/render_review.py --all genes/
+    uv run python -m ai_gene_review.render --all genes/
 
 # ============== Visualization ==============
 
@@ -308,6 +321,13 @@ fetch-examples:
     uv run ai-gene-review fetch-gene human BRCA1
     uv run ai-gene-review fetch-gene human EGFR
     uv run ai-gene-review fetch-gene human CFAP300
+
+# Example: Fetch common human ncRNA genes
+fetch-ncrna-examples:
+    uv run ai-gene-review fetch-ncrna human SNORD3A    # snoRNA
+    uv run ai-gene-review fetch-ncrna human XIST       # lncRNA
+    uv run ai-gene-review fetch-ncrna human H19        # lncRNA
+    uv run ai-gene-review fetch-ncrna human MIR21      # miRNA
 
 # Build static site from gene markdown files
 build-site:

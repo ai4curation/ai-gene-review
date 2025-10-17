@@ -15,7 +15,13 @@ None &#8594;  <sub>0..1</sub> [String](types/String.md)
 
 ## Children
 
+ *  [AnnotationExtension➞predicate](AnnotationExtension_predicate.md)
 
 ## Used by
 
- * [AnnotationExtension](AnnotationExtension.md)
+
+## Other properties
+
+|  |  |  |
+| --- | --- | --- |
+| **Mappings:** | | rdf:predicate |
