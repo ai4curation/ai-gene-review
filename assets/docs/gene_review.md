@@ -71,7 +71,7 @@ Schema for gene curation Top level entity is a GeneReview, which is about a sing
  * [➞proposed_parent](proposedOntologyTerm__proposed_parent.md) - Proposed parent term in the ontology hierarchy
  * [➞supported_by](proposedOntologyTerm__supported_by.md)
  * [proposed_new_terms](proposed_new_terms.md) - Proposed new ontology terms that should exist but don't
- * [proposed_replacement_terms](proposed_replacement_terms.md) - Proposed replacement terms
+ * [proposed_replacement_terms](proposed_replacement_terms.md) - If the action is MODIFY, then this is a list of proposed replacement terms
  * [➞experts](question__experts.md) - Experts to answer the question. These should be drawn from the authors of relevant publications already referenced. If no suitable experts are available, it's OK to leave this as an empty list!
  * [➞question](question__question.md) - Question to be answered
  * [reason](reason.md) - Reason for the action
@@ -81,6 +81,7 @@ Schema for gene curation Top level entity is a GeneReview, which is about a sing
  * [retired](retired.md) - Whether the annotation is retired or replaced
  * [review](review.md) - Review of the gene
  * [statement](statement.md) - Concise statement describing an aspect of the gene
+ * [status](status.md) - Overall status of the gene review
  * [suggested_experiments](suggested_experiments.md)
  * [suggested_questions](suggested_questions.md) - Suggested questions to ask experts about the gene. Only include if not obvious from the literature.
  * [summary](summary.md) - Summary of the review
@@ -104,6 +105,7 @@ Schema for gene curation Top level entity is a GeneReview, which is about a sing
  * [GOMolecularActivityEnum](GOMolecularActivityEnum.md) - A molecular activity term in the GO ontology
  * [GOProteinContainingComplexEnum](GOProteinContainingComplexEnum.md) - A protein-containing complex term in the GO ontology
  * [GOTermEnum](GOTermEnum.md) - A term in the GO ontology
+ * [GeneReviewStatusEnum](GeneReviewStatusEnum.md) - Status of the gene review process
  * [ManuscriptSection](ManuscriptSection.md) - Sections of a scientific manuscript or publication
  * [ProductTypeEnum](ProductTypeEnum.md) - Type of gene product
  * [ROTermEnum](ROTermEnum.md) - A term in the relation ontology

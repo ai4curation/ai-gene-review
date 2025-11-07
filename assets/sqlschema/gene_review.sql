@@ -2,6 +2,7 @@
 --     * Slot: id
 --     * Slot: gene_symbol Description: Symbol of the gene
 --     * Slot: product_type Description: Type of gene product (protein, ncRNA, etc.)
+--     * Slot: status Description: Overall status of the gene review
 --     * Slot: description Description: Description of the entity
 --     * Slot: taxon_id
 -- # Class: Term Description: A term in a specific ontology
@@ -138,7 +139,7 @@ CREATE TABLE "Finding" (
 CREATE TABLE "Review" (
 	id INTEGER NOT NULL,
 	summary TEXT,
-	action VARCHAR(22),
+	action VARCHAR(22) NOT NULL,
 	reason TEXT,
 	PRIMARY KEY (id)
 );CREATE INDEX "ix_Review_id" ON "Review" (id);
@@ -167,14 +168,15 @@ CREATE TABLE "GeneReview" (
 	id TEXT NOT NULL,
 	gene_symbol TEXT NOT NULL,
 	product_type VARCHAR(13),
+	status VARCHAR(11),
 	description TEXT,
-	taxon_id TEXT,
+	taxon_id TEXT NOT NULL,
 	PRIMARY KEY (id),
 	FOREIGN KEY(taxon_id) REFERENCES "Term" (id)
 );CREATE INDEX "ix_GeneReview_id" ON "GeneReview" (id);
 CREATE TABLE "AnnotationExtension" (
 	id INTEGER NOT NULL,
-	predicate TEXT,
+	predicate TEXT NOT NULL,
 	term_id TEXT,
 	PRIMARY KEY (id),
 	FOREIGN KEY(term_id) REFERENCES "Term" (id)
@@ -193,7 +195,7 @@ CREATE TABLE "Question_experts" (
 	experts TEXT,
 	PRIMARY KEY ("Question_id", experts),
 	FOREIGN KEY("Question_id") REFERENCES "Question" (id)
-);CREATE INDEX "ix_Question_experts_experts" ON "Question_experts" (experts);CREATE INDEX "ix_Question_experts_Question_id" ON "Question_experts" ("Question_id");
+);CREATE INDEX "ix_Question_experts_Question_id" ON "Question_experts" ("Question_id");CREATE INDEX "ix_Question_experts_experts" ON "Question_experts" (experts);
 CREATE TABLE "Reference" (
 	id TEXT NOT NULL,
 	title TEXT NOT NULL,
@@ -254,7 +256,7 @@ CREATE TABLE "GeneReview_suggested_experiments" (
 );CREATE INDEX "ix_GeneReview_suggested_experiments_suggested_experiments_id" ON "GeneReview_suggested_experiments" (suggested_experiments_id);CREATE INDEX "ix_GeneReview_suggested_experiments_GeneReview_id" ON "GeneReview_suggested_experiments" ("GeneReview_id");
 CREATE TABLE "SupportingTextInReference" (
 	id INTEGER NOT NULL,
-	reference_id TEXT,
+	reference_id TEXT NOT NULL,
 	supporting_text TEXT,
 	full_text_unavailable BOOLEAN,
 	reference_section_type VARCHAR(22),
@@ -264,7 +266,7 @@ CREATE TABLE "SupportingTextInReference" (
 CREATE TABLE "ExistingAnnotation" (
 	id INTEGER NOT NULL,
 	negated BOOLEAN,
-	evidence_type VARCHAR(3),
+	evidence_type VARCHAR(3) NOT NULL,
 	original_reference_id TEXT,
 	retired BOOLEAN,
 	term_id TEXT,
@@ -280,14 +282,14 @@ CREATE TABLE "Reference_findings" (
 	PRIMARY KEY ("Reference_id", findings_id),
 	FOREIGN KEY("Reference_id") REFERENCES "Reference" (id),
 	FOREIGN KEY(findings_id) REFERENCES "Finding" (id)
-);CREATE INDEX "ix_Reference_findings_findings_id" ON "Reference_findings" (findings_id);CREATE INDEX "ix_Reference_findings_Reference_id" ON "Reference_findings" ("Reference_id");
+);CREATE INDEX "ix_Reference_findings_Reference_id" ON "Reference_findings" ("Reference_id");CREATE INDEX "ix_Reference_findings_findings_id" ON "Reference_findings" (findings_id);
 CREATE TABLE "Review_additional_reference_ids" (
 	"Review_id" INTEGER,
 	additional_reference_ids_id TEXT,
 	PRIMARY KEY ("Review_id", additional_reference_ids_id),
 	FOREIGN KEY("Review_id") REFERENCES "Review" (id),
 	FOREIGN KEY(additional_reference_ids_id) REFERENCES "Reference" (id)
-);CREATE INDEX "ix_Review_additional_reference_ids_additional_reference_ids_id" ON "Review_additional_reference_ids" (additional_reference_ids_id);CREATE INDEX "ix_Review_additional_reference_ids_Review_id" ON "Review_additional_reference_ids" ("Review_id");
+);CREATE INDEX "ix_Review_additional_reference_ids_Review_id" ON "Review_additional_reference_ids" ("Review_id");CREATE INDEX "ix_Review_additional_reference_ids_additional_reference_ids_id" ON "Review_additional_reference_ids" (additional_reference_ids_id);
 CREATE TABLE "GeneReview_existing_annotations" (
 	"GeneReview_id" TEXT,
 	existing_annotations_id INTEGER,
@@ -301,7 +303,7 @@ CREATE TABLE "ExistingAnnotation_extensions" (
 	PRIMARY KEY ("ExistingAnnotation_id", extensions_id),
 	FOREIGN KEY("ExistingAnnotation_id") REFERENCES "ExistingAnnotation" (id),
 	FOREIGN KEY(extensions_id) REFERENCES "AnnotationExtension" (id)
-);CREATE INDEX "ix_ExistingAnnotation_extensions_ExistingAnnotation_id" ON "ExistingAnnotation_extensions" ("ExistingAnnotation_id");CREATE INDEX "ix_ExistingAnnotation_extensions_extensions_id" ON "ExistingAnnotation_extensions" (extensions_id);
+);CREATE INDEX "ix_ExistingAnnotation_extensions_extensions_id" ON "ExistingAnnotation_extensions" (extensions_id);CREATE INDEX "ix_ExistingAnnotation_extensions_ExistingAnnotation_id" ON "ExistingAnnotation_extensions" ("ExistingAnnotation_id");
 CREATE TABLE "ExistingAnnotation_supporting_entities" (
 	"ExistingAnnotation_id" INTEGER,
 	supporting_entities TEXT,

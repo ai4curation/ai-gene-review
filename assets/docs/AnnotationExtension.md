@@ -6,7 +6,7 @@
 URI: [gene_review:AnnotationExtension](https://w3id.org/ai4curation/gene_review/AnnotationExtension)
 
 
-[![img](https://yuml.me/diagram/nofunky;dir:TB/class/[Term],[Term]<term%200..1-++[AnnotationExtension&#124;predicate:string%20%3F],[ExistingAnnotation]++-%20extensions%200..*>[AnnotationExtension],[ExistingAnnotation])](https://yuml.me/diagram/nofunky;dir:TB/class/[Term],[Term]<term%200..1-++[AnnotationExtension&#124;predicate:string%20%3F],[ExistingAnnotation]++-%20extensions%200..*>[AnnotationExtension],[ExistingAnnotation])
+[![img](https://yuml.me/diagram/nofunky;dir:TB/class/[Term],[Term]<term%200..1-++[AnnotationExtension&#124;predicate:string],[ExistingAnnotation]++-%20extensions%200..*>[AnnotationExtension],[ExistingAnnotation])](https://yuml.me/diagram/nofunky;dir:TB/class/[Term],[Term]<term%200..1-++[AnnotationExtension&#124;predicate:string],[ExistingAnnotation]++-%20extensions%200..*>[AnnotationExtension],[ExistingAnnotation])
 
 ## Referenced by Class
 
@@ -17,7 +17,7 @@ URI: [gene_review:AnnotationExtension](https://w3id.org/ai4curation/gene_review/
 
 ### Own
 
- * [AnnotationExtension➞predicate](AnnotationExtension_predicate.md)  <sub>0..1</sub>
+ * [AnnotationExtension➞predicate](AnnotationExtension_predicate.md)  <sub>1..1</sub>
      * Description: Predicate of the extension
      * Range: [String](types/String.md)
  * [term](term.md)  <sub>0..1</sub>

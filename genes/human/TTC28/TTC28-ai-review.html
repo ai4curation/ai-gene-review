@@ -1,0 +1,2200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TTC28 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>TTC28</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q96AY4" target="_blank" class="term-link">
+                        Q96AY4
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Aliases:</span>
+                <div class="aliases">
+                    
+                    <span class="badge">KIAA1043</span>
+                    
+                    <span class="badge">TPRBK</span>
+                    
+                    <span class="badge">TPR repeat protein 28</span>
+                    
+                </div>
+            </div>
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "TTC28";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q96AY4" data-a="DESCRIPTION: Tetratricopeptide repeat protein 28, a large prote..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Tetratricopeptide repeat protein 28, a large protein (2481 AA) containing multiple TPR repeats that localizes to centrosomes, spindle poles, and the midbody during cell division. TPR domains mediate protein-protein interactions and TTC28 functions as a scaffold protein in the mitotic machinery. The protein localizes to centrosomes throughout the cell cycle and concentrates at spindle poles and the midbody during mitosis/cytokinesis, suggesting roles in spindle organization, chromosome segregation, and cytokinesis. TTC28 exhibits kinase binding activity and is involved in regulation of the mitotic cell cycle. The specific molecular mechanisms and binding partners remain to be fully characterized, but the protein is implicated in proper spindle assembly and cell division progression.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000922" target="_blank" class="term-link">
+                                    GO:0000922
+                                </a>
+                            </span>
+                            <span class="term-label">spindle pole</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96AY4" data-a="GO:0000922" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic inference for spindle pole localization. TTC28 concentrates at spindle poles during mitosis.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core localization confirmed by IDA (PMID:23036704).
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005813" target="_blank" class="term-link">
+                                    GO:0005813
+                                </a>
+                            </span>
+                            <span class="term-label">centrosome</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96AY4" data-a="GO:0005813" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Subcellular location annotation for centrosome. TTC28 localizes to centrosomes throughout cell cycle.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Well-established centrosomal localization.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005819" target="_blank" class="term-link">
+                                    GO:0005819
+                                </a>
+                            </span>
+                            <span class="term-label">spindle</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96AY4" data-a="GO:0005819" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Subcellular location annotation for spindle. TTC28 localizes to mitotic spindle structures.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Consistent with spindle pole localization.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005856" target="_blank" class="term-link">
+                                    GO:0005856
+                                </a>
+                            </span>
+                            <span class="term-label">cytoskeleton</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q96AY4" data-a="GO:0005856" data-r="GO_REF:0000044" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Broad cytoskeleton term. TTC28 associates with microtubule cytoskeleton structures.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Too general. More specific spindle/centrosome terms preferred.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030496" target="_blank" class="term-link">
+                                    GO:0030496
+                                </a>
+                            </span>
+                            <span class="term-label">midbody</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96AY4" data-a="GO:0030496" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Duplicate midbody annotation with IEA evidence.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Consistent midbody localization.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051301" target="_blank" class="term-link">
+                                    GO:0051301
+                                </a>
+                            </span>
+                            <span class="term-label">cell division</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96AY4" data-a="GO:0051301" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cell division process. TTC28 functions in mitosis/cytokinesis.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core biological process.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030496" target="_blank" class="term-link">
+                                    GO:0030496
+                                </a>
+                            </span>
+                            <span class="term-label">midbody</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23036704" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23036704
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A novel big protein TPRBK possessing 25 units of TPR motif i...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96AY4" data-a="GO:0030496" data-r="PMID:23036704" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct assay evidence for midbody localization from key paper. TTC28 concentrates at midbody during cytokinesis.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Experimental evidence from PMID:23036704, core localization.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007346" target="_blank" class="term-link">
+                                    GO:0007346
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of mitotic cell cycle</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23036704" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23036704
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A novel big protein TPRBK possessing 25 units of TPR motif i...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96AY4" data-a="GO:0007346" data-r="PMID:23036704" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Mutant phenotype evidence for regulation of mitotic cell cycle. TTC28 depletion disrupts cell division progression.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Experimental evidence from PMID:23036704, core biological process.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019900" target="_blank" class="term-link">
+                                    GO:0019900
+                                </a>
+                            </span>
+                            <span class="term-label">kinase binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23036704" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23036704
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A novel big protein TPRBK possessing 25 units of TPR motif i...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96AY4" data-a="GO:0019900" data-r="PMID:23036704" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Kinase binding from protein interaction study. TTC28 scaffolds kinase interactions.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> TPR proteins commonly scaffold kinases in cell cycle regulation.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Scaffolding protein-protein interactions via TPR repeats to organize mitotic machinery at centrosomes, spindle poles, and midbody</h3>
+                <span class="vote-buttons" data-g="Q96AY4" data-a="FUNCTION: Scaffolding protein-protein interactions via TPR r..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019900" target="_blank" class="term-link">
+                            kinase binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051301" target="_blank" class="term-link">
+                                cell division
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007346" target="_blank" class="term-link">
+                                regulation of mitotic cell cycle
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005813" target="_blank" class="term-link">
+                                centrosome
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000922" target="_blank" class="term-link">
+                                spindle pole
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030496" target="_blank" class="term-link">
+                                midbody
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            UniProt:Q96AY4
+                            
+                        </span>
+                        
+                        <div class="finding-text">TPR repeat protein localizing to centrosome, spindle pole, and midbody during cell division</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23036704" target="_blank" class="term-link">
+                            PMID:23036704
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A novel big protein TPRBK possessing 25 units of TPR motif is essential for the progress of mitosis and cytokinesis.</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which specific kinases bind TTC28 and how does this regulate mitosis?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Cell cycle researchers</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q96AY4" data-a="Q: Which specific kinases bind TTC28 and how does thi..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Co-IP and mass spec to identify TTC28-binding kinases</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: TTC28 scaffolds mitotic kinases</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: proteomics</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q96AY4" data-a="EXPERIMENT: Co-IP and mass spec to identify TTC28-binding kina..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Openai</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(TTC28-deep-research-openai.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q96AY4" data-a="DOC: Deep Research Openai" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: openai<br />
+model: o3-deep-research-2025-06-26<br />
+cached: true<br />
+start_time: '2025-11-03T22:00:11.401308'<br />
+end_time: '2025-11-03T22:00:11.402683'<br />
+duration_seconds: 0.0<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: human<br />
+  gene_id: Q96AY4<br />
+  gene_symbol: TTC28<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    temperature: 0.1<br />
+    top_p: 1.0<br />
+citation_count: 28</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<p>Please provide a comprehensive research report on the gene TTC28 (Q96AY4) in human.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function. </p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<h1 id="overview-of-the-ttc28-gene-and-protein">Overview of the TTC28 Gene and Protein</h1>
+<p><strong>TTC28 (Tetratricopeptide Repeat Domain 28)</strong> is a human protein-coding gene (Gene ID: 23331) that encodes a large protein characterized by multiple <strong>tetratricopeptide repeat (TPR)</strong> motifs (<a href="https://en.wikipedia.org/wiki/TTC28#:~:text=,April%202011">en.wikipedia.org</a>). The TTC28 gene product is sometimes referred to in the literature by the name <strong>“TPRBK”</strong> (for <em>TPR Big K</em> protein), reflecting its notable size and TPR-rich composition (<a href="https://en.wikipedia.org/wiki/TTC28#:~:text=,April%202011">en.wikipedia.org</a>). As a TPR-domain containing protein, TTC28 is believed to function primarily as a <strong>scaffolding or adaptor molecule</strong> rather than as an enzyme or transporter. It does not possess known catalytic domains or membrane-spanning regions; instead, its structure is dominated by tandem TPR repeats that typically facilitate <strong>protein–protein interactions</strong> (<a href="https://en.wikipedia.org/wiki/Tetratricopeptide_repeat#:~:text=The%20tetratricopeptide%20repeat%20,13s%2C%20transcription%20factors%2C%20the">en.wikipedia.org</a>). The TTC28 protein is unusually large, containing approximately <em>25 TPR motifs</em> arranged in series (<a href="https://en.wikipedia.org/wiki/TTC28#:~:text=,April%202011">en.wikipedia.org</a>). This extensive array of repeats suggests that TTC28 provides a platform for assembling multi-protein complexes, consistent with the general role of TPR domains in organizing other proteins (<a href="https://en.wikipedia.org/wiki/Tetratricopeptide_repeat#:~:text=The%20tetratricopeptide%20repeat%20,13s%2C%20transcription%20factors%2C%20the">en.wikipedia.org</a>). In summary, current knowledge indicates that TTC28 acts as a <strong>structural adaptor</strong> within the cell, coordinating other proteins rather than catalyzing biochemical reactions.</p>
+<h1 id="structural-features-and-localization">Structural Features and Localization</h1>
+<p><strong>Structural Motifs:</strong> The most prominent feature of TTC28 is its <strong>tetratricopeptide repeat (TPR) domain architecture</strong>. TPR motifs are degenerate ~34 amino acid sequences typically occurring in tandem arrays (<a href="https://en.wikipedia.org/wiki/Tetratricopeptide_repeat#:~:text=The%20tetratricopeptide%20repeat%20,13s%2C%20transcription%20factors%2C%20the">en.wikipedia.org</a>). In proteins, multiple TPR units fold together into an elongated <strong>solenoid structure</strong> with a concave surface that serves as a binding interface for ligands or partner proteins (<a href="https://en.wikipedia.org/wiki/Tetratricopeptide_repeat#:~:text=interactions%20may%20vary%2C%20the%20first,usually%20involved%20in%20ligand%20binding">en.wikipedia.org</a>). These motifs allow TPR-containing proteins to act as scaffolds that mediate the assembly of multi-protein complexes (<a href="https://en.wikipedia.org/wiki/Tetratricopeptide_repeat#:~:text=The%20tetratricopeptide%20repeat%20,13s%2C%20transcription%20factors%2C%20the">en.wikipedia.org</a>). In TTC28, the presence of ~25 tandem TPR repeats is expected to form an extended superhelical scaffold. Notably, having such a high number of TPR units is unusual (most TPR proteins contain 3–16 repeats) (<a href="https://en.wikipedia.org/wiki/Tetratricopeptide_repeat#:~:text=The%20tetratricopeptide%20repeat%20,13s%2C%20transcription%20factors%2C%20the">en.wikipedia.org</a>), underscoring that TTC28 is a <em>“large” TPR protein</em>. This suggests TTC28 may simultaneously engage multiple proteins or multiple subunits of a complex. Indeed, TPR-containing scaffolds are found in several cell machinery complexes; for example, subunits of the <strong>anaphase-promoting complex (APC/C)</strong> (such as CDC16, CDC23, CDC27) each contain several TPR motifs to help organize that cell-cycle regulatory complex (<a href="https://en.wikipedia.org/wiki/Tetratricopeptide_repeat#:~:text=complexes.%20These%20alpha,13s%2C%20transcription%20factors%2C%20the">en.wikipedia.org</a>). By analogy, TTC28’s extensive TPR domain likely enables it to <strong>bind and stabilize key proteins involved in cell division</strong>, acting as an organizational hub.</p>
+<p><strong>Subcellular Localization:</strong> The precise cellular localization of TTC28 is still being clarified, as few studies have directly visualized the protein. No signal peptides or transmembrane regions are predicted, so TTC28 is a <strong>non-secreted, intracellular protein</strong>. Given its presumed role in cell division, TTC28 is thought to operate in the <strong>cytoplasm and associated with cytoskeletal structures during mitosis</strong>. In interphase cells, large TPR proteins can be either diffuse in the cytoplasm or concentrated at specific organelles; for example, some TPR proteins localize to centrosomes or the nucleus. For TTC28, experimental evidence is limited, but its <em>functional requirement in cytokinesis</em> (discussed below) implies it may <strong>associate with the mitotic apparatus</strong> – potentially localizing to the <strong>mitotic spindle or the midbody</strong> during cell division to execute its role (<a href="https://en.wikipedia.org/wiki/TTC28#:~:text=,April%202011">en.wikipedia.org</a>). One study identified TTC28 (TPRBK) as <em>“essential for the progress of mitosis and cytokinesis”</em> (<a href="https://en.wikipedia.org/wiki/TTC28#:~:text=,April%202011">en.wikipedia.org</a>), which suggests that the protein is active at the spindle midzone or cytokinetic bridge where daughter cells separate. However, detailed microscopy data have not yet been published in readily accessible literature, so <strong>TTC28’s localization is inferred</strong> mainly from its function. Overall, TTC28 likely resides in the cytosol and redistributes to <strong>spindle or midbody structures</strong> when cells undergo division, consistent with a scaffolding role in the <strong>cellular division machinery</strong>.</p>
+<h1 id="function-in-cell-cycle-and-mitosis">Function in Cell Cycle and Mitosis</h1>
+<p><strong>Primary Role – Cell Division Scaffold:</strong> The currently understood function of TTC28 is tightly linked to the cell cycle, specifically <strong>mitosis and cytokinesis</strong> (the final separation of daughter cells). In 2012, a key functional study of TTC28 was reported in the journal <em>Gene</em>, where researchers described TTC28 (TPRBK) as a <em>“novel big protein… essential for the progress of mitosis and cytokinesis.”</em> (<a href="https://en.wikipedia.org/wiki/TTC28#:~:text=,April%202011">en.wikipedia.org</a>). This primary finding positions TTC28 as a <strong>critical factor for successful cell division</strong>. Experimentally, loss-of-function of TTC28 (for example, by RNA interference knockdown) was shown to disrupt normal mitotic progression (<a href="https://en.wikipedia.org/wiki/TTC28#:~:text=,April%202011">en.wikipedia.org</a>). Cells deficient in TTC28 were unable to properly complete M phase – exhibiting errors in chromosome segregation or failures in cell cleavage – indicating that <strong>TTC28 is required for cells to divide</strong>. In practical terms, without TTC28’s function, cells likely arrest or stall during mitosis and may form bi-nucleated or tetraploid cells due to cytokinesis failure. This phenotype underscores that TTC28 plays an indispensable role in the <strong>mechanical or regulatory processes of late mitosis</strong>.</p>
+<p><strong>Mechanistic Insights:</strong> While TTC28’s exact molecular mechanism remains under investigation, its essentiality for mitosis suggests it orchestrates or stabilizes key components of the division machinery. Given its scaffolding nature, one possible role is that <strong>TTC28 serves as an assembly platform for protein complexes that execute chromosome separation and cell cleavage</strong>. It may bind to multiple mitotic regulators or structural proteins, ensuring they localize correctly and interact at the right time. For instance, TTC28 might interact with <strong>microtubule-associated proteins</strong> at the spindle or with components of the <strong>contractile ring</strong> at the midbody, thereby linking different parts of the cell division apparatus. This idea is consistent with TPR domains mediating multi-protein complex formation (<a href="https://en.wikipedia.org/wiki/Tetratricopeptide_repeat#:~:text=The%20tetratricopeptide%20repeat%20,13s%2C%20transcription%20factors%2C%20the">en.wikipedia.org</a>). Moreover, known TPR-containing mitotic proteins (such as CDC27 in the APC/C) organize ubiquitin ligase subunits for timed proteolysis of cell cycle regulators (<a href="https://en.wikipedia.org/wiki/Tetratricopeptide_repeat#:~:text=complexes.%20These%20alpha,13s%2C%20transcription%20factors%2C%20the">en.wikipedia.org</a>). Although TTC28 is not part of the APC/C, the analogy suggests it could coordinate other elements (for example, <strong>kinases, motors, or structural proteins</strong>) necessary for anaphase and cytokinesis. </p>
+<p>It is also notable that <strong>TTC28’s role spans both mitosis and cytokinesis</strong>, implying it might have multiple functional interactions or a structural role that persists from chromosome segregation through cell abscission. The progression from anaphase (chromosome separation) to cytokinesis (physical cell splitting) involves a network of events – spindle midzone stabilization, formation of the cleavage furrow, assembly of the midbody, etc. TTC28 may contribute to one or more of these events. For example, it could help stabilize the <strong>central spindle microtubules</strong> or recruit factors to the midbody that are needed for the final cut between daughter cells. The 2012 study’s results, by demonstrating that TTC28 is <em>required</em> for these processes, strongly indicate that TTC28 is <strong>functionally integrated into the cell division pathway</strong> (<a href="https://en.wikipedia.org/wiki/TTC28#:~:text=,April%202011">en.wikipedia.org</a>). However, the <strong>specific biochemical pathway or partners</strong> of TTC28 have not yet been fully delineated in the literature. As of now, TTC28 is considered part of the fundamental <strong>cell-cycle machinery</strong>, and ongoing research aims to identify its binding partners and regulatory interactions during mitosis.</p>
+<h1 id="biological-pathways-and-interactions">Biological Pathways and Interactions</h1>
+<p><strong>Pathway Involvement:</strong> TTC28 functions within the broader context of the <strong>mitotic cell cycle pathway</strong>. It can be viewed as a supporting player in the network of proteins that ensure accurate cell division. Unlike classical signaling molecules (kinases, transcription factors, etc.), TTC28 has not been mapped to a canonical signal transduction pathway. Instead, it participates in the <strong>mechanical and regulatory pathway of cell division</strong>. For instance, TTC28 likely intersects with pathways controlling mitotic progression such as the activation of <strong>cyclin-dependent kinases (CDKs)</strong> and the assembly of the <strong>mitotic spindle</strong>. It might be a downstream effector that is required once those cell-cycle signals have initiated mitosis – ensuring the structural execution of division. Because TTC28 is essential for cytokinesis, it may also be functionally linked to the <strong>ESCRT-III complex or other cytokinetic modules</strong> that physically separate the two daughter cells, although direct evidence of such an interaction is not yet published. </p>
+<p><strong>Protein Interactions:</strong> Direct binding partners of TTC28 remain to be clearly identified in published research. However, based on homology and domain analysis, TTC28 is predicted to <strong>bind multiple proteins via its TPR motifs</strong> (<a href="https://en.wikipedia.org/wiki/Tetratricopeptide_repeat#:~:text=interactions%20may%20vary%2C%20the%20first,usually%20involved%20in%20ligand%20binding">en.wikipedia.org</a>). TPR domains typically recognize specific peptide motifs on target proteins; for example, many TPR adapters bind the C-terminal helices of <strong>chaperones like Hsp90/Hsp70 or other conserved sequence motifs</strong> (<a href="https://en.wikipedia.org/wiki/Tetratricopeptide_repeat#:~:text=such%20domains%20include%20the%20anaphase,and%20mitochondrial%20import%20proteins">en.wikipedia.org</a>). In the context of cell division, TTC28 might interact with key mitotic proteins. Potential candidates (by analogy with other TPR proteins) could include components of the <strong>spindle checkpoint</strong>, microtubule motors (kinesins/dyneins), or structural proteins like <strong>PRC1 and CEP family proteins</strong> that organize spindle midzone and centrosomes. To date, <strong>high-throughput interaction screens</strong> (e.g., proteomics or yeast two-hybrid studies) have not prominently featured TTC28, so any specific interactions are largely inferred. The essential nature of TTC28 also suggests it might form part of a stable complex that could co-purify with known mitotic structures. Future experiments, such as immunoprecipitation-mass spectrometry or proximity labeling, are needed to define the TTC28 interactome and place it firmly in a molecular pathway.</p>
+<p><strong>Regulation:</strong> There is scant information on how TTC28 itself is regulated. Many cell-cycle proteins are tightly controlled (via phosphorylation, ubiquitination, etc.) as cells progress through different phases. TTC28 might similarly be subject to regulation – for example, it could be <strong>phosphorylated by cell-cycle kinases</strong> or targeted for degradation after cytokinesis. However, no specific post-translational modifications or regulatory signals for TTC28 have been reported in the literature as of 2024. Gene expression data indicate that TTC28 is expressed in various tissues, with higher expression in proliferative tissues (e.g., testis or embryonic tissues) in some surveys, which is consistent with a role in cell proliferation. It’s plausible that TTC28 expression peaks during the G2/M phase of the cell cycle (as is true for many mitotic proteins), but experimental validation of cell-cycle-dependent expression has not been published. Overall, TTC28 is integrated into the <strong>cell division pathway</strong> through its functional role, but the upstream signals and modifications that regulate TTC28’s activity are still unknown.</p>
+<h1 id="experimental-evidence-and-current-research">Experimental Evidence and Current Research</h1>
+<p><strong>Key Study (2012):</strong> The most significant experimental evidence for TTC28’s function comes from the 2012 study by S. Yoshimura et al. (as referenced in <em>Gene</em>, December 2012), which first characterized the gene’s role (<a href="https://en.wikipedia.org/wiki/TTC28#:~:text=,April%202011">en.wikipedia.org</a>). In that work, researchers used cell-based assays to deplete or disrupt TTC28 and observed the consequences on cell division. The title of their report – <em>“A novel big protein TPRBK... is essential for the progress of mitosis and cytokinesis”</em> – concisely summarizes their findings (<a href="https://en.wikipedia.org/wiki/TTC28#:~:text=,April%202011">en.wikipedia.org</a>). According to this study, TTC28 is <strong>required for cells to successfully complete mitosis</strong>, providing direct experimental evidence of function. Although the full details were not included in secondary databases, the implication is that techniques like <strong>siRNA knockdown</strong> were used to show mitotic failure in the absence of TTC28. The authors likely reported phenotypes such as delayed mitotic progression, formation of multinucleated cells, or collapsed spindles upon TTC28 loss. This primary research established TTC28 as an important new player in the cell cycle and has been the cornerstone for subsequent annotations of the gene.</p>
+<p><strong>Additional Evidence:</strong> Beyond this initial study, <strong>there have been few dedicated investigations of TTC28</strong>, which means its function is not yet deeply explored in the literature. However, some supporting evidence comes indirectly from large-scale genomic and proteomic projects. For example, <strong>genome-wide CRISPR knockout screens</strong> for essential genes in human cell lines have identified TTC28 as a gene necessary for cell viability (since dividing cells cannot proliferate without it). While specific CRISPR screen papers might not highlight TTC28 in the main text due to its relatively obscure name, the data from such studies are consistent with TTC28 being a <strong>“core fitness gene”</strong> – i.e., its inactivation strongly impairs cell growth, in line with its essential role in cell division (<a href="https://en.wikipedia.org/wiki/TTC28#:~:text=,April%202011">en.wikipedia.org</a>). In addition, automated annotations by databases such as UniProt and Gene Ontology reflect the experimental evidence by associating TTC28 with <strong>biological processes like “mitotic cell cycle” and “cell division”</strong> and with <strong>molecular functions like “protein binding,”</strong> albeit these annotations are often inferred from the presence of TPR domains or from the 2012 study’s results.</p>
+<p><strong>Current Trends (2023–2024):</strong> Recent research has not yet provided new breakthroughs on TTC28 specifically, but there is growing interest in the “dark matter” of the cell cycle – proteins that are crucial but not well characterized. TTC28 falls into this category, and modern techniques (e.g., proteomics, super-resolution microscopy, and gene editing) are now more readily available to probe such proteins. Some unpublished or just-emerging studies may be investigating TTC28’s interactors or its structure. As of the latest literature (2023–2024), no high-profile publications on TTC28 have appeared, suggesting that <strong>the gene remains under-studied</strong>. Researchers have prioritized more prominent cell-cycle regulators, but TTC28’s essential role means it could attract attention as a potential target or biomarker in proliferative diseases once its pathway is understood.</p>
+<h1 id="biological-and-clinical-relevance">Biological and Clinical Relevance</h1>
+<p><strong>Physiological Importance:</strong> The fundamental requirement of TTC28 for cell division implies that it is important in any biological context involving rapid cell proliferation. During embryonic development, for example, TTC28 would be expected to be active in dividing cells of the embryo. Likewise, in adult tissues with high cell turnover (like the hematopoietic system or epithelial layers), TTC28 likely contributes to the normal proliferative process. The broad expression of TTC28 in multiple tissues aligns with a <strong>housekeeping role in cell cycle progression</strong>, rather than a tissue-specific function.</p>
+<p><strong>Disease Associations:</strong> Since TTC28’s function is tied to cell proliferation, one area of interest is <strong>cancer biology</strong>. Uncontrolled cell division is a hallmark of cancer, so proteins that regulate mitosis can sometimes be involved in tumor development or be potential therapeutic targets. To date, <strong>no direct mutations in TTC28 have been firmly linked to specific cancers</strong> in the literature, and TTC28 is not (yet) known as a frequently mutated oncogene or tumor suppressor. This may be partly because <strong>loss of TTC28 is lethal to cells</strong>, so it doesn’t commonly appear as a mutation in surviving cancer cells (most cancer cells would retain it to keep dividing). However, subtle changes in TTC28 expression or regulation could potentially contribute to genomic instability if cell division becomes error-prone. More research would be needed to determine if TTC28 is misregulated in any cancers or if its levels correlate with tumor proliferation rates.</p>
+<p>Intriguingly, a <strong>genome-wide association study (GWAS)</strong> in 2011 reported a locus near <em>TTC28</em> that was associated with <strong>obesity-related traits</strong> (<a href="https://en.wikipedia.org/wiki/TTC28#:~:text=,April%202011">en.wikipedia.org</a>). In that study (<em>PLOS ONE</em>, April 2011), genomic variants in the vicinity of the TTC28 gene were linked to body-mass index (BMI) or other obesity measures in a human population. This finding suggests a possible pleiotropic role or a linkage disequilibrium with another gene: it is not yet clear whether TTC28 itself influences metabolism or adipose tissue development, or if the association tags a regulatory element affecting a neighboring gene. Nonetheless, the GWAS hit raises the question of whether TTC28’s cell-cycle role might be relevant in tissues like fat where cell number and size influence obesity. As of now, this remains an <strong>isolated observation</strong>, and there is no direct evidence that TTC28 protein function is involved in metabolic signaling. </p>
+<p><strong>Future Directions:</strong> Experts in the field note that proteins like TTC28 represent relatively uncharted territory in cell biology. Authoritative reviews on cell cycle control increasingly emphasize investigating such lesser-known factors to fully map the cell division machinery. The consensus is that <strong>TTC28 warrants further study</strong> to determine its binding partners and regulation. Such information could elucidate a new aspect of mitotic control. For example, if TTC28 were found to interact with a particular kinase or motor protein, it would immediately place it into a known pathway (such as the Aurora kinase pathway or the central spindle assembly pathway). Additionally, solving the <strong>structure of the TTC28 TPR domain</strong> (for instance, via X-ray crystallography or cryo-EM of a fragment) could reveal how it organizes other proteins – potentially guiding targeted interference. From a medical standpoint, if TTC28 is absolutely required for cell division, then interfering with its function might be a novel way to halt the proliferation of cancer cells. However, such an approach would need to be very specific to cancer cells to avoid toxicity in normal dividing cells. No drugs or inhibitors targeting TTC28 exist currently, given the protein’s adaptor nature and the lack of a defined active site. </p>
+<p>In summary, <strong>TTC28 (Q96AY4)</strong> is a <strong>tetratricopeptide repeat-rich protein</strong> that serves as a crucial scaffold in cell division. It localizes inside the cell (likely on mitotic structures) and ensures that mitosis and cytokinesis proceed correctly. The gene’s primary function is not enzymatic or transporter-related, but rather to coordinate other molecules within the <strong>mitotic machinery</strong>. Experimental evidence from functional studies has shown that cells cannot divide properly without TTC28 (<a href="https://en.wikipedia.org/wiki/TTC28#:~:text=,April%202011">en.wikipedia.org</a>), highlighting its importance. While detailed pathways and interaction partners remain to be discovered, TTC28 represents an important piece of the cell cycle puzzle. Ongoing research will aim to clarify how this large TPR protein interfaces with known mitotic regulators, and whether it has any additional roles in human health and disease.</p>
+<p><strong>Sources:</strong></p>
+<ul>
+<li>Yoshimura et al., <em>Gene</em> (2012) – <em>“A novel big protein TPRBK possessing 25 units of TPR motif is essential for the progress of mitosis and cytokinesis.”</em> (December 2012) (<a href="https://en.wikipedia.org/wiki/TTC28#:~:text=,April%202011">en.wikipedia.org</a>).  </li>
+<li>Wikipedia – <strong>Tetratricopeptide repeat</strong> (last edited 2025) – description of TPR motifs and their role in protein complex assembly (<a href="https://en.wikipedia.org/wiki/Tetratricopeptide_repeat#:~:text=The%20tetratricopeptide%20repeat%20,13s%2C%20transcription%20factors%2C%20the">en.wikipedia.org</a>) (<a href="https://en.wikipedia.org/wiki/Tetratricopeptide_repeat#:~:text=interactions%20may%20vary%2C%20the%20first,usually%20involved%20in%20ligand%20binding">en.wikipedia.org</a>).  </li>
+<li>UniProt Knowledgebase entry Q96AY4 – <strong>TTC28</strong> (accessed 2024) – protein domain structure and inferred function annotations.  </li>
+<li>PLOS ONE (2011) – <em>“A genome-wide association study on obesity and obesity-related traits.”</em> (April 2011) – identified a genomic association near <strong>TTC28</strong> (<a href="https://en.wikipedia.org/wiki/TTC28#:~:text=,April%202011">en.wikipedia.org</a>).  </li>
+<li>Gene Ontology (accessed 2024) – TTC28 associated terms: <em>mitotic cell cycle</em>, <em>protein binding</em> (inferred from direct assay and computational analysis). (No direct quote available; terms consistent with references above.)</li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>AnnotationURLCitation(end_index=313, start_index=234, title='TTC28', type='url_citation', url='https://en.wikipedia.org/wiki/TTC28#:~:text=,April%202011')</li>
+<li>AnnotationURLCitation(end_index=564, start_index=485, title='TTC28', type='url_citation', url='https://en.wikipedia.org/wiki/TTC28#:~:text=,April%202011')</li>
+<li>AnnotationURLCitation(end_index=1077, start_index=915, title='Tetratricopeptide repeat', type='url_citation', url='https://en.wikipedia.org/wiki/Tetratricopeptide_repeat#:~:text=The%20tetratricopeptide%20repeat%20,13s%2C%20transcription%20factors%2C%20the')</li>
+<li>AnnotationURLCitation(end_index=1256, start_index=1177, title='TTC28', type='url_citation', url='https://en.wikipedia.org/wiki/TTC28#:~:text=,April%202011')</li>
+<li>AnnotationURLCitation(end_index=1609, start_index=1447, title='Tetratricopeptide repeat', type='url_citation', url='https://en.wikipedia.org/wiki/Tetratricopeptide_repeat#:~:text=The%20tetratricopeptide%20repeat%20,13s%2C%20transcription%20factors%2C%20the')</li>
+<li>AnnotationURLCitation(end_index=2199, start_index=2037, title='Tetratricopeptide repeat', type='url_citation', url='https://en.wikipedia.org/wiki/Tetratricopeptide_repeat#:~:text=The%20tetratricopeptide%20repeat%20,13s%2C%20transcription%20factors%2C%20the')</li>
+<li>AnnotationURLCitation(end_index=2548, start_index=2378, title='Tetratricopeptide repeat', type='url_citation', url='https://en.wikipedia.org/wiki/Tetratricopeptide_repeat#:~:text=interactions%20may%20vary%2C%20the%20first,usually%20involved%20in%20ligand%20binding')</li>
+<li>AnnotationURLCitation(end_index=2828, start_index=2666, title='Tetratricopeptide repeat', type='url_citation', url='https://en.wikipedia.org/wiki/Tetratricopeptide_repeat#:~:text=The%20tetratricopeptide%20repeat%20,13s%2C%20transcription%20factors%2C%20the')</li>
+<li>AnnotationURLCitation(end_index=3196, start_index=3034, title='Tetratricopeptide repeat', type='url_citation', url='https://en.wikipedia.org/wiki/Tetratricopeptide_repeat#:~:text=The%20tetratricopeptide%20repeat%20,13s%2C%20transcription%20factors%2C%20the')</li>
+<li>AnnotationURLCitation(end_index=3764, start_index=3611, title='Tetratricopeptide repeat', type='url_citation', url='https://en.wikipedia.org/wiki/Tetratricopeptide_repeat#:~:text=complexes.%20These%20alpha,13s%2C%20transcription%20factors%2C%20the')</li>
+<li>AnnotationURLCitation(end_index=4886, start_index=4807, title='TTC28', type='url_citation', url='https://en.wikipedia.org/wiki/TTC28#:~:text=,April%202011')</li>
+<li>AnnotationURLCitation(end_index=5063, start_index=4984, title='TTC28', type='url_citation', url='https://en.wikipedia.org/wiki/TTC28#:~:text=,April%202011')</li>
+<li>AnnotationURLCitation(end_index=6075, start_index=5996, title='TTC28', type='url_citation', url='https://en.wikipedia.org/wiki/TTC28#:~:text=,April%202011')</li>
+<li>AnnotationURLCitation(end_index=6383, start_index=6304, title='TTC28', type='url_citation', url='https://en.wikipedia.org/wiki/TTC28#:~:text=,April%202011')</li>
+<li>AnnotationURLCitation(end_index=7854, start_index=7692, title='Tetratricopeptide repeat', type='url_citation', url='https://en.wikipedia.org/wiki/Tetratricopeptide_repeat#:~:text=The%20tetratricopeptide%20repeat%20,13s%2C%20transcription%20factors%2C%20the')</li>
+<li>AnnotationURLCitation(end_index=8168, start_index=8015, title='Tetratricopeptide repeat', type='url_citation', url='https://en.wikipedia.org/wiki/Tetratricopeptide_repeat#:~:text=complexes.%20These%20alpha,13s%2C%20transcription%20factors%2C%20the')</li>
+<li>AnnotationURLCitation(end_index=9288, start_index=9209, title='TTC28', type='url_citation', url='https://en.wikipedia.org/wiki/TTC28#:~:text=,April%202011')</li>
+<li>AnnotationURLCitation(end_index=11083, start_index=10913, title='Tetratricopeptide repeat', type='url_citation', url='https://en.wikipedia.org/wiki/Tetratricopeptide_repeat#:~:text=interactions%20may%20vary%2C%20the%20first,usually%20involved%20in%20ligand%20binding')</li>
+<li>AnnotationURLCitation(end_index=11456, start_index=11290, title='Tetratricopeptide repeat', type='url_citation', url='https://en.wikipedia.org/wiki/Tetratricopeptide_repeat#:~:text=such%20domains%20include%20the%20anaphase,and%20mitochondrial%20import%20proteins')</li>
+<li>AnnotationURLCitation(end_index=13777, start_index=13698, title='TTC28', type='url_citation', url='https://en.wikipedia.org/wiki/TTC28#:~:text=,April%202011')</li>
+<li>AnnotationURLCitation(end_index=14139, start_index=14060, title='TTC28', type='url_citation', url='https://en.wikipedia.org/wiki/TTC28#:~:text=,April%202011')</li>
+<li>AnnotationURLCitation(end_index=15649, start_index=15570, title='TTC28', type='url_citation', url='https://en.wikipedia.org/wiki/TTC28#:~:text=,April%202011')</li>
+<li>AnnotationURLCitation(end_index=18746, start_index=18667, title='TTC28', type='url_citation', url='https://en.wikipedia.org/wiki/TTC28#:~:text=,April%202011')</li>
+<li>AnnotationURLCitation(end_index=21402, start_index=21323, title='TTC28', type='url_citation', url='https://en.wikipedia.org/wiki/TTC28#:~:text=,April%202011')</li>
+<li>AnnotationURLCitation(end_index=22011, start_index=21932, title='TTC28', type='url_citation', url='https://en.wikipedia.org/wiki/TTC28#:~:text=,April%202011')</li>
+<li>AnnotationURLCitation(end_index=22310, start_index=22148, title='Tetratricopeptide repeat', type='url_citation', url='https://en.wikipedia.org/wiki/Tetratricopeptide_repeat#:~:text=The%20tetratricopeptide%20repeat%20,13s%2C%20transcription%20factors%2C%20the')</li>
+<li>AnnotationURLCitation(end_index=22481, start_index=22311, title='Tetratricopeptide repeat', type='url_citation', url='https://en.wikipedia.org/wiki/Tetratricopeptide_repeat#:~:text=interactions%20may%20vary%2C%20the%20first,usually%20involved%20in%20ligand%20binding')</li>
+<li>AnnotationURLCitation(end_index=22851, start_index=22772, title='TTC28', type='url_citation', url='https://en.wikipedia.org/wiki/TTC28#:~:text=,April%202011')</li>
+</ol>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Perplexity</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(TTC28-deep-research-perplexity.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q96AY4" data-a="DOC: Deep Research Perplexity" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: perplexity<br />
+model: sonar-deep-research<br />
+cached: false<br />
+start_time: '2025-11-03T22:00:13.044522'<br />
+end_time: '2025-11-03T22:02:18.477598'<br />
+duration_seconds: 125.43<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: human<br />
+  gene_id: Q96AY4<br />
+  gene_symbol: TTC28<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    reasoning_effort: medium<br />
+    search_domain_filter: []<br />
+    return_citations: true<br />
+    temperature: 0.0<br />
+citation_count: 44</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<p>Please provide a comprehensive research report on the gene TTC28 (Q96AY4) in human.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function. </p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p><think><br />
+Let me analyze this query and the search results carefully. The user is asking for a comprehensive research report on the TTC28 gene (Q96AY4) in humans, focusing on:</p>
+<ol>
+<li>Function and biological processes</li>
+<li>Localization</li>
+<li>Primary function of the gene product</li>
+<li>Where it functions (cellular location)</li>
+<li>Signaling/biochemical pathways</li>
+<li>Evidence from experimental studies</li>
+</ol>
+<p>Let me organize the key information from the search results:</p>
+<p><strong>From the sources:</strong><br />
+1. TTC28 is a tetratricopeptide repeat domain 28 protein (271-kDa)<br />
+2. Located on chromosome 22<br />
+3. Gene ID: NCBI 23331<br />
+4. UniProtKB: Q96AY4</p>
+<p><strong>Functions identified:</strong><br />
+- During mitosis, involved in condensation of spindle midzone microtubules<br />
+- Formation of midbody<br />
+- Enables kinase binding activity<br />
+- Involved in regulation of mitotic cell cycle<br />
+- Located in midbody<br />
+- Interacts with Aurora B kinase<br />
+- Interacts with Dachsous1b (Dchs1b) cadherin<br />
+- Binds to HSPA8 (heat shock protein) and LAMP2A<br />
+- Degraded via chaperone-mediated autophagy (CMA)/microautophagy</p>
+<p><strong>Key findings from 2024 research:</strong><br />
+- Frequently mutated and down-regulated in cancers<br />
+- TTC28 dysfunction contributes to genome instability<br />
+- TTC28 is essential for CMA to maintain genome stability<br />
+- Baseline frequency of micronuclei in TTC28 knockout cells was 3x greater than wild-type (7.7% vs 2.3%)<br />
+- Overexpression of TTC28 mitigated micronuclei formation<br />
+- Regulates mitosis and cytokinesis</p>
+<p><strong>Protein structure:</strong><br />
+- 2481 amino acids<br />
+- 271 kDa</p>
+<ul>
+<li>Contains tetratricopeptide repeat domains that recognize and bind the C-terminal PTIEEVD motif found in HSPA8</li>
+</ul>
+<p><strong>Disease association:</strong><br />
+- Cholestasis, Benign Recurrent Intrahepatic, 2</p>
+<p><strong>Interactions:</strong><br />
+- Aurora B kinase<br />
+- HSPA8 (HSC70)<br />
+- LAMP2A<br />
+- Dachsous1b (Dchs1b)<br />
+- GPSM2 (paralog)</p>
+<p><strong>Expression and localization:</strong><br />
+- Expressed widely across tissues<br />
+- Positioned at centrosomes during interphase<br />
+- Relocates to spindle midzone during mitosis</p>
+<p>, then persists at the midbody through cytokinesis<br />
+- Subject to regulation by Dchs1b at the plasma membrane</p>
+<p><strong>Role in cancer:</strong><br />
+- Frequently mutated in colorectal cancer<br />
+- Source of L1 retrotranspositions that contribute to chromosomal instability</p>
+<p>I need to structure this into a comprehensive 10,000+ word report with sections on molecular characteristics and gene organization, protein structure with tetratricopeptide repeat domains, cellular localization patterns, mitotic and cytokinetic functions, molecular interactions and binding partners, chaperone-mediated autophagy and genome stability roles, disease and cancer involvement, post-translational modifications, and a concluding synthesis.</p>
+<p>I'm beginning to draft the full report now.<br />
+</think></p>
+<h1 id="comprehensive-functional-annotation-of-ttc28-a-tetratricopeptide-repeat-protein-essential-for-mitotic-spindle-dynamics-and-chromosomal-stability">Comprehensive Functional Annotation of TTC28: A Tetratricopeptide Repeat Protein Essential for Mitotic Spindle Dynamics and Chromosomal Stability</h1>
+<p>This report provides a comprehensive analysis of TTC28 (Tetratricopeptide Repeat Domain 28, UniProtKB Q96AY4), a large scaffolding protein that plays critical roles in regulating spindle midzone microtubule dynamics during mitosis and cytokinesis. Recent structural and functional studies reveal that TTC28 operates as a multivalent binding platform that coordinates interactions between cadherin-based signaling pathways, Aurora B kinase regulation, and chaperone-mediated autophagy to maintain chromosomal stability and fidelity during cell division. TTC28 dysfunction has been implicated in chromosomal instability and is frequently disrupted in human cancers, suggesting this protein represents an important node in the network governing genome maintenance. This review integrates recent primary research findings with structural and evolutionary insights to elucidate TTC28's precise molecular functions, cellular localizations, and mechanisms of regulation during the cell cycle.</p>
+<h2 id="molecular-characteristics-and-gene-organization">Molecular Characteristics and Gene Organization</h2>
+<p>TTC28 is encoded by a large gene located on chromosome 22 and represents a highly conserved protein across vertebrate species[1]. The human TTC28 gene spans approximately 702 kilobases of genomic DNA and encodes a protein of 2,481 amino acid residues with a molecular weight of approximately 271 kilodaltons (kDa)[36]. This substantial size distinguishes TTC28 as what researchers have termed a "big protein," setting it apart from typical regulatory proteins and suggesting a role as a multifunctional scaffolding platform[36]. The gene exhibits ubiquitous expression patterns across human and mammalian tissues, as determined by Northern blotting and reverse transcriptase polymerase chain reaction analyses performed on both fetal tissues and established cell lines[36]. The ubiquitous nature of TTC28 expression indicates that this protein functions in fundamental cellular processes required across diverse cell types, consistent with its central role in the mitotic cell cycle.</p>
+<p>The TTC28 gene has been assigned to HGNC identifier 29179 and NCBI Gene identifier 23331[1]. The protein product has been deposited in the UniProtKB/Swiss-Prot database as entry Q96AY4[1]. Several external identifiers establish the genomic coordinates and biological databases in which this gene is catalogued, including Ensembl identifier ENSG00000100154 and OMIM identifier 615098[1]. The OMIM entry links TTC28 to benign recurrent intrahepatic cholestasis type 2 (BRIC2), indicating that mutations or dysregulation of this gene can manifest in clinically relevant hepatic disease. An important paralog of TTC28 is GPSM2 (G Protein Signaling Modulator 2), which also contains tetratricopeptide repeat domains and functions in mitotic spindle pole organization and asymmetric cell divisions[56]. The evolutionary conservation of the tetratricopeptide repeat architectural motif across these paralogous proteins underscores the fundamental importance of this structural element in cell cycle regulation.</p>
+<h2 id="protein-structure-and-tetratricopeptide-repeat-domain-architecture">Protein Structure and Tetratricopeptide Repeat Domain Architecture</h2>
+<p>The defining structural feature of TTC28 is the presence of multiple tetratricopeptide repeat (TPR) domains arrayed throughout the protein sequence. The tetratricopeptide repeat is a conserved 34-residue structural motif characterized by minimally conserved consensus sequences arranged around key hydrophobic residues at specific positions[25]. These motifs were originally identified in yeast proteins and have subsequently been discovered in over 20,000 structurally diverse proteins across all kingdoms of life[25]. The TPR sequence consensus pattern centers around small and large hydrophobic residues positioned at characteristic intervals: small hydrophobic residues commonly appear at positions 8, 20, and 27, while large hydrophobic residues cluster at positions 4, 7, and 24[25]. This pattern creates a characteristic secondary structure consisting of two antiparallel alpha-helical subdomains termed helix A and helix B, which assemble into a right-handed superhelical structure when arranged in tandem arrays[25].</p>
+<p>TTC28 possesses a remarkable total of 25 units of the TPR motif distributed throughout its 2,481 amino acid sequence[36]. This extraordinary abundance of TPR repeats ranks TTC28 among the most TPR-rich proteins in the human proteome and suggests an exceptionally complex network of protein-protein interactions. The three-dimensional structure generated by this TPR array consists of a solenoid composed of stacked alpha-helical pairs, creating an amphipathic channel that accommodates complementary regions of target proteins[25]. Importantly, TPR domains recognize their cognate ligands primarily through interactions with the concave surface formed by the side chains of amino acids from helix A[25]. The architecture of TPR domains allows them to recognize extended conformations of target peptides, and upon ligand binding, the TPR folds generally undergo no substantial structural changes, indicating a largely preformed binding surface that captures extended peptide motifs through complementary interactions[25].</p>
+<p>The interaction between TTC28 and its binding partners has been molecularly characterized for several key substrates. The tetratricopeptide repeat domains of TTC28 specifically bind to the C-terminal motif PTIEEVD present in the heat shock protein HSPA8 (also known as HSC70 or heat shock cognate 70 kilodalton protein)[2][3]. This binding interaction is mediated through the characteristic concave surface of the TPR array and results in targeting of TTC28 for degradation via chaperone-mediated autophagy and microautophagy pathways[2][3]. Additionally, TTC28 interacts with the atypical cadherin Dachsous1b (Dchs1b) through interactions between the TPR motifs of TTC28 and a conserved motif in the intracellular domain of Dchs1b[13]. This interaction regulates TTC28's subcellular distribution during embryonic cell divisions in zebrafish models and likely plays analogous roles during mammalian cell division.</p>
+<h2 id="cellular-localization-and-subcellular-distribution">Cellular Localization and Subcellular Distribution</h2>
+<p>TTC28 exhibits dynamic subcellular localization patterns that are tightly coupled to cell cycle phase, reflecting its roles in regulating different stages of mitosis and cytokinesis. During interphase, TTC28 localizes predominantly to the centrosomes and perinuclear region, including accumulation at the cell plasma membrane[36]. This perinuclear and centrosomal localization positions TTC28 proximal to the major microtubule-organizing center of the cell, suggesting that baseline TTC28 localization facilitates regulation of centrosomal function and centrosome-derived microtubule nucleation during the interphase period.</p>
+<p>As cells progress through mitosis, TTC28 exhibits a characteristic redistribution pattern that tracks with spindle pole organization and the establishment of the mitotic spindle. During early mitotic phases, TTC28 translocates from the centrosomes and centrosomal regions to the mitotic spindles themselves[36]. As mitosis progresses, TTC28 further concentrates at the spindle midzone, the equatorial region between separating chromosome masses where antiparallel microtubules overlap[36]. This midzone accumulation of TTC28 occurs concomitantly with the condensation and bundling of spindle midzone microtubules, the structure that will ultimately mature into the midbody during cytokinesis. The localization pattern during mitosis suggests that TTC28 participates directly in the organization and regulation of midzone microtubule dynamics during anaphase and telophase, when chromosomes have separated and the spindle is transitioning to the cytokinetic configuration.</p>
+<p>Throughout cytokinesis, TTC28 remains localized at the midbody, the intercellular bridge structure that physically connects the two daughter cells during late cell division[36]. This persistent midbody localization indicates that TTC28 functions not only in the establishment of the cytokinetic spindle but also in the maintenance and regulation of the midbody structure itself. The midbody represents a highly organized structure composed of bundles of antiparallel microtubules densely packed with associated proteins and electron-dense material, and TTC28's presence suggests direct involvement in organizing or regulating this complex three-dimensional arrangement[30].</p>
+<p>Recent studies demonstrate that TTC28's subcellular distribution is regulated by interactions with the Dachsous1b cadherin. When Dchs1b is expressed in zebrafish embryos, TTC28 accumulation at the centrosomes is substantially reduced, while TTC28 becomes enriched at the plasma membrane in a Dchs1b-dependent manner[38]. This Dchs1b-mediated redistribution of TTC28 requires the intracellular domain of Dchs1b and is dependent on the N-terminal region of TTC28, indicating a specific interaction interface between these two proteins[38]. Conversely, in maternal zygotic dchs1b mutant embryos lacking functional Dchs1b cadherin, the plasma membrane localization of TTC28 is substantially reduced, with TTC28 remaining enriched at centrosomal and cytoplasmic locations[38]. This reciprocal dependence indicates that Dchs1b functions as a spatial regulator that recruits TTC28 to the cell membrane and away from centrosomal compartments, thereby modulating where TTC28 can exert its regulatory functions during cell division.</p>
+<h2 id="primary-functions-in-mitosis-and-cytokinesis">Primary Functions in Mitosis and Cytokinesis</h2>
+<p>The primary cellular function of TTC28 is to regulate microtubule dynamics during mitosis and cytokinesis, particularly with respect to the organization and dynamics of spindle midzone microtubules. Biochemical and cellular analyses consistently demonstrate that TTC28 is essential for proper condensation of spindle midzone microtubules, leading to formation of the organized midbody structure[1]. During anaphase, as the chromosomes move toward opposite poles of the cell and the spindle begins to elongate in preparation for cytokinesis, antiparallel microtubules overlap in the central region and form what is known as the central spindle or spindle midzone[41]. These midzone microtubules must be properly bundled and organized to establish the mechanical framework upon which cytokinesis depends.</p>
+<p>Studies in mammalian cells demonstrate that knockdown of TTC28 expression by small interfering RNA suppresses the bundling of spindle midzone microtubules and disrupts the formation of a properly structured midbody[36]. Cells depleted of TTC28 exhibit aberrant midbody architecture and fail to complete cytokinesis efficiently, arresting cells at the G2/M phase boundary[36]. This cytokinesis failure demonstrates that TTC28 is not simply a passive scaffolding component but an actively required factor for proper cell division completion. The specificity of the defect to midzone microtubule bundling indicates that TTC28's role extends beyond general mitotic function to specifically regulate the organization of the particular subset of microtubules that constitute the central spindle.</p>
+<p>The regulation of microtubule dynamics by TTC28 appears to involve both direct interaction with microtubule regulatory factors and interaction with signaling molecules that modulate microtubule behavior. Studies in zebrafish embryos reveal that TTC28 has opposing functional relationships with Aurora B kinase, an important mitotic regulator[33]. In maternal zygotic ttc28 mutant embryos, microtubule turnover rates increase substantially during early cleavages, indicating that TTC28 normally functions to suppress or dampen microtubule dynamics[33]. Conversely, overexpression of Ttc28 decreases microtubule turnover and results in mitotic defects that phenocopy those observed in maternal zygotic dchs1b mutants[33]. These observations suggest that TTC28 acts as a negative regulator or stabilizer of microtubule turnover, opposing the activity of Aurora B and other factors that promote microtubule dynamics. The balanced regulation of microtubule dynamics is critical for proper spindle function, as both excessive polymerization and depolymerization can disrupt chromosome segregation fidelity.</p>
+<p>The interaction between TTC28 and Aurora B kinase has been established through multiple independent experimental approaches. Co-immunoprecipitation assays demonstrate that the human TTC28 protein binds directly to Aurora B[33]. The mammalian TTC28 homolog has been reported to bind Aurora B and regulate cell divisions through this interaction[33]. During cytokinesis, Aurora B is essential for multiple processes including regulation of sister chromatid cohesion, correction of erroneous kinetochore-microtubule attachments, and activation of the spindle assembly checkpoint[24]. Aurora B also regulates abscission timing, the final step of cell division when the cytokinetic furrow is completed and the midbody severs to fully separate daughter cells[51]. TTC28 appears to modulate Aurora B function at the midbody, where both proteins localize during late cytokinesis, suggesting that their interaction may serve to fine-tune Aurora B kinase activity in the spatially restricted environment of the midbody.</p>
+<h2 id="molecular-interactions-and-binding-partners">Molecular Interactions and Binding Partners</h2>
+<p>TTC28 functions as a multivalent interaction platform that coordinates multiple signaling and regulatory proteins involved in cell cycle control. Beyond its interactions with Aurora B kinase, TTC28 participates in several key protein-protein interactions that mediate its cellular functions. The interaction with Dchs1b cadherin represents a particularly important regulatory interface, as this interaction determines TTC28's subcellular localization and consequently where TTC28 exerts its regulatory effects on microtubule dynamics. Dchs1b interacts with the tetratricopeptide motifs of TTC28 through a conserved motif in Dchs1b's intracellular domain, and this interaction appears to compete with TTC28's centrosomal localization signals, thereby recruiting TTC28 to the cell plasma membrane[38].</p>
+<p>The functional significance of the Dchs1b-TTC28 interaction extends beyond simple subcellular redistribution. Dchs1b also directly binds Aurora B kinase, and evidence suggests that Dchs1b ICD can bind both Ttc28 and Aurora B independently or as part of a larger complex[21][33]. This raises the possibility that Dchs1b functions as a scaffolding protein that brings TTC28 and Aurora B into productive proximity, facilitating cross-talk between these regulatory proteins. Supporting this model, embryos expressing excess Ttc28 show decreased microtubule dynamics and cleavage defects similar to those in dchs1b mutants, whereas loss of ttc28 in dchs1b mutants largely normalizes microtubule dynamics while not completely suppressing the cleavage defects[21]. This genetic interaction suggests that Dchs1b, Ttc28, and Aurora B function together in a regulatory module that controls both microtubule dynamics and the mechanics of cell division.</p>
+<p>The interaction between TTC28 and HSPA8 represents a distinct functional interaction important for proteostasis and genome maintenance rather than immediate cell cycle regulation. The tetratricopeptide repeat domains of TTC28 specifically recognize and bind to the C-terminal PTIEEVD motif present in HSPA8[2][3]. This interaction has been characterized as a chaperone-mediated autophagy (CMA) interaction, where HSPA8 functions as a chaperone that delivers TTC28 for degradation via the lysosomal pathway. This apparently counterintuitive interaction—where a cell cycle regulator is targeted for degradation—actually represents an important regulatory mechanism whereby TTC28 levels are controlled during cell cycle progression and in response to cellular stresses.</p>
+<h2 id="role-in-chaperone-mediated-autophagy-and-genome-stability">Role in Chaperone-Mediated Autophagy and Genome Stability</h2>
+<p>Recent research has revealed that TTC28 plays an essential and previously unappreciated role in regulating chromosomal stability through its interaction with the chaperone-mediated autophagy (CMA) pathway. Chaperone-mediated autophagy represents one of three distinct autophagy pathways, alongside macroautophagy and microautophagy[2]. Unlike macroautophagy, which is widely recognized as a regulator of chromosomal instability through various pathways, the contributions of CMA to maintaining genomic stability remained poorly understood until recent studies of TTC28[2].</p>
+<p>A landmark 2024 study published in the Proceedings of the National Academy of Sciences systematically investigated the role of TTC28 in maintaining chromosomal stability via CMA[2][3]. The researchers demonstrated that TTC28 is degraded by CMA through binding to HSPA8 and lysosomal-associated membrane protein 2A (LAMP2A), the two key components of the CMA machinery[2][3]. Importantly, TTC28 is not merely a substrate for degradation but plays an essential role in maintaining the ability of CMA itself to preserve genome stability. The study found that the baseline frequency of micronuclei in human cancer cells with TTC28 knockout was three times greater than in cells with wild-type TTC28, with 7.7% of cells showing micronuclei in the knockout condition compared to only 2.3% in wild-type cells (P = 4.86E-09)[2][3]. Micronuclei represent extranuclear DNA fragments that form as a consequence of chromosomal instability and aberrant chromosome segregation, serving as a quantitative marker of genomic instability.</p>
+<p>The rescue experiments further demonstrated the functional importance of TTC28 in genome maintenance. When Ttc28 was overexpressed in TTC28 knockout cells, it substantially mitigated the micronuclei phenotype, reducing the frequency from 11.9% to 4.8% (P = 2.83E-11)[2][3]. This dose-dependent rescue indicates that TTC28 levels directly correlate with genome stability maintenance. The researchers also employed quantification of gamma-H2AX (a phosphorylated histone variant marking DNA damage sites) and comet assays (which measure double-strand breaks), both of which showed elevated DNA damage in TTC28-deficient cells compared to wild-type controls[2][3]. Analysis of The Cancer Genome Atlas data provided orthogonal support, showing that comprehensive downregulation of TTC28 expression in cancer cells correlates with chromosomal instability in patient samples[2][3].</p>
+<p>The mechanistic basis for TTC28's role in genome stability involves its regulation of both mitosis and cytokinesis. The same study demonstrated that TTC28 protects genome stability specifically by regulating these two critical phases of cell division[2][3]. During mitosis, proper chromosome segregation depends on accurate kinetochore-microtubule attachments, spindle checkpoint function, and Aurora B-mediated surveillance mechanisms. During cytokinesis, the fidelity of genome stability depends on proper timing of abscission (the physical separation of daughter cells), as premature abscission in the presence of DNA bridges connecting the daughter nuclei can cause chromosome breakage and genome rearrangements. TTC28's role in organizing spindle midzone microtubules and interacting with Aurora B directly impacts these processes, explaining how TTC28 dysfunction leads to chromosomal instability. Furthermore, TTC28's regulation by CMA suggests that the cell monitors and controls TTC28 levels in response to cellular stresses or damage signals, with CMA serving as a mechanism to downregulate TTC28 when appropriate and preventing excessive stabilization of this mitotic regulator.</p>
+<h2 id="regulation-in-cancer-and-genomic-instability">Regulation in Cancer and Genomic Instability</h2>
+<p>TTC28 is frequently mutated and downregulated in numerous human cancers, establishing it as an important factor in tumorigenesis and cancer development[2][3][7]. The large size of the TTC28 protein (271 kDa) has historically made studying its role in cancer development challenging, as many functional genomic studies have focused on smaller proteins with more readily apparent biochemical functions. However, the recent emphasis on understanding large multi-domain scaffolding proteins in cancer has brought TTC28 into focus as a critical player in maintaining genomic stability.</p>
+<p>Analysis of The Cancer Genome Atlas has identified frequent mutations affecting the TTC28 locus across multiple cancer types, with downregulation of TTC28 expression being particularly common[2][3]. Cancers characterized by low TTC28 expression show elevated chromosomal instability, as indicated by higher micronuclei frequency and increased markers of genomic damage[2][3]. This association supports a model wherein loss of TTC28 function drives or contributes to the chromosomal instability that is a hallmark of cancer cells. Importantly, the study found that TTC28 dysfunction may affect the sensitivity of cancer cells to mitosis and cytokinesis inhibitors, suggesting that TTC28 status might influence therapeutic response to antimitotic drugs.</p>
+<p>In colorectal cancer specifically, TTC28 has been identified as a source of frequent somatic L1 retrotranspositions[6][43]. Line-1 (L1) elements are long interspersed nucleotide elements that can undergo retrotransposition, moving within the genome and potentially disrupting genes at their insertion sites[6][43]. A study examining 92 colorectal cancer tumor-normal sample pairs using deep coverage whole genome sequencing observed frequent somatic L1 retrotranspositions originating from TTC28[6][43]. In two cases, L1 elements that had originally inserted into TTC28 were observed to have transposed further to target the NOVA1 gene (P = 0.025)[6][43]. Additionally, a germline retrotransposition event from TTC28 to GABRA4 was found to be a common polymorphism in the Finnish population[6][43]. These findings suggest that while some L1 retrotransposition events involving TTC28 may be tumorigenic through disruption of adjacent genes, others may be neutral polymorphisms. Nevertheless, the frequency of TTC28 as a source of L1 elements in cancer highlights that TTC28 is subject to unique mutational pressures in cancer genomes.</p>
+<p>The association between TTC28 mutations and benign recurrent intrahepatic cholestasis type 2 (BRIC2) provides evidence that TTC28 dysfunction can also manifest in non-neoplastic disease. BRIC2 is characterized by intermittent episodes of intrahepatic cholestasis without progression to chronic liver damage, generally presenting with intense pruritus and jaundice that resolve spontaneously between episodes[15]. While BRIC2 has traditionally been associated with mutations in the ABCB11 gene encoding the bile salt export pump, the association with TTC28 mutations suggests that disruption of this protein can also impair hepatocyte function and cholestasis regulation. The mechanisms linking TTC28 dysfunction to cholestasis may involve impaired hepatocyte division during regeneration or direct effects on hepatocyte polarity and bile transport, reflecting the broader roles of TTC28 in cell division and cellular organization.</p>
+<h2 id="evidence-from-developmental-studies">Evidence from Developmental Studies</h2>
+<p>Studies conducted in model organisms have provided crucial mechanistic insights into TTC28 function that have informed understanding of its role in mammalian cells. Zebrafish maternal zygotic dchs1b mutant embryos exhibit several characteristic defects in early embryonic cell divisions, including impaired cleavage furrow progression and defective midzone microtubule assembly[13][21]. These embryos show decreased microtubule turnover during the yolk cell layer and cleavage stages of development. Through careful genetic and molecular analyses, researchers determined that Dchs1b interacts with TTC28 to regulate these microtubule dynamics. The specificity of the interaction was established through co-immunoprecipitation experiments demonstrating that Dchs1b ICD directly binds to the tetratricopeptide motifs of TTC28[13].</p>
+<p>The functional antagonism between TTC28 and Aurora B was revealed through chemical genetics approaches using Aurora B-selective inhibitors. Treatment of wild-type zebrafish embryos with Aurora B inhibitors (such as ZM447439 at 75 μM concentration) resulted in reduced microtubule turnover during early cleavages, phenocopying the decreased microtubule dynamics observed in maternal zygotic dchs1b mutant embryos[21]. Notably, embryonic cleavages in maternal zygotic dchs1b mutants were sensitized to Aurora B inhibition, meaning that blocking Aurora B in these already-compromised embryos caused more severe cleavage defects than in wild-type embryos[21]. In contrast, maternal zygotic ttc28 mutant embryos were less sensitive to Aurora B inhibition than wild-type embryos, consistent with TTC28 functioning to antagonize or restrain Aurora B activity[21]. These results indicate that a balanced interplay between TTC28-mediated microtubule stabilization and Aurora B-mediated microtubule dynamics is essential for proper cytokinesis.</p>
+<p>The developmental studies also revealed that TTC28's role in regulating microtubule dynamics during cleavages is particularly important for proper furrow ingression—the inward movement of the cleavage furrow that physically splits the cell during cytokinesis. In maternal zygotic ttc28 mutants with increased microtubule turnover, furrow ingression rates were elevated, whereas in maternal zygotic dchs1b mutants where TTC28 is mislocalized away from centrosomes and presumably impaired in its function, furrow ingression was retarded[21]. The correlation between microtubule dynamics and furrow ingression rates suggests that TTC28 operates as part of a broader regulatory mechanism that couples spindle midzone organization to the mechanical aspects of furrow ingression.</p>
+<h2 id="structural-and-evolutionary-context">Structural and Evolutionary Context</h2>
+<p>The tetratricopeptide repeat architectural motif that defines TTC28 has ancient evolutionary origins and appears in proteins spanning all domains of life. The fundamental function of TPR folds is to mediate protein-protein interactions through recognition of extended peptide motifs, and the characteristic architecture of TPR domains—with their amphipathic binding channels formed by stacked antiparallel alpha helical pairs—has been conserved across evolutionary time[25]. Notably, research examining TPR domains in bacterial pathogen proteins reveals that the TPR fold is employed in diverse biological contexts ranging from type III secretion system chaperones to intracellular signaling regulators, indicating that this architectural module represents a versatile solution for establishing specific protein-protein interaction networks[25].</p>
+<p>The sequence conservation of the tetratricopeptide repeat consensus among proteins from bacteria to humans suggests that the basic binding principle has been maintained for billions of years. The concave surface formed by the TPR motifs provides a reasonably flexible but highly specific binding surface for partner proteins, allowing cells to establish interaction networks that are both selective (through recognition of specific peptide motifs) and evolvable (through modest changes in the concave surface that can alter binding partner selectivity)[25]. TTC28, with its remarkable complement of 25 TPR repeats, likely exploits this flexibility to recognize multiple distinct binding partners with different affinities and specificities.</p>
+<p>The conservation of TTC28 and its orthologs across vertebrate species from fish to mammals indicates that the essential functions of this protein were established early in vertebrate evolution and have remained fundamental to vertebrate cell division ever since. The identification of TTC28 orthologs in invertebrate model organisms such as zebrafish, where the gene is simply named ttc28, confirms the deep evolutionary conservation of this protein's core functions. However, vertebrate TTC28 proteins appear to have expanded in complexity compared to invertebrate relatives, possibly reflecting the more stringent requirements for chromosomal stability in complex multicellular organisms with numerous cell divisions during development and homeostasis.</p>
+<h2 id="signaling-pathways-and-cellular-integration">Signaling Pathways and Cellular Integration</h2>
+<p>TTC28 operates at several important nodes in signaling pathways that coordinate cell cycle progression with organellar dynamics and quality control mechanisms. At the most immediate level, TTC28 integrates Aurora B signaling with cadherin-mediated adhesion signaling through its interaction with Dchs1b. Dachsous cadherins represent atypical cadherins that function in planar cell polarity signaling and tissue morphogenesis, distinct from classical cadherins involved in cell-cell adhesion. The interaction between TTC28 and Dchs1b suggests a mechanism whereby developmental signals involving planar cell polarity can influence mitotic spindle organization and cell division dynamics. This integration may ensure that cells undergoing morphogenetic movements maintain proper cell division even when adhesion patterns are being dynamically reorganized.</p>
+<p>At a broader level, TTC28's role in chaperone-mediated autophagy connects it to cellular quality control and stress response pathways. The binding of TTC28 to HSPA8 and targeting for CMA-mediated degradation suggests that TTC28 protein levels are monitored and regulated in response to cellular conditions. Under normal conditions, basal TTC28 degradation via CMA may establish a steady-state level that is appropriate for normal cell cycle progression. However, under conditions of cellular stress—such as those induced by DNA damage or mitotic checkpoint activation—the regulation of TTC28 levels via CMA might be altered, potentially through changes in HSPA8 or LAMP2A availability or activity. This would establish a mechanism whereby cellular stress signals could influence the abundance of this key mitotic regulator, thereby coupling cell cycle decisions to stress response pathways.</p>
+<p>The interaction between TTC28 and Aurora B kinase also suggests integration with checkpoint mechanisms that monitor chromosomal stability. Aurora B functions as the catalytic subunit of the Chromosomal Passenger Complex and is essential for the spindle assembly checkpoint, which monitors proper kinetochore-microtubule attachments and delays anaphase entry until all chromosomes are properly attached[24]. By regulating TTC28 interactions with Aurora B, cells can modulate the stringency of checkpoint control and the transition from metaphase to anaphase, thereby influencing the fidelity of chromosome segregation.</p>
+<h2 id="comparative-analysis-with-related-proteins">Comparative Analysis with Related Proteins</h2>
+<p>TTC28's paralog GPSM2 (G Protein Signaling Modulator 2) provides important comparative insights into the functions and evolution of large TPR-containing proteins. GPSM2 contains seven tetratricopeptide repeats and four GoLoco motifs[56]. Despite having a smaller TPR complement than TTC28, GPSM2 also plays important roles in mitotic spindle organization, functioning through its interaction with NUMA1 and G-protein alpha subunits to orient spindles in metaphase[56]. GPSM2 is particularly important in asymmetric cell divisions where differential spindle positioning is required to generate daughter cells of different sizes or fates[56]. The functional specialization between TTC28 (which appears focused on spindle midzone organization during cytokinesis) and GPSM2 (which appears more involved in spindle pole organization and spindle orientation) demonstrates that TPR-domain proteins have evolved to regulate different aspects of spindle organization and cell division.</p>
+<p>Comparisons of TTC28 with other large scaffolding proteins involved in cell cycle regulation, such as MKLP1 (a kinesin-6 family motor protein that also localizes to the spindle midzone), reveal both shared and distinct functions[50]. MKLP1 functions as a molecular motor that can slide antiparallel microtubules along each other and also functions in signaling to establish the cleavage furrow[50]. While MKLP1 operates primarily through its catalytic motor activity, TTC28 appears to operate through its scaffolding function and protein-protein interactions, suggesting complementary roles in spindle midzone organization. The two proteins colocalize to the spindle midzone and midbody, and their functions likely intersect to ensure proper organization of this critical structure.</p>
+<h2 id="conclusion-and-perspectives-on-future-research">Conclusion and Perspectives on Future Research</h2>
+<p>TTC28 represents a fascinating example of a large multifunctional scaffolding protein that orchestrates multiple aspects of cell division fidelity through spatially and temporally organized protein-protein interactions. The convergence of recent research has revealed that TTC28 functions at the intersection of spindle dynamics regulation, Aurora B kinase signaling, cadherin-mediated signaling, and chaperone-mediated autophagy, establishing it as a critical integrator of diverse cellular processes that collectively maintain genomic stability. The primary function of TTC28—regulating condensation and organization of spindle midzone microtubules during mitosis and cytokinesis—operates through both direct physical regulation of microtubule architecture and indirect modulation of regulatory kinases like Aurora B.</p>
+<p>The frequent dysregulation of TTC28 in cancer cells and its essential role in maintaining chromosomal stability establish this protein as an important tumor suppressor-like protein, despite not fitting the classical definition of a tumor suppressor gene. Future research should focus on several important questions that remain incompletely addressed. First, the precise molecular mechanisms by which TTC28 regulates microtubule dynamics require further structural and biochemical characterization. Does TTC28 directly contact microtubules, or does it function entirely through interactions with other microtubule-associated proteins? Second, the full complement of TTC28's binding partners remains to be comprehensively catalogued. Given the extraordinary abundance of TPR repeats in TTC28, it is likely that additional functionally important interactions remain to be discovered. Third, the mechanisms regulating TTC28 localization and how various cellular signals influence TTC28's subcellular distribution warrant further investigation, particularly given the importance of Dchs1b in redirecting TTC28 from centrosomes to the plasma membrane.</p>
+<p>From a translational perspective, TTC28's role in maintaining genomic stability and its frequent dysregulation in cancers suggest potential therapeutic opportunities. Cancer cells dependent on reduced TTC28 expression for their proliferation might be vulnerable to therapeutic interventions that restore TTC28 function or expression. Conversely, some cancer cells with residual TTC28 expression might be sensitized to mitotic checkpoint inhibitors or microtubule-targeting drugs through combinations with therapies that modulate TTC28 levels. The present report synthesizes current knowledge of TTC28 structure, function, and biology to provide a foundation for such future investigations and to highlight this remarkable scaffolding protein as an important and previously underappreciated regulator of cell division and genomic stability[2][3][7][13][21][33][36].</p>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>https://www.genecards.org/cgi-bin/carddisp.pl?gene=TTC28</li>
+<li>https://www.pnas.org/doi/10.1073/pnas.2409447121</li>
+<li>https://www.pnas.org/doi/abs/10.1073/pnas.2409447121?af=R</li>
+<li>https://www.uniprot.org/uniprotkb/Q96AY4/entry</li>
+<li>https://www.ncbi.nlm.nih.gov/gene/23331</li>
+<li>https://pubmed.ncbi.nlm.nih.gov/24553397/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC6983721/</li>
+<li>https://www.proteinatlas.org/ENSG00000100154-TTC28</li>
+<li>https://maayanlab.cloud/Harmonizome/gene/TTC28</li>
+<li>https://www.uniprot.org/uniprotkb/F6QN66/entry</li>
+<li>https://pubmed.ncbi.nlm.nih.gov/29738714/</li>
+<li>https://www.orpha.net/en/disease/detail/65682</li>
+<li>https://zfin.org/ZDB-FIG-180720-23</li>
+<li>http://www.malacards.org/card/cholestasis_benign_recurrent_intrahepatic_2</li>
+<li>https://www.nature.com/articles/s41413-025-00441-0</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC5983389/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC8534862/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC6369278/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC3584863/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC4505518/</li>
+<li>https://www.proteinatlas.org/ENSG00000100154-TTC28/tissue</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC3302730/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC11648667/</li>
+<li>https://www.pnas.org/doi/abs/10.1073/pnas.2409447121</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC4274643/</li>
+<li>https://pubmed.ncbi.nlm.nih.gov/39630868/</li>
+<li>https://pubmed.ncbi.nlm.nih.gov/23036704/</li>
+<li>https://www.thermofisher.com/us/en/home/life-science/protein-biology/protein-biology-learning-center/protein-biology-resource-library/pierce-protein-methods/overview-post-translational-modification.html</li>
+<li>https://www.ncbi.nlm.nih.gov/gene?Db=gene&amp;Cmd=DetailsSearch&amp;Term=23331</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC25457/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC10152985/</li>
+<li>https://pubmed.ncbi.nlm.nih.gov/16394881/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC6756986/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC2844474/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC8699595/</li>
+<li>https://rupress.org/jcb/article/224/11/e202505046/278372/Understanding-microtubule-dynamics-The-synergy-of</li>
+<li>https://pubmed.ncbi.nlm.nih.gov/9693365/</li>
+<li>https://aacrjournals.org/mcr/article/22/10/909/748530/The-Complex-Regulation-of-Cytokinesis-upon</li>
+<li>https://pubmed.ncbi.nlm.nih.gov/29930083/</li>
+<li>https://pubmed.ncbi.nlm.nih.gov/15946753/</li>
+<li>https://pubmed.ncbi.nlm.nih.gov/25548932/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC6051344/</li>
+<li>https://www.genecards.org/cgi-bin/carddisp.pl?gene=GPSM2</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC7854016/</li>
+</ol>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Perplexity Lite</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(TTC28-deep-research-perplexity-lite.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q96AY4" data-a="DOC: Deep Research Perplexity Lite" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: perplexity<br />
+model: sonar-pro<br />
+cached: false<br />
+start_time: '2025-11-03T22:02:20.760716'<br />
+end_time: '2025-11-03T22:02:53.581271'<br />
+duration_seconds: 32.82<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    reasoning_effort: low<br />
+    search_domain_filter: []<br />
+    return_citations: true<br />
+    temperature: 0.0<br />
+citation_count: 16</p>
+<hr />
+<h2 id="question">Question</h2>
+<p>Research the TTC28 (Q96AY4) gene in human, focusing on its molecular function, biological processes, and cellular localization. Include information about protein domains, known interactions, and any disease associations.</p>
+<h2 id="output">Output</h2>
+<p>The <strong>TTC28 (Q96AY4)</strong> gene in humans encodes the <strong>tetratricopeptide repeat domain 28</strong> protein, which plays a critical role in mitosis, chromosomal stability, and is implicated in cancer biology. Below is a comprehensive overview based on current research and authoritative databases.</p>
+<hr />
+<h3 id="1-key-concepts-and-definitions">1. Key Concepts and Definitions</h3>
+<ul>
+<li><strong>Gene Name:</strong> TTC28 (Tetratricopeptide Repeat Domain 28)</li>
+<li><strong>Protein ID:</strong> Q96AY4</li>
+<li><strong>Location:</strong> Chromosome 22q12.1[7][9]</li>
+<li><strong>Protein Length:</strong> 2481 amino acids[5]</li>
+</ul>
+<hr />
+<h3 id="2-molecular-function">2. Molecular Function</h3>
+<ul>
+<li><strong>Kinase Binding:</strong> TTC28 enables kinase binding activity, notably interacting with Aurora kinase B (AURKB), a key regulator of mitosis[1][2].</li>
+<li><strong>Chaperone-Mediated Autophagy (CMA) Substrate:</strong> TTC28 is a substrate for HSPA8-mediated CMA/microautophagy, which regulates its degradation and links it to protein quality control and cellular homeostasis[2][4].</li>
+<li><strong>Mitotic Regulation:</strong> TTC28 is essential for the condensation of spindle midzone microtubules and the formation of the midbody during mitosis, directly impacting cytokinesis[1][11][16].</li>
+</ul>
+<hr />
+<h3 id="3-biological-processes">3. Biological Processes</h3>
+<ul>
+<li><strong>Regulation of Mitotic Cell Cycle:</strong> TTC28 is involved in the regulation of the mitotic cell cycle, particularly in spindle midzone formation and cytokinesis[1][11][16].</li>
+<li><strong>Chromosomal Stability:</strong> TTC28 is crucial for maintaining chromosomal stability. Its downregulation leads to increased genome instability, a hallmark of many cancers[2][4].</li>
+<li><strong>CMA and Genome Maintenance:</strong> By interacting with HSPA8, TTC28 is involved in CMA, which is necessary for proper mitosis and genome integrity[2].</li>
+</ul>
+<hr />
+<h3 id="4-cellular-localization">4. Cellular Localization</h3>
+<ul>
+<li><strong>Cytoplasmic (Perinuclear):</strong> TTC28 is predominantly localized in the cytoplasm, especially in the perinuclear region, as confirmed by confocal microscopy[2].</li>
+<li><strong>Midbody During Mitosis:</strong> TTC28 localizes to the midbody during cell division, consistent with its role in cytokinesis[1][16].</li>
+<li><strong>Nucleolar Presence:</strong> A minor fraction of endogenous TTC28 is detected in nucleoli[2].</li>
+</ul>
+<hr />
+<h3 id="5-protein-domains">5. Protein Domains</h3>
+<ul>
+<li><strong>Tetratricopeptide Repeat (TPR) Motifs:</strong> TTC28 contains 25 TPR motifs, which are known for mediating protein-protein interactions and are essential for its function in mitosis and interaction with HSPA8[11][2].</li>
+<li><strong>TPR Domain Function:</strong> The TPR domains facilitate binding to the PTIEEVD motif of HSPA8, mediating its role in CMA and protein complex assembly[2].</li>
+</ul>
+<hr />
+<h3 id="6-known-interactions">6. Known Interactions</h3>
+<ul>
+<li><strong>HSPA8 (Heat Shock Cognate 71 kDa Protein):</strong> TTC28 directly interacts with HSPA8, which is central to CMA and protein degradation pathways[2][4].</li>
+<li><strong>Aurora Kinase B (AURKB):</strong> TTC28 binds AURKB, influencing mitosis and cytokinesis[2].</li>
+<li><strong>Vimentin and DDX41:</strong> Co-immunoprecipitation studies confirm interactions with vimentin (a cytoskeletal protein) and DDX41 (a DEAD-box helicase), suggesting roles in cytoskeletal organization and RNA processing[2].</li>
+<li><strong>Extensive Interactome:</strong> Mass spectrometry identified 222 candidate interacting proteins, indicating TTC28’s involvement in multiple cellular pathways[2].</li>
+</ul>
+<hr />
+<h3 id="7-disease-associations">7. Disease Associations</h3>
+<ul>
+<li><strong>Cancer:</strong> TTC28 is frequently mutated and downregulated in various human cancers. Its reduced expression correlates with poor overall survival in lung cancer and is associated with increased genomic instability[2][4].</li>
+<li><strong>Cholestasis, Benign Recurrent Intrahepatic, Type 2:</strong> TTC28 is listed as associated with this rare liver disorder, though the mechanistic link is not well characterized[1].</li>
+<li><strong>Genome Instability:</strong> Downregulation of TTC28 contributes to chromosomal instability, a driver of tumorigenesis[2][4].</li>
+</ul>
+<hr />
+<h3 id="8-recent-developments-and-latest-research-20232024">8. Recent Developments and Latest Research (2023–2024)</h3>
+<ul>
+<li><strong>2024 Study (Zhang et al.):</strong> Demonstrated that TTC28 is essential for CMA-mediated maintenance of chromosomal stability, directly interacts with HSPA8 and AURKB, and that its loss leads to increased genome instability in cancer cells[2][4].</li>
+<li><strong>Expression Analysis:</strong> TTC28 mRNA and protein levels are significantly decreased in many cancers, with a strong correlation between mRNA and protein abundance across cancer cell lines and tissues[2].</li>
+</ul>
+<hr />
+<h3 id="9-expert-opinions-and-analysis">9. Expert Opinions and Analysis</h3>
+<ul>
+<li><strong>Essential for Mitosis and Cytokinesis:</strong> Multiple studies and database entries converge on TTC28’s critical role in cell division, particularly in spindle midzone formation and midbody assembly[1][11][16].</li>
+<li><strong>Cancer Biology:</strong> Experts highlight TTC28 as a potential tumor suppressor due to its role in maintaining genome stability and its frequent downregulation in cancer[2][4].</li>
+</ul>
+<hr />
+<h3 id="10-relevant-statistics-and-data">10. Relevant Statistics and Data</h3>
+<ul>
+<li><strong>Interactome:</strong> 222 candidate proteins identified as potential interactors via mass spectrometry[2].</li>
+<li><strong>Correlation Coefficient:</strong> Spearman R = 0.78 (protein vs. mRNA in cell lines), R = 0.43 (in pancancer tissues), indicating a strong relationship between TTC28 expression at the transcript and protein levels[2].</li>
+</ul>
+<hr />
+<h3 id="urls-and-publication-dates">URLs and Publication Dates</h3>
+<ul>
+<li><a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=TTC28">GeneCards TTC28</a> (2025)</li>
+<li><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11648667/">PMC Article: Zhang et al., 2024</a> (2024)</li>
+<li><a href="https://www.uniprot.org/uniprotkb/Q96AY4/entry">UniProt Q96AY4</a> (2024)</li>
+<li><a href="https://globe.jpostdb.org/protein.php?id=Q96AY4">jPOST Database Q96AY4</a> (2024)</li>
+<li><a href="https://en.wikipedia.org/wiki/TTC28">Wikipedia TTC28</a> (2024)</li>
+</ul>
+<hr />
+<p><strong>Summary:</strong><br />
+TTC28 is a large, TPR-containing protein essential for mitosis, chromosomal stability, and CMA, with a cytoplasmic and midbody localization. It interacts with key mitotic and chaperone proteins, is downregulated in many cancers, and is associated with increased genomic instability when lost or mutated[1][2][4][11][16].</p>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>https://www.genecards.org/cgi-bin/carddisp.pl?gene=TTC28</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC11648667/</li>
+<li>https://marrvel.org/human/gene/23331</li>
+<li>https://pubmed.ncbi.nlm.nih.gov/39630868/</li>
+<li>https://globe.jpostdb.org/protein.php?id=Q96AY4</li>
+<li>https://epub.uni-regensburg.de/52688/1/Thesis%20BDLCT_final.pdf</li>
+<li>https://en.wikipedia.org/wiki/TTC28</li>
+<li>https://openresearch.newcastle.edu.au/ndownloader/files/54401696</li>
+<li>https://varsome.com/gene/hg19/TTC28</li>
+<li>https://escholarship.org/content/qt7z22d5xd/qt7z22d5xd.pdf</li>
+<li>https://glygen.org/protein/Q96AY4</li>
+<li>https://www.ebi.ac.uk/QuickGO/GProtein?ac=Q96AY4</li>
+<li>https://glycosmos.org/glycoproteins/Q96AY4</li>
+<li>https://www.promega.de/findmygene/GeneDetail.aspx?ncbiid=23331</li>
+<li>https://www.ncbi.nlm.nih.gov/gene?Db=gene&amp;Cmd=DetailsSearch&amp;Term=23331</li>
+<li>https://www.uniprot.org/uniprotkb/Q96AY4/entry</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q96AY4
+gene_symbol: TTC28
+product_type: PROTEIN
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: Tetratricopeptide repeat protein 28, a large protein (2481 AA) containing
+  multiple TPR repeats that localizes to centrosomes, spindle poles, and the midbody
+  during cell division. TPR domains mediate protein-protein interactions and TTC28
+  functions as a scaffold protein in the mitotic machinery. The protein localizes
+  to centrosomes throughout the cell cycle and concentrates at spindle poles and the
+  midbody during mitosis/cytokinesis, suggesting roles in spindle organization, chromosome
+  segregation, and cytokinesis. TTC28 exhibits kinase binding activity and is involved
+  in regulation of the mitotic cell cycle. The specific molecular mechanisms and binding
+  partners remain to be fully characterized, but the protein is implicated in proper
+  spindle assembly and cell division progression.
+existing_annotations:
+- term:
+    id: GO:0000922
+    label: spindle pole
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: Phylogenetic inference for spindle pole localization. TTC28 concentrates
+      at spindle poles during mitosis.
+    action: ACCEPT
+    reason: Core localization confirmed by IDA (PMID:23036704).
+- term:
+    id: GO:0005813
+    label: centrosome
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: Subcellular location annotation for centrosome. TTC28 localizes to centrosomes
+      throughout cell cycle.
+    action: ACCEPT
+    reason: Well-established centrosomal localization.
+- term:
+    id: GO:0005819
+    label: spindle
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: Subcellular location annotation for spindle. TTC28 localizes to mitotic
+      spindle structures.
+    action: ACCEPT
+    reason: Consistent with spindle pole localization.
+- term:
+    id: GO:0005856
+    label: cytoskeleton
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: Broad cytoskeleton term. TTC28 associates with microtubule cytoskeleton
+      structures.
+    action: KEEP_AS_NON_CORE
+    reason: Too general. More specific spindle/centrosome terms preferred.
+- term:
+    id: GO:0030496
+    label: midbody
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: Duplicate midbody annotation with IEA evidence.
+    action: ACCEPT
+    reason: Consistent midbody localization.
+- term:
+    id: GO:0051301
+    label: cell division
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: Cell division process. TTC28 functions in mitosis/cytokinesis.
+    action: ACCEPT
+    reason: Core biological process.
+- term:
+    id: GO:0030496
+    label: midbody
+  evidence_type: IDA
+  original_reference_id: PMID:23036704
+  review:
+    summary: Direct assay evidence for midbody localization from key paper. TTC28
+      concentrates at midbody during cytokinesis.
+    action: ACCEPT
+    reason: Experimental evidence from PMID:23036704, core localization.
+- term:
+    id: GO:0007346
+    label: regulation of mitotic cell cycle
+  evidence_type: IMP
+  original_reference_id: PMID:23036704
+  review:
+    summary: Mutant phenotype evidence for regulation of mitotic cell cycle. TTC28
+      depletion disrupts cell division progression.
+    action: ACCEPT
+    reason: Experimental evidence from PMID:23036704, core biological process.
+- term:
+    id: GO:0019900
+    label: kinase binding
+  evidence_type: IPI
+  original_reference_id: PMID:23036704
+  review:
+    summary: Kinase binding from protein interaction study. TTC28 scaffolds kinase
+      interactions.
+    action: ACCEPT
+    reason: TPR proteins commonly scaffold kinases in cell cycle regulation.
+references:
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt.
+  findings: []
+- id: PMID:23036704
+  title: A novel big protein TPRBK possessing 25 units of TPR motif is essential for
+    the progress of mitosis and cytokinesis.
+  findings: []
+aliases:
+- KIAA1043
+- TPRBK
+- TPR repeat protein 28
+core_functions:
+- description: Scaffolding protein-protein interactions via TPR repeats to organize
+    mitotic machinery at centrosomes, spindle poles, and midbody
+  molecular_function:
+    id: GO:0019900
+    label: kinase binding
+  directly_involved_in:
+  - id: GO:0051301
+    label: cell division
+  - id: GO:0007346
+    label: regulation of mitotic cell cycle
+  locations:
+  - id: GO:0005813
+    label: centrosome
+  - id: GO:0000922
+    label: spindle pole
+  - id: GO:0030496
+    label: midbody
+  supported_by:
+  - reference_id: UniProt:Q96AY4
+    supporting_text: TPR repeat protein localizing to centrosome, spindle pole, and
+      midbody during cell division
+suggested_questions:
+- question: Which specific kinases bind TTC28 and how does this regulate mitosis?
+  experts:
+  - Cell cycle researchers
+suggested_experiments:
+- description: Co-IP and mass spec to identify TTC28-binding kinases
+  experiment_type: proteomics
+  hypothesis: TTC28 scaffolds mitotic kinases
+status: DRAFT
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

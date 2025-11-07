@@ -1,0 +1,1353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>xoxG - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>xoxG</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/C5B121" target="_blank" class="term-link">
+                        C5B121
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Methylorubrum extorquens AM1</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "xoxG";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="C5B121" data-a="DESCRIPTION: xoxG encodes a specialized c-type cytochrome (cyto..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>xoxG encodes a specialized c-type cytochrome (cytochrome c_L) that serves as the dedicated electron acceptor for XoxF-type lanthanide-dependent methanol dehydrogenases. The protein contains heme c covalently attached via the CXXCH motif and exhibits an unusually low reduction potential (+172 mV at pH 7.0), substantially lower than the analogous MxaG cytochrome (+256 mV) that serves the calcium-dependent MxaFI system. Located in the periplasm, XoxG accepts electrons from reduced XoxF following methanol oxidation and transfers them to cytochrome c_H in the respiratory electron transport chain. The gene is organized within the xox1 operon (xoxF1-xoxG-xoxJ) and is subject to lanthanide-responsive regulation as part of the lanthanide switch mechanism. XoxG is absolutely essential for XoxF activity with no functional redundancy from other cytochromes.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009055" target="_blank" class="term-link">
+                                    GO:0009055
+                                </a>
+                            </span>
+                            <span class="term-label">electron transfer activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="C5B121" data-a="GO:0009055" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct - XoxG accepts electrons from the reduced PQQ cofactor of XoxF methanol dehydrogenase and transfers them to cytochrome c_H in the periplasmic electron transport chain [file:METEA/xoxG/xoxG-claude-deep-research.md, &#34;XoxG accepts electrons from the reduced PQQ cofactor of XoxF following methanol oxidation, then transfers these electrons to cytochrome c_H&#34;].
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0020037" target="_blank" class="term-link">
+                                    GO:0020037
+                                </a>
+                            </span>
+                            <span class="term-label">heme binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="C5B121" data-a="GO:0020037" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct - XoxG contains heme c covalently attached through thioether bonds via the signature CXXCH motif at residues C95 and C98 [file:METEA/xoxG/xoxG-claude-deep-research.md, &#34;The protein contains heme c covalently attached through thioether bonds via the signature CXXCH motif (residues C95 and C98)&#34;].
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046872" target="_blank" class="term-link">
+                                    GO:0046872
+                                </a>
+                            </span>
+                            <span class="term-label">metal ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="C5B121" data-a="GO:0046872" data-r="GO_REF:0000043" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but general - XoxG binds iron in the heme prosthetic group, with the heme iron axially coordinated by His99 and Met143 [file:METEA/xoxG/xoxG-claude-deep-research.md, &#34;The FeIII is axially ligated by His99 and Met143&#34;]. More specific term GO:0020037 (heme binding) is also present and captures this function more precisely.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>XoxG functions as the dedicated electron acceptor in the lanthanide-dependent methanol oxidation pathway. The c-type cytochrome accepts electrons from reduced XoxF following methanol oxidation to formaldehyde and transfers them to cytochrome c_H. XoxG exhibits an unusually low reduction potential (+172 mV) that is specifically tuned for efficient electron transfer from lanthanide-dependent methanol dehydrogenases. The heme iron is axially coordinated by His99 and Met143.</h3>
+                <span class="vote-buttons" data-g="C5B121" data-a="FUNCTION: XoxG functions as the dedicated electron acceptor ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009055" target="_blank" class="term-link">
+                            electron transfer activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015945" target="_blank" class="term-link">
+                                methanol metabolic process
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015946" target="_blank" class="term-link">
+                                methanol oxidation
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042597" target="_blank" class="term-link">
+                                periplasmic space
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:METEA/xoxG/xoxG-claude-deep-research.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">XoxG functions as a cytochrome c that accepts electrons from the lanthanide-dependent methanol dehydrogenase XoxF1...XoxG accepts electrons from the reduced PQQ cofactor of XoxF following methanol oxidation, then transfers these electrons to cytochrome c_H...The Em of XoxG was measured to be 172 ± 1 mV</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:METEA/xoxG/xoxG-claude-deep-research.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep research on xoxG cytochrome cL electron acceptor</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Claude Deep Research</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(xoxG-claude-deep-research.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="C5B121" data-a="DOC: Claude Deep Research" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="deep-research-on-xoxg-cytochrome-c_l-electron-acceptor-for-lanthanide-dependent-methanol-dehydrogenase-in-methylorubrum-extorquens-am1">Deep Research on xoxG: Cytochrome c_L Electron Acceptor for Lanthanide-Dependent Methanol Dehydrogenase in Methylorubrum extorquens AM1</h1>
+<h2 id="introduction-and-discovery-context">Introduction and Discovery Context</h2>
+<p>The discovery of lanthanide-dependent methanol dehydrogenases transformed our understanding of methylotrophic metabolism, revealing that bacteria can utilize rare earth elements as cofactors for methanol oxidation. Central to this lanthanide-dependent system is the xoxG gene (locus tag MexAM1_META1p1741), which encodes a specialized cytochrome c_L that serves as the dedicated electron acceptor for XoxF-type methanol dehydrogenases [Web search, "XoxG functions as a cytochrome <em>c</em> that accepts electrons from the lanthanide-dependent methanol dehydrogenase XoxF1"]. XoxG represents the functional analog of MxaG (the cytochrome c_L that serves calcium-dependent MxaFI methanol dehydrogenases), yet exhibits distinctive structural and biochemical properties that optimize it specifically for lanthanide-dependent methanol oxidation.</p>
+<p>The xoxG gene is organized within the xox1 operon alongside xoxF1 (encoding the lanthanide-dependent methanol dehydrogenase large subunit) and xoxJ (encoding a periplasmic binding protein) [Web search, "XoxG (MexAM1_META1p1741) is structurally organized within the <em>xox1</em> operon alongside <em>xoxF1</em> and <em>xoxJ</em>"]. This genetic linkage reflects the functional interdependence of these three components in lanthanide-dependent methanol metabolism. Unlike the calcium-dependent mxa operon, which contains numerous additional genes for enzyme maturation and accessory functions, the streamlined xox1 operon contains only the minimal genetic elements required for lanthanide-dependent methanol oxidation—the enzyme itself (xoxF1), its electron acceptor (xoxG), and an associated periplasmic protein (xoxJ).</p>
+<p>The physiological importance of xoxG is underscored by genetic studies demonstrating that loss of either xoxG or xoxJ was equivalent to loss of both xoxF1 for methanol oxidation capacity when lanthanides are present [Web search, "loss of either <em>xoxG</em> or <em>xoxJ</em> was equivalent to loss of both <em>xoxF1</em>"]. This functional equivalence indicates that XoxG and XoxJ are absolutely essential for XoxF activity, with no functional redundancy from other cellular proteins. The specificity of XoxG for the lanthanide-dependent system, despite the presence of the structurally related MxaG in the same organism, highlights the distinct biochemical requirements of lanthanide- versus calcium-dependent methanol oxidation.</p>
+<h2 id="gene-organization-and-the-lanthanide-switch">Gene Organization and the Lanthanide Switch</h2>
+<p>The xoxG gene is positioned as the middle component of the xox1 operon, flanked upstream by xoxF1 and downstream by xoxJ. This gene order—xoxF1-xoxG-xoxJ—parallels the order of genes in the calcium-dependent mxa operon (mxaF-mxaJ-mxaG), though with important differences in operon structure and regulatory mechanisms. The conserved synteny between these two operons suggests that they arose through duplication and subsequent divergence, with each system becoming specialized for different metal cofactors.</p>
+<p>Expression of the xox1 operon, including xoxG, is subject to sophisticated transcriptional regulation as part of the "lanthanide switch" mechanism. When lanthanides become available in the environment, expression from the xox1 promoter increases substantially—from 44 ± 3 RFU/OD₆₀₀ without lanthanides to 206 ± 11 with lanthanum addition in wild-type cells, representing an approximately 4.7-fold induction [Web search, "from 44 ± 3 RFU/OD600 without lanthanides to 206 ± 11 with lanthanum addition in wild-type cells"]. Conversely, when lanthanides are available, the mxa operon (encoding the calcium-dependent system) is downregulated and transcript levels of the xox1 operon genes (xoxF1GJ) are upregulated [Web search, "When lanthanides (Ln) are available, the mxa operon is downregulated and transcript levels of the xox1 operon genes (xoxF1GJ) are upregulated"]. This reciprocal regulation ensures that cells express the methanol oxidation system most appropriate for available metal cofactors.</p>
+<p>The molecular mechanisms underlying the lanthanide switch involve the MxbDM two-component regulatory system, along with the xoxF1 and xoxF2 genes themselves, which have been shown to be required for operation of the lanthanide-switch [Web search, "the MxbDM two-component system along with the xoxF1 and xoxF2 genes themselves have been shown to be required for operation of the Ln-switch"]. The involvement of XoxF proteins themselves in regulating expression of the mxa operon creates a complex regulatory circuit in which the lanthanide-dependent enzymes not only carry out methanol oxidation but also participate in metal-responsive transcriptional control. Lanthanides serve as a signal for a transcriptional response called "the Ln-switch" or "rare earth-switch," though the mechanism of lanthanide signal sensing is not completely understood.</p>
+<p>Importantly, unlike xoxF1, the xoxG and xoxJ genes are not required for expression of the mxa genes, indicating they function solely in the lanthanide-dependent pathway without regulatory influence over the calcium-dependent system [Web search, "Unlike xoxF, xoxG and xoxJ are not required for expression of the mxa genes"]. However, they are likely required for XoxF activity, as loss of either xoxG or xoxJ resulted in growth phenotypes that mirrored the xoxF1 xoxF2 double mutant strain. The coordinate regulation of xoxG with xoxF1 and xoxJ ensures that all components of the lanthanide-dependent methanol oxidation system are expressed together as a functional unit.</p>
+<h2 id="protein-structure-and-biosynthesis">Protein Structure and Biosynthesis</h2>
+<p>XoxG is synthesized as a precursor protein containing an N-terminal periplasmic signal peptide. The signal peptide consists of the first 26 amino acids with the sequence MLGAVPAATVAFAQDAKPELANKLDP [Web search, "The signal peptide consists of the first 26 amino acids...MLGAVPAATVAFAQDAKPELANKLDP"]. Following translocation across the cytoplasmic membrane via the general secretory (Sec) pathway and subsequent cleavage of the signal peptide, the mature XoxG protein begins at Gln27 [PMID:31017712, "The N-terminal residue of XoxG was Gln27, following cleavage of the periplasmic signal peptide"]. This signal peptide-mediated targeting to the periplasm is essential for XoxG function, as it must reside in the same cellular compartment as the XoxF methanol dehydrogenase to facilitate electron transfer.</p>
+<p>Following translocation to the periplasm, XoxG undergoes post-translational modification to covalently attach the heme c prosthetic group. The protein contains heme c covalently attached through thioether bonds via the signature CXXCH motif, specifically at residues C95 and C98 in the mature protein sequence [PMID:31017712, "The protein contains heme <em>c</em> covalently attached through thioether bonds via the signature CXXCH motif (residues C95 and C98)"]. This CXXCH motif (cysteine-X-X-cysteine-histidine, where X represents any amino acid) is the defining feature of c-type cytochromes, distinguishing them from other heme proteins in which the prosthetic group is bound non-covalently. The covalent attachment of heme via thioether linkages to the two cysteine residues provides exceptional stability and ensures that the heme remains properly positioned within the protein fold.</p>
+<p>The heme iron in XoxG is coordinated axially by His99 and Met143, defining the coordination geometry of the heme and influencing its redox properties [PMID:31017712, "The FeIII is axially ligated by His99 and Met143"]. This bis-histidine/methionine coordination is characteristic of class I cytochromes c and provides the electronic environment necessary for reversible electron transfer. The histidine residue is part of the CXXCH heme-binding motif, while the methionine ligand is provided by a residue later in the sequence, requiring proper protein folding to bring these distant regions together to complete the heme coordination sphere.</p>
+<p>Structural characterization revealed that XoxG adopts the characteristic class I cytochrome c fold, with three core α-helices (I, III, and V) forming a hydrophobic pocket that shields the heme from solvent [PMID:31017712, "The protein adopts the characteristic class I cytochrome <em>c</em> fold with three core α-helices (I, III, V) forming a hydrophobic pocket"]. This folding pattern is evolutionarily conserved across diverse cytochromes c and provides a stable scaffold for the redox-active heme. However, XoxG exhibits notable structural variations from the canonical class I fold. Most significantly, XoxG lacks helix IV and instead contains a 19-residue loop in this region [PMID:31017712, "XoxG lacks helix IV" and "a 19-residue loop"], contrasting with the shorter 13-residue loop found in the analogous MxaG protein. This extended loop has important functional consequences, as it results in greater solvent exposure of the heme propionate groups compared to MxaG.</p>
+<p>The heme edge remains open to solvent in the XoxG structure, facilitating electron transfer to and from the heme iron [PMID:31017712, "with the heme edge remaining open to solvent"]. This solvent accessibility is functionally important, as it allows the heme to interact with the PQQ cofactor of XoxF methanol dehydrogenase during electron transfer. The balance between protecting the heme within a hydrophobic environment (to stabilize it and tune its redox potential) while maintaining sufficient solvent exposure (to enable electron transfer) represents a key design principle in electron transfer proteins, and XoxG achieves this balance through its distinctive structural features.</p>
+<p>Heterologous expression studies demonstrated that XoxG can be produced in Escherichia coli when co-expressed with cytochrome c maturation factors [PMID:31017712, "XoxG was heterologously expressed in <em>E. coli</em> with cytochrome <em>c</em> maturation factors"]. This finding has practical implications for biochemical characterization and potential biotechnological applications, as it enables production of XoxG in a genetically tractable host organism. Purification yielded approximately 6 mg of protein per liter of culture, and the purified protein displayed features consistent with a c-type cytochrome, with bound heme exhibiting the characteristic spectroscopic properties [PMID:31017712, "The purification yielded approximately 6 mg per liter of culture" and "XoxG purified with bound heme and displayed features consistent with a <em>c</em>-type cytochrome"].</p>
+<h2 id="redox-properties-and-electron-transfer-mechanism">Redox Properties and Electron Transfer Mechanism</h2>
+<p>The most distinctive biochemical property of XoxG is its unusually low reduction potential of +172 ± 1 mV (measured at pH 7.0) [PMID:31017712, "The Em of XoxG was measured to be 172 ± 1 mV" and Web search, "The measured reduction potential was '172 ± 1 mV' at pH 7.0"]. This value is substantially lower than that of the corresponding cytochrome c_L of the calcium-dependent system, MxaG, which exhibits a reduction potential of +256 mV [Web search, "This reduction potential is significantly lower than that for the corresponding cytochrome cL, MxaG, of the M. extorquens Ca-MDH, +256 mV"]. The 84 mV difference in reduction potential between XoxG and MxaG is functionally significant, as it reflects different thermodynamic requirements for efficient electron transfer from lanthanide-dependent versus calcium-dependent methanol dehydrogenases.</p>
+<p>The unusually low reduction potential of XoxG results from structural features that increase solvent exposure of the heme propionate groups [Web search, "This unusual property results from greater solvent exposure of the heme propionates due to the absent helix IV"]. In MxaG, helix IV shields the heme propionates from solvent and a bound calcium ion provides additional electrostatic stabilization, both of which contribute to the higher reduction potential. XoxG lacks both of these features—it has no helix IV (replaced by an extended loop) and contains no calcium-binding site. The absence of these structural elements results in greater hydration of the heme propionates, which stabilizes the reduced (Fe²⁺) form of the heme relative to the oxidized (Fe³⁺) form, thereby lowering the reduction potential.</p>
+<p>The functional significance of XoxG's low reduction potential relates to its role in accepting electrons from lanthanide-dependent methanol dehydrogenases. Assays of XoxF enzymes metallated with different lanthanides (La³⁺, Ce³⁺, and Nd³⁺) using their physiological electron acceptor XoxG displayed lanthanide-independent catalytic velocities [PMID:31017712, "When assayed with XoxF metallated by different lanthanides (La³⁺, Ce³⁺, Nd³⁺), XoxG displays lanthanide-independent catalytic velocities"]. This observation indicates that XoxG can efficiently accept electrons from XoxF regardless of which specific lanthanide cofactor is present in the enzyme active site. The lanthanide-independence of catalytic velocity suggests that the reduction potential of XoxG is appropriately tuned to provide a thermodynamic driving force for electron transfer from XoxF across the range of lanthanides used by these organisms.</p>
+<p>However, the Michaelis constant (K_m) for XoxG markedly increases from lanthanum to neodymium [PMID:31017712, "the Km for XoxG markedly increases from La to Nd"], indicating that the binding affinity or interaction kinetics between XoxF and XoxG varies depending on the lanthanide cofactor. This finding suggests that XoxG's redox properties are tuned specifically for lighter lanthanides in XoxF, an interpretation supported by the unusually low reduction potential of XoxG [PMID:31017712, "suggesting that XoxG's redox properties are 'tuned specifically for lighter Lns in XoxF'" and Web search, "suggesting the redox properties are tuned for lighter lanthanides"]. The increasing K_m with heavier lanthanides may reflect changes in the electronic properties of the XoxF active site that affect the efficiency of electron transfer, or altered protein-protein interaction kinetics resulting from lanthanide-dependent conformational changes.</p>
+<p>The mechanism of electron transfer from XoxF to XoxG likely involves formation of a transient complex between the two proteins, similar to the well-characterized interaction between calcium-dependent methanol dehydrogenase (MxaFI) and its electron acceptor (MxaG). Both heme propionate groups in XoxG remain highly solvent exposed because helix II is more extended, increasing accessibility compared to related proteins like MxaG [PMID:31017712, "both heme propionate groups remain 'highly solvent exposed because helix II is more extended'"). This enhanced solvent exposure may facilitate formation of the electron transfer complex by providing greater conformational flexibility or by exposing charged residues that participate in protein-protein recognition. The solvent-exposed heme edge enables close approach of the XoxF active site to the XoxG heme, minimizing the electron transfer distance and maximizing transfer efficiency.</p>
+<h2 id="comparative-analysis-xoxg-versus-mxag">Comparative Analysis: XoxG versus MxaG</h2>
+<p>XoxG and MxaG represent evolutionary paralogs that have diverged to serve functionally analogous but biochemically distinct roles in lanthanide-dependent and calcium-dependent methanol oxidation, respectively. Both proteins are c-type cytochromes that function as dedicated electron acceptors for their cognate methanol dehydrogenases, both reside in the periplasm, and both adopt the fundamental class I cytochrome c fold. However, they exhibit key structural and biochemical differences that reflect their specialization for different metal cofactor systems.</p>
+<p>The most prominent structural difference is the presence of a calcium-binding site in MxaG that is absent in XoxG [Web search, "Key structural differences include MxaG's calcium-binding site near helix II (absent in XoxG)"]. In MxaG, a tightly bound calcium ion positioned close to the inner heme propionate stabilizes the redox potential and is likely involved in the flow of electrons from reduced pyrroloquinoline quinone in methanol dehydrogenase to the heme of cytochrome c_L [Web search, "close to the inner haem propionate, there is tightly bound calcium ion that is likely to be involved in stabilization of the redox potential"]. This calcium coordination provides electrostatic stabilization of the oxidized heme form, raising the reduction potential. XoxG lacks this calcium-binding site entirely, contributing to its lower reduction potential.</p>
+<p>A second major structural difference involves helix IV. MxaG contains a helix IV that shields the heme propionates from solvent [Web search, "MxaG's helix IV that shields the heme"], whereas XoxG lacks helix IV entirely, replacing it with a 19-residue loop [PMID:31017712, "XoxG lacks helix IV" and "a 19-residue loop"]. This extended loop in XoxG, compared to the 13-residue loop in the corresponding region of MxaG, results in substantially greater solvent exposure of the heme propionates. The increased solvation lowers the reduction potential by stabilizing the reduced form of the heme. These structural differences—absence of calcium binding and lack of helix IV—act synergistically to lower XoxG's reduction potential by 84 mV compared to MxaG, optimizing it for electron transfer from lanthanide-dependent XoxF.</p>
+<p>An additional distinctive feature of MxaG (but not XoxG) is the presence of a disulfide bridge that tethers the long C-terminal extension to the body of the structure [Web search, "Cytochrome cL is unusual in having a disulphide bridge that tethers the long C-terminal extension to the body of the structure"]. This disulfide bond represents another unusual structural element not commonly found in other cytochromes c. Whether XoxG contains a similar disulfide bridge has not been explicitly reported, though the absence of this feature in descriptions of XoxG structure suggests it may be specific to MxaG. If MxaG's disulfide bridge contributes to structural stability or influences protein-protein interactions with MxaFI, its absence from XoxG might reflect different structural requirements for interaction with the homodimeric XoxF compared to the heterotetrameric MxaFI.</p>
+<p>Despite these significant differences, both XoxG and MxaG share a core structure typical of class I cytochromes c, having α-helices folded into a compact structure enclosing the single heme c prosthetic group and leaving one edge of the heme exposed [Web search, "its X-ray structure reveals a core that is typical of class I cytochromes c"]. This conserved architectural framework provides the fundamental scaffold for heme binding and electron transfer, with the specific differences between XoxG and MxaG representing fine-tuning modifications that optimize each protein for its specific functional context.</p>
+<p>The nucleotide and amino acid sequences of cytochrome c_L genes show that these proteins are completely different from all other cytochromes, except for the haem-binding site [PMID:2851998, "The nucleotide sequence showed this cytochrome c is completely different, except for its haem-binding site, from all other cytochromes"]. This finding from the original characterization of the mxaG gene underscores that cytochrome c_L proteins (including both MxaG and XoxG) represent a unique and specialized class of electron transfer proteins that have evolved specifically to serve methanol dehydrogenases. The conservation of only the heme-binding motif while the remaining sequence diverges dramatically from other cytochromes reflects strong selective pressure for specialized function in methanol oxidation while relaxing constraints on other sequence regions.</p>
+<p>The deduced amino acid sequence of cytochrome c_L genes shows pronounced sequence identity across different methylotrophic bacteria, with studies reporting 55% identity between Methylophaga aminisulfidivorans and Methylorubrum extorquens, 53% identity with Paracoccus denitrificans, and 49% identity with Hyphomicrobium denitrificans [PMID:32627749, "The deduced amino acid sequence of the mxaG gene had pronounced sequence identity to those of the CytcL genes in the genome sequences of Methylobacterium Extorquens (55% identity), Paracoccus denitrificans (53% identity), and Hyphomicrobium denitrificans (49% identity)"]. This moderate level of sequence conservation across diverse methylotrophic lineages indicates that cytochrome c_L structure and function have been subject to evolutionary constraint, with certain features preserved while others have diverged to accommodate organism-specific requirements or metal cofactor specializations.</p>
+<h2 id="physiological-function-and-metabolic-context">Physiological Function and Metabolic Context</h2>
+<p>XoxG functions within the periplasmic electron transfer chain that oxidizes methanol to formaldehyde in the presence of lanthanide cofactors. The electron transfer pathway proceeds as follows: methanol → XoxF (MDH) → XoxG (cytochrome c_L) → cytochrome c_H → terminal oxidase → oxygen. In this pathway, XoxG accepts electrons from the reduced PQQ cofactor of XoxF following methanol oxidation, then transfers these electrons to cytochrome c_H, which delivers them to the terminal respiratory oxidase [Web search, "During the growth of methylotrophic bacteria, methanol is oxidised by the large soluble, periplasmic quinoprotein methanol dehydrogenase (MDH), initiating an electron transfer process in which the reduced MDH is oxidised by the unusual cytochrome cL, which is in turn re-oxidised by the typical cytochrome c2 (called cytochrome cH)"].</p>
+<p>The periplasmic localization of this electron transfer chain is unusual, as most respiratory electron transport occurs in the cytoplasmic membrane or associated membrane complexes. The periplasmic location of methanol oxidation likely reflects the physicochemical properties of methanol, which can readily cross biological membranes, and the need to rapidly oxidize this potentially toxic compound before it accumulates. By oxidizing methanol in the periplasm and feeding electrons into the conventional membrane-bound respiratory chain via soluble cytochromes, methylotrophs have evolved an efficient system for methanol utilization.</p>
+<p>Cytochrome c_L proteins, including XoxG, are abundant periplasmic proteins that take part in the methanol oxidation process in methylotrophs, facilitating electron transfer from the pyrroloquinoline quinone (PQQ) cofactor of methanol dehydrogenase [PMID:32627749, "Cytochrome cL (CytcL) is an abundant periplasmic protein, takes part in methanol oxidation process in methylotrophs, in which electron transfer (ET) take place from the pyrroloquinoline (PQQ) cofactor of the methanol dehydrogenase (MDH) to CytcL"]. The high abundance of these proteins ensures that electron transfer from methanol dehydrogenase does not become rate-limiting for overall methanol oxidation. Maintaining a large pool of oxidized XoxG in the periplasm provides a ready electron sink for reduced XoxF, enabling rapid turnover of the dehydrogenase and efficient coupling of methanol oxidation to energy conservation.</p>
+<p>Genetic and physiological studies have revealed that XoxG exhibits roles beyond its well-characterized function in XoxF-dependent methanol oxidation. Surprisingly, growth defects appear in xoxG mutants even without lanthanide supplementation [Web search, "Surprisingly, XoxG exhibits roles beyond XoxF support—growth defects appear even without lanthanide supplementation, suggesting involvement in broader cellular metabolism not yet fully characterized"]. This observation suggests involvement in broader cellular metabolism not yet fully characterized, raising intriguing questions about alternative functions or metabolic connections of XoxG beyond its primary role in lanthanide-dependent methanol oxidation. Possible explanations include participation in other periplasmic redox processes, involvement in metal homeostasis pathways, or regulatory roles in coordinating cellular metabolism with metal availability.</p>
+<p>The essentiality of XoxG for XoxF function is absolute—loss of xoxG results in growth phenotypes equivalent to loss of xoxF1 under lanthanide-replete conditions. This functional equivalence indicates that XoxG cannot be substituted by other cellular cytochromes, despite the presence of numerous other c-type cytochromes in Methylorubrum extorquens. The specificity of the XoxF-XoxG interaction likely reflects both thermodynamic requirements (the matched reduction potentials) and kinetic factors (specific protein-protein recognition determinants). The inability of MxaG to substitute for XoxG in supporting XoxF activity, despite their structural and functional similarities, underscores the specificity of these electron transfer partnerships.</p>
+<h2 id="crystal-structures-and-structural-biology">Crystal Structures and Structural Biology</h2>
+<p>Multiple crystal structures of cytochrome c_L proteins from diverse methylotrophic bacteria have been determined, providing detailed atomic-level information about these specialized electron transfer proteins. Notable structures include the cytochrome c_L from Methylophaga aminisulfidivorans MPT determined at 2.13 Å resolution (PDB: 7C90) [PMID:32627749, "The first crystal structure of heme c containing CytcL from the aquatic methylotrophic bacterium Methylophaga aminisulfidivorans MPT at 2.13 Å resolution was determined (PDB: 7C90)"], and the structure from Methylobacterium extorquens determined by X-ray crystallography to 1.6 Å resolution (PDB: 2D0W) [Web search, "The structure of cytochrome cL from Methylobacterium extorquens has been determined by X-ray crystallography to a resolution of 1.6 Å. This structure is available as PDB: 2D0W"].</p>
+<p>The high-resolution structure of cytochrome c_L from Methylophaga aminisulfidivorans revealed several interesting features. Apart from the iron in heme, three additional metal ion binding sites for Na⁺, Ca²⁺, and Fe²⁺ were identified [PMID:32627749, "Apart from Fe in heme, three additional metal ion binding sites for Na+, Ca+, and Fe2+ were found"]. These metal ions mostly formed coordination bonds with amino acid residues on a loop (residues G93-Y111) that interacts with the heme [PMID:32627749, "wherein the ions mostly formed coordination bonds with the amino acid residues on the loop (G93-Y111) that interacts with heme"]. The functional significance of these additional metal binding sites remains unclear—they might play structural roles in stabilizing the protein fold, modulate redox properties, or participate in protein-protein interactions during electron transfer.</p>
+<p>Cytochrome c_L proteins are unusually large for c-type cytochromes, with molecular weights around 19 kDa [Web search, "Also unusual is its large size (about 19 kDa)"]. This size is substantially greater than typical class I cytochromes c such as mitochondrial cytochrome c (~12 kDa), reflecting additional structural elements beyond the conserved cytochrome c fold. The additional structural features may provide binding surfaces for interaction with methanol dehydrogenase, enable regulatory functions, or facilitate proper localization within the periplasmic space.</p>
+<p>Another unusual characteristic of cytochrome c_L is its low isoelectric point of 3.5 [Web search, "its low isoelectric point of 3.5"]. Class I cytochromes c are typically basic proteins with high isoelectric points, reflecting their need to interact electrostatically with acidic partners in electron transfer chains. The acidic nature of cytochrome c_L (including both MxaG and XoxG) is unusual and may reflect the need to interact with basic patches on methanol dehydrogenase surfaces. The charge complementarity between acidic cytochrome c_L and basic patches on MDH would facilitate transient complex formation through electrostatic steering, positioning the proteins for efficient electron transfer.</p>
+<p>Cytochrome c_L proteins also display atypical reactions with carbon monoxide [Web search, "its atypical reaction with carbon monoxide"], further distinguishing them from conventional cytochromes c. The molecular basis and functional significance of this CO reactivity remain incompletely understood but might reflect unusual electronic properties of the heme environment or accessibility of the heme iron to small molecules. Such reactivity could potentially serve regulatory functions, allowing cellular CO levels (which might accumulate under certain metabolic conditions) to modulate methanol oxidation activity.</p>
+<h2 id="the-xoxj-gene-and-xoxj-protein-partner-in-lanthanide-dependent-methanol-oxidation">The xoxJ Gene and XoxJ Protein: Partner in Lanthanide-Dependent Methanol Oxidation</h2>
+<p>While the primary focus of this review is xoxG, it is important to briefly discuss xoxJ, as these two genes are genetically linked and functionally interdependent. The xoxJ gene encodes a periplasmic binding protein that, like xoxG, is essential for XoxF methanol dehydrogenase activity [Web search, "XoxJ is a poorly characterized periplasmic binding protein; however, it was recently postulated that XoxJ participates in XoxF activation"]. Loss of xoxJ produces growth phenotypes equivalent to loss of xoxF1 or xoxG, demonstrating its essential role in the lanthanide-dependent system [Web search, "loss of either xoxG or xoxJ resulted in growth that mirrored the xoxF1 xoxF2 double mutant strain"].</p>
+<p>The molecular function of XoxJ in lanthanide-dependent methanol oxidation remains incompletely characterized but is believed to participate in XoxF activation or stabilization. One attractive hypothesis is that XoxJ plays an analogous role to MxaJ in the calcium-dependent system—facilitating cofactor incorporation, enzyme assembly, or protection of the enzyme. However, the specific mechanisms by which XoxJ contributes to XoxF function require further investigation. The genetic linkage of xoxJ immediately downstream of xoxG in the xox1 operon suggests coordinate regulation and functional interdependence, forming a minimal functional unit for lanthanide-dependent methanol oxidation.</p>
+<h2 id="biotechnological-applications-and-engineering-implications">Biotechnological Applications and Engineering Implications</h2>
+<p>The characterization of XoxG and the lanthanide-dependent methanol oxidation system has important implications for metabolic engineering and synthetic biology applications. Methanol represents an attractive feedstock for industrial biotechnology due to its low cost, renewable production routes, and favorable physicochemical properties. Engineering efficient methanol utilization pathways into industrial microorganisms requires comprehensive understanding of all components of natural methylotrophic systems, including electron acceptors like XoxG.</p>
+<p>The successful heterologous expression of functional XoxG in Escherichia coli, when co-expressed with cytochrome c maturation factors <a href="https://pubmed.ncbi.nlm.nih.gov/31017712">PMID:31017712</a>, demonstrates that this electron transfer system can be reconstituted in non-native hosts. This finding opens possibilities for engineering lanthanide-dependent methanol oxidation into organisms that naturally lack this capability. By introducing the xoxFGJ operon along with appropriate regulatory elements and cofactor biosynthesis genes, synthetic methylotrophy could potentially be established in diverse microorganisms, enabling production of valuable chemicals from methanol feedstocks.</p>
+<p>The discovery that lanthanide-dependent methanol dehydrogenases exhibit superior catalytic properties compared to calcium-dependent enzymes—with higher turnover rates and greater substrate affinity—motivates engineering efforts focused on the XoxF/XoxG system rather than the traditional MxaFI/MxaG system. The lower K_m values and higher k_cat observed for XoxF enzymes translate to more efficient methanol conversion, particularly important for industrial applications where substrate conversion efficiency directly impacts process economics. Engineering organisms to constitutively express the xox1 system, or supplementing industrial fermentation media with lanthanides, could enhance productivity in methanol-based bioprocesses.</p>
+<p>The unusual redox properties of XoxG—particularly its low reduction potential optimized for lanthanide-dependent catalysis—represent an interesting target for protein engineering. Rational design or directed evolution approaches could potentially modify XoxG to enhance its electron transfer efficiency, broaden its lanthanide specificity, or optimize its stability under industrial conditions. The detailed structural information available for XoxG provides a foundation for such engineering efforts, enabling structure-guided modification of key residues involved in redox tuning or protein-protein interactions.</p>
+<p>The lanthanide switch mechanism, with its sophisticated transcriptional regulation coordinating expression of lanthanide-dependent and calcium-dependent systems, could be exploited for bioprocess control. By manipulating lanthanide availability or engineering regulatory circuits, it may be possible to create inducible expression systems where methanol metabolism can be turned on or off on demand, or where metabolic flux can be dynamically adjusted in response to process conditions. Such regulatory control would enable more sophisticated bioprocess designs with greater flexibility and optimization potential.</p>
+<h2 id="outstanding-questions-and-future-directions">Outstanding Questions and Future Directions</h2>
+<p>Despite significant advances in understanding XoxG and the lanthanide-dependent methanol oxidation system, numerous questions remain unanswered. First, the molecular details of the XoxF-XoxG interaction and electron transfer mechanism require further characterization. What are the specific protein-protein contact residues that ensure recognition and complex formation? How does the protein-protein interface influence electron transfer kinetics? Does the interaction involve conformational changes in either protein? Solving co-crystal structures of XoxF-XoxG complexes or using advanced biophysical techniques such as hydrogen-deuterium exchange mass spectrometry or cross-linking mass spectrometry could reveal these interaction details.</p>
+<p>Second, the mechanistic basis for the lanthanide-dependent change in K_m for XoxG deserves investigation. Why does the binding affinity or interaction kinetics between XoxF and XoxG vary depending on which lanthanide is present in the XoxF active site? Does the lanthanide influence the protein structure, the electronic properties of the active site, or the protein dynamics in ways that affect XoxG binding? Computational approaches such as molecular dynamics simulations comparing XoxF with different lanthanides could provide insights into lanthanide-dependent conformational changes that might affect XoxG interaction.</p>
+<p>Third, the unexpected observation that xoxG mutants show growth defects even without lanthanide supplementation suggests additional, undiscovered functions of XoxG beyond its primary role in lanthanide-dependent methanol oxidation [Web search, "growth defects appear even without lanthanide supplementation, suggesting involvement in broader cellular metabolism"]. What are these alternative functions? Does XoxG participate in other periplasmic redox processes? Might it have regulatory roles or involvement in metal homeostasis? Comprehensive physiological characterization of xoxG mutants under diverse growth conditions, combined with proteomic and metabolomic analyses, could reveal these additional functions.</p>
+<p>Fourth, the evolutionary relationship between XoxG and MxaG, and their divergence to serve different metal cofactor systems, presents interesting evolutionary questions. When did the duplication event that gave rise to separate lanthanide-dependent and calcium-dependent systems occur? What were the ancestral properties of the progenitor cytochrome c_L? What selective pressures drove the divergence and specialization of these paralogs? Phylogenetic analyses combined with ancestral sequence reconstruction and biochemical characterization of reconstructed ancestral proteins could illuminate this evolutionary history.</p>
+<p>Fifth, the broader distribution and diversity of xoxG genes across methylotrophic bacteria remains incompletely characterized. How widespread are lanthanide-dependent methanol oxidation systems? Do all organisms with xoxF genes also possess xoxG, or have some lineages lost or never acquired the specialized electron acceptor? What is the relationship between xoxG gene presence and environmental lanthanide availability? Comparative genomic analyses examining the distribution of xox operons across diverse bacterial lineages, correlated with ecological and environmental data, could reveal biogeographic patterns and ecological factors influencing the evolution and maintenance of lanthanide-dependent metabolism.</p>
+<p>Sixth, the coordination between cytochrome c maturation (heme attachment) and protein folding in XoxG and related cytochromes c_L deserves investigation. What are the kinetics and thermodynamics of heme attachment? How do the cytochrome c maturation factors recognize and process XoxG? Are there quality control mechanisms ensuring that only properly folded, heme-containing XoxG is retained? Biochemical reconstitution experiments using purified components could dissect the maturation pathway and identify rate-limiting steps or quality control checkpoints.</p>
+<p>Finally, the three-dimensional structure of XoxG from Methylorubrum extorquens AM1 specifically has not been deposited in the Protein Data Bank, with available structures coming from related organisms. Determining the structure of M. extorquens XoxG at high resolution would enable direct structural comparison with MxaG from the same organism, revealing the precise structural changes responsible for the different redox properties and functional specializations. Such structures could guide targeted mutagenesis experiments to test hypotheses about structure-function relationships.</p>
+<h2 id="conclusion">Conclusion</h2>
+<p>The xoxG gene encodes a specialized cytochrome c_L that serves as the dedicated electron acceptor for lanthanide-dependent methanol dehydrogenases in methylotrophic bacteria. Positioned within the xox1 operon alongside xoxF1 and xoxJ, xoxG expression is subject to sophisticated regulation as part of the lanthanide switch, ensuring that the lanthanide-dependent methanol oxidation system is expressed when rare earth elements are available. The XoxG protein exhibits distinctive structural and biochemical properties that optimize it for efficient electron transfer from XoxF, including an unusually low reduction potential of +172 mV, absence of calcium binding, and lack of helix IV resulting in enhanced solvent exposure of heme propionates.</p>
+<p>Comparative analysis of XoxG and its paralog MxaG reveals how evolution has fine-tuned closely related proteins for distinct functional roles—one optimized for lanthanide-dependent catalysis, the other for calcium-dependent catalysis. The structural differences between these proteins, while subtle in some respects, have profound effects on their redox properties and functional performance, illustrating the sensitivity of electron transfer proteins to detailed structural features. The absolute requirement for XoxG in lanthanide-dependent methanol oxidation, demonstrated by the equivalence of xoxG and xoxF1 deletion phenotypes, underscores its essential and non-redundant role in this metabolic system.</p>
+<p>The characterization of XoxG has important implications for understanding methylotrophic metabolism, the biological chemistry of lanthanides, and the evolution of metal-dependent enzyme systems. As methylotrophy gains increasing attention for biotechnological applications in sustainable chemistry and carbon capture, comprehensive understanding of all components of methanol oxidation systems—including specialized electron acceptors like XoxG—becomes increasingly important. Continued research on XoxG structure, function, regulation, and evolution promises to yield insights into fundamental aspects of biological electron transfer while enabling practical applications in industrial biotechnology and environmental sustainability.</p>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: C5B121
+gene_symbol: xoxG
+product_type: PROTEIN
+taxon:
+  id: NCBITaxon:272630
+  label: Methylorubrum extorquens AM1
+description: xoxG encodes a specialized c-type cytochrome (cytochrome c_L) that serves
+  as the dedicated electron acceptor for XoxF-type lanthanide-dependent methanol dehydrogenases.
+  The protein contains heme c covalently attached via the CXXCH motif and exhibits
+  an unusually low reduction potential (+172 mV at pH 7.0), substantially lower than
+  the analogous MxaG cytochrome (+256 mV) that serves the calcium-dependent MxaFI
+  system. Located in the periplasm, XoxG accepts electrons from reduced XoxF following
+  methanol oxidation and transfers them to cytochrome c_H in the respiratory electron
+  transport chain. The gene is organized within the xox1 operon (xoxF1-xoxG-xoxJ)
+  and is subject to lanthanide-responsive regulation as part of the lanthanide switch
+  mechanism. XoxG is absolutely essential for XoxF activity with no functional redundancy
+  from other cytochromes.
+existing_annotations:
+- term:
+    id: GO:0009055
+    label: electron transfer activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: Correct - XoxG accepts electrons from the reduced PQQ cofactor of XoxF
+      methanol dehydrogenase and transfers them to cytochrome c_H in the periplasmic
+      electron transport chain [file:METEA/xoxG/xoxG-claude-deep-research.md, &#34;XoxG
+      accepts electrons from the reduced PQQ cofactor of XoxF following methanol oxidation,
+      then transfers these electrons to cytochrome c_H&#34;].
+    action: ACCEPT
+- term:
+    id: GO:0020037
+    label: heme binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: Correct - XoxG contains heme c covalently attached through thioether
+      bonds via the signature CXXCH motif at residues C95 and C98 [file:METEA/xoxG/xoxG-claude-deep-research.md,
+      &#34;The protein contains heme c covalently attached through thioether bonds via
+      the signature CXXCH motif (residues C95 and C98)&#34;].
+    action: ACCEPT
+- term:
+    id: GO:0046872
+    label: metal ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: Correct but general - XoxG binds iron in the heme prosthetic group, with
+      the heme iron axially coordinated by His99 and Met143 [file:METEA/xoxG/xoxG-claude-deep-research.md,
+      &#34;The FeIII is axially ligated by His99 and Met143&#34;]. More specific term GO:0020037
+      (heme binding) is also present and captures this function more precisely.
+    action: KEEP_AS_NON_CORE
+core_functions:
+- description: XoxG functions as the dedicated electron acceptor in the lanthanide-dependent
+    methanol oxidation pathway. The c-type cytochrome accepts electrons from reduced
+    XoxF following methanol oxidation to formaldehyde and transfers them to cytochrome
+    c_H. XoxG exhibits an unusually low reduction potential (+172 mV) that is specifically
+    tuned for efficient electron transfer from lanthanide-dependent methanol dehydrogenases.
+    The heme iron is axially coordinated by His99 and Met143.
+  molecular_function:
+    id: GO:0009055
+    label: electron transfer activity
+  directly_involved_in:
+  - id: GO:0015945
+    label: methanol metabolic process
+  - id: GO:0015946
+    label: methanol oxidation
+  locations:
+  - id: GO:0042597
+    label: periplasmic space
+  supported_by:
+  - reference_id: file:METEA/xoxG/xoxG-claude-deep-research.md
+    supporting_text: XoxG functions as a cytochrome c that accepts electrons from
+      the lanthanide-dependent methanol dehydrogenase XoxF1...XoxG accepts electrons
+      from the reduced PQQ cofactor of XoxF following methanol oxidation, then transfers
+      these electrons to cytochrome c_H...The Em of XoxG was measured to be 172 ±
+      1 mV
+references:
+- id: file:METEA/xoxG/xoxG-claude-deep-research.md
+  title: Deep research on xoxG cytochrome cL electron acceptor
+  findings: []
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms.
+  findings: []
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+status: DRAFT
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

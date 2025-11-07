@@ -108,12 +108,20 @@ class JSONExporter:
         # Parent object information
         row["protein_id"] = gene_review.id
         row["gene_symbol"] = gene_review.gene_symbol
+        row["product_type"] = gene_review.product_type if gene_review.product_type else "PROTEIN"
+        row["status"] = gene_review.status if gene_review.status else None
         row["taxon_id"] = gene_review.taxon.id if gene_review.taxon else None
         row["taxon_label"] = gene_review.taxon.label if gene_review.taxon else None
         row["tags"] = gene_review.tags if gene_review.tags else []
 
         # Add link fields
-        row["uniprot_link"] = f"https://www.uniprot.org/uniprotkb/{gene_review.id}" if gene_review.id else None
+        # For ncRNAs, link to RNAcentral; for proteins, link to UniProt
+        if gene_review.product_type and gene_review.product_type not in ["PROTEIN", "PSEUDOGENE"]:
+            # ncRNA - use RNAcentral URL (keep field name as uniprot_link for compatibility)
+            row["uniprot_link"] = f"https://rnacentral.org/rna/{gene_review.id}" if gene_review.id else None
+        else:
+            # Protein or pseudogene - use UniProt URL
+            row["uniprot_link"] = f"https://www.uniprot.org/uniprotkb/{gene_review.id}" if gene_review.id else None
         row["pathway_link"] = self._generate_pathway_link(gene_review)
         row["review_html_link"] = self._generate_review_html_link(gene_review)
 

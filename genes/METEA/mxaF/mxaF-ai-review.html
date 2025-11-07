@@ -1,0 +1,1833 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>mxaF - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>mxaF</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P16027" target="_blank" class="term-link">
+                        P16027
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Methylorubrum extorquens AM1</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "mxaF";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P16027" data-a="DESCRIPTION: mxaF encodes the large subunit (α) of the calcium-..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>mxaF encodes the large subunit (α) of the calcium-dependent methanol dehydrogenase (MxaFI-MDH), a heterotetrameric (α₂β₂) quinoprotein enzyme that catalyzes the oxidation of methanol to formaldehyde in the periplasm. Each MxaF subunit contains one pyrroloquinoline quinone (PQQ) prosthetic group and one catalytically essential Ca²⁺ ion. This enzyme represents the classical methanol oxidation system that is expressed when lanthanides are absent, as part of the lanthanide switch mechanism. The protein exhibits an eight-blade β-propeller fold with the PQQ and Ca²⁺ positioned in a deep active site cleft, and transfers electrons to cytochrome c_L (MxaG) as part of the periplasmic electron transport chain.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003824" target="_blank" class="term-link">
+                                    GO:0003824
+                                </a>
+                            </span>
+                            <span class="term-label">catalytic activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P16027" data-a="GO:0003824" data-r="GO_REF:0000117" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but overly general. MxaF possesses specific alcohol dehydrogenase (cytochrome c) activity with PQQ and Ca²⁺ as cofactors. The term is technically correct but does not capture the specific function [file:METEA/mxaF/mxaF-claude-deep-research.md, &#34;catalyzes the two-electron oxidation of methanol to formaldehyde&#34;].
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005509" target="_blank" class="term-link">
+                                    GO:0005509
+                                </a>
+                            </span>
+                            <span class="term-label">calcium ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P16027" data-a="GO:0005509" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct - each MxaF subunit contains one catalytically essential Ca²⁺ ion coordinated in the active site along with PQQ [file:METEA/mxaF/mxaF-claude-deep-research.md, &#34;one calcium ion which is catalytically essential&#34;].
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="P16027" data-a="GO:0005886" data-r="GO_REF:0000044" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Incorrect - MxaF is a soluble periplasmic protein, not membrane-associated. It is located in the outer membrane-bounded periplasmic space [file:METEA/mxaF/mxaF-claude-deep-research.md, &#34;periplasmic methanol dehydrogenase&#34;].
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015945" target="_blank" class="term-link">
+                                    GO:0015945
+                                </a>
+                            </span>
+                            <span class="term-label">methanol metabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P16027" data-a="GO:0015945" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct - MxaF catalyzes the first and rate-limiting step in methanol metabolism, oxidizing methanol to formaldehyde [file:METEA/mxaF/mxaF-claude-deep-research.md, &#34;oxidation of methanol to formaldehyde&#34;].
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="P16027" data-a="GO:0016020" data-r="GO_REF:0000002" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Incorrect - MxaF is a soluble periplasmic enzyme, not membrane-bound. This is an over-annotation.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016491" target="_blank" class="term-link">
+                                    GO:0016491
+                                </a>
+                            </span>
+                            <span class="term-label">oxidoreductase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P16027" data-a="GO:0016491" data-r="GO_REF:0000043" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but very general parent term. More specific child terms (GO:0052933) better describe the function.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016614" target="_blank" class="term-link">
+                                    GO:0016614
+                                </a>
+                            </span>
+                            <span class="term-label">oxidoreductase activity, acting on CH-OH group of donors</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P16027" data-a="GO:0016614" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct - MxaF oxidizes the CH-OH group of methanol to formaldehyde [file:METEA/mxaF/mxaF-claude-deep-research.md, &#34;oxidizes methanol to formaldehyde&#34;].
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030288" target="_blank" class="term-link">
+                                    GO:0030288
+                                </a>
+                            </span>
+                            <span class="term-label">outer membrane-bounded periplasmic space</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P16027" data-a="GO:0030288" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct - MxaF is located in the periplasm where it performs methanol oxidation [file:METEA/mxaF/mxaF-claude-deep-research.md, &#34;periplasmic quinoprotein methanol dehydrogenase&#34;].
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046872" target="_blank" class="term-link">
+                                    GO:0046872
+                                </a>
+                            </span>
+                            <span class="term-label">metal ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P16027" data-a="GO:0046872" data-r="GO_REF:0000043" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but general - MxaF binds calcium ion specifically. More specific term GO:0005509 (calcium ion binding) is preferred.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0052933" target="_blank" class="term-link">
+                                    GO:0052933
+                                </a>
+                            </span>
+                            <span class="term-label">alcohol dehydrogenase (cytochrome c(L)) activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P16027" data-a="GO:0052933" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct and most specific - MxaF is a PQQ-dependent alcohol dehydrogenase that transfers electrons to cytochrome c_L (MxaG) [file:METEA/mxaF/mxaF-claude-deep-research.md, &#34;transfers electrons to cytochrome c_L&#34;].
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070968" target="_blank" class="term-link">
+                                    GO:0070968
+                                </a>
+                            </span>
+                            <span class="term-label">pyrroloquinoline quinone binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P16027" data-a="GO:0070968" data-r="GO_REF:0000117" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct - each MxaF subunit contains one PQQ prosthetic group that serves as the redox cofactor [file:METEA/mxaF/mxaF-claude-deep-research.md, &#34;one molecule of the prosthetic group PQQ&#34;].
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>MxaF catalyzes the PQQ-dependent oxidation of methanol to formaldehyde in the periplasm, transferring electrons to cytochrome c_L (MxaG). Each MxaF subunit contains one PQQ prosthetic group and one catalytically essential Ca²⁺ ion. This represents the first and rate-limiting step in methylotrophic methanol metabolism, and is part of the classical calcium-dependent methanol oxidation system expressed when lanthanides are absent.</h3>
+                <span class="vote-buttons" data-g="P16027" data-a="FUNCTION: MxaF catalyzes the PQQ-dependent oxidation of meth..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0052933" target="_blank" class="term-link">
+                            alcohol dehydrogenase (cytochrome c(L)) activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015945" target="_blank" class="term-link">
+                                methanol metabolic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030288" target="_blank" class="term-link">
+                                outer membrane-bounded periplasmic space
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:METEA/mxaF/mxaF-claude-deep-research.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">catalyzes the two-electron oxidation of methanol to formaldehyde...enzyme uses pyrroloquinoline quinone (PQQ) to sequentially transfer two electrons from methanol to cytochrome cL...Each MxaF subunit contains one catalytically essential Ca²⁺ ion</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:METEA/mxaF/mxaF-claude-deep-research.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep research on mxaF calcium-dependent methanol dehydrogenase</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods.</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Claude Deep Research</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(mxaF-claude-deep-research.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P16027" data-a="DOC: Claude Deep Research" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="deep-research-mxaf-calcium-dependent-methanol-dehydrogenase">Deep Research: mxaF - Calcium-Dependent Methanol Dehydrogenase</h1>
+<h2 id="introduction-and-historical-context">Introduction and Historical Context</h2>
+<p>Methanol dehydrogenase (MDH) has long been recognized as a central enzyme in methylotrophic bacteria, catalyzing the first step in methanol oxidation to formaldehyde [PMID:7735834, "Methanol dehydrogenase (MDH) is a bacterial periplasmic quinoprotein"]. The enzyme was initially characterized as containing the novel prosthetic group pyrroloquinoline quinone (PQQ), which was discovered in bacterial quinoproteins in the late 1970s [PMID:7818466, "quinoproteins containing pyrrolo-quinoline quinone"]. However, it wasn't until the 1990s that researchers fully appreciated the critical role of calcium in the active site of this enzyme.</p>
+<p>Early structural work revealed that methanol dehydrogenase possesses tightly bound Ca²⁺ in addition to its PQQ prosthetic group, and that this calcium is directly or indirectly involved in binding PQQ in the active site [PMID:1332681, "methanol dehydrogenase lacking an essential calcium ion"]. Studies replacing the enzyme-bound calcium with strontium demonstrated that the metal ion plays an essential role beyond simple structural stability, as the altered kinetic properties indicated involvement in the catalytic mechanism itself [PMID:8198531, "Replacement of enzyme-bound calcium with strontium alters the kinetic properties"].</p>
+<h2 id="protein-structure-and-organization">Protein Structure and Organization</h2>
+<h3 id="the-heterotetramer-architecture">The Heterotetramer Architecture</h3>
+<p>In gram-negative methylotrophic bacteria, methanol dehydrogenase consists of the MxaF and MxaI proteins making up the large and small subunits [PMID:21873495, "methanol dehydrogenase consists of the MxaF and MxaI proteins"]. More specifically, the enzyme forms a heterotetramer (α₂β₂) composed of two 66-kDa large subunits (MxaF) and two small 8.5-kDa subunits (MxaI) [PMID:24816778, "two 66-kDa large subunits (MxaF) and two small 8.5-kDa subunits (MxaI)"]. The large subunit contains the active-site residues and the PQQ prosthetic group, which is coordinated to a calcium ion in the active site, representing the catalytic component of the enzyme, while the MxaI subunits tightly wrap against the MxaF subunits [PMID:24816778, "large subunit contains the active-site residues and the PQQ prosthetic group"].</p>
+<p>The structure of the α₂β₂ tetramer of MDH from Methylobacterium extorquens was determined at 1.94 Å resolution with an R-factor of 19.85%, providing unprecedented detail into the enzyme's architecture [PMID:7735834, "structure of the α2β2 tetramer of MDH from Methylobacterium extorquens was determined at 1.94 Å"]. The α-subunit of MDH exhibits an elegant eight-fold radial symmetry, with its eight β-sheets stabilized by a novel tryptophan docking motif that had not been observed in other protein structures at the time [PMID:7735834, "α-subunit of MDH has an eight-fold radial symmetry, with its eight β-sheets stabilized by a novel tryptophan docking motif"].</p>
+<h3 id="active-site-architecture">Active Site Architecture</h3>
+<p>The active site architecture revealed by high-resolution crystallography shows remarkable sophistication in how the enzyme positions its cofactors. The PQQ in the active site is held in place by a coplanar tryptophan and by a novel disulphide ring formed between adjacent cysteines which are bonded by an unusual non-planar trans peptide bond [PMID:7735834, "PQQ in the active site is held in place by a coplanar tryptophan and by a novel disulphide ring"]. This unusual structural feature was discovered when Blake and colleagues found that the active site of methanol dehydrogenase contains a disulphide bridge between adjacent cysteine residues, a finding that significantly advanced understanding of PQQ stabilization [Nat. Struct. Biol. 1, 102–105, 1994, "active site of methanol dehydrogenase contains a disulphide bridge between adjacent cysteine residues"].</p>
+<p>The active site also revealed details about calcium coordination. White, Boyd, Mathews and colleagues reported the active site structure of the calcium-containing quinoprotein methanol dehydrogenase, showing how Ca²⁺ directly participates in coordinating with both PQQ and key amino acid residues [Biochemistry 32(48):12955–12958, 1993, "active site structure of the calcium-containing quinoprotein methanol dehydrogenase"]. This calcium ion is essential for enzymatic activity, as demonstrated by studies characterizing mutant forms lacking this metal [PMID:1332681, "Characterization of mutant forms of the quinoprotein methanol dehydrogenase lacking an essential calcium ion"].</p>
+<h3 id="recent-insights-into-assembly">Recent Insights into Assembly</h3>
+<p>A landmark 2025 study using cryo-electron microscopy captured the structures of intermediate complexes formed by the chaperone MxaJ and catalytic subunit MxaF during PQQ-dependent MDH maturation [Nature Communications 2025, "structures of the intermediate complexes formed by the chaperone MxaJ and catalytic subunit MxaF"]. This work revealed a chaperone-mediated molecular mechanism of cofactor incorporation, showing how MxaJ transiently associates with MxaF to facilitate proper PQQ insertion into the active site [Nature Communications 2025, "chaperone-mediated molecular mechanism of cofactor incorporation"]. These findings represent a significant advance in understanding how complex metalloproteins achieve their mature, catalytically competent state.</p>
+<h2 id="gene-organization-in-methylorubrum-extorquens-am1">Gene Organization in Methylorubrum extorquens AM1</h2>
+<p>The extensively studied Ca²⁺- and pyrroloquinoline quinone (PQQ)-dependent MeDH is encoded by the mxaFI genes, where each large subunit (MxaF) contains Ca and PQQ, both essential for methanol oxidation to formaldehyde in the periplasmic space [PMC4859578, "extensively studied Ca- and pyrroloquinoline quinone (PQQ)-dependent MeDH is encoded by the mxaFI genes"]. In the genome of Methylorubrum extorquens AM1 (formerly Methylobacterium extorquens AM1), the mxaF gene is designated with the locus tag MexAM1_META1p4538, while mxaI is MexAM1_META1p4535 [Scientific Reports 2020, "Methylorubrum extorquens AM1 produces a MxaFI-type MeDH encoded by mxaF: MexAM1_META1p4538 and mxaI: MexAM1_META1p4535"].</p>
+<p>The structural gene mxaF has been widely used as a functional gene probe for methanotrophs and methylotrophs in environmental studies [PMC168619, "methanol dehydrogenase structural gene mxaF and its use as a functional gene probe"]. This utility stems from the gene's conservation among methylotrophs while maintaining enough sequence divergence to allow phylogenetic discrimination between different methylotrophic lineages [PMID:23451130, "methanol dehydrogenase gene, mxaF, as a functional and phylogenetic marker"].</p>
+<p>Interestingly, an additional gene mxaW is present immediately upstream of mxaF, divergently transcribed from a methanol-inducible promoter [PMID:9495022, "mxaW is present immediately upstream of mxaF, divergently transcribed from a methanol-inducible promoter"]. However, despite its methanol-regulated expression, mutations in mxaW had no effect on growth of M. extorquens AM1 on methanol or other substrates, suggesting it may play a subsidiary or redundant role [PMID:9495022, "mutations in mxaW had no effect on growth"].</p>
+<h2 id="catalytic-mechanism-and-function">Catalytic Mechanism and Function</h2>
+<h3 id="methanol-oxidation-chemistry">Methanol Oxidation Chemistry</h3>
+<p>The enzyme uses pyrroloquinoline quinone (PQQ) to sequentially transfer two electrons from methanol to cytochrome cL during the oxidation of methanol to formaldehyde [PMID:24816778, "enzyme uses pyrroloquinoline quinone (PQQ) to sequentially transfer two electrons to cytochrome cL"]. This reaction represents the first and rate-limiting step in methylotrophic metabolism, converting methanol (CH₃OH) to formaldehyde (CH₂O) with the release of two protons and two electrons. The reactive C5 carbonyl of PQQ and an Asp residue are required for catalysis, working in concert to activate the alcohol substrate [PMID:24816778, "reactive C5 carbonyl of PQQ and an Asp residue are required for catalysis"].</p>
+<p>The calcium ion plays a critical mechanistic role beyond simple cofactor binding. The Ca²⁺ directly or indirectly participates in binding PQQ in the active site, and appears to stabilize the transition state during hydride transfer from methanol to the PQQ carbonyl [PMID:1332681, "Ca²⁺ directly or indirectly involved in binding PQQ in the active site"]. Studies replacing calcium with strontium showed altered kinetic parameters, indicating that the exact ionic radius and coordination geometry of the metal influences catalytic efficiency [PMID:8198531, "Replacement of enzyme-bound calcium with strontium alters the kinetic properties"].</p>
+<h3 id="electron-transfer-to-cytochrome-cl">Electron Transfer to Cytochrome cL</h3>
+<p>The interaction between methanol dehydrogenase and its electron acceptor, cytochrome cL, has been characterized extensively in methylotrophic bacteria [PMID:1311606, "interaction of methanol dehydrogenase and its electron acceptor, cytochrome cL in methylotrophic bacteria"]. This interaction involves an electrostatic reaction which involves carboxyl groups on cytochrome cL and amino groups on the α-subunit of MDH, facilitating rapid and specific electron transfer [PMID:1311606, "electrostatic reaction which involves carboxyl groups on cytochrome cL and amino groups on the alpha-subunit of MDH"]. The specificity of this interaction ensures that electrons flow efficiently from reduced PQQ to the respiratory chain.</p>
+<p>Cytochrome cL itself has distinctive properties optimized for its role as the primary electron acceptor from MDH. Studies of purified cytochrome cL from methylotrophs revealed it has a low isoelectric point, a midpoint potential of approximately 310 mV, and a molecular weight around 21,000 Da [PMID:PMC1162356, "cytochrome cL had a low isoelectric point, a midpoint potential of 310 mV and a molecular weight of 21,000"]. These properties position it ideally in the electron transport chain to accept electrons from reduced PQQ (which has a more negative redox potential) and pass them to cytochrome cH and ultimately to terminal oxidases.</p>
+<h2 id="complex-regulatory-network">Complex Regulatory Network</h2>
+<h3 id="the-five-gene-regulatory-hierarchy">The Five-Gene Regulatory Hierarchy</h3>
+<p>One of the most fascinating aspects of mxaF biology is the elaborate regulatory network controlling its expression. In Methylobacterium extorquens AM1, five known genes—mxbDM, mxcQE and mxaB—are required for transcription of mxaF [PMID:9495022, "five known genes, mxbDM, mxcQE and mxaB are required for transcription of mxaF"]. This multi-tiered regulatory system ensures that the energetically expensive methanol dehydrogenase is only produced when appropriate.</p>
+<p>The regulatory hierarchy operates in a cascade fashion. MxcQE encode a putative sensor-regulator pair that sits at the top of the regulatory cascade [PMID:7582014, "mxcQ and mxcE genes, required for methanol dehydrogenase synthesis: a two-component regulatory system"]. In MxcQ and MxcE mutants, expression of mxbD was reduced to non-detectable levels, demonstrating that MxcQE controls the expression of the second tier of regulators [PMID:9168623, "MxcQ and MxcE mutants, expression of mxbD was reduced to non-detectable levels"].</p>
+<p>The second tier consists of MxbD and MxbM. The nucleotide sequence suggests that mxbD encodes a histidine protein kinase with two transmembrane domains and that mxbM encodes a DNA-binding response regulator [PMID:9168623, "mxbD encodes a histidine protein kinase with two transmembrane domains and mxbM encodes a DNA-binding response regulator"]. These two components form a classical two-component regulatory system. MxbDM were shown to be required for expression of mxaF, confirming their role in directly controlling transcription of the methanol dehydrogenase structural gene [PMID:9168623, "mxbDM were shown to be required for expression of mxaF"].</p>
+<p>These results suggest a regulatory hierarchy in which the sensor-regulator pair MxcQE control expression of the sensor-regulator pair MxbDM, and MxbDM in turn control expression of a number of genes involved in methanol oxidation [PMID:9168623, "regulatory hierarchy in which the sensor-regulator pair MxcQE control expression of the sensor-regulator pair MxbDM"].</p>
+<h3 id="the-orphan-response-regulator-mxab">The Orphan Response Regulator MxaB</h3>
+<p>Adding another layer of complexity is the orphan response regulator MxaB. The sequence of mxaB indicates that the gene product is a member of the response regulator family, yet none of the open reading frames near mxaB showed sequence identity to sensor kinases [PMID:9495022, "sequence of mxaB indicates that the gene product is a member of the response regulator family" and "none of the open reading frames near mxaB showed sequence identity to sensor kinases"]. This makes MxaB unusual—an orphan response regulator without an obvious cognate kinase partner.</p>
+<p>In Methylobacterium extorquens AM1, mxaB is required for regulation of methanol oxidation and is located at the end of a large cluster of methylotrophy genes that begins with mxaF [PMID:9495022, "mxaB is required for regulation of methanol oxidation and is located at the end of a large cluster"]. Recent research has revealed that the orphan response regulator MxaB plays a role in the lanthanide-dependent MDH switch, with its gene transcription itself being lanthanide responsive [PMID:9495022 and PMC4859578, "orphan response regulator MxaB, whose gene transcription is itself lanthanide responsive"]. This suggests MxaB may integrate signals about metal availability into the regulatory decision of which methanol dehydrogenase system to express.</p>
+<h2 id="the-lanthanide-dependent-metal-switch">The Lanthanide-Dependent Metal Switch</h2>
+<h3 id="discovery-of-the-alternative-system">Discovery of the Alternative System</h3>
+<p>The prevailing view of methanol dehydrogenase as a calcium-dependent enzyme was revolutionized in 2011 when researchers discovered that The Methylobacterium extorquens AM1 genome contains two homologs of MxaF, XoxF1 and XoxF2, which are approximately 50% identical to MxaF [PMID:21873495, "Methylobacterium extorquens AM1 genome contains two homologs of MxaF, XoxF1 and XoxF2, which are approximately 50% identical to MxaF"]. These XoxF proteins were found to be lanthanide-dependent methanol dehydrogenases, representing a fundamentally different biochemical solution to the same catalytic problem.</p>
+<h3 id="xoxfs-dual-regulatory-and-catalytic-role">XoxF's Dual Regulatory and Catalytic Role</h3>
+<p>What makes XoxF particularly remarkable is its dual function. XoxF is part of a complex regulatory cascade involving the 2-component systems MxcQE and MxbDM, which are required for the expression of the methanol dehydrogenase genes [PMID:21873495, "XoxF is part of a complex regulatory cascade involving the 2-component systems MxcQE and MxbDM"]. Expression of methanol dehydrogenase genes is severely repressed in the xoxF1 xoxF2 double mutant strain, and this decrease is likely due to decreased expression of the two-component systems mxbDM and mxcQE [PMID:21873495, "Expression of methanol dehydrogenase genes is severely repressed in the xoxF1 xoxF2 double mutant strain"].</p>
+<p>The metal switch operates through the different forms of XoxF. When lanthanides are absent, apo-XoxF (the metal-free form) activates expression of the mxa genes and represses expression of the xox1 genes as mediated through the two-component systems MxcQE and MxbDM [PMC4859578, "When lanthanides are absent, apo-XoxF activates expression of the mxa genes and represses expression of the xox1 genes"]. Conversely, when lanthanides are present, XoxF binds these metals and loses its regulatory function, instead serving as the primary methanol dehydrogenase enzyme.</p>
+<h3 id="transcriptional-responses-to-lanthanides">Transcriptional Responses to Lanthanides</h3>
+<p>In the presence of La³⁺, the genes xoxF, xoxG, and xoxJ encoding the lanthanide-dependent MDH, the predicted cognate cytochrome cL, and a MxaJ-like protein were all significantly upregulated [PMC4859578, "In the presence of La³⁺ the genes xoxF, xoxG, and xoxJ were all significantly upregulated"]. This coordinated upregulation ensures that the entire lanthanide-dependent methanol oxidation system—enzyme, electron acceptor, and assembly chaperone—is expressed together. Meanwhile, the calcium-dependent mxaF system is downregulated under these conditions, preventing wasteful production of an enzyme that would lack its required metal cofactor.</p>
+<h2 id="biotechnological-applications">Biotechnological Applications</h2>
+<h3 id="expression-systems-and-overproduction">Expression Systems and Overproduction</h3>
+<p>The mxaF gene has been successfully manipulated for various biotechnological applications. For instance, the mxaF gene encoding the large subunit of methanol dehydrogenase was cloned from Methylobacterium sp. MB200, and overexpression resulted in a fivefold increase in methanol dehydrogenase activity [PMID:26189558, "overexpression resulted in a fivefold increase in methanol dehydrogenase activity"]. This demonstrates that MxaF levels can be limiting for overall methanol oxidation capacity in methylotrophs.</p>
+<p>Homologously overexpressed MDH was obtained from Methylorubrum extorquens AM1 by cloning only the mxaF gene (GenBank locus tag: MexAM1_META1p4538), showing that even without overexpressing the small subunit mxaI, increased MxaF production can enhance enzyme levels [PMID:36142248, "Homologously overexpressed MDH was obtained from Methylorubrum extorquens AM1 by cloning only the mxaF gene"]. This approach has been applied to the development of bioelectrocatalytical systems where methanol dehydrogenase serves as the biocatalyst for methanol oxidation in biosensors or biofuel cells [PMID:36142248, "for the Development of Bioelectrocatalytical Systems"].</p>
+<h3 id="promoter-engineering">Promoter Engineering</h3>
+<p>The native mxaF promoter has also been engineered for synthetic biology applications. Researchers have worked on bestowing inducibility on the cloned methanol dehydrogenase promoter (PmxaF) of Methylobacterium extorquens by applying regulatory elements from Pseudomonas putida F1 [PMC1694210, "Bestowing Inducibility on the Cloned Methanol Dehydrogenase Promoter (PmxaF)"]. Such engineered promoters could allow controlled expression of heterologous genes in methylotrophs or provide tunable methanol-responsive promoters for biotechnology.</p>
+<h2 id="comparative-enzymology-mxaf-vs-xoxf">Comparative Enzymology: MxaF vs XoxF</h2>
+<h3 id="structural-and-functional-differences">Structural and Functional Differences</h3>
+<p>While MxaF and XoxF share approximately 50% amino acid sequence identity and both catalyze the same overall reaction, they differ in critical ways [PMID:21873495, "approximately 50% identical to MxaF"]. MxaF is well-studied as a calcium-dependent heterotetrameric enzyme with two 66-kDa large subunits (MxaF) and two small 8.5-kDa subunits (MxaI), while XoxF enzymes are homodimeric and do not require a small subunit partner [PMID:24816778, "heterotetrameric enzyme, with two 66-kDa large subunits (MxaF) and two small 8.5-kDa subunits (MxaI)"].</p>
+<p>The active site metal differs fundamentally between the two enzyme types. Where MxaF contains calcium in its active site coordinated with PQQ [PMID:7735834, "calcium-containing quinoprotein"], XoxF binds lanthanides such as La³⁺, Ce³⁺, or Nd³⁺. Crystal structure determination of XoxF proteins at 1.85 Å resolution reveals a lanthanide ion in the active site, in contrast to the calcium ion in MxaF [PMID:30132076, "1.85 Å resolution crystal structure reveals a La(III) ion in the active site, in contrast to the calcium ion in MxaF"]. This metal substitution confers different catalytic properties, with lanthanide-dependent enzymes generally showing higher specific activity under optimal conditions.</p>
+<h3 id="ecological-and-evolutionary-implications">Ecological and Evolutionary Implications</h3>
+<p>The existence of two fundamentally different methanol dehydrogenase systems—calcium-dependent MxaFI and lanthanide-dependent XoxF—reflects the evolutionary pressures methylotrophs face in environments with variable metal availability. Calcium is abundant in most environments, making MxaF a reliable enzyme when lanthanides are scarce. However, when rare earth elements are available even at trace concentrations, the higher catalytic efficiency of XoxF provides a competitive advantage [PMC4859578, "Lanthanide-Dependent Regulation of Methanol Oxidation Systems"]. The regulatory coupling between the two systems, with XoxF itself serving as the sensor of lanthanide availability, represents an elegant evolutionary solution to the challenge of metal-dependent enzyme optimization.</p>
+<h2 id="phylogenetic-and-environmental-significance">Phylogenetic and Environmental Significance</h2>
+<h3 id="mxaf-as-a-functional-marker">mxaF as a Functional Marker</h3>
+<p>The methanol dehydrogenase gene mxaF has become a standard functional and phylogenetic marker for proteobacterial methanotrophs in natural environments [PMID:23451130, "methanol dehydrogenase gene, mxaF, as a functional and phylogenetic marker for proteobacterial methanotrophs"]. Environmental surveys using mxaF primers can detect the presence and diversity of methylotrophic bacteria in soil, water, and other habitats, providing insights into the microbial communities capable of methanol oxidation [PMC3579938, "Methanol Dehydrogenase Gene, mxaF, as a Functional and Phylogenetic Marker"].</p>
+<p>This utility stems from mxaF being both highly conserved (allowing design of universal primers) and sufficiently variable (allowing phylogenetic discrimination). The gene's functional importance—being essential for growth on methanol—also means its presence reliably indicates methylotrophic potential, unlike housekeeping genes that might be present in non-methylotrophs.</p>
+<h3 id="role-in-global-carbon-cycling">Role in Global Carbon Cycling</h3>
+<p>Methylotrophs harboring mxaF play important roles in global carbon cycling by oxidizing single-carbon compounds released from various sources. Methanol is produced by plants, released during decomposition of organic matter, and generated through industrial processes. Bacteria expressing MxaF can metabolize this methanol, preventing its accumulation and converting it into cellular biomass and carbon dioxide. In environments where lanthanides are limiting, MxaF-dependent methylotrophs would be the primary organisms capable of methanol oxidation, making this enzyme ecologically significant.</p>
+<h2 id="concluding-perspectives">Concluding Perspectives</h2>
+<p>The mxaF gene of Methylorubrum extorquens AM1 encodes a sophisticated calcium-dependent methanol dehydrogenase that exemplifies how bacteria have evolved elaborate solutions for metabolizing single-carbon compounds. The enzyme's PQQ-calcium catalytic center, enabled by an unusual active site architecture with novel structural features like the cysteine disulfide bridge, catalyzes efficient methanol oxidation. The elaborate five-component regulatory hierarchy controlling mxaF expression ensures the enzyme is produced only when appropriate, while the lanthanide-dependent switch involving XoxF allows the organism to optimize its methanol oxidation strategy based on available metal cofactors.</p>
+<p>From a mechanistic standpoint, ongoing research continues to reveal new details about MxaF assembly, with recent cryo-EM structures showing how the MxaJ chaperone facilitates PQQ incorporation. From an evolutionary perspective, the coexistence of calcium-dependent MxaF and lanthanide-dependent XoxF systems reveals how bacteria adapt to variable geochemical conditions. And from a biotechnological standpoint, MxaF's robust catalytic activity and amenability to overexpression make it attractive for biosensors, biofuel cells, and synthetic biology applications.</p>
+<p>Understanding mxaF within the broader context of methylotrophy regulation, electron transfer, and metal cofactor biology provides crucial insights into how bacteria orchestrate complex metabolic systems to thrive on simple carbon sources across diverse environments.</p>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P16027
+gene_symbol: mxaF
+product_type: PROTEIN
+taxon:
+  id: NCBITaxon:272630
+  label: Methylorubrum extorquens AM1
+description: mxaF encodes the large subunit (α) of the calcium-dependent methanol
+  dehydrogenase (MxaFI-MDH), a heterotetrameric (α₂β₂) quinoprotein enzyme that catalyzes
+  the oxidation of methanol to formaldehyde in the periplasm. Each MxaF subunit contains
+  one pyrroloquinoline quinone (PQQ) prosthetic group and one catalytically essential
+  Ca²⁺ ion. This enzyme represents the classical methanol oxidation system that is
+  expressed when lanthanides are absent, as part of the lanthanide switch mechanism.
+  The protein exhibits an eight-blade β-propeller fold with the PQQ and Ca²⁺ positioned
+  in a deep active site cleft, and transfers electrons to cytochrome c_L (MxaG) as
+  part of the periplasmic electron transport chain.
+existing_annotations:
+- term:
+    id: GO:0003824
+    label: catalytic activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  review:
+    summary: Correct but overly general. MxaF possesses specific alcohol dehydrogenase
+      (cytochrome c) activity with PQQ and Ca²⁺ as cofactors. The term is technically
+      correct but does not capture the specific function [file:METEA/mxaF/mxaF-claude-deep-research.md,
+      &#34;catalyzes the two-electron oxidation of methanol to formaldehyde&#34;].
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0005509
+    label: calcium ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: Correct - each MxaF subunit contains one catalytically essential Ca²⁺
+      ion coordinated in the active site along with PQQ [file:METEA/mxaF/mxaF-claude-deep-research.md,
+      &#34;one calcium ion which is catalytically essential&#34;].
+    action: ACCEPT
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: Incorrect - MxaF is a soluble periplasmic protein, not membrane-associated.
+      It is located in the outer membrane-bounded periplasmic space [file:METEA/mxaF/mxaF-claude-deep-research.md,
+      &#34;periplasmic methanol dehydrogenase&#34;].
+    action: REMOVE
+- term:
+    id: GO:0015945
+    label: methanol metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: Correct - MxaF catalyzes the first and rate-limiting step in methanol
+      metabolism, oxidizing methanol to formaldehyde [file:METEA/mxaF/mxaF-claude-deep-research.md,
+      &#34;oxidation of methanol to formaldehyde&#34;].
+    action: ACCEPT
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: Incorrect - MxaF is a soluble periplasmic enzyme, not membrane-bound.
+      This is an over-annotation.
+    action: REMOVE
+- term:
+    id: GO:0016491
+    label: oxidoreductase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: Correct but very general parent term. More specific child terms (GO:0052933)
+      better describe the function.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0016614
+    label: oxidoreductase activity, acting on CH-OH group of donors
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: Correct - MxaF oxidizes the CH-OH group of methanol to formaldehyde [file:METEA/mxaF/mxaF-claude-deep-research.md,
+      &#34;oxidizes methanol to formaldehyde&#34;].
+    action: ACCEPT
+- term:
+    id: GO:0030288
+    label: outer membrane-bounded periplasmic space
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: Correct - MxaF is located in the periplasm where it performs methanol
+      oxidation [file:METEA/mxaF/mxaF-claude-deep-research.md, &#34;periplasmic quinoprotein
+      methanol dehydrogenase&#34;].
+    action: ACCEPT
+- term:
+    id: GO:0046872
+    label: metal ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: Correct but general - MxaF binds calcium ion specifically. More specific
+      term GO:0005509 (calcium ion binding) is preferred.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0052933
+    label: alcohol dehydrogenase (cytochrome c(L)) activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: Correct and most specific - MxaF is a PQQ-dependent alcohol dehydrogenase
+      that transfers electrons to cytochrome c_L (MxaG) [file:METEA/mxaF/mxaF-claude-deep-research.md,
+      &#34;transfers electrons to cytochrome c_L&#34;].
+    action: ACCEPT
+- term:
+    id: GO:0070968
+    label: pyrroloquinoline quinone binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  review:
+    summary: Correct - each MxaF subunit contains one PQQ prosthetic group that serves
+      as the redox cofactor [file:METEA/mxaF/mxaF-claude-deep-research.md, &#34;one molecule
+      of the prosthetic group PQQ&#34;].
+    action: ACCEPT
+core_functions:
+- description: MxaF catalyzes the PQQ-dependent oxidation of methanol to formaldehyde
+    in the periplasm, transferring electrons to cytochrome c_L (MxaG). Each MxaF subunit
+    contains one PQQ prosthetic group and one catalytically essential Ca²⁺ ion. This
+    represents the first and rate-limiting step in methylotrophic methanol metabolism,
+    and is part of the classical calcium-dependent methanol oxidation system expressed
+    when lanthanides are absent.
+  molecular_function:
+    id: GO:0052933
+    label: alcohol dehydrogenase (cytochrome c(L)) activity
+  directly_involved_in:
+  - id: GO:0015945
+    label: methanol metabolic process
+  locations:
+  - id: GO:0030288
+    label: outer membrane-bounded periplasmic space
+  supported_by:
+  - reference_id: file:METEA/mxaF/mxaF-claude-deep-research.md
+    supporting_text: catalyzes the two-electron oxidation of methanol to formaldehyde...enzyme
+      uses pyrroloquinoline quinone (PQQ) to sequentially transfer two electrons from
+      methanol to cytochrome cL...Each MxaF subunit contains one catalytically essential
+      Ca²⁺ ion
+references:
+- id: file:METEA/mxaF/mxaF-claude-deep-research.md
+  title: Deep research on mxaF calcium-dependent methanol dehydrogenase
+  findings: []
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms.
+  findings: []
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt.
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods.
+  findings: []
+status: DRAFT
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

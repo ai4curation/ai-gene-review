@@ -1,0 +1,1955 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SOCS4 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>SOCS4</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q8WXH5" target="_blank" class="term-link">
+                        Q8WXH5
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Aliases:</span>
+                <div class="aliases">
+                    
+                    <span class="badge">Suppressor of cytokine signaling 4</span>
+                    
+                    <span class="badge">SOCS-4</span>
+                    
+                </div>
+            </div>
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "SOCS4";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q8WXH5" data-a="DESCRIPTION: Suppressor of cytokine signaling 4 (SOCS4, ~50 kDa..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Suppressor of cytokine signaling 4 (SOCS4, ~50 kDa), member of SOCS family serving as STAT-induced inhibitor and negative feedback regulator in cytokine and growth factor signaling. Contains central SH2 domain (binds phosphotyrosine) and C-terminal SOCS box (recruits E3 ubiquitin ligase machinery). Long N-terminal region (~270 aa) characteristic of SOCS4-7 subfamily. Functions as E3 ligase adaptor: SH2 domain binds specific phosphotyrosine motifs on activated receptors/kinases, while SOCS box recruits Elongin B/C-Cullin-5 ubiquitin ligase complex, promoting proteasomal degradation of bound substrates. Primary target is EGFR - binds phospho-Y1092 on activated EGFR, recruiting ubiquitin ligase for receptor degradation and blocking STAT3 binding site, thereby attenuating EGF-induced signaling. Acts as brake on growth factor receptor signaling by physically associating with and marking activated proteins for destruction. Also reported weak interactions with c-Kit receptor and JAK2. Critical role in limiting inflammatory responses during infection - SOCS4-knockout mice highly susceptible to influenza with exaggerated cytokine storm (excessive chemokines/cytokines causing tissue damage). Tempers initial wave of inflammation preventing immune-mediated damage. Human SOCS4 T266M mutation causes autoimmune/inflammatory syndrome via hyperactive EGFR-STAT3 signaling. Acts as tumor suppressor in some cancers (gastric, lung) where loss removes brake on EGFR/STAT3 oncogenic pathways. Cytosolic protein recruited to activated receptor complexes at plasma membrane or endosomes. Broadly expressed with inducible upregulation by cytokines/growth factors. Dispensable for baseline development but crucial during acute stress responses.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019221" target="_blank" class="term-link">
+                                    GO:0019221
+                                </a>
+                            </span>
+                            <span class="term-label">cytokine-mediated signaling pathway</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8WXH5" data-a="GO:0019221" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytokine-mediated signaling pathway - SOCS4 is induced by cytokines and regulates cytokine signaling through receptor degradation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core regulatory pathway.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009968" target="_blank" class="term-link">
+                                    GO:0009968
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of signal transduction</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8WXH5" data-a="GO:0009968" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Negative regulation of signal transduction - attenuates EGFR and cytokine signaling.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> General regulatory function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032436" target="_blank" class="term-link">
+                                    GO:0032436
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of proteasomal ubiquitin-dependent protein catabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8WXH5" data-a="GO:0032436" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Positive regulation of proteasomal ubiquitin-dependent protein catabolic process - SOCS box recruits E3 ligase complex promoting degradation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core mechanism.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035556" target="_blank" class="term-link">
+                                    GO:0035556
+                                </a>
+                            </span>
+                            <span class="term-label">intracellular signal transduction</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8WXH5" data-a="GO:0035556" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Intracellular signal transduction - mediates cytokine and growth factor signal attenuation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Signaling regulator.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25814554" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25814554
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Phospho-tyrosine dependent protein-protein interaction netwo...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8WXH5" data-a="GO:0005515" data-r="PMID:25814554" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Protein binding - SH2 domain binds phosphotyrosine on EGFR and other targets.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core binding function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8WXH5" data-a="GO:0005515" data-r="PMID:32296183" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Protein binding - SH2 domain binds phosphotyrosine on EGFR and other targets.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core binding function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32814053" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32814053
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Interactome Mapping Provides a Network of Neurodegenerative ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8WXH5" data-a="GO:0005515" data-r="PMID:32814053" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Protein binding - SH2 domain binds phosphotyrosine on EGFR and other targets.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core binding function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016567" target="_blank" class="term-link">
+                                    GO:0016567
+                                </a>
+                            </span>
+                            <span class="term-label">protein ubiquitination</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000041
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8WXH5" data-a="GO:0016567" data-r="GO_REF:0000041" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Protein ubiquitination - SOCS box recruits E3 ligase.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core mechanism.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007175" target="_blank" class="term-link">
+                                    GO:0007175
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of epidermal growth factor-activated receptor activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15590694" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15590694
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Suppressors of cytokine signaling 4 and 5 regulate epidermal...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8WXH5" data-a="GO:0007175" data-r="PMID:15590694" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Negative regulation of EGFR activity - binds phospho-Y1092 on activated EGFR promoting degradation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Primary target function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>E3 ubiquitin ligase adaptor that targets EGFR and other growth factor receptors for proteasomal degradation. SH2 domain binds phospho-Y1092 on activated EGFR, while SOCS box recruits Elongin-Cullin-5 complex. Negatively regulates EGFR-STAT3 signaling, preventing excessive inflammation and growth factor signaling. Critical for limiting cytokine storms during viral infection.</h3>
+                <span class="vote-buttons" data-g="Q8WXH5" data-a="FUNCTION: E3 ubiquitin ligase adaptor that targets EGFR and ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004842" target="_blank" class="term-link">
+                            ubiquitin-protein transferase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007175" target="_blank" class="term-link">
+                                negative regulation of epidermal growth factor-activated receptor activity
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042130" target="_blank" class="term-link">
+                                negative regulation of T cell proliferation
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            UniProt:Q8WXH5
+                            
+                        </span>
+                        
+                        <div class="finding-text">E3 ubiquitin ligase adaptor that targets EGFR and other growth factor receptors for proteasomal degradation. SH2 domain binds phospho-Y1092 on activated EGFR, while SOCS box recruits Elongin-Cullin-5 ...</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000041.md" target="_blank" class="term-link">
+                            GO_REF:0000041
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniPathway vocabulary mapping.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15590694" target="_blank" class="term-link">
+                            PMID:15590694
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Suppressors of cytokine signaling 4 and 5 regulate epidermal growth factor receptor signaling.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25814554" target="_blank" class="term-link">
+                            PMID:25814554
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Phospho-tyrosine dependent protein-protein interaction network.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                            PMID:32296183
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A reference map of the human binary protein interactome.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32814053" target="_blank" class="term-link">
+                            PMID:32814053
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Interactome Mapping Provides a Network of Neurodegenerative Disease Proteins and Uncovers Widespread Protein Aggregation in Affected Brains.</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Openai</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(SOCS4-deep-research-openai.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q8WXH5" data-a="DOC: Deep Research Openai" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: openai<br />
+model: o3-deep-research-2025-06-26<br />
+cached: true<br />
+start_time: '2025-11-03T23:06:00.377550'<br />
+end_time: '2025-11-03T23:06:00.378529'<br />
+duration_seconds: 0.0<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: human<br />
+  gene_id: Q8WXH5<br />
+  gene_symbol: SOCS4<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    temperature: 0.1<br />
+    top_p: 1.0<br />
+citation_count: 79</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<p>Please provide a comprehensive research report on the gene SOCS4 (Q8WXH5) in human.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function. </p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<h1 id="socs4-suppressor-of-cytokine-signaling-4-functions-pathways-and-localization">SOCS4 (Suppressor of Cytokine Signaling 4) – Functions, Pathways, and Localization</h1>
+<h2 id="overview-and-key-characteristics-of-socs4">Overview and Key Characteristics of SOCS4</h2>
+<p><strong>SOCS4 (Suppressor of Cytokine Signaling 4)</strong> is a human protein (~50 kDa) encoded by the <em>SOCS4</em> gene (UniProt Q8WXH5). It belongs to the SOCS family of proteins, which are <strong>STAT-induced inhibitors</strong> acting as inducible negative feedback regulators in cytokine and growth factor signaling pathways (<a href="https://en.wikipedia.org/wiki/SOCS4#:~:text=The%20protein%20encoded%20by%20this,been%20found%20for%20this%20gene">en.wikipedia.org</a>) (<a href="https://pubmed.ncbi.nlm.nih.gov/39460806/#:~:text=SOCS%20proteins%20are%20essential%20for,Therefore%2C%20this%20review%20aims%20to">pubmed.ncbi.nlm.nih.gov</a>). Like other SOCS members, SOCS4 contains a central <strong>SH2 domain</strong> (Src homology 2) and a C-terminal <strong>SOCS box</strong> motif (<a href="https://en.wikipedia.org/wiki/SOCS4#:~:text=The%20protein%20encoded%20by%20this,been%20found%20for%20this%20gene">en.wikipedia.org</a>). The SH2 domain specifically binds phosphorylated tyrosine residues on target proteins, while the SOCS box recruits ubiquitination machinery, defining the SOCS proteins’ role as adaptors for proteasomal degradation of signaling molecules (<a href="https://ngdc.cncb.ac.cn/openlb/publication/OLB-PM-39460806#:~:text=Kamura%2C%20T,Genes%20%26%20Development%2012%3A3872%E2%80%933881">ngdc.cncb.ac.cn</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3976820/#:~:text=cytoplasmic%20domain%20and%20a%20phosphorylation,29%5D.%20SOCS5">pmc.ncbi.nlm.nih.gov</a>). SOCS4 and the related SOCS5–7 have unusually long <strong>N-terminal regions</strong> (in SOCS4, ~270 amino acids) not found in the smaller SOCS1–3, suggesting these proteins may engage additional interactions or regulatory mechanisms beyond the core SH2/SOCS-box function (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3976820/#:~:text=tempting%20to%20extrapolate%20this%20well,growth%20factor%20receptor%20signalling%20via">pmc.ncbi.nlm.nih.gov</a>). Bioinformatic analyses indicate the N-terminus of SOCS4 is largely disordered (except for a ~70-residue segment), and its precise role remains unclear (<a href="https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2024.1449397/full#:~:text=SOCS4%20contains%20a%20considerably%20longer,role%20in%20the%20mediating%20epidermal">www.frontiersin.org</a>). Notably, SOCS4 and SOCS5 share a conserved N-terminal subregion, though this region appears to play only a minor role in their known signaling functions (<a href="https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2024.1449397/full#:~:text=SOCS4%20contains%20a%20considerably%20longer,EGFR">www.frontiersin.org</a>).</p>
+<p><strong>Subcellular localization:</strong> SOCS4 is a cytosolic protein that functions at the intracellular side of receptor signaling complexes. It lacks any transmembrane domain or signal peptide, and is generally found in the <strong>cytoplasm</strong>, where it can interact with activated receptors or kinases. Upon cytokine or growth factor stimulation, SOCS4 is induced and recruited to activated receptor complexes in the cell, such as the cytoplasmic tail of the <strong>Epidermal Growth Factor Receptor (EGFR)</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3976820/#:~:text=of%20interaction%20with%20the%20EGF,blocking%20the%20later%20ability%20to">pmc.ncbi.nlm.nih.gov</a>). By binding to receptors at the plasma membrane or in endosomal vesicles, SOCS4 exerts its regulatory effect locally at those signaling sites. Transcript profiling indicates <em>SOCS4</em> is <strong>broadly expressed</strong> in human tissues (with detectable mRNA in lymphoid organs like appendix and lymph node, among others) (<a href="https://www.ncbi.nlm.nih.gov/gene/122809#:~:text=Expression%20Ubiquitous%20expression%20in%20appendix,25%20other%20tissues%20See%20more">www.ncbi.nlm.nih.gov</a>), consistent with a general role in modulating cytokine and growth factor responses across multiple cell types. In summary, SOCS4 is a cytosolic adaptor protein characterized by an SH2 domain for target binding and a SOCS box for ubiquitin ligase recruitment, positioning it as a negative regulator of signaling pathways.</p>
+<h2 id="mechanism-of-action-sh2-domain-socs-box-and-ubiquitin-mediated-regulation">Mechanism of Action: SH2 Domain, SOCS Box, and Ubiquitin-Mediated Regulation</h2>
+<p><strong>Domain structure and mechanism:</strong> SOCS4’s mode of action centers on its ability to <strong>bind phosphorylated signaling proteins and target them for ubiquitination and degradation</strong>. The SH2 domain of SOCS4 recognizes specific phosphotyrosine motifs on target proteins (often activated receptors or signaling enzymes), tethering SOCS4 to these signaling complexes (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3976820/#:~:text=of%20interaction%20with%20the%20EGF,blocking%20the%20later%20ability%20to">pmc.ncbi.nlm.nih.gov</a>). Once bound, the C-terminal SOCS box recruits an E3 ubiquitin ligase complex: the SOCS box interacts with the adaptor proteins Elongin B and Elongin C, which in turn couple SOCS4 to a Cullin-5/RING ubiquitin ligase scaffold (<a href="https://ngdc.cncb.ac.cn/openlb/publication/OLB-PM-39460806#:~:text=Kamura%2C%20T,Genes%20%26%20Development%2012%3A3872%E2%80%933881">ngdc.cncb.ac.cn</a>). This <strong>SOCS4–Elongin-Cullin complex</strong> catalyzes the polyubiquitination of the associated target protein, marking it for proteasomal degradation (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3976820/#:~:text=cytoplasmic%20domain%20and%20a%20phosphorylation,29%5D.%20SOCS5">pmc.ncbi.nlm.nih.gov</a>). A seminal structural study in 2007 resolved the crystal structure of a SOCS4–Elongin B/C complex, revealing the details of this interface and confirming the molecular basis by which SOCS4 recruits the ubiquitin machinery to degrade bound substrates (<a href="https://ngdc.cncb.ac.cn/openlb/publication/OLB-PM-39460806#:~:text=Bullock%2C%20A,PMID%3A%2017997974">ngdc.cncb.ac.cn</a>). In essence, SOCS4 functions as an <strong>E3 ligase adaptor</strong>: it itself is not an enzyme, but it brings ubiquitin-transfer enzymes into proximity with specific phosphorylated targets, thereby attenuating signaling by promoting the <strong>turnover of activated receptors or signaling proteins</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3976820/#:~:text=cytoplasmic%20domain%20and%20a%20phosphorylation,29%5D.%20SOCS5">pmc.ncbi.nlm.nih.gov</a>).</p>
+<p><strong>Target recognition and specificity:</strong> A defining target of SOCS4 is the <strong>Epidermal Growth Factor Receptor (EGFR)</strong>, a receptor tyrosine kinase. SOCS4 was shown to bind directly to a particular phosphotyrosine site on the activated EGFR (tyrosine 1092 in the human EGFR cytoplasmic domain) via its SH2 domain (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3976820/#:~:text=of%20interaction%20with%20the%20EGF,blocking%20the%20later%20ability%20to">pmc.ncbi.nlm.nih.gov</a>). This interaction is phosphorylation-dependent – SOCS4 docks onto EGFR only after the receptor is activated and autophosphorylated on Y1092 (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3976820/#:~:text=of%20interaction%20with%20the%20EGF,blocking%20the%20later%20ability%20to">pmc.ncbi.nlm.nih.gov</a>). Binding of SOCS4 to EGFR has two major consequences: (1) it <strong>recruits the ubiquitin ligase complex</strong> to EGFR, leading to ubiquitination and <strong>proteasomal degradation of the receptor</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3976820/#:~:text=cytoplasmic%20domain%20and%20a%20phosphorylation,29%5D.%20SOCS5">pmc.ncbi.nlm.nih.gov</a>), and (2) it <strong>blocks downstream signaling</strong> by occluding access of other signaling molecules to that phosphotyrosine site. In particular, the same Y1092 on EGFR is a docking site for STAT3, a transcription factor activated by EGFR signaling; by occupying Y1092, SOCS4 prevents STAT3 from binding and becoming activated (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3976820/#:~:text=phosphotyrosine%20residues%20on%20the%20activated,KIT%2C%20the">pmc.ncbi.nlm.nih.gov</a>). Through these mechanisms, SOCS4 effectively <strong>attenuates EGF-induced signaling</strong>, reducing both the duration and intensity of downstream pathways (such as the STAT3 pathway) emanating from EGFR (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3976820/#:~:text=of%20interaction%20with%20the%20EGF,blocking%20the%20later%20ability%20to">pmc.ncbi.nlm.nih.gov</a>). This ability to <strong>compete for receptor binding sites and induce receptor degradation</strong> is a hallmark of SOCS4’s function.</p>
+<p>It’s worth noting that SOCS4’s close relative SOCS5 can also downregulate EGFR, though via a slightly different mechanism: SOCS5’s long N-terminal region can interact with EGFR even in the absence of phosphorylation, whereas SOCS4 relies on phosphotyrosine binding (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3976820/#:~:text=of%20interaction%20with%20the%20EGF,Y1092%29%20as%20STAT3%3B%20therefore">pmc.ncbi.nlm.nih.gov</a>). Both SOCS4 and SOCS5 ultimately promote EGFR degradation, and together they are unique among SOCS family members in significantly reducing cellular EGFR levels when overexpressed (<a href="https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2024.1449397/full#:~:text=match%20at%20L865%20SOCS4%20and,KO%7D%20mice%20and">www.frontiersin.org</a>). The <strong>specificity of SOCS4’s SH2 domain</strong> appears tuned mainly to certain receptor tyrosine kinases; besides EGFR, SOCS4 has been reported (from in vitro assays) to bind with lower affinity to the activated c-Kit receptor (stem cell factor receptor) and to JAK2 (a Janus kinase) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3976820/#:~:text=ubiquitin%20ligase%20activity%20,141%5D.%20SOCS5">pmc.ncbi.nlm.nih.gov</a>). The biological significance of these latter interactions is still undetermined, but they suggest SOCS4 could have broader substrate scope, potentially modulating <strong>c-Kit signaling</strong> (implicated in hematopoietic and reproductive physiology) or certain <strong>JAK/STAT pathways</strong> in specific contexts (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3976820/#:~:text=ubiquitin%20ligase%20activity%20,141%5D.%20SOCS5">pmc.ncbi.nlm.nih.gov</a>). Overall, the primary mechanism of SOCS4 is to <strong>serve as a brake on signal transduction</strong> by physically associating with activated signaling proteins and marking them for destruction, thereby curtailing the propagation of the signal.</p>
+<h2 id="biological-function-and-pathways-involving-socs4">Biological Function and Pathways Involving SOCS4</h2>
+<h3 id="regulation-of-egfr-and-growth-factor-signaling">Regulation of EGFR and Growth Factor Signaling</h3>
+<p>One of the best-characterized functions of SOCS4 is its role in <strong>negative regulation of epidermal growth factor (EGF) receptor signaling</strong>. Initial studies demonstrated that SOCS4 (and SOCS5) can downregulate EGF-induced signaling in cells (<a href="https://ngdc.cncb.ac.cn/openlb/publication/OLB-PM-39460806#:~:text=Kario%2C%20E,PMID%3A%2015590694">ngdc.cncb.ac.cn</a>). Mechanistically, as described above, SOCS4 binding to EGFR leads to receptor ubiquitination and degradation, effectively <strong>reducing EGFR protein levels</strong> and dampening downstream pathways like the STAT3 transcriptional program (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3976820/#:~:text=of%20interaction%20with%20the%20EGF,KIT%2C%20the">pmc.ncbi.nlm.nih.gov</a>). Because EGFR activation influences cell proliferation, survival, and differentiation, SOCS4 is thought to act as a <strong>safety check on growth factor signals</strong>. By competing with STAT3 for receptor binding, SOCS4 can directly inhibit STAT3 activation in response to EGF (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3976820/#:~:text=phosphotyrosine%20residues%20on%20the%20activated,KIT%2C%20the">pmc.ncbi.nlm.nih.gov</a>). This places SOCS4 as an important modulator in pathways where EGFR–STAT3 signaling drives functional outcomes (for example, in epithelial cell growth or inflammation). Consistent with this, an experimental study in <strong>zebrafish</strong> (which possess two SOCS4 paralogs) lent further support to SOCS4’s role in EGF signaling: zebrafish <em>socs4b</em> mutant fish developed normally (indicating SOCS4 is not essential for development), but <em>in vitro</em> assays showed that the Socs4b protein can attenuate <strong>EGF-induced signaling</strong> through the EGFR pathway (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11430285/#:~:text=vivo%20and%20in%20vitro,able%20to%20regulate%20EGFR%20signaling">pmc.ncbi.nlm.nih.gov</a>). This suggests that under physiological conditions, SOCS4 acts redundantly or is only needed under stress, yet it clearly has the capacity to regulate receptor tyrosine kinase signals when present. Indeed, some authors propose that whereas SOCS1–3 primarily target cytokine-JAK/STAT pathways, the subgroup SOCS4–7 predominantly <strong>regulate receptor tyrosine kinases (RTKs)</strong> (like EGFR, c-Kit, insulin receptor, etc.), highlighting SOCS4 as part of the cellular machinery controlling growth factor receptor signaling intensity (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3976820/#:~:text=research%20evidence%20suggesting%20that%20while,and%20RTKs%20is%20not%20strict">pmc.ncbi.nlm.nih.gov</a>).</p>
+<p>Beyond EGFR, SOCS4’s potential interactions with other RTKs or signaling proteins hint at additional roles. Its <strong>weak affinity for c-Kit</strong> (the receptor for stem cell factor) is intriguing in light of a reported function in ovarian biology: SOCS4 has been implicated as a <strong>modulator of primordial follicle activation in the ovary</strong> (<a href="https://ngdc.cncb.ac.cn/openlb/publication/OLB-PM-39460806#:~:text=Russell%2C%20and%20E,PMID%3A%2021604262">ngdc.cncb.ac.cn</a>). In the mouse ovary, c-Kit signaling in oocytes is one pathway that drives the transition of dormant primordial follicles into maturing follicles. A study found that SOCS4 is expressed in ovarian tissue and suggested it acts as a “<strong>gate-keeper</strong>” to restrain premature follicle activation (<a href="https://ngdc.cncb.ac.cn/openlb/publication/OLB-PM-39460806#:~:text=Russell%2C%20and%20E,PMID%3A%2021604262">ngdc.cncb.ac.cn</a>). While the exact mechanism in that context wasn’t fully confirmed, it is plausible that SOCS4 tempers c-Kit or other growth factor signals in the ovary, thereby preventing excessive or untimely follicular development. This example illustrates how SOCS4’s basic biochemical function – dampening RTK signaling – can translate into a specific physiological role (maintenance of the ovarian reserve). Similarly, <strong>insulin and IGF signaling</strong> are other RTK pathways where SOCS family members play roles (e.g., SOCS6/7 in metabolic regulation (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3976820/#:~:text=Like%20other%20SOCS%20proteins%2C%20SOCS6,to%20bind%20to%20and%20inhibit">pmc.ncbi.nlm.nih.gov</a>)), although SOCS4 itself has not been strongly linked to insulin pathways. In summary, <strong>SOCS4’s primary function is as a negative regulator of growth factor receptors</strong>, with EGFR being the clearest example to date. By ensuring proper termination of EGFR/STAT3 signals, SOCS4 contributes to controlled cell growth and balanced signaling outputs in tissues.</p>
+<h3 id="role-in-cytokine-signaling-and-immune-pathways">Role in Cytokine Signaling and Immune Pathways</h3>
+<p>Although named for cytokine signaling, SOCS4 is less studied in classical JAK/STAT cytokine pathways than SOCS1–3. SOCS4 does <strong>not directly bind and inhibit JAK kinases</strong> with high affinity (unlike SOCS1 and SOCS3, which bind JAKs), but it can influence cytokine signaling indirectly through its impact on receptors and downstream molecules. For instance, by targeting EGFR and limiting STAT3 activation, SOCS4 may affect cytokine-driven STAT3 responses (since many cytokines like IL-6 also activate STAT3). There is evidence that SOCS4 can modulate certain cytokine pathways <em>via</em> cross-talk: one study found that <strong>infection with the parasite <em>Cryptosporidium</em></strong> in intestinal cells induces microRNAs (miR-98 and let-7) that downregulate SOCS4, leading to prolonged IL-6/STAT3 signaling in those cells (<a href="https://ngdc.cncb.ac.cn/openlb/publication/OLB-PM-39460806#:~:text=Hu%2C%20G,PMID%3A%2020486857">ngdc.cncb.ac.cn</a>). This suggests that in some immune contexts, SOCS4 would normally act to curb pro-inflammatory cytokine signaling, but pathogens may suppress SOCS4 to promote a stronger host cell response (<a href="https://ngdc.cncb.ac.cn/openlb/publication/OLB-PM-39460806#:~:text=Hu%2C%20G,PMID%3A%2020486857">ngdc.cncb.ac.cn</a>). Indeed, the SOCS family in general is induced by cytokines as a <strong>negative feedback loop</strong>, and SOCS4 is no exception – stimuli such as interferons or interleukins can upregulate <em>SOCS4</em> expression, which then feeds back to dampen signaling cascades (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3976820/#:~:text=The%20expression%20of%20SOCS%20proteins,talk.%E2%80%9D">pmc.ncbi.nlm.nih.gov</a>). However, compared to SOCS1 or SOCS3, the <strong>precise cytokine triggers</strong> and direct molecular targets of SOCS4 in immune signaling are not well defined. Some in vitro data suggest SOCS4 can weakly inhibit certain cytokine receptor pathways (e.g. interferon-γ or IL-4 signaling) when overexpressed, but these effects are subtle relative to the potent inhibition by SOCS1/3 in those pathways (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3976820/#:~:text=biological%20consequences%20of%20which%20remain,119%20%2C%20%20138">pmc.ncbi.nlm.nih.gov</a>). Thus, <strong>SOCS4’s role in cytokine signaling appears more auxiliary or context-dependent</strong>, often manifesting through cross-regulation of pathways like EGFR–STAT3 that interface with cytokine networks.</p>
+<h3 id="immune-response-infection-and-inflammation">Immune Response, Infection, and Inflammation</h3>
+<p>Emerging research has uncovered an important role for SOCS4 in controlling <strong>innate immune responses during infections</strong>, even though it is not a classical immune cell signaling molecule like SOCS1/3. A striking example comes from studies of <strong>influenza A virus infection</strong>. Mice lacking the <em>Socs4</em> gene were found to be <strong>highly susceptible to influenza</strong>, suffering more severe disease compared to wild-type mice (<a href="https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2024.1449397/full#:~:text=match%20at%20L869%20results%20demonstrated,be%20required%20to%20further%20conclude">www.frontiersin.org</a>) (<a href="https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2024.1449397/full#:~:text=Kedzierski%20et%C2%A0al,highly%20dysregulated%20pulmonary%20chemokine%20production">www.frontiersin.org</a>). SOCS4-knockout mice infected with H1N1 influenza showed an <strong>exaggerated inflammatory response</strong> in the lungs – often termed a “cytokine storm” – characterized by <strong>excessive production of pro-inflammatory chemokines and cytokines</strong> that led to tissue damage (<a href="https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2024.1449397/full#:~:text=match%20at%20L869%20results%20demonstrated,be%20required%20to%20further%20conclude">www.frontiersin.org</a>) (<a href="https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2024.1449397/full#:~:text=Kedzierski%20et%C2%A0al,highly%20dysregulated%20pulmonary%20chemokine%20production">www.frontiersin.org</a>). In these animals, the early innate immune response was dysregulated: levels of key chemokines in the lung (important for recruiting immune cells) were abnormally high, and the mice failed to effectively clear the virus, resulting in increased mortality (<a href="https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2024.1449397/full#:~:text=Kedzierski%20et%C2%A0al,highly%20dysregulated%20pulmonary%20chemokine%20production">www.frontiersin.org</a>). This phenotype indicates that SOCS4 normally acts to <strong>temper the initial wave of inflammation</strong> during viral infection, preventing immune-mediated damage while still allowing virus control. Indeed, the absence of SOCS4 skews the balance toward immunopathology (too much inflammation) at the expense of efficient viral clearance (<a href="https://ngdc.cncb.ac.cn/openlb/publication/OLB-PM-39460806#:~:text=match%20at%20L277%202014,PMID%3A%2024809749">ngdc.cncb.ac.cn</a>). Consistent with this, delivering exogenous SOCS4 can have protective effects: in one study, a recombinant herpesvirus engineered to express SOCS4 was used in a mouse cytokine storm model, and the presence of SOCS4 helped <strong>protect against lethal inflammation</strong>, highlighting its potential as an anti-inflammatory agent (<a href="https://ngdc.cncb.ac.cn/openlb/publication/OLB-PM-39460806#:~:text=match%20at%20L641%20Ren%2C%20S,PMID%3A%2030569160">ngdc.cncb.ac.cn</a>).</p>
+<p>The mechanism behind SOCS4’s role in infection appears to tie back to its regulation of growth factor and cytokine signals in immune cells and tissues. In the influenza model, researchers observed that <strong>pulmonary STAT3 activation</strong> and downstream inflammatory gene expression were poorly controlled in SOCS4-deficient mice (<a href="https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2024.1449397/full#:~:text=match%20at%20L910%20mutation%20in,dysregulation%20of%20EGFR%20signalling%20results">www.frontiersin.org</a>). SOCS4 is thought to be induced early after infection (possibly by inflammatory cytokines or tissue damage signals) and then act to <strong>restrain pathways like EGFR/STAT3 and possibly NF-κB</strong>, which drive the production of inflammatory mediators. Notably, a <strong>human genetic study</strong> provided corroborating evidence: Arts <em>et al.</em> (2015) identified a family with an inherited autoimmune/inflammatory syndrome and discovered a missense mutation in the <em>SOCS4</em> gene (T266M) as the likely cause (<a href="https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2024.1449397/full#:~:text=SOCS4%20mutations%20have%20been%20previously,transmittable%20missense">www.frontiersin.org</a>). This point mutation led to a dysfunctional SOCS4 protein, and patient cells showed <strong>hyperactive EGFR–STAT3 signaling</strong> and heightened cytokine responses (<a href="https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2024.1449397/full#:~:text=match%20at%20L910%20mutation%20in,dysregulation%20of%20EGFR%20signalling%20results">www.frontiersin.org</a>). In other words, a single amino acid change that crippled SOCS4’s function was enough to produce an immune dysregulation disorder in humans, due to failure to rein in specific signaling pathways. This finding underscores that <strong>SOCS4 is critical for calibrating the immune response</strong> – too little SOCS4 activity results in uncontrolled signaling (e.g. excessive STAT3-driven cytokines), which can manifest as cytokine storm or autoimmunity (<a href="https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2024.1449397/full#:~:text=match%20at%20L910%20mutation%20in,dysregulation%20of%20EGFR%20signalling%20results">www.frontiersin.org</a>).</p>
+<p>Apart from influenza, SOCS4 has been implicated in immune responses to other pathogens. For example, in a viral encephalitis model (Semliki Forest virus infection), SOCS4 was shown to be an essential modulator that balances antiviral immunity and immunopathology (<a href="https://pubmed.ncbi.nlm.nih.gov/36366574/#:~:text=Responses%20during%20Alphavirus%20Infection%20,Tan%20A%2C%20Jia%20Hui%20Foo">pubmed.ncbi.nlm.nih.gov</a>). Loss of SOCS4 skewed the balance, presumably allowing either unchecked virus replication or excessive tissue-damaging inflammation. There is also evidence that SOCS4 might influence <strong>T cell-mediated responses</strong>: one study using <em>Socs4</em>-knockdown mice observed effects on T-lymphocyte signaling, including a previously unrecognized role in modulating T Cell Receptor (TCR) signaling pathways (<a href="https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2024.1449397/full#:~:text=match%20at%20L892%20authors%20also,1%CE%B1%20%2896%29.%20Conversely">www.frontiersin.org</a>). In that work, <em>Socs4</em>-deficient mice had altered T-cell responses during infection and wound healing, and SOCS4 was found to interact with <strong>HIF-1α</strong> (a transcription factor involved in inflammation and hypoxia responses) in immune cells (<a href="https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2024.1449397/full#:~:text=authors%20also%20illuminated%20a%20previously,1%CE%B1%20%2896%29.%20Conversely">www.frontiersin.org</a>). Though these observations are still being investigated, they hint that SOCS4’s influence may extend into adaptive immunity by shaping the inflammatory environment and possibly T-cell activation thresholds. In summary, <strong>SOCS4 serves as a negative regulator of inflammation</strong>, especially in the early stages of immune responses. By dampening excessive cytokine production (likely through limiting EGFR/STAT3 and related signals in immune and epithelial cells), SOCS4 prevents collateral tissue damage and aids in achieving a controlled, effective response to infection (<a href="https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2024.1449397/full#:~:text=match%20at%20L869%20results%20demonstrated,be%20required%20to%20further%20conclude">www.frontiersin.org</a>) (<a href="https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2024.1449397/full#:~:text=Kedzierski%20et%C2%A0al,highly%20dysregulated%20pulmonary%20chemokine%20production">www.frontiersin.org</a>).</p>
+<h2 id="socs4-in-human-disease-and-therapeutic-insights">SOCS4 in Human Disease and Therapeutic Insights</h2>
+<p><strong>Tumor suppression and cancer pathways:</strong> Given its role in limiting growth factor signaling, SOCS4 is often considered to have <strong>tumor suppressor-like functions</strong>. Unrestrained EGFR or STAT3 signaling is a known driver of oncogenesis in many tissues, and SOCS4’s ability to downregulate EGFR suggests it could protect against tumor development. Indeed, several studies have found that <em>SOCS4</em> expression is lost or reduced in certain cancers. For example, a genomic analysis in <strong>gastric cancer</strong> identified <em>SOCS4</em> as a novel candidate <strong>tumor suppressor gene</strong>, frequently downregulated in gastric tumors (<a href="https://ngdc.cncb.ac.cn/openlb/publication/OLB-PM-39460806#:~:text=Kobayashi%2C%20D,PMID%3A%2022127425">ngdc.cncb.ac.cn</a>). In that study, researchers using an array-based approach discovered deletions or low expression of <em>SOCS4</em> in gastric cancer samples, and functional assays indicated that restoring SOCS4 in gastric cancer cells suppressed their growth (<a href="https://ngdc.cncb.ac.cn/openlb/publication/OLB-PM-39460806#:~:text=Kobayashi%2C%20D,PMID%3A%2022127425">ngdc.cncb.ac.cn</a>). This aligns with the idea that SOCS4 normally restrains pro-proliferative signaling (like EGFR/MAPK or STAT3) in the stomach. Similarly, microRNA-mediated silencing of <em>SOCS4</em> has been observed in lung cancer: miR-1290 is upregulated in some lung adenocarcinomas and <strong>promotes tumor cell proliferation and invasion by targeting SOCS4 for downregulation</strong> (<a href="https://ngdc.cncb.ac.cn/openlb/publication/OLB-PM-39460806#:~:text=22127425">ngdc.cncb.ac.cn</a>). By knocking down SOCS4, this microRNA removes a brake on EGFR and possibly other oncogenic pathways, thereby facilitating cancer progression (<a href="https://ngdc.cncb.ac.cn/openlb/publication/OLB-PM-39460806#:~:text=22127425">ngdc.cncb.ac.cn</a>). Consistent with a protective role, higher SOCS4 levels have been correlated with better clinical outcomes in at least some cancers – for instance, in a cohort of breast cancer patients, higher expression of SOCS4 (and other SOCS family members) was associated with <strong>earlier stage tumors and improved prognosis</strong> (<a href="https://ngdc.cncb.ac.cn/openlb/publication/OLB-PM-39460806#:~:text=Sasi%20W%2C%20W,178">ngdc.cncb.ac.cn</a>). These correlative data suggest that when SOCS4 is intact and expressed, it may keep oncogenic signaling in check, slowing tumor growth and spread.</p>
+<p>Interestingly, there are contexts where SOCS4 might act in the opposite manner, highlighting the complexity of cancer biology. A recent study in <strong>esophageal squamous cell carcinoma</strong> reported that <em>SOCS4</em> was <em>upregulated</em> in tumor tissues and that this upregulation actually <strong>promoted cancer cell proliferation and migration</strong> (<a href="https://ngdc.cncb.ac.cn/openlb/publication/OLB-PM-39460806#:~:text=Ying%2C%20J.%2C%20H.,PMID%3A%2035116557">ngdc.cncb.ac.cn</a>). The authors of that study speculated that SOCS4 might be co-opted in certain cancer cells to modulate the signaling network in a way that favors tumor progression (the precise mechanism is not fully understood; it could be that in those cells SOCS4 selectively inhibits a growth-inhibitory pathway or influences the tumor microenvironment in an unexpected way). Nonetheless, the predominant view – supported by most experimental evidence – is that <strong>SOCS4 functions as a negative regulator of oncogenic signaling</strong>, and loss of SOCS4 removes an important checkpoint on pathways like EGFR, <strong>contributing to malignancy</strong> (<a href="https://ngdc.cncb.ac.cn/openlb/publication/OLB-PM-39460806#:~:text=Kobayashi%2C%20D,PMID%3A%2022127425">ngdc.cncb.ac.cn</a>) (<a href="https://ngdc.cncb.ac.cn/openlb/publication/OLB-PM-39460806#:~:text=22127425">ngdc.cncb.ac.cn</a>). Because of this, there is interest in <em>SOCS4 status as a biomarker</em> and even in therapeutic strategies to restore or mimic SOCS4 function in cancers with hyperactive growth factor signaling. However, directly targeting SOCS4 in the clinic is challenging; as a regulatory protein that is not an enzyme, it does not have an obvious small-molecule binding pocket. To date, <strong>no specific SOCS4-activating drugs or SOCS4 mimetics</strong> have been developed, and <strong>research into SOCS4 as a drug target is still in early stages</strong> (<a href="https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2024.1449397/full#:~:text=match%20at%20L926%20there%20has,complex%20for%20targeted%20protein%20degradation">www.frontiersin.org</a>). The idea of using the SOCS4 mechanism for therapy (for example, harnessing the SOCS4–Cullin5 E3 ligase complex to degrade disease-causing proteins) is intriguing but remains largely theoretical at present (<a href="https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2024.1449397/full#:~:text=there%20has%20been%20little%20to,complex%20for%20targeted%20protein%20degradation">www.frontiersin.org</a>).</p>
+<p><strong>Inflammatory and immune disorders:</strong> The role of SOCS4 in limiting cytokine storms suggests it could be relevant in diseases characterized by excessive inflammation. The aforementioned <em>SOCS4</em> mutation in a familial autoimmune disease points to a link between SOCS4 dysfunction and <strong>autoimmune/autoinflammatory conditions</strong> (<a href="https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2024.1449397/full#:~:text=SOCS4%20mutations%20have%20been%20previously,transmittable%20missense">www.frontiersin.org</a>). Patients with that SOCS4 T266M mutation had issues with immune overactivity, implying that <strong>genetic defects in SOCS4 may predispose individuals to hyperinflammatory syndromes or autoimmune disease</strong> (<a href="https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2024.1449397/full#:~:text=match%20at%20L910%20mutation%20in,dysregulation%20of%20EGFR%20signalling%20results">www.frontiersin.org</a>). While this appears to be a rare scenario, it underscores the principle that <strong>tight regulation of cytokine and growth factor signals by SOCS4 is important for immune homeostasis</strong>. There is speculation that certain sporadic autoimmune diseases might involve downregulation of SOCS4 (for example, through cytokine signaling imbalances or microRNAs) as part of their pathology, but more research is needed. On a therapeutic front, the anti-inflammatory properties of SOCS4 raise the possibility of leveraging it to treat conditions like <strong>cytokine release syndrome</strong>, severe viral infections, or inflammatory lung injury. The proof-of-concept in animal models – using a viral vector to deliver SOCS4 and thereby quell inflammation – is a promising sign that enhancing SOCS4 activity could ameliorate pathological inflammation (<a href="https://ngdc.cncb.ac.cn/openlb/publication/OLB-PM-39460806#:~:text=match%20at%20L641%20Ren%2C%20S,PMID%3A%2030569160">ngdc.cncb.ac.cn</a>). Conversely, in scenarios where a stronger immune response is desirable (such as chronic infections or cancer immunotherapy), temporarily <strong>inhibiting SOCS4</strong> might boost the immune activity. However, given SOCS4’s complex effects and the risk of a cytokine storm, such strategies would need to be approached with caution. As of 2024, <strong>no clinical interventions directly targeting SOCS4</strong> have been reported, but SOCS4 remains a protein of significant interest in both immunology and oncology research.</p>
+<h2 id="expert-perspectives-and-current-research-directions">Expert Perspectives and Current Research Directions</h2>
+<p>Despite two decades since its discovery, SOCS4 is sometimes described as a “<strong>neglected</strong>” member of the SOCS family (<a href="https://pubmed.ncbi.nlm.nih.gov/39460806/#:~:text=functions%20of%20many%20SOCS%20proteins,that%20are%20essential%20for%20normal">pubmed.ncbi.nlm.nih.gov</a>). Early SOCS research focused on SOCS1–3, and only in recent years have studies begun to elucidate SOCS4’s roles in infection, cancer, and tissue homeostasis (<a href="https://pubmed.ncbi.nlm.nih.gov/39460806/#:~:text=functions%20of%20many%20SOCS%20proteins,that%20are%20essential%20for%20normal">pubmed.ncbi.nlm.nih.gov</a>). Experts note that <strong>our current understanding of SOCS4 is incomplete</strong>: while its biochemical function as an EGFR antagonist is known, its full spectrum of targets and its physiological roles are still being uncovered (<a href="https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2024.1449397/full#:~:text=match%20at%20L880%20mechanism%20of,system%20despite%20its%20broad%20expression">www.frontiersin.org</a>). A 2024 comprehensive review highlighted that <em>SOCS4’s mechanism of action remains not fully solved</em>, and unlike some other SOCS proteins, <strong>no single “signature” pathway completely defines SOCS4’s function</strong> (<a href="https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2024.1449397/full#:~:text=docking%20sites%20for%20SOCS4%20to,these%20populations%20and%20thus%20the">www.frontiersin.org</a>). SOCS4-knockout mice do not exhibit obvious phenotypic abnormalities under normal conditions (indicating functional redundancy or context-specific roles), but they reveal critical functions under challenge (infection, stress) (<a href="https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2024.1449397/full#:~:text=match%20at%20L869%20results%20demonstrated,be%20required%20to%20further%20conclude">www.frontiersin.org</a>) (<a href="https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2024.1449397/full#:~:text=Kedzierski%20et%C2%A0al,highly%20dysregulated%20pulmonary%20chemokine%20production">www.frontiersin.org</a>). This has led researchers to conclude that <strong>SOCS4 is dispensable for baseline development and immunity, yet crucial during acute stress responses</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11430285/#:~:text=vivo%20and%20in%20vitro,able%20to%20regulate%20EGFR%20signaling">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2024.1449397/full#:~:text=Kedzierski%20et%C2%A0al,highly%20dysregulated%20pulmonary%20chemokine%20production">www.frontiersin.org</a>). Going forward, areas of active investigation include identifying <strong>novel binding partners of SOCS4’s N-terminal domain</strong> (which might uncover new pathways it regulates) and understanding how SOCS4 is itself regulated – for instance, what signals induce <em>SOCS4</em> expression and how post-translational modifications might modulate its activity.</p>
+<p>Another frontier is the exploration of <strong>SOCS4 in human disease</strong> through genomic and clinical studies. With the increasing use of genome sequencing in patients, more cases of SOCS4 mutations might come to light, potentially linking SOCS4 to immunological disorders or susceptibilities to infections. Additionally, cancer genomics might reveal the frequency of <em>SOCS4</em> loss or amplification in various tumors, informing its role as a tumor suppressor or oncogenic collaborator. On the therapeutic side, while <em>drugging</em> SOCS4 directly is challenging, there is interest in <strong>mimetics of SOCS proteins</strong> or <strong>small molecules that enhance SOCS function</strong> as anti-inflammatory agents (<a href="https://ngdc.cncb.ac.cn/openlb/publication/OLB-PM-39460806#:~:text=La%20Manna%2C%20S,PMID%3A%2039050870">ngdc.cncb.ac.cn</a>). So far, these efforts have centered on SOCS1/3, but the same concepts could be applied to SOCS4 if a druggable interface or pathway can be identified. For example, stabilizing SOCS4 protein levels (which are often kept low by continuous degradation) could amplify its inhibitory effects on EGFR/STAT3 signaling in diseases where those pathways are overactive. </p>
+<p>In summary, <strong>SOCS4 is recognized as an important regulatory node at the intersection of growth factor and cytokine signaling</strong>. It localizes in the cytosol to intercept signals from receptors like EGFR, preventing overactivation of downstream pathways such as STAT3 (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3976820/#:~:text=phosphotyrosine%20residues%20on%20the%20activated,KIT%2C%20the">pmc.ncbi.nlm.nih.gov</a>). Through this action, SOCS4 influences diverse biological processes – from epithelial cell proliferation to antiviral immune responses. The latest research (2023–2024) reinforces SOCS4’s role in restraining inflammatory cytokine surges and maintaining immune balance (<a href="https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2024.1449397/full#:~:text=match%20at%20L869%20results%20demonstrated,be%20required%20to%20further%20conclude">www.frontiersin.org</a>) (<a href="https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2024.1449397/full#:~:text=match%20at%20L910%20mutation%20in,dysregulation%20of%20EGFR%20signalling%20results">www.frontiersin.org</a>), and it opens new questions about how this protein can be manipulated for therapeutic benefit. While much has been learned, experts agree that <strong>SOCS4’s full repertoire of functions and its potential in medicine are just beginning to be appreciated</strong>, warranting further detailed studies (<a href="https://pubmed.ncbi.nlm.nih.gov/39460806/#:~:text=functions%20of%20many%20SOCS%20proteins,that%20are%20essential%20for%20normal">pubmed.ncbi.nlm.nih.gov</a>) (<a href="https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2024.1449397/full#:~:text=docking%20sites%20for%20SOCS4%20to,these%20populations%20and%20thus%20the">www.frontiersin.org</a>).</p>
+<p><strong>References:</strong> (Publication dates and sources for key references cited are included inline above)</p>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>AnnotationURLCitation(end_index=568, start_index=434, title='SOCS4', type='url_citation', url='https://en.wikipedia.org/wiki/SOCS4#:~:text=The%20protein%20encoded%20by%20this,been%20found%20for%20this%20gene')</li>
+<li>AnnotationURLCitation(end_index=728, start_index=569, title='The Neglected Suppressor of Cytokine Signalling (SOCS): SOCS4-7 - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/39460806/#:~:text=SOCS%20proteins%20are%20essential%20for,Therefore%2C%20this%20review%20aims%20to')</li>
+<li>AnnotationURLCitation(end_index=982, start_index=848, title='SOCS4', type='url_citation', url='https://en.wikipedia.org/wiki/SOCS4#:~:text=The%20protein%20encoded%20by%20this,been%20found%20for%20this%20gene')</li>
+<li>AnnotationURLCitation(end_index=1373, start_index=1221, title='The Neglected Suppressor of Cytokine Signalling (SOCS): SOCS4-7. - National Genomics Data Center (CNCB-NGDC)', type='url_citation', url='https://ngdc.cncb.ac.cn/openlb/publication/OLB-PM-39460806#:~:text=Kamura%2C%20T,Genes%20%26%20Development%2012%3A3872%E2%80%933881')</li>
+<li>AnnotationURLCitation(end_index=1521, start_index=1374, title='The Role of Suppressors of Cytokine Signalling in Human Neoplasms - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3976820/#:~:text=cytoplasmic%20domain%20and%20a%20phosphorylation,29%5D.%20SOCS5')</li>
+<li>AnnotationURLCitation(end_index=1954, start_index=1783, title='The Role of Suppressors of Cytokine Signalling in Human Neoplasms - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3976820/#:~:text=tempting%20to%20extrapolate%20this%20well,growth%20factor%20receptor%20signalling%20via')</li>
+<li>AnnotationURLCitation(end_index=2313, start_index=2107, title='Frontiers | Unravelling the druggability and immunological roles of the SOCS-family proteins', type='url_citation', url='https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2024.1449397/full#:~:text=SOCS4%20contains%20a%20considerably%20longer,role%20in%20the%20mediating%20epidermal')</li>
+<li>AnnotationURLCitation(end_index=2639, start_index=2468, title='Frontiers | Unravelling the druggability and immunological roles of the SOCS-family proteins', type='url_citation', url='https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2024.1449397/full#:~:text=SOCS4%20contains%20a%20considerably%20longer,EGFR')</li>
+<li>AnnotationURLCitation(end_index=3289, start_index=3132, title='The Role of Suppressors of Cytokine Signalling in Human Neoplasms - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3976820/#:~:text=of%20interaction%20with%20the%20EGF,blocking%20the%20later%20ability%20to')</li>
+<li>AnnotationURLCitation(end_index=3760, start_index=3599, title='SOCS4 suppressor of cytokine signaling 4 [Homo sapiens (human)] - Gene - NCBI', type='url_citation', url='https://www.ncbi.nlm.nih.gov/gene/122809#:~:text=Expression%20Ubiquitous%20expression%20in%20appendix,25%20other%20tissues%20See%20more')</li>
+<li>AnnotationURLCitation(end_index=4683, start_index=4526, title='The Role of Suppressors of Cytokine Signalling in Human Neoplasms - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3976820/#:~:text=of%20interaction%20with%20the%20EGF,blocking%20the%20later%20ability%20to')</li>
+<li>AnnotationURLCitation(end_index=5060, start_index=4908, title='The Neglected Suppressor of Cytokine Signalling (SOCS): SOCS4-7. - National Genomics Data Center (CNCB-NGDC)', type='url_citation', url='https://ngdc.cncb.ac.cn/openlb/publication/OLB-PM-39460806#:~:text=Kamura%2C%20T,Genes%20%26%20Development%2012%3A3872%E2%80%933881')</li>
+<li>AnnotationURLCitation(end_index=5353, start_index=5206, title='The Role of Suppressors of Cytokine Signalling in Human Neoplasms - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3976820/#:~:text=cytoplasmic%20domain%20and%20a%20phosphorylation,29%5D.%20SOCS5')</li>
+<li>AnnotationURLCitation(end_index=5725, start_index=5604, title='The Neglected Suppressor of Cytokine Signalling (SOCS): SOCS4-7. - National Genomics Data Center (CNCB-NGDC)', type='url_citation', url='https://ngdc.cncb.ac.cn/openlb/publication/OLB-PM-39460806#:~:text=Bullock%2C%20A,PMID%3A%2017997974')</li>
+<li>AnnotationURLCitation(end_index=6158, start_index=6011, title='The Role of Suppressors of Cytokine Signalling in Human Neoplasms - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3976820/#:~:text=cytoplasmic%20domain%20and%20a%20phosphorylation,29%5D.%20SOCS5')</li>
+<li>AnnotationURLCitation(end_index=6629, start_index=6472, title='The Role of Suppressors of Cytokine Signalling in Human Neoplasms - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3976820/#:~:text=of%20interaction%20with%20the%20EGF,blocking%20the%20later%20ability%20to')</li>
+<li>AnnotationURLCitation(end_index=6927, start_index=6770, title='The Role of Suppressors of Cytokine Signalling in Human Neoplasms - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3976820/#:~:text=of%20interaction%20with%20the%20EGF,blocking%20the%20later%20ability%20to')</li>
+<li>AnnotationURLCitation(end_index=7261, start_index=7114, title='The Role of Suppressors of Cytokine Signalling in Human Neoplasms - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3976820/#:~:text=cytoplasmic%20domain%20and%20a%20phosphorylation,29%5D.%20SOCS5')</li>
+<li>AnnotationURLCitation(end_index=7727, start_index=7581, title='The Role of Suppressors of Cytokine Signalling in Human Neoplasms - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3976820/#:~:text=phosphotyrosine%20residues%20on%20the%20activated,KIT%2C%20the')</li>
+<li>AnnotationURLCitation(end_index=8080, start_index=7923, title='The Role of Suppressors of Cytokine Signalling in Human Neoplasms - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3976820/#:~:text=of%20interaction%20with%20the%20EGF,blocking%20the%20later%20ability%20to')</li>
+<li>AnnotationURLCitation(end_index=8626, start_index=8470, title='The Role of Suppressors of Cytokine Signalling in Human Neoplasms - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3976820/#:~:text=of%20interaction%20with%20the%20EGF,Y1092%29%20as%20STAT3%3B%20therefore')</li>
+<li>AnnotationURLCitation(end_index=8979, start_index=8807, title='Frontiers | Unravelling the druggability and immunological roles of the SOCS-family proteins', type='url_citation', url='https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2024.1449397/full#:~:text=match%20at%20L865%20SOCS4%20and,KO%7D%20mice%20and')</li>
+<li>AnnotationURLCitation(end_index=9392, start_index=9260, title='The Role of Suppressors of Cytokine Signalling in Human Neoplasms - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3976820/#:~:text=ubiquitin%20ligase%20activity%20,141%5D.%20SOCS5')</li>
+<li>AnnotationURLCitation(end_index=9820, start_index=9688, title='The Role of Suppressors of Cytokine Signalling in Human Neoplasms - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3976820/#:~:text=ubiquitin%20ligase%20activity%20,141%5D.%20SOCS5')</li>
+<li>AnnotationURLCitation(end_index=10525, start_index=10406, title='The Neglected Suppressor of Cytokine Signalling (SOCS): SOCS4-7. - National Genomics Data Center (CNCB-NGDC)', type='url_citation', url='https://ngdc.cncb.ac.cn/openlb/publication/OLB-PM-39460806#:~:text=Kario%2C%20E,PMID%3A%2015590694')</li>
+<li>AnnotationURLCitation(end_index=10886, start_index=10754, title='The Role of Suppressors of Cytokine Signalling in Human Neoplasms - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3976820/#:~:text=of%20interaction%20with%20the%20EGF,KIT%2C%20the')</li>
+<li>AnnotationURLCitation(end_index=11301, start_index=11155, title='The Role of Suppressors of Cytokine Signalling in Human Neoplasms - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3976820/#:~:text=phosphotyrosine%20residues%20on%20the%20activated,KIT%2C%20the')</li>
+<li>AnnotationURLCitation(end_index=11991, start_index=11843, title='Zebrafish Suppressor of Cytokine Signaling 4b (Socs4b) Is Dispensable for Development but May Regulate Epidermal Growth Factor Receptor Signaling - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC11430285/#:~:text=vivo%20and%20in%20vitro,able%20to%20regulate%20EGFR%20signaling')</li>
+<li>AnnotationURLCitation(end_index=12680, start_index=12518, title='The Role of Suppressors of Cytokine Signalling in Human Neoplasms - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3976820/#:~:text=research%20evidence%20suggesting%20that%20while,and%20RTKs%20is%20not%20strict')</li>
+<li>AnnotationURLCitation(end_index=13144, start_index=13017, title='The Neglected Suppressor of Cytokine Signalling (SOCS): SOCS4-7. - National Genomics Data Center (CNCB-NGDC)', type='url_citation', url='https://ngdc.cncb.ac.cn/openlb/publication/OLB-PM-39460806#:~:text=Russell%2C%20and%20E,PMID%3A%2021604262')</li>
+<li>AnnotationURLCitation(end_index=13562, start_index=13435, title='The Neglected Suppressor of Cytokine Signalling (SOCS): SOCS4-7. - National Genomics Data Center (CNCB-NGDC)', type='url_citation', url='https://ngdc.cncb.ac.cn/openlb/publication/OLB-PM-39460806#:~:text=Russell%2C%20and%20E,PMID%3A%2021604262')</li>
+<li>AnnotationURLCitation(end_index=14256, start_index=14100, title='The Role of Suppressors of Cytokine Signalling in Human Neoplasms - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3976820/#:~:text=Like%20other%20SOCS%20proteins%2C%20SOCS6,to%20bind%20to%20and%20inhibit')</li>
+<li>AnnotationURLCitation(end_index=15589, start_index=15473, title='The Neglected Suppressor of Cytokine Signalling (SOCS): SOCS4-7. - National Genomics Data Center (CNCB-NGDC)', type='url_citation', url='https://ngdc.cncb.ac.cn/openlb/publication/OLB-PM-39460806#:~:text=Hu%2C%20G,PMID%3A%2020486857')</li>
+<li>AnnotationURLCitation(end_index=15895, start_index=15779, title='The Neglected Suppressor of Cytokine Signalling (SOCS): SOCS4-7. - National Genomics Data Center (CNCB-NGDC)', type='url_citation', url='https://ngdc.cncb.ac.cn/openlb/publication/OLB-PM-39460806#:~:text=Hu%2C%20G,PMID%3A%2020486857')</li>
+<li>AnnotationURLCitation(end_index=16285, start_index=16147, title='The Role of Suppressors of Cytokine Signalling in Human Neoplasms - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3976820/#:~:text=The%20expression%20of%20SOCS%20proteins,talk.%E2%80%9D')</li>
+<li>AnnotationURLCitation(end_index=16825, start_index=16675, title='The Role of Suppressors of Cytokine Signalling in Human Neoplasms - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3976820/#:~:text=biological%20consequences%20of%20which%20remain,119%20%2C%20%20138')</li>
+<li>AnnotationURLCitation(end_index=17699, start_index=17495, title='Frontiers | Unravelling the druggability and immunological roles of the SOCS-family proteins', type='url_citation', url='https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2024.1449397/full#:~:text=match%20at%20L869%20results%20demonstrated,be%20required%20to%20further%20conclude')</li>
+<li>AnnotationURLCitation(end_index=17904, start_index=17700, title='Frontiers | Unravelling the druggability and immunological roles of the SOCS-family proteins', type='url_citation', url='https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2024.1449397/full#:~:text=Kedzierski%20et%C2%A0al,highly%20dysregulated%20pulmonary%20chemokine%20production')</li>
+<li>AnnotationURLCitation(end_index=18369, start_index=18165, title='Frontiers | Unravelling the druggability and immunological roles of the SOCS-family proteins', type='url_citation', url='https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2024.1449397/full#:~:text=match%20at%20L869%20results%20demonstrated,be%20required%20to%20further%20conclude')</li>
+<li>AnnotationURLCitation(end_index=18574, start_index=18370, title='Frontiers | Unravelling the druggability and immunological roles of the SOCS-family proteins', type='url_citation', url='https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2024.1449397/full#:~:text=Kedzierski%20et%C2%A0al,highly%20dysregulated%20pulmonary%20chemokine%20production')</li>
+<li>AnnotationURLCitation(end_index=19033, start_index=18829, title='Frontiers | Unravelling the druggability and immunological roles of the SOCS-family proteins', type='url_citation', url='https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2024.1449397/full#:~:text=Kedzierski%20et%C2%A0al,highly%20dysregulated%20pulmonary%20chemokine%20production')</li>
+<li>AnnotationURLCitation(end_index=19495, start_index=19364, title='The Neglected Suppressor of Cytokine Signalling (SOCS): SOCS4-7. - National Genomics Data Center (CNCB-NGDC)', type='url_citation', url='https://ngdc.cncb.ac.cn/openlb/publication/OLB-PM-39460806#:~:text=match%20at%20L277%202014,PMID%3A%2024809749')</li>
+<li>AnnotationURLCitation(end_index=19953, start_index=19816, title='The Neglected Suppressor of Cytokine Signalling (SOCS): SOCS4-7. - National Genomics Data Center (CNCB-NGDC)', type='url_citation', url='https://ngdc.cncb.ac.cn/openlb/publication/OLB-PM-39460806#:~:text=match%20at%20L641%20Ren%2C%20S,PMID%3A%2030569160')</li>
+<li>AnnotationURLCitation(end_index=20484, start_index=20280, title='Frontiers | Unravelling the druggability and immunological roles of the SOCS-family proteins', type='url_citation', url='https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2024.1449397/full#:~:text=match%20at%20L910%20mutation%20in,dysregulation%20of%20EGFR%20signalling%20results')</li>
+<li>AnnotationURLCitation(end_index=21163, start_index=20972, title='Frontiers | Unravelling the druggability and immunological roles of the SOCS-family proteins', type='url_citation', url='https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2024.1449397/full#:~:text=SOCS4%20mutations%20have%20been%20previously,transmittable%20missense')</li>
+<li>AnnotationURLCitation(end_index=21523, start_index=21319, title='Frontiers | Unravelling the druggability and immunological roles of the SOCS-family proteins', type='url_citation', url='https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2024.1449397/full#:~:text=match%20at%20L910%20mutation%20in,dysregulation%20of%20EGFR%20signalling%20results')</li>
+<li>AnnotationURLCitation(end_index=22168, start_index=21964, title='Frontiers | Unravelling the druggability and immunological roles of the SOCS-family proteins', type='url_citation', url='https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2024.1449397/full#:~:text=match%20at%20L910%20mutation%20in,dysregulation%20of%20EGFR%20signalling%20results')</li>
+<li>AnnotationURLCitation(end_index=22588, start_index=22434, title='Suppressor of Cytokine Signalling 5 (SOCS5) Modulates Inflammatory Responses during Alphavirus Infection - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/36366574/#:~:text=Responses%20during%20Alphavirus%20Infection%20,Tan%20A%2C%20Jia%20Hui%20Foo')</li>
+<li>AnnotationURLCitation(end_index=23171, start_index=22982, title='Frontiers | Unravelling the druggability and immunological roles of the SOCS-family proteins', type='url_citation', url='https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2024.1449397/full#:~:text=match%20at%20L892%20authors%20also,1%CE%B1%20%2896%29.%20Conversely')</li>
+<li>AnnotationURLCitation(end_index=23611, start_index=23411, title='Frontiers | Unravelling the druggability and immunological roles of the SOCS-family proteins', type='url_citation', url='https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2024.1449397/full#:~:text=authors%20also%20illuminated%20a%20previously,1%CE%B1%20%2896%29.%20Conversely')</li>
+<li>AnnotationURLCitation(end_index=24385, start_index=24181, title='Frontiers | Unravelling the druggability and immunological roles of the SOCS-family proteins', type='url_citation', url='https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2024.1449397/full#:~:text=match%20at%20L869%20results%20demonstrated,be%20required%20to%20further%20conclude')</li>
+<li>AnnotationURLCitation(end_index=24590, start_index=24386, title='Frontiers | Unravelling the druggability and immunological roles of the SOCS-family proteins', type='url_citation', url='https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2024.1449397/full#:~:text=Kedzierski%20et%C2%A0al,highly%20dysregulated%20pulmonary%20chemokine%20production')</li>
+<li>AnnotationURLCitation(end_index=25379, start_index=25256, title='The Neglected Suppressor of Cytokine Signalling (SOCS): SOCS4-7. - National Genomics Data Center (CNCB-NGDC)', type='url_citation', url='https://ngdc.cncb.ac.cn/openlb/publication/OLB-PM-39460806#:~:text=Kobayashi%2C%20D,PMID%3A%2022127425')</li>
+<li>AnnotationURLCitation(end_index=25739, start_index=25616, title='The Neglected Suppressor of Cytokine Signalling (SOCS): SOCS4-7. - National Genomics Data Center (CNCB-NGDC)', type='url_citation', url='https://ngdc.cncb.ac.cn/openlb/publication/OLB-PM-39460806#:~:text=Kobayashi%2C%20D,PMID%3A%2022127425')</li>
+<li>AnnotationURLCitation(end_index=26193, start_index=26097, title='The Neglected Suppressor of Cytokine Signalling (SOCS): SOCS4-7. - National Genomics Data Center (CNCB-NGDC)', type='url_citation', url='https://ngdc.cncb.ac.cn/openlb/publication/OLB-PM-39460806#:~:text=22127425')</li>
+<li>AnnotationURLCitation(end_index=26432, start_index=26336, title='The Neglected Suppressor of Cytokine Signalling (SOCS): SOCS4-7. - National Genomics Data Center (CNCB-NGDC)', type='url_citation', url='https://ngdc.cncb.ac.cn/openlb/publication/OLB-PM-39460806#:~:text=22127425')</li>
+<li>AnnotationURLCitation(end_index=26854, start_index=26747, title='The Neglected Suppressor of Cytokine Signalling (SOCS): SOCS4-7. - National Genomics Data Center (CNCB-NGDC)', type='url_citation', url='https://ngdc.cncb.ac.cn/openlb/publication/OLB-PM-39460806#:~:text=Sasi%20W%2C%20W,178')</li>
+<li>AnnotationURLCitation(end_index=27461, start_index=27334, title='The Neglected Suppressor of Cytokine Signalling (SOCS): SOCS4-7. - National Genomics Data Center (CNCB-NGDC)', type='url_citation', url='https://ngdc.cncb.ac.cn/openlb/publication/OLB-PM-39460806#:~:text=Ying%2C%20J.%2C%20H.,PMID%3A%2035116557')</li>
+<li>AnnotationURLCitation(end_index=28206, start_index=28083, title='The Neglected Suppressor of Cytokine Signalling (SOCS): SOCS4-7. - National Genomics Data Center (CNCB-NGDC)', type='url_citation', url='https://ngdc.cncb.ac.cn/openlb/publication/OLB-PM-39460806#:~:text=Kobayashi%2C%20D,PMID%3A%2022127425')</li>
+<li>AnnotationURLCitation(end_index=28303, start_index=28207, title='The Neglected Suppressor of Cytokine Signalling (SOCS): SOCS4-7. - National Genomics Data Center (CNCB-NGDC)', type='url_citation', url='https://ngdc.cncb.ac.cn/openlb/publication/OLB-PM-39460806#:~:text=22127425')</li>
+<li>AnnotationURLCitation(end_index=29025, start_index=28823, title='Frontiers | Unravelling the druggability and immunological roles of the SOCS-family proteins', type='url_citation', url='https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2024.1449397/full#:~:text=match%20at%20L926%20there%20has,complex%20for%20targeted%20protein%20degradation')</li>
+<li>AnnotationURLCitation(end_index=29435, start_index=29232, title='Frontiers | Unravelling the druggability and immunological roles of the SOCS-family proteins', type='url_citation', url='https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2024.1449397/full#:~:text=there%20has%20been%20little%20to,complex%20for%20targeted%20protein%20degradation')</li>
+<li>AnnotationURLCitation(end_index=29956, start_index=29765, title='Frontiers | Unravelling the druggability and immunological roles of the SOCS-family proteins', type='url_citation', url='https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2024.1449397/full#:~:text=SOCS4%20mutations%20have%20been%20previously,transmittable%20missense')</li>
+<li>AnnotationURLCitation(end_index=30362, start_index=30158, title='Frontiers | Unravelling the druggability and immunological roles of the SOCS-family proteins', type='url_citation', url='https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2024.1449397/full#:~:text=match%20at%20L910%20mutation%20in,dysregulation%20of%20EGFR%20signalling%20results')</li>
+<li>AnnotationURLCitation(end_index=31325, start_index=31188, title='The Neglected Suppressor of Cytokine Signalling (SOCS): SOCS4-7. - National Genomics Data Center (CNCB-NGDC)', type='url_citation', url='https://ngdc.cncb.ac.cn/openlb/publication/OLB-PM-39460806#:~:text=match%20at%20L641%20Ren%2C%20S,PMID%3A%2030569160')</li>
+<li>AnnotationURLCitation(end_index=32161, start_index=32005, title='The Neglected Suppressor of Cytokine Signalling (SOCS): SOCS4-7 - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/39460806/#:~:text=functions%20of%20many%20SOCS%20proteins,that%20are%20essential%20for%20normal')</li>
+<li>AnnotationURLCitation(end_index=32475, start_index=32319, title='The Neglected Suppressor of Cytokine Signalling (SOCS): SOCS4-7 - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/39460806/#:~:text=functions%20of%20many%20SOCS%20proteins,that%20are%20essential%20for%20normal')</li>
+<li>AnnotationURLCitation(end_index=32895, start_index=32695, title='Frontiers | Unravelling the druggability and immunological roles of the SOCS-family proteins', type='url_citation', url='https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2024.1449397/full#:~:text=match%20at%20L880%20mechanism%20of,system%20despite%20its%20broad%20expression')</li>
+<li>AnnotationURLCitation(end_index=33300, start_index=33105, title='Frontiers | Unravelling the druggability and immunological roles of the SOCS-family proteins', type='url_citation', url='https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2024.1449397/full#:~:text=docking%20sites%20for%20SOCS4%20to,these%20populations%20and%20thus%20the')</li>
+<li>AnnotationURLCitation(end_index=33731, start_index=33527, title='Frontiers | Unravelling the druggability and immunological roles of the SOCS-family proteins', type='url_citation', url='https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2024.1449397/full#:~:text=match%20at%20L869%20results%20demonstrated,be%20required%20to%20further%20conclude')</li>
+<li>AnnotationURLCitation(end_index=33936, start_index=33732, title='Frontiers | Unravelling the druggability and immunological roles of the SOCS-family proteins', type='url_citation', url='https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2024.1449397/full#:~:text=Kedzierski%20et%C2%A0al,highly%20dysregulated%20pulmonary%20chemokine%20production')</li>
+<li>AnnotationURLCitation(end_index=34234, start_index=34086, title='Zebrafish Suppressor of Cytokine Signaling 4b (Socs4b) Is Dispensable for Development but May Regulate Epidermal Growth Factor Receptor Signaling - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC11430285/#:~:text=vivo%20and%20in%20vitro,able%20to%20regulate%20EGFR%20signaling')</li>
+<li>AnnotationURLCitation(end_index=34439, start_index=34235, title='Frontiers | Unravelling the druggability and immunological roles of the SOCS-family proteins', type='url_citation', url='https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2024.1449397/full#:~:text=Kedzierski%20et%C2%A0al,highly%20dysregulated%20pulmonary%20chemokine%20production')</li>
+<li>AnnotationURLCitation(end_index=35588, start_index=35464, title='The Neglected Suppressor of Cytokine Signalling (SOCS): SOCS4-7. - National Genomics Data Center (CNCB-NGDC)', type='url_citation', url='https://ngdc.cncb.ac.cn/openlb/publication/OLB-PM-39460806#:~:text=La%20Manna%2C%20S,PMID%3A%2039050870')</li>
+<li>AnnotationURLCitation(end_index=36365, start_index=36219, title='The Role of Suppressors of Cytokine Signalling in Human Neoplasms - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3976820/#:~:text=phosphotyrosine%20residues%20on%20the%20activated,KIT%2C%20the')</li>
+<li>AnnotationURLCitation(end_index=36837, start_index=36633, title='Frontiers | Unravelling the druggability and immunological roles of the SOCS-family proteins', type='url_citation', url='https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2024.1449397/full#:~:text=match%20at%20L869%20results%20demonstrated,be%20required%20to%20further%20conclude')</li>
+<li>AnnotationURLCitation(end_index=37042, start_index=36838, title='Frontiers | Unravelling the druggability and immunological roles of the SOCS-family proteins', type='url_citation', url='https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2024.1449397/full#:~:text=match%20at%20L910%20mutation%20in,dysregulation%20of%20EGFR%20signalling%20results')</li>
+<li>AnnotationURLCitation(end_index=37487, start_index=37331, title='The Neglected Suppressor of Cytokine Signalling (SOCS): SOCS4-7 - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/39460806/#:~:text=functions%20of%20many%20SOCS%20proteins,that%20are%20essential%20for%20normal')</li>
+<li>AnnotationURLCitation(end_index=37683, start_index=37488, title='Frontiers | Unravelling the druggability and immunological roles of the SOCS-family proteins', type='url_citation', url='https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2024.1449397/full#:~:text=docking%20sites%20for%20SOCS4%20to,these%20populations%20and%20thus%20the')</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q8WXH5
+gene_symbol: SOCS4
+product_type: PROTEIN
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &#39;Suppressor of cytokine signaling 4 (SOCS4, ~50 kDa), member of SOCS
+  family serving as STAT-induced inhibitor and negative feedback regulator in cytokine
+  and growth factor signaling. Contains central SH2 domain (binds phosphotyrosine)
+  and C-terminal SOCS box (recruits E3 ubiquitin ligase machinery). Long N-terminal
+  region (~270 aa) characteristic of SOCS4-7 subfamily. Functions as E3 ligase adaptor:
+  SH2 domain binds specific phosphotyrosine motifs on activated receptors/kinases,
+  while SOCS box recruits Elongin B/C-Cullin-5 ubiquitin ligase complex, promoting
+  proteasomal degradation of bound substrates. Primary target is EGFR - binds phospho-Y1092
+  on activated EGFR, recruiting ubiquitin ligase for receptor degradation and blocking
+  STAT3 binding site, thereby attenuating EGF-induced signaling. Acts as brake on
+  growth factor receptor signaling by physically associating with and marking activated
+  proteins for destruction. Also reported weak interactions with c-Kit receptor and
+  JAK2. Critical role in limiting inflammatory responses during infection - SOCS4-knockout
+  mice highly susceptible to influenza with exaggerated cytokine storm (excessive
+  chemokines/cytokines causing tissue damage). Tempers initial wave of inflammation
+  preventing immune-mediated damage. Human SOCS4 T266M mutation causes autoimmune/inflammatory
+  syndrome via hyperactive EGFR-STAT3 signaling. Acts as tumor suppressor in some
+  cancers (gastric, lung) where loss removes brake on EGFR/STAT3 oncogenic pathways.
+  Cytosolic protein recruited to activated receptor complexes at plasma membrane or
+  endosomes. Broadly expressed with inducible upregulation by cytokines/growth factors.
+  Dispensable for baseline development but crucial during acute stress responses.&#39;
+existing_annotations:
+- term:
+    id: GO:0019221
+    label: cytokine-mediated signaling pathway
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: Cytokine-mediated signaling pathway - SOCS4 is induced by cytokines and
+      regulates cytokine signaling through receptor degradation.
+    action: ACCEPT
+    reason: Core regulatory pathway.
+- term:
+    id: GO:0009968
+    label: negative regulation of signal transduction
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: Negative regulation of signal transduction - attenuates EGFR and cytokine
+      signaling.
+    action: ACCEPT
+    reason: General regulatory function.
+- term:
+    id: GO:0032436
+    label: positive regulation of proteasomal ubiquitin-dependent protein catabolic
+      process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: Positive regulation of proteasomal ubiquitin-dependent protein catabolic
+      process - SOCS box recruits E3 ligase complex promoting degradation.
+    action: ACCEPT
+    reason: Core mechanism.
+- term:
+    id: GO:0035556
+    label: intracellular signal transduction
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: Intracellular signal transduction - mediates cytokine and growth factor
+      signal attenuation.
+    action: ACCEPT
+    reason: Signaling regulator.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:25814554
+  review:
+    summary: Protein binding - SH2 domain binds phosphotyrosine on EGFR and other
+      targets.
+    action: ACCEPT
+    reason: Core binding function.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  review:
+    summary: Protein binding - SH2 domain binds phosphotyrosine on EGFR and other
+      targets.
+    action: ACCEPT
+    reason: Core binding function.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32814053
+  review:
+    summary: Protein binding - SH2 domain binds phosphotyrosine on EGFR and other
+      targets.
+    action: ACCEPT
+    reason: Core binding function.
+- term:
+    id: GO:0016567
+    label: protein ubiquitination
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000041
+  review:
+    summary: Protein ubiquitination - SOCS box recruits E3 ligase.
+    action: ACCEPT
+    reason: Core mechanism.
+- term:
+    id: GO:0007175
+    label: negative regulation of epidermal growth factor-activated receptor activity
+  evidence_type: IDA
+  original_reference_id: PMID:15590694
+  review:
+    summary: Negative regulation of EGFR activity - binds phospho-Y1092 on activated
+      EGFR promoting degradation.
+    action: ACCEPT
+    reason: Primary target function.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms.
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000041
+  title: Gene Ontology annotation based on UniPathway vocabulary mapping.
+  findings: []
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+- id: PMID:15590694
+  title: Suppressors of cytokine signaling 4 and 5 regulate epidermal growth factor
+    receptor signaling.
+  findings: []
+- id: PMID:25814554
+  title: Phospho-tyrosine dependent protein-protein interaction network.
+  findings: []
+- id: PMID:32296183
+  title: A reference map of the human binary protein interactome.
+  findings: []
+- id: PMID:32814053
+  title: Interactome Mapping Provides a Network of Neurodegenerative Disease Proteins
+    and Uncovers Widespread Protein Aggregation in Affected Brains.
+  findings: []
+aliases:
+- Suppressor of cytokine signaling 4
+- SOCS-4
+core_functions:
+- molecular_function:
+    id: GO:0004842
+    label: ubiquitin-protein transferase activity
+  description: E3 ubiquitin ligase adaptor that targets EGFR and other growth factor
+    receptors for proteasomal degradation. SH2 domain binds phospho-Y1092 on activated
+    EGFR, while SOCS box recruits Elongin-Cullin-5 complex. Negatively regulates EGFR-STAT3
+    signaling, preventing excessive inflammation and growth factor signaling. Critical
+    for limiting cytokine storms during viral infection.
+  locations:
+  - id: GO:0005737
+    label: cytoplasm
+  directly_involved_in:
+  - id: GO:0007175
+    label: negative regulation of epidermal growth factor-activated receptor activity
+  - id: GO:0042130
+    label: negative regulation of T cell proliferation
+  supported_by:
+  - reference_id: UniProt:Q8WXH5
+    supporting_text: E3 ubiquitin ligase adaptor that targets EGFR and other growth
+      factor receptors for proteasomal degradation. SH2 domain binds phospho-Y1092
+      on activated EGFR, while SOCS box recruits Elongin-Cullin-5 ...
+status: DRAFT
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

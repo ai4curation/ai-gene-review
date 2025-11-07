@@ -1,0 +1,2739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RASA4 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>RASA4</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/O43374" target="_blank" class="term-link">
+                        O43374
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Aliases:</span>
+                <div class="aliases">
+                    
+                    <span class="badge">RAS p21 protein activator 4</span>
+                    
+                    <span class="badge">CAPRI</span>
+                    
+                    <span class="badge">Calcium-promoted Ras inactivator</span>
+                    
+                </div>
+            </div>
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "RASA4";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="O43374" data-a="DESCRIPTION: RAS p21 protein activator 4 (CAPRI - Calcium-Promo..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>RAS p21 protein activator 4 (CAPRI - Calcium-Promoted Ras Inactivator), calcium-regulated GTPase-activating protein for RAS and RAP1 small GTPases. Member of GAP1 family with two tandem C2 domains (Ca2+ and phospholipid binding), central GAP-related domain (GRD) for catalytic activity, and C-terminal pleckstrin homology (PH) domain with Bruton&#39;s tyrosine kinase (Btk) motif. Unique calcium sensor that links intracellular Ca2+ signals to Ras inactivation. Cytosolic protein at rest that rapidly translocates to inner plasma membrane upon Ca2+ elevation via C2 domain binding to anionic phospholipids (phosphatidylserine). PH domain atypical - does not bind phosphoinositides due to Leu→Arg substitution. Dual substrate specificity: catalyzes GTP hydrolysis on Ras family GTPases (H-Ras, N-Ras, K-Ras) and Rap1 via arginine-finger mechanism. Oligomerization state regulates substrate preference - monomeric form predominantly RasGAP, while Ca2+-induced homodimers exhibit enhanced Rap1GAP activity. Functions as negative regulator of Ras-MAPK and Rap1-integrin signaling pathways. Critical for immune cell function: in neutrophils, enables chemotaxis through high-concentration gradients by mediating GPCR-induced Ras adaptation - loss causes hyperactive Ras-GTP, excessive F-actin polymerization, and defective directional migration. In macrophages, essential for Fcγ receptor-mediated phagocytosis - CAPRI acts as adaptor linking FcγR calcium signals to coordinated regulation of Ras (inactivation) and Cdc42/Rac1 (activation) for phagosome formation. CAPRI-knockout mice show ~80% lethality to Salmonella infection due to impaired bacterial clearance. Tumor suppressor-like function - loss leads to prolonged Ras-MAPK signaling. Downregulated in cervical cancer (~AUC 0.986 diagnostic value); forced expression suppresses proliferation by inactivating HIF-1α/survivin pathway. Somatic mutations (e.g. D111N in DLBCL) associated with enhanced ERK/MAPK activation and cancer progression. Broadly expressed with high levels in immune organs (spleen, lymph nodes). Acts as amplitude sensor for Ca2+ bursts, translating calcium signal intensity into proportional Ras inactivation. Provides negative feedback loop preventing overactivation of growth and immune signaling pathways.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005096" target="_blank" class="term-link">
+                                    GO:0005096
+                                </a>
+                            </span>
+                            <span class="term-label">GTPase activator activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O43374" data-a="GO:0005096" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> GTPase activator activity - dual RasGAP and Rap1GAP function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core enzymatic function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1902531" target="_blank" class="term-link">
+                                    GO:1902531
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of intracellular signal transduction</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O43374" data-a="GO:1902531" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Regulation of intracellular signal transduction - regulates Ras/Rap1 signaling.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core regulatory role.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005096" target="_blank" class="term-link">
+                                    GO:0005096
+                                </a>
+                            </span>
+                            <span class="term-label">GTPase activator activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O43374" data-a="GO:0005096" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> GTPase activator activity - dual RasGAP and Rap1GAP function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core enzymatic function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005543" target="_blank" class="term-link">
+                                    GO:0005543
+                                </a>
+                            </span>
+                            <span class="term-label">phospholipid binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O43374" data-a="GO:0005543" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phospholipid binding - C2 domains bind membrane phospholipids in Ca2+-dependent manner.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Domain function for membrane targeting.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O43374" data-a="GO:0005829" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytosol - cytosolic at rest with Ca2+-triggered membrane translocation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core resting localization.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O43374" data-a="GO:0005886" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Plasma membrane - translocates to inner plasma membrane upon Ca2+ elevation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Activity-dependent localization.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008270" target="_blank" class="term-link">
+                                    GO:0008270
+                                </a>
+                            </span>
+                            <span class="term-label">zinc ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O43374" data-a="GO:0008270" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Zinc ion binding - RasGAP domain requires metal cofactors.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Enzymatic requirement.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035556" target="_blank" class="term-link">
+                                    GO:0035556
+                                </a>
+                            </span>
+                            <span class="term-label">intracellular signal transduction</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O43374" data-a="GO:0035556" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Intracellular signal transduction - participates in Ras/Rap1 signaling pathways.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Signaling role.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046580" target="_blank" class="term-link">
+                                    GO:0046580
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of Ras protein signal transduction</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O43374" data-a="GO:0046580" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Negative regulation of Ras protein signal transduction - core function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core regulatory function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046872" target="_blank" class="term-link">
+                                    GO:0046872
+                                </a>
+                            </span>
+                            <span class="term-label">metal ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O43374" data-a="GO:0046872" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Metal ion binding - requires metal cofactors.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Enzymatic requirement.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071277" target="_blank" class="term-link">
+                                    GO:0071277
+                                </a>
+                            </span>
+                            <span class="term-label">cellular response to calcium ion</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O43374" data-a="GO:0071277" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cellular response to calcium ion - Ca2+-regulated membrane translocation and activation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core regulatory mechanism.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005096" target="_blank" class="term-link">
+                                    GO:0005096
+                                </a>
+                            </span>
+                            <span class="term-label">GTPase activator activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16009725" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16009725
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    CAPRI and RASAL impose different modes of information proces...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O43374" data-a="GO:0005096" data-r="PMID:16009725" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> GTPase activator activity - dual RasGAP and Rap1GAP function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core enzymatic function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            Reactome:R-HSA-5658231
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O43374" data-a="GO:0005829" data-r="Reactome:R-HSA-5658231" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytosol - cytosolic at rest with Ca2+-triggered membrane translocation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core resting localization.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            Reactome:R-HSA-5658435
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O43374" data-a="GO:0005829" data-r="Reactome:R-HSA-5658435" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytosol - cytosolic at rest with Ca2+-triggered membrane translocation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core resting localization.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16009725" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16009725
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    CAPRI and RASAL impose different modes of information proces...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O43374" data-a="GO:0005829" data-r="PMID:16009725" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytosol - cytosolic at rest with Ca2+-triggered membrane translocation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core resting localization.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16009725" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16009725
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    CAPRI and RASAL impose different modes of information proces...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O43374" data-a="GO:0005886" data-r="PMID:16009725" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Plasma membrane - translocates to inner plasma membrane upon Ca2+ elevation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Activity-dependent localization.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071277" target="_blank" class="term-link">
+                                    GO:0071277
+                                </a>
+                            </span>
+                            <span class="term-label">cellular response to calcium ion</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16009725" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16009725
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    CAPRI and RASAL impose different modes of information proces...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O43374" data-a="GO:0071277" data-r="PMID:16009725" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cellular response to calcium ion - Ca2+-regulated membrane translocation and activation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core regulatory mechanism.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034260" target="_blank" class="term-link">
+                                    GO:0034260
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of GTPase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11448776" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11448776
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    CAPRI regulates Ca(2+)-dependent inactivation of the Ras-MAP...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O43374" data-a="GO:0034260" data-r="PMID:11448776" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Negative regulation of GTPase activity - stimulates GTP hydrolysis on Ras/Rap1.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core enzymatic function (GAP activity).
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034260" target="_blank" class="term-link">
+                                    GO:0034260
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of GTPase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12845332" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12845332
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Phospholipase Cgamma activates Ras on the Golgi apparatus by...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O43374" data-a="GO:0034260" data-r="PMID:12845332" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Negative regulation of GTPase activity - stimulates GTP hydrolysis on Ras/Rap1.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core enzymatic function (GAP activity).
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005096" target="_blank" class="term-link">
+                                    GO:0005096
+                                </a>
+                            </span>
+                            <span class="term-label">GTPase activator activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11448776" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11448776
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    CAPRI regulates Ca(2+)-dependent inactivation of the Ras-MAP...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O43374" data-a="GO:0005096" data-r="PMID:11448776" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> GTPase activator activity - dual RasGAP and Rap1GAP function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core enzymatic function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Calcium-regulated dual-specificity RasGAP that catalyzes GTP hydrolysis on both RAS proteins (H-Ras, N-Ras, K-Ras) and RAP1 GTPase. Monomeric form predominantly RasGAP; Ca2+-induced dimers exhibit enhanced Rap1GAP activity. C2 domains mediate Ca2+-dependent membrane translocation. Critical for neutrophil chemotaxis adaptation and macrophage phagocytosis. Tumor suppressor-like function.</h3>
+                <span class="vote-buttons" data-g="O43374" data-a="FUNCTION: Calcium-regulated dual-specificity RasGAP that cat..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005096" target="_blank" class="term-link">
+                            GTPase activator activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046580" target="_blank" class="term-link">
+                                negative regulation of Ras protein signal transduction
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071277" target="_blank" class="term-link">
+                                cellular response to calcium ion
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006935" target="_blank" class="term-link">
+                                chemotaxis
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                plasma membrane
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            UniProt:O43374
+                            
+                        </span>
+                        
+                        <div class="finding-text">RASA4/CAPRI is Ca2+-regulated dual Ras/Rap1 GAP essential for neutrophil chemotaxis and macrophage phagocytosis. CAPRI-KO mice show 80% lethality to Salmonella infection. Oligomerization state regulates substrate preference.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11448776" target="_blank" class="term-link">
+                            PMID:11448776
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">CAPRI regulates Ca(2+)-dependent inactivation of the Ras-MAPK pathway.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12845332" target="_blank" class="term-link">
+                            PMID:12845332
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Phospholipase Cgamma activates Ras on the Golgi apparatus by means of RasGRP1.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16009725" target="_blank" class="term-link">
+                            PMID:16009725
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">CAPRI and RASAL impose different modes of information processing on Ras due to contrasting temporal filtering of Ca2+.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        Reactome:R-HSA-5658231
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">RAS GAPs stimulate RAS GTPase activity</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        Reactome:R-HSA-5658435
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">RAS GAPs bind RAS:GTP</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Openai</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(RASA4-deep-research-openai.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="O43374" data-a="DOC: Deep Research Openai" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: openai<br />
+model: o3-deep-research-2025-06-26<br />
+cached: true<br />
+start_time: '2025-11-04T00:09:07.099444'<br />
+end_time: '2025-11-04T00:09:07.106808'<br />
+duration_seconds: 0.01<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: human<br />
+  gene_id: O43374<br />
+  gene_symbol: RASA4<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    temperature: 0.1<br />
+    top_p: 1.0<br />
+citation_count: 113</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<p>Please provide a comprehensive research report on the gene RASA4 (O43374) in human.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function. </p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<h1 id="overview-of-rasa4-capri-and-its-function-in-ras-signaling">Overview of RASA4 (CAPRI) and Its Function in Ras Signaling</h1>
+<p><strong>RASA4</strong>, also known as <em>RAS p21 protein activator 4</em> or <strong>CAPRI</strong> (Calcium-Promoted Ras Inactivator), is a member of the GAP1 family of GTPase-activating proteins that down-regulate Ras signaling in a calcium-dependent manner (<a href="https://www.ncbi.nlm.nih.gov/gene?Cmd=DetailsSearch&amp;Db=gene&amp;Term=10156#:~:text=Summary%20This%20gene%20encodes%20a,provided">www.ncbi.nlm.nih.gov</a>). Like other Ras GAPs, RASA4 accelerates the intrinsic GTPase activity of Ras, converting Ras from its active GTP-bound form to an inactive GDP-bound form (<a href="https://www.ncbi.nlm.nih.gov/gene?Cmd=DetailsSearch&amp;Db=gene&amp;Term=10156#:~:text=that%20suppresses%20the%20Ras%2Fmitogen,Expression">www.ncbi.nlm.nih.gov</a>). This terminates Ras-mediated signaling, notably the Ras–Raf–MEK–ERK (MAPK) pathway which controls gene expression, cell growth, and differentiation (<a href="https://www.ncbi.nlm.nih.gov/gene?Cmd=DetailsSearch&amp;Db=gene&amp;Term=10156#:~:text=that%20suppresses%20the%20Ras%2Fmitogen,Expression">www.ncbi.nlm.nih.gov</a>). RASA4 is therefore a <strong>negative regulator</strong> of Ras signaling that links intracellular calcium signals to Ras inactivation (<a href="https://pharos.nih.gov/targets/RASA4#:~:text=Ca%282%2B%29,longer%20activates%20downstream%20pathways%20that">pharos.nih.gov</a>). It is widely expressed across tissues (with especially high mRNA levels in immune organs like spleen and lymph nodes) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC1464573/#:~:text=determine%20Rasa4%20expression%2C%20we%20probed,27">pmc.ncbi.nlm.nih.gov</a>), suggesting a broad role in cellular signaling. Importantly, RASA4 was first characterized in 2001 as a calcium-regulated Ras GAP that localizes to the cytosol at rest and translocates to the plasma membrane upon Ca^2+ elevation (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC1464573/#:~:text=as%20a%20Ras,a%20critical%20role%20in%20Fc%CE%B3R">pmc.ncbi.nlm.nih.gov</a>). Below, we discuss RASA4’s structure, biochemical activity, cellular localization, and involvement in key biological processes, citing recent research (including 2021–2024 studies) for the latest insights.</p>
+<h2 id="domain-structure-and-calcium-regulated-activation">Domain Structure and Calcium-Regulated Activation</h2>
+<p>RASA4/CAPRI has a multi-domain architecture typical of the GAP1 subfamily of Ras GAPs (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC1464573/#:~:text=CAPRI%20is%20a%20member%20of,cells%20but%20not%20in%20its">pmc.ncbi.nlm.nih.gov</a>). It contains <strong>two tandem C2 domains</strong> at the N-terminus, a central <strong>GAP-related domain (GRD)</strong> that provides the catalytic Ras GTPase-activating function, and a C-terminal <strong>pleckstrin homology (PH) domain</strong> followed by a <strong>Bruton’s tyrosine kinase (Btk) motif</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC1464573/#:~:text=CAPRI%20is%20a%20member%20of,cells%20but%20not%20in%20its">pmc.ncbi.nlm.nih.gov</a>). The C2 domains are calcium-binding modules; notably, RASA4 (and the related RASAL1) contain the full complement of five acidic residues in each C2 domain required for Ca^2+ coordination (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3103366/#:~:text=dual%20RasGAP%20and%20RapGAP%20activities,and%20Rap1GAP%20activities%20of%20CAPRI">pmc.ncbi.nlm.nih.gov</a>). Indeed, rises in intracellular Ca^2+ trigger RASA4’s C2 domains to bind lipid membranes, causing rapid translocation of RASA4 from the cytosol to the inner surface of the plasma membrane (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC1464573/#:~:text=as%20a%20Ras,a%20critical%20role%20in%20Fc%CE%B3R">pmc.ncbi.nlm.nih.gov</a>). This Ca^2+-dependent membrane recruitment is essential for RASA4’s function – in unstimulated cells RASA4 is cytosolic, but upon a stimulus that raises Ca^2+ (such as receptor activation), RASA4 relocates to the plasma membrane where its GAP domain can access Ras proteins (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC1464573/#:~:text=as%20a%20Ras,a%20critical%20role%20in%20Fc%CE%B3R">pmc.ncbi.nlm.nih.gov</a>). Interestingly, the PH domain of RASA4 appears <em>atypical</em>: unlike other GAP1 family members, RASA4’s PH domain does not bind phosphoinositides like PIP_2 or PIP_3 due to a Leu→Arg substitution at a key position (<a href="https://www.abcam.com/en-ch/targets/rasa4/1331#:~:text=Domain">www.abcam.com</a>). This suggests RASA4’s membrane targeting relies predominantly on Ca^2+/C2-domain interactions with anionic phospholipids (e.g. phosphatidylserine) rather than PH domain binding to phosphoinositide lipids. Consistent with this mechanism, deletion of the C-terminal PH-Btk module does not prevent Ca^2+-triggered translocation of RASA4 to the membrane (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3103366/#:~:text=investigated%20the%20mechanism%20that%20switches,2%2B%7D%20at">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3103366/#:~:text=Ca%5E%7B2%2B%7D,dimeric%20forms%20of%20CAPRI%20exhibited">pmc.ncbi.nlm.nih.gov</a>), whereas mutations that disrupt Ca^2+ binding abolish membrane recruitment (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3103366/#:~:text=plasma%20membrane%20upon%20cell%20stimulation,monomers%20or%20homodimers%20through%20a">pmc.ncbi.nlm.nih.gov</a>). Thus, RASA4 acts as a <strong>calcium sensor</strong> in cells: it remains dormant in the cytosol until a rise in Ca^2+ induces it to attach to the membrane and become active as a Ras GTPase-accelerating protein (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3103366/#:~:text=CAPRI%20is%20a%20member%20of,forms%20a%20hydrophobic%20face%20in">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3103366/#:~:text=CAPRI%20increases%20upon%20cell%20stimulation,Ras%20and%20Rap1%20signaling%20pathways">pmc.ncbi.nlm.nih.gov</a>).</p>
+<h2 id="gtpase-activating-function-and-substrate-specificity">GTPase-Activating Function and Substrate Specificity</h2>
+<p><strong>Primary biochemical function:</strong> RASA4’s GRD catalyzes the hydrolysis of GTP on Ras, turning off Ras signaling. In enzymatic terms, RASA4 provides an <em>“arginine finger”</em> into Ras’s active site, accelerating GTP hydrolysis by several orders of magnitude (as is typical for Ras GAPs) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3103366/#:~:text=domains%2C%20and%20although%20Rap1%20is,mechanisms%2C%20some%20GAPs%20have%20dual">pmc.ncbi.nlm.nih.gov</a>). The primary substrates are the canonical <strong>Ras family</strong> small GTPases (H-Ras, N-Ras, K-Ras), which control the MAPK cascade. By stimulating Ras’s GTPase, RASA4 prevents prolonged activation of downstream ERK/MAPK signaling that would otherwise drive transcriptional programs for proliferation and differentiation (<a href="https://www.ncbi.nlm.nih.gov/gene?Cmd=DetailsSearch&amp;Db=gene&amp;Term=10156#:~:text=that%20suppresses%20the%20Ras%2Fmitogen,Expression">www.ncbi.nlm.nih.gov</a>). Importantly, emerging research shows that RASA4 is a <strong>dual-specificity GAP</strong> under certain conditions. In addition to Ras, RASA4 can target the closely related GTPase <strong>Rap1</strong> (a regulator of cell adhesion and other processes). <em>In vitro</em> and cell-based assays demonstrated that RASA4 (like several GAP1 family members) has measurable GAP activity toward Rap1, albeit weaker than its RasGAP activity (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC1904491/#:~:text=GAP1,For%20this%20dual%20activity%2C%20regions">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC1904491/#:~:text=domain,association%20with%20the%20plasma%20membrane">pmc.ncbi.nlm.nih.gov</a>). This Rap1-GAP activity is <strong>calcium-regulated</strong>. A 2006 biochemical study (Kupzig et al., <em>J. Biol. Chem.</em>, 2006) showed that RASA4’s ability to inactivate Rap1 is low at baseline but significantly enhanced when Ca^2+ triggers RASA4’s association with the plasma membrane (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC1904491/#:~:text=domain,association%20with%20the%20plasma%20membrane">pmc.ncbi.nlm.nih.gov</a>). Subsequent work (Dai <em>et al.</em>, 2011) revealed the mechanism: Ca^2+ not only recruits RASA4 to the membrane, but also induces <strong>RASA4 homodimerization</strong>, and this oligomeric state favors Rap1 as a substrate (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10920261/#:~:text=In%20addition%20to%20SynGAP%2C%20most,study%20suggests%20that%20modulation%20of">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3103366/#:~:text=dimer%20formation,Ras%20and%20Rap1%20signaling%20pathways">pmc.ncbi.nlm.nih.gov</a>). Monomeric RASA4 predominantly acts as a RasGAP, whereas Ca^2+-induced RASA4 dimers exhibit increased Rap1GAP activity (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10920261/#:~:text=%28Kupzig%20et%20al,translational%20modifications%20or%20second%20messenger">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3103366/#:~:text=dimer%20formation,Ras%20and%20Rap1%20signaling%20pathways">pmc.ncbi.nlm.nih.gov</a>). In live-cell experiments, a dimerization-deficient mutant of RASA4 had strong Ras-inactivating activity but was impaired in turning off Rap1, confirming that dimerization is crucial for RASA4’s RapGAP function (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3103366/#:~:text=dimer%20formation,Ras%20and%20Rap1%20signaling%20pathways">pmc.ncbi.nlm.nih.gov</a>). These findings position RASA4 as a versatile GAP that can <strong>coordinate Ras and Rap1 signaling</strong> depending on cellular Ca^2+ levels. In effect, RASA4 acts as a calcium-sensitive switch: at moderate Ca^2+ it mainly inactivates Ras, and at high Ca^2+ it can simultaneously dampen Rap1 signaling, thereby tuning the balance between the Ras-ERK pathway and Rap1-mediated pathways (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10920261/#:~:text=%28Kupzig%20et%20al,translational%20modifications%20or%20second%20messenger">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3103366/#:~:text=RapGAP%20activity%20than%20RasGAP%20activity%2C,Ras%20and%20Rap1%20signaling%20pathways">pmc.ncbi.nlm.nih.gov</a>). This dual specificity, regulated by Ca^2+ and RASA4’s conformational state, is a distinctive feature that sets RASA4 apart from many other Ras GAPs (which typically do <em>not</em> act on Rap GTPases).</p>
+<h2 id="subcellular-localization-and-activation-by-calcium">Subcellular Localization and Activation by Calcium</h2>
+<p>Under resting conditions, RASA4 is a <strong>cytosolic</strong> protein, but its active site must access membrane-bound Ras. RASA4 solves this by moving to the membrane only when needed: upon cell stimulation that raises intracellular Ca^2+, RASA4 rapidly <strong>translocates to the inner leaflet of the plasma membrane</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC1464573/#:~:text=as%20a%20Ras,a%20critical%20role%20in%20Fc%CE%B3R">pmc.ncbi.nlm.nih.gov</a>). Early work by Lockyer and colleagues (2001) showed that agonists evoking Ca^2+ mobilization (e.g. histamine in certain cell types) cause GFP-tagged CAPRI to accumulate at the plasma membrane within seconds, coincident with Ras inactivation (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3103366/#:~:text=intracellular%20Ca,We%20found%20that%20dimeric%20and">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3103366/#:~:text=CAPRI%20increases%20upon%20cell%20stimulation,Ras%20and%20Rap1%20signaling%20pathways">pmc.ncbi.nlm.nih.gov</a>). This Ca^2+-triggered translocation is mediated by the two C2 domains which bind membrane phospholipids in the presence of Ca^2+ (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3103366/#:~:text=dual%20RasGAP%20and%20RapGAP%20activities,and%20Rap1GAP%20activities%20of%20CAPRI">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3103366/#:~:text=of%20the%20GAP1%20family%20that,RasGAP%20and%20RapGAP%20activities%20of">pmc.ncbi.nlm.nih.gov</a>). The localization switch is crucial: RASA4’s GAP activity is essentially confined to when and where it attaches to the membrane. Indeed, RASA4 has <strong>little to no Ras-GAP activity in solution</strong>; it becomes an effective Ras inhibitor only in the cellular context when recruited to Ras’s membrane compartment (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC1464573/#:~:text=as%20a%20Ras,a%20critical%20role%20in%20Fc%CE%B3R">pmc.ncbi.nlm.nih.gov</a>). While at the membrane, RASA4 likely interacts with Ras at the inner plasma membrane (where Ras is anchored by lipid modifications) and possibly other signaling proteins. Notably, RASA4’s membrane residence can persist as long as Ca^2+ remains elevated – for example, CAPRI tends to <strong>stay membrane-bound during sustained calcium signals</strong>, unlike some related proteins that dissociate rapidly with Ca^2+ oscillations (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3103366/#:~:text=of%20the%20GAP1%20family%20that,RasGAP%20and%20RapGAP%20activities%20of">pmc.ncbi.nlm.nih.gov</a>). This behavior allows RASA4 to act as a brake on Ras for the duration of a calcium signal. Once Ca^2+ levels fall, RASA4 releases from the membrane and returns to the cytosolic inactive pool. In summary, <strong>subcellular localization is tightly coupled to RASA4 function</strong>: it is a cytosolic protein that dynamically relocalizes to carry out its GAP activity at the plasma membrane in response to second messenger (Ca^2+) signals (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC1464573/#:~:text=as%20a%20Ras,a%20critical%20role%20in%20Fc%CE%B3R">pmc.ncbi.nlm.nih.gov</a>).</p>
+<h2 id="role-in-rasmapk-signaling-and-calcium-signaling-pathways">Role in Ras/MAPK Signaling and Calcium Signaling Pathways</h2>
+<p>By linking Ca^2+ signals to Ras inactivation, RASA4 serves as a key node in crosstalk between calcium signaling pathways and the Ras/MAPK pathway. Many cell stimuli – for instance, engagement of certain G-protein coupled receptors or immune cell receptors – trigger concurrent pathways: one leading to calcium release and another activating Ras. RASA4 is thought to sense the Ca^2+ increase and <em>shut off Ras at the appropriate time</em>, preventing overactivation of downstream ERK/MAPK signaling (<a href="https://www.ncbi.nlm.nih.gov/gene?Cmd=DetailsSearch&amp;Db=gene&amp;Term=10156#:~:text=that%20suppresses%20the%20Ras%2Fmitogen,provided%20by%20RefSeq%2C%20Jul%202008">www.ncbi.nlm.nih.gov</a>). Lockyer <em>et al.</em> (2001) described CAPRI as an “<strong>amplitude sensor</strong>” for intracellular Ca^2+ bursts, meaning that RASA4 can translate the intensity of Ca^2+ signals into proportional Ras inactivation (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3103366/#:~:text=CAPRI%20is%20a%20member%20of,forms%20a%20hydrophobic%20face%20in">pmc.ncbi.nlm.nih.gov</a>). In practical terms, a mild stimulus causing a small Ca^2+ transient may only weakly recruit RASA4, allowing some Ras–ERK signaling to proceed; but a strong stimulus (with high Ca^2+) robustly brings RASA4 to the membrane (and in dimeric form), swiftly terminating Ras activity (and even dampening Rap1) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10920261/#:~:text=%28Kupzig%20et%20al,translational%20modifications%20or%20second%20messenger">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3103366/#:~:text=dimer%20formation,Ras%20and%20Rap1%20signaling%20pathways">pmc.ncbi.nlm.nih.gov</a>). This provides a <strong>negative feedback loop</strong> in signaling: for example, in growth factor or immune receptor signaling, initial Ras activation can stimulate Ca^2+ release (via PLCγ generating IP_3), and the resulting Ca^2+ then recruits CAPRI/RASA4 to turn Ras off. Such feedback ensures transient Ras activation rather than sustained signaling. The outcome is finer control of the MAPK pathway, which is critical because prolonged Ras–ERK activity can lead to inappropriate gene transcription or cell proliferation. Consistent with this role, <strong>RASA4 loss can cause hyperactive Ras signaling</strong>. Cells lacking RASA4 show prolonged Ras–ERK pathway activation when calcium is elevated, since the usual Ca^2+-induced Ras shutoff is missing (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8639426/#:~:text=Neutrophils%20sense%20and%20migrate%20through,chemoattractants%2C%20as%20a%20result%20of">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8639426/#:~:text=locally%20controls%20the%20GPCR,actin%20polymerization%3B%20and%20subsequent%20defective">pmc.ncbi.nlm.nih.gov</a>). This is evident in experimental models like <em>CAPRI</em>-knockdown neutrophils, which exhibit abnormally sustained Ras-GTP and downstream PI3K/Akt signaling upon stimulation (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8639426/#:~:text=gradients%20through%20adaptation,data%20reveal%20that%20CAPRI%20controls">pmc.ncbi.nlm.nih.gov</a>). Thus, in normal physiology RASA4 helps terminate Ras/MAPK signals in a timely, Ca^2+-dependent manner, preventing overactivation of pathways that drive proliferation or other responses.</p>
+<p>Beyond the generic Ras/MAPK pathway, RASA4 also participates in <strong>specific signaling contexts</strong>. For example, RASA4 can function as an <em>“adaptor”</em> bridging Ras signaling to certain actin-regulating pathways. A <strong>2005 Nature Immunology study</strong> showed that RASA4 (CAPRI) is required in <strong>Fcγ receptor-mediated phagocytosis</strong> in macrophages (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC1464573/#:~:text=that%20the%20Ca%5E%7B2%2B%7D,defective%20activation%20of%20Cdc42%20and">pmc.ncbi.nlm.nih.gov</a>). During phagocytosis of antibody-coated targets, calcium rises and CAPRI translocates to nascent phagocytic cups. There, RASA4 was found to <strong>interact with the Rho-family GTPases Cdc42 and Rac1</strong> (key regulators of the actin cytoskeleton) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC1464573/#:~:text=that%20the%20Ca%5E%7B2%2B%7D,defective%20activation%20of%20Cdc42%20and">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC1464573/#:~:text=Rac1,and%20Cdc42%20and%20Rac1%20and">pmc.ncbi.nlm.nih.gov</a>). Although RASA4’s GAP domain is specific for Ras, it constitutively binds Cdc42/Rac1 and co-localizes with them at the membrane during phagocytosis (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC1464573/#:~:text=that%20the%20Ca%5E%7B2%2B%7D,defective%20activation%20of%20Cdc42%20and">pmc.ncbi.nlm.nih.gov</a>). In CAPRI knockout mice, macrophages showed <em>impaired</em> phagocytic engulfment and a reduced oxidative burst response, due to defective activation of Cdc42 and Rac1 at the phagocytic cup (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC1464573/#:~:text=that%20the%20Ca%5E%7B2%2B%7D,defective%20activation%20of%20Cdc42%20and">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC1464573/#:~:text=Rac1,and%20Cdc42%20and%20Rac1%20and">pmc.ncbi.nlm.nih.gov</a>). These findings suggest that <strong>RASA4 serves as a scaffold or adaptor</strong>, bringing together activated Ras (to turn it off) and the actin-remodeling GTPases (to help turn them on) in the precise spatial context of the forming phagosome (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC1464573/#:~:text=that%20the%20Ca%5E%7B2%2B%7D,defective%20activation%20of%20Cdc42%20and">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC1464573/#:~:text=purified%20form,Fc%CE%B3R%20to%20Cdc42%20and%20Rac1">pmc.ncbi.nlm.nih.gov</a>). In essence, RASA4 links the Fcγ receptor’s calcium signal to coordinated regulation of two GTPase modules: it terminates local Ras signals while facilitating Rac1/Cdc42-driven actin assembly needed for particle engulfment (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC1464573/#:~:text=that%20the%20Ca%5E%7B2%2B%7D,defective%20activation%20of%20Cdc42%20and">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC1464573/#:~:text=purified%20form,Fc%CE%B3R%20to%20Cdc42%20and%20Rac1">pmc.ncbi.nlm.nih.gov</a>). This is a specialized example of how RASA4 integrates into signaling pathways beyond just Ras/MAPK, influencing cytoskeletal dynamics and innate immune responses.</p>
+<h2 id="biological-functions-in-immune-cells">Biological Functions in Immune Cells</h2>
+<p>RASA4 plays significant roles in the immune system, where stimuli often elevate Ca^2+ and require tight control of Ras and actin signaling. In <strong>innate immune cells</strong> such as neutrophils and macrophages, RASA4 has emerged as an important regulator:</p>
+<ul>
+<li>
+<p><strong>Chemotaxis and GPCR signaling in neutrophils:</strong> A recent study by Xu <em>et al.</em> (PNAS, 2021) identified RASA4/CAPRI as the crucial “Ras inhibitor” that enables neutrophils to properly <em>adapt</em> to chemoattractant gradients (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8639426/#:~:text=Neutrophils%20sense%20and%20migrate%20through,chemoattractants%2C%20as%20a%20result%20of">pmc.ncbi.nlm.nih.gov</a>). Neutrophils migrating toward signals (like fMLP or IL-8) experience a rapid Ras activation through GPCR pathways, which then must be attenuated (adaptation) to prevent saturation of the signaling cascade. Xu <em>et al.</em> showed that when CAPRI was knocked down in human neutrophil-like cells, the cells failed to turn off Ras signaling after initial stimulation – Ras-GTP remained abnormally high (non-adaptive) and downstream effectors like Akt, GSK-3β, and cofilin were hyper-phosphorylated (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8639426/#:~:text=gradients%20through%20adaptation,data%20reveal%20that%20CAPRI%20controls">pmc.ncbi.nlm.nih.gov</a>). This led to <strong>excessive F-actin polymerization</strong> and defective chemotaxis in steep chemoattractant gradients (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8639426/#:~:text=calcium,data%20reveal%20that%20CAPRI%20controls">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8639426/#:~:text=locally%20controls%20the%20GPCR,actin%20polymerization%3B%20and%20subsequent%20defective">pmc.ncbi.nlm.nih.gov</a>). Essentially, without RASA4, neutrophils lost the ability to “reset” their signaling, becoming overstimulated and less directional in high signal conditions. Interestingly, the same cells showed <em>supersensitive</em> responses in shallow gradients – they would over-react to normally sub-threshold cues (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8639426/#:~:text=GSK,findings%20show%20that%20CAPRI%20functions">pmc.ncbi.nlm.nih.gov</a>). This paradoxical behavior underscores RASA4’s role in tuning signal sensitivity: <strong>with RASA4, neutrophils exhibit proper adaptation</strong>, allowing them to sense increases in chemoattractant over a wide concentration range (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8639426/#:~:text=Neutrophils%20provide%20first,mechanism%20largely%20remains%20elusive%2C%20although">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8639426/#:~:text=recruit%20Ras%20inhibitor%2C%20CAPRI%2C%20to,mediated%20adaptation">pmc.ncbi.nlm.nih.gov</a>). The 2021 study concluded that CAPRI is an essential inhibitory component of the chemotactic signaling network, working in tandem with excitatory signals to optimize neutrophil navigation (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8639426/#:~:text=Neutrophils%20provide%20first,mechanism%20largely%20remains%20elusive%2C%20although">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8639426/#:~:text=recruit%20Ras%20inhibitor%2C%20CAPRI%2C%20to,mediated%20adaptation">pmc.ncbi.nlm.nih.gov</a>). This is an expert confirmation that RASA4’s calcium-triggered Ras-GAP activity has a real-world function in immune cell migration.</p>
+</li>
+<li>
+<p><strong>Fc receptor-mediated phagocytosis in macrophages:</strong> As mentioned, RASA4 was shown to be critical for efficient phagocytosis in a 2005 mouse study (Zhang <em>et al.</em>, <em>Nat. Immunol.</em> 2005). CAPRI-deficient mice (Rasa4^–/–) were viable and developed normally, with no overt issues in basal immune cell populations (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC1464573/#:~:text=Bacterial%20clearance%20in%20CAPRI,the%20expression%20of%20CAPRI%20in">pmc.ncbi.nlm.nih.gov</a>). However, when challenged, they had a <strong>severely impaired innate immune response to infections</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC1464573/#:~:text=macrophages%2C%20we%20examined%20the%20innate,5%7D%20CFU%2Fmouse">pmc.ncbi.nlm.nih.gov</a>). For instance, <strong>80% of RASA4-knockout mice succumbed to <em>Salmonella</em> infection within 2 days</strong>, whereas 0% of wild-type mice died in that period (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC1464573/#:~:text=macrophages%2C%20we%20examined%20the%20innate,5%7D%20CFU%2Fmouse">pmc.ncbi.nlm.nih.gov</a>). They also showed dramatically reduced clearance of bacterial infections like <em>Streptococcus pneumoniae</em> in the lungs (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC1464573/#:~:text=whereas%20none%20of%20the%20controls,acquired">pmc.ncbi.nlm.nih.gov</a>). At the cellular level, macrophages from these knockout mice could bind antibody-coated bacteria but struggled to internalize them and mount a normal respiratory burst (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC1464573/#:~:text=that%20the%20Ca%5E%7B2%2B%7D,defective%20activation%20of%20Cdc42%20and">pmc.ncbi.nlm.nih.gov</a>). The underlying cause was traced to <strong>failure to properly activate Cdc42 and Rac1</strong> during phagosome formation, due to loss of CAPRI’s adaptor function (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC1464573/#:~:text=that%20the%20Ca%5E%7B2%2B%7D,defective%20activation%20of%20Cdc42%20and">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC1464573/#:~:text=purified%20form,Fc%CE%B3R%20to%20Cdc42%20and%20Rac1">pmc.ncbi.nlm.nih.gov</a>). Thus, in real-world terms, <strong>RASA4 is required for host defense</strong>, linking calcium signals from engaged Fcγ receptors to the cytoskeletal rearrangements and microbicidal responses needed to engulf and destroy pathogens. These immune phenotypes highlight that, while RASA4’s enzymatic target is Ras, its absence has <em>pleiotropic effects on immune cell function</em> – but notably, those effects manifest in specific processes (phagocytosis, chemotaxis) where spatially and temporally controlled Ras inactivation is critical.</p>
+</li>
+</ul>
+<p>It is worth noting that RASA4 is one of several Ras regulators in immune cells. For example, in T-lymphocytes, Ras activation is triggered by the Ca^2+-dependent RasGEF RasGRP1, and it’s plausible that RASA4 provides a balancing negative feedback in that context as well. Although RASA4’s role in adaptive immunity is less well characterized, its ubiquitous expression and calcium-regulation suggest it may modulate signals downstream of the T-cell receptor or other lymphocyte receptors that induce calcium influx. The pronounced phenotypes in innate immunity, however, clearly establish RASA4 as a <strong>key signaling hub in immune responses</strong>, preventing overactivation of Ras pathways and coordinating them with cytoskeletal changes via Rac/Cdc42.</p>
+<h2 id="roles-in-cell-proliferation-and-cancer">Roles in Cell Proliferation and Cancer</h2>
+<p>Given Ras’s central role in cell proliferation and oncogenic transformation, RASA4 has drawn interest for its potential influence on cancer-related pathways. By turning off Ras, RASA4 can act as a <strong>tumor suppressor-like factor</strong>, especially in tumors where Ras/MAPK signaling is driving growth. Recent cancer studies have started to examine RASA4 expression and function:</p>
+<ul>
+<li>
+<p>A 2021 study by Chen <em>et al.</em> (published in <em>Bioengineered</em>, Dec 2021) investigated RASA4 in <strong>cervical squamous cell carcinoma (CESC)</strong>. They found that <strong>RASA4 mRNA is significantly downregulated in cervical cancer tissues</strong> compared to normal tissue (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8809920/#:~:text=Luciferase%20reporter%20assays%20and%20LW6,Based%20on%20the%20TCGA">pmc.ncbi.nlm.nih.gov</a>). Low RASA4 levels correlated with poorer patient prognosis, suggesting RASA4 loss might contribute to tumor progression (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8809920/#:~:text=RAS%20p21%20protein%20activator%204,to%20determine%20the%20prognostic%20and">pmc.ncbi.nlm.nih.gov</a>). Experimentally, forcing RASA4 expression in cervical cancer cell lines (HeLa and C-33A) suppressed their proliferation, while CRISPR/Cas9 knockout of RASA4 enhanced proliferation (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8809920/#:~:text=the%20CRISPR%2FCas9%20technology,was%20noted%20in%20the%20colony">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8809920/#:~:text=the%20CRISPR%2FCas9%20technology,was%20noted%20in%20the%20colony">pmc.ncbi.nlm.nih.gov</a>). Mechanistically, the authors showed that RASA4 overexpression <em>inactivates the HIF-1α signaling pathway</em> in these cells (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8809920/#:~:text=RASA4%20may%20negatively%20regulate%20HIF1%CE%B1,cells%20by%20inactivating%20the%20HIF1%CE%B1">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8809920/#:~:text=Figure%205,Consistently%2C%20Western%20blotting%20results">pmc.ncbi.nlm.nih.gov</a>). Hypoxia-inducible factor 1α is often upregulated in tumors to promote angiogenesis and survival. In RASA4-overexpressing cells, HIF-1α transcriptional activity (measured by an HRE-luciferase reporter) was markedly reduced, and the levels of <strong>survivin</strong> (a pro-survival protein and HIF target) were diminished (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8809920/#:~:text=that%20both%20RASA4%20and%20HIF1%CE%B1,As%20shown%20in">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8809920/#:~:text=match%20at%20L366%20RASA4%20inactivated,revealed%20that%20survivin%20protein%20was">pmc.ncbi.nlm.nih.gov</a>). Conversely, RASA4 deletion led to heightened HIF-1α activity and survivin expression, effects which could be reversed by a HIF-1α inhibitor (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8809920/#:~:text=was%20also%20recorded%20in%20vivo,Our%20findings%20indicated">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8809920/#:~:text=RASA4%20regulates%20proliferation%20through%20the,Furthermore%2C%20we">pmc.ncbi.nlm.nih.gov</a>). These results indicate that <strong>RASA4 suppresses tumor cell growth at least in part by down-regulating HIF-1α signaling</strong>, likely through its upstream effect on Ras. (Active Ras can stabilize HIF-1α via PI3K/AKT and MAPK pathways; thus RASA4 may impede those pro-HIF signals.) The study concluded that RASA4 is a promising inhibitor of cervical cancer cell proliferation and that its low expression in tumors could be an important diagnostic or prognostic marker (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8809920/#:~:text=match%20at%20L44%20inactivating%20the,for%20targeted%20therapy%20against%20CESC">pmc.ncbi.nlm.nih.gov</a>). Indeed, RASA4 expression had a high diagnostic value for distinguishing CESC tissue (ROC AUC ~0.986 in their analysis) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8809920/#:~:text=match%20at%20L251%20value%20of,of%20RASA4%20in%20CESC%20progression">pmc.ncbi.nlm.nih.gov</a>).</p>
+</li>
+<li>
+<p>Broader cancer genomic data also hint at RASA4’s role. While RASA4 is not among the most commonly mutated genes in cancer, loss-of-function mutations do occur. For instance, a 2022 study in <em>Diffuse Large B-cell Lymphoma</em> (DLBCL) identified a somatic missense mutation in <strong>RASA4 (D111N)</strong> in a relapsed tumor, predicted to be damaging (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8764096/#:~:text=SOS1%20%20,Possibly%20damaging">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8764096/#:~:text=RASA2%20%20,N%2FA">pmc.ncbi.nlm.nih.gov</a>). Alongside mutations in other Ras regulators (like NF1 GTPase-activating protein and RASGRP4 GEF), the RASA4 mutation was associated with enhanced ERK/MAPK activation in the relapsed lymphoma cells (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8764096/#:~:text=hypothesized%20that%20RAS,In%20silico%20modeling%20indicated%20an">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8764096/#:~:text=proteins,to%20a%20growth%20advantage%20in">pmc.ncbi.nlm.nih.gov</a>). This suggests that <strong>disrupting RASA4 can contribute to aberrant Ras pathway activation in cancer</strong>, potentially conferring growth advantage or treatment resistance. Indeed, RASA4’s closest homologs (like RASA1/p120 RasGAP and NF1) are well-known tumor suppressors, and although RASA4 is calcium-regulated and cell-context-specific, it appears to have a similar brake function on mitogenic signaling. Noonan syndrome and related “RASopathy” disorders (caused by germline Ras/MAPK pathway mutations) have not implicated RASA4 to date, but somatic alterations in RASA4 might collaborate with other oncogenic events to sustain Ras activity in certain contexts.</p>
+</li>
+</ul>
+<p>In summary, <strong>RASA4’s activity opposes oncogenic Ras signaling</strong>, and maintaining its function is ordinarily beneficial for keeping cell proliferation in check. When RASA4 is under-expressed or mutated, cells may experience more unchecked Ras/MAPK activity, which can contribute to tumorigenesis. While RASA4 is not as famous as major tumor suppressors like NF1, ongoing research (2021–2024) highlights its potential importance in cancer biology and even as a therapeutic target: for example, strategies to boost RASA4 activity or mimic its function could, in theory, help suppress Ras-driven tumor growth. Conversely, excessive RASA4 activity might dampen necessary Ras signals, so the cell must balance this carefully – which it achieves through the calcium-dependent regulatory mechanism described above.</p>
+<h2 id="conclusion-and-expert-perspectives">Conclusion and Expert Perspectives</h2>
+<p><strong>RASA4/CAPRI emerges as a multifaceted regulator</strong> that connects calcium second-messenger signals to the control of two critical small GTPases, Ras and Rap1. Its primary role is to serve as a calcium-triggered “off-switch” for Ras, ensuring that stimuli which elevate Ca^2+ (such as immune receptor engagement or growth factors) do not lead to runaway Ras/MAPK signaling (<a href="https://www.ncbi.nlm.nih.gov/gene?Cmd=DetailsSearch&amp;Db=gene&amp;Term=10156#:~:text=that%20suppresses%20the%20Ras%2Fmitogen,provided%20by%20RefSeq%2C%20Jul%202008">www.ncbi.nlm.nih.gov</a>). This function is vital across various scenarios – from a neutrophil adjusting its sensitivity in a gradient (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8639426/#:~:text=Neutrophils%20provide%20first,mechanism%20largely%20remains%20elusive%2C%20although">pmc.ncbi.nlm.nih.gov</a>), to a macrophage coordinating actin remodeling for phagocytosis (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC1464573/#:~:text=that%20the%20Ca%5E%7B2%2B%7D,defective%20activation%20of%20Cdc42%20and">pmc.ncbi.nlm.nih.gov</a>), to a cell in a tumor suppressing proliferative signals (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8809920/#:~:text=RAS%20p21%20protein%20activator%204,to%20determine%20the%20prognostic%20and">pmc.ncbi.nlm.nih.gov</a>). Structurally, RASA4 is equipped with C2 domains to sense Ca^2+ and a GAP domain to execute GTP hydrolysis on Ras (and Rap1 when dimerized) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3103366/#:~:text=CAPRI%20increases%20upon%20cell%20stimulation,Ras%20and%20Rap1%20signaling%20pathways">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10920261/#:~:text=%28Kupzig%20et%20al,translational%20modifications%20or%20second%20messenger">pmc.ncbi.nlm.nih.gov</a>). Experts in the field highlight RASA4 as an <strong>“inhibitory component”</strong> or brake in signaling pathways: for example, Xu et al. (2021) describe CAPRI as <em>“essential for both the sensitivity and the GPCR-mediated adaptation of human neutrophils”</em>, acting to locally control Ras activity and prevent overstimulation (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8639426/#:~:text=Neutrophils%20provide%20first,mechanism%20largely%20remains%20elusive%2C%20although">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8639426/#:~:text=recruit%20Ras%20inhibitor%2C%20CAPRI%2C%20to,mediated%20adaptation">pmc.ncbi.nlm.nih.gov</a>). Likewise, immunologists (Zhang et al. 2005) noted that <em>“these results suggest that CAPRI provides a link between [FcγR signaling] and Cdc42/Rac1”</em> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC1464573/#:~:text=Rac1,and%20Cdc42%20and%20Rac1%20and">pmc.ncbi.nlm.nih.gov</a>), underscoring its adaptor role beyond enzymatic activity. In the context of cancer, Chen et al. (2021) pointed out RASA4’s <em>“tumor-suppressing role”</em>, showing that restoring RASA4 can impair cancer cell proliferation by interfering with pro-growth pathways like HIF-1α (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8809920/#:~:text=results%20indicate%20the%20tumor,Therefore%2C%20our%20results%20strongly">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8809920/#:~:text=RASA4%20may%20negatively%20regulate%20HIF1%CE%B1,cells%20by%20inactivating%20the%20HIF1%CE%B1">pmc.ncbi.nlm.nih.gov</a>). All these studies reinforce the concept that <strong>RASA4 is a critical regulatory node</strong> at the intersection of calcium signaling and Ras/Rap GTPase networks.</p>
+<p>In conclusion, RASA4 (O43374) is a calcium-regulated Ras GAP that ensures appropriate termination of Ras signals and coordinates complex cellular responses. Its activity is finely tuned by intracellular Ca^2+ levels, subcellular localization, and oligomerization state, enabling it to function in processes ranging from chemotaxis and phagocytosis to growth control. Through recent advances (2021–2024), our understanding of RASA4 has expanded – revealing its dual Ras/Rap specificity, its role in immune cell signal adaptation, and its potential impact on cancer pathways. Ongoing research continues to uncover how this <em>Calcium-Promoted Ras Inactivator</em> contributes to normal physiology and how its dysregulation may lead to disease, solidifying RASA4’s place as an important molecular switch in human cellular signaling (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3103366/#:~:text=RapGAP%20activity%20than%20RasGAP%20activity%2C,Ras%20and%20Rap1%20signaling%20pathways">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8639426/#:~:text=gradients%20through%20adaptation,data%20reveal%20that%20CAPRI%20controls">pmc.ncbi.nlm.nih.gov</a>).</p>
+<p><strong>References:</strong></p>
+<ol>
+<li>Lockyer PJ <em>et al.</em> (2001). <em>Curr. Biol.</em> <strong>11</strong>: 981–986. [PubMed ID: 11525734] – <strong>CAPRI regulates Ca^2+-dependent inactivation of the Ras-MAPK pathway</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC1464573/#:~:text=CAPRI%20is%20a%20member%20of,cells%20but%20not%20in%20its">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC1464573/#:~:text=as%20a%20Ras,a%20critical%20role%20in%20Fc%CE%B3R">pmc.ncbi.nlm.nih.gov</a>).  </li>
+<li>Zhang J <em>et al.</em> (2005). <em>Nat. Immunol.</em> <strong>6</strong>(9): 911–919. [Published Sep 2005] – <strong>A critical role for CAPRI in FcγR-mediated phagocytosis</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC1464573/#:~:text=that%20the%20Ca%5E%7B2%2B%7D,defective%20activation%20of%20Cdc42%20and">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC1464573/#:~:text=purified%20form,Fc%CE%B3R%20to%20Cdc42%20and%20Rac1">pmc.ncbi.nlm.nih.gov</a>).  </li>
+<li>Kupzig S <em>et al.</em> (2006). <em>J. Biol. Chem.</em> <strong>281</strong>(15): 9891–9900. [Published Apr 2006] – <strong>GAP1 family members are bifunctional Ras/Rap GAPs</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC1904491/#:~:text=GAP1,For%20this%20dual%20activity%2C%20regions">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC1904491/#:~:text=domain,association%20with%20the%20plasma%20membrane">pmc.ncbi.nlm.nih.gov</a>).  </li>
+<li>Dai Y <em>et al.</em> (2011). <em>J. Biol. Chem.</em> <strong>286</strong>(22): 19905–19916. [Published Jun 2011] – <strong>Ca^2+-dependent monomer-dimer switch in CAPRI controls Ras vs Rap GAP activity</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3103366/#:~:text=CAPRI%20increases%20upon%20cell%20stimulation,Ras%20and%20Rap1%20signaling%20pathways">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10920261/#:~:text=%28Kupzig%20et%20al,translational%20modifications%20or%20second%20messenger">pmc.ncbi.nlm.nih.gov</a>).  </li>
+<li>Xu X <em>et al.</em> (2021). <em>Proc. Natl. Acad. Sci. U.S.A.</em> <strong>118</strong>(43): e2002162118. [Published Oct 2021] – <strong>CAPRI enables neutrophils to chemotax through high-range gradients (Ras adaptation)</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8639426/#:~:text=Neutrophils%20sense%20and%20migrate%20through,chemoattractants%2C%20as%20a%20result%20of">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8639426/#:~:text=recruit%20Ras%20inhibitor%2C%20CAPRI%2C%20to,mediated%20adaptation">pmc.ncbi.nlm.nih.gov</a>).  </li>
+<li>Chen J <em>et al.</em> (2021). <em>Bioengineered</em> <strong>12</strong>(2): 10723–10733. [Published Dec 2021] – <strong>RASA4 inhibits HIF-1α pathway to suppress cervical cancer cell proliferation</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8809920/#:~:text=RASA4%20may%20negatively%20regulate%20HIF1%CE%B1,cells%20by%20inactivating%20the%20HIF1%CE%B1">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8809920/#:~:text=Figure%205,Consistently%2C%20Western%20blotting%20results">pmc.ncbi.nlm.nih.gov</a>).  </li>
+<li>Benoit A <em>et al.</em> (2022). <em>Sci. Rep.</em> <strong>12</strong>: 779. [Published Jan 2022] – <strong>Mutations in Ras pathway regulators in relapsed DLBCL (includes RASA4 D111N)</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8764096/#:~:text=SOS1%20%20,Possibly%20damaging">pmc.ncbi.nlm.nih.gov</a>).  </li>
+<li>Cherra SJ III &amp; Lamb R (2024). <em>Front. Mol. Neurosci.</em> <strong>17</strong>: 1352731. [Published Feb 2024] – <strong>Review: Intersections between Ras and Rap signaling</strong> (notes calcium-dependent RASA4 Ras/Rap GAP activity) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10920261/#:~:text=In%20addition%20to%20SynGAP%2C%20most,study%20suggests%20that%20modulation%20of">pmc.ncbi.nlm.nih.gov</a>).  </li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>AnnotationURLCitation(end_index=440, start_index=291, title='RASA4 RAS p21 protein activator 4 [Homo sapiens (human)] - Gene - NCBI', type='url_citation', url='https://www.ncbi.nlm.nih.gov/gene?Cmd=DetailsSearch&amp;Db=gene&amp;Term=10156#:~:text=Summary%20This%20gene%20encodes%20a,provided')</li>
+<li>AnnotationURLCitation(end_index=750, start_index=595, title='RASA4 RAS p21 protein activator 4 [Homo sapiens (human)] - Gene - NCBI', type='url_citation', url='https://www.ncbi.nlm.nih.gov/gene?Cmd=DetailsSearch&amp;Db=gene&amp;Term=10156#:~:text=that%20suppresses%20the%20Ras%2Fmitogen,Expression')</li>
+<li>AnnotationURLCitation(end_index=1055, start_index=900, title='RASA4 RAS p21 protein activator 4 [Homo sapiens (human)] - Gene - NCBI', type='url_citation', url='https://www.ncbi.nlm.nih.gov/gene?Cmd=DetailsSearch&amp;Db=gene&amp;Term=10156#:~:text=that%20suppresses%20the%20Ras%2Fmitogen,Expression')</li>
+<li>AnnotationURLCitation(end_index=1306, start_index=1179, title='Pharos : Target Details - RASA4', type='url_citation', url='https://pharos.nih.gov/targets/RASA4#:~:text=Ca%282%2B%29,longer%20activates%20downstream%20pathways%20that')</li>
+<li>AnnotationURLCitation(end_index=1560, start_index=1426, title='A critical role for the Calcium-promoted Ras Inactivator in Fcγ receptor-mediated phagocytosis - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC1464573/#:~:text=determine%20Rasa4%20expression%2C%20we%20probed,27')</li>
+<li>AnnotationURLCitation(end_index=1923, start_index=1790, title='A critical role for the Calcium-promoted Ras Inactivator in Fcγ receptor-mediated phagocytosis - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC1464573/#:~:text=as%20a%20Ras,a%20critical%20role%20in%20Fc%CE%B3R')</li>
+<li>AnnotationURLCitation(end_index=2412, start_index=2271, title='A critical role for the Calcium-promoted Ras Inactivator in Fcγ receptor-mediated phagocytosis - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC1464573/#:~:text=CAPRI%20is%20a%20member%20of,cells%20but%20not%20in%20its')</li>
+<li>AnnotationURLCitation(end_index=2819, start_index=2678, title='A critical role for the Calcium-promoted Ras Inactivator in Fcγ receptor-mediated phagocytosis - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC1464573/#:~:text=CAPRI%20is%20a%20member%20of,cells%20but%20not%20in%20its')</li>
+<li>AnnotationURLCitation(end_index=3172, start_index=3007, title='Ca2+-dependent Monomer and Dimer Formation Switches CAPRI Protein between Ras GTPase-activating Protein (GAP) and RapGAP Activities - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3103366/#:~:text=dual%20RasGAP%20and%20RapGAP%20activities,and%20Rap1GAP%20activities%20of%20CAPRI')</li>
+<li>AnnotationURLCitation(end_index=3494, start_index=3361, title='A critical role for the Calcium-promoted Ras Inactivator in Fcγ receptor-mediated phagocytosis - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC1464573/#:~:text=as%20a%20Ras,a%20critical%20role%20in%20Fc%CE%B3R')</li>
+<li>AnnotationURLCitation(end_index=3902, start_index=3769, title='A critical role for the Calcium-promoted Ras Inactivator in Fcγ receptor-mediated phagocytosis - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC1464573/#:~:text=as%20a%20Ras,a%20critical%20role%20in%20Fc%CE%B3R')</li>
+<li>AnnotationURLCitation(end_index=4194, start_index=4114, title='RASA4 | Abcam', type='url_citation', url='https://www.abcam.com/en-ch/targets/rasa4/1331#:~:text=Domain')</li>
+<li>AnnotationURLCitation(end_index=4691, start_index=4546, title='Ca2+-dependent Monomer and Dimer Formation Switches CAPRI Protein between Ras GTPase-activating Protein (GAP) and RapGAP Activities - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3103366/#:~:text=investigated%20the%20mechanism%20that%20switches,2%2B%7D%20at')</li>
+<li>AnnotationURLCitation(end_index=4832, start_index=4692, title='Ca2+-dependent Monomer and Dimer Formation Switches CAPRI Protein between Ras GTPase-activating Protein (GAP) and RapGAP Activities - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3103366/#:~:text=Ca%5E%7B2%2B%7D,dimeric%20forms%20of%20CAPRI%20exhibited')</li>
+<li>AnnotationURLCitation(end_index=5078, start_index=4908, title='Ca2+-dependent Monomer and Dimer Formation Switches CAPRI Protein between Ras GTPase-activating Protein (GAP) and RapGAP Activities - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3103366/#:~:text=plasma%20membrane%20upon%20cell%20stimulation,monomers%20or%20homodimers%20through%20a')</li>
+<li>AnnotationURLCitation(end_index=5427, start_index=5279, title='Ca2+-dependent Monomer and Dimer Formation Switches CAPRI Protein between Ras GTPase-activating Protein (GAP) and RapGAP Activities - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3103366/#:~:text=CAPRI%20is%20a%20member%20of,forms%20a%20hydrophobic%20face%20in')</li>
+<li>AnnotationURLCitation(end_index=5597, start_index=5428, title='Ca2+-dependent Monomer and Dimer Formation Switches CAPRI Protein between Ras GTPase-activating Protein (GAP) and RapGAP Activities - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3103366/#:~:text=CAPRI%20increases%20upon%20cell%20stimulation,Ras%20and%20Rap1%20signaling%20pathways')</li>
+<li>AnnotationURLCitation(end_index=6105, start_index=5940, title='Ca2+-dependent Monomer and Dimer Formation Switches CAPRI Protein between Ras GTPase-activating Protein (GAP) and RapGAP Activities - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3103366/#:~:text=domains%2C%20and%20although%20Rap1%20is,mechanisms%2C%20some%20GAPs%20have%20dual')</li>
+<li>AnnotationURLCitation(end_index=6575, start_index=6420, title='RASA4 RAS p21 protein activator 4 [Homo sapiens (human)] - Gene - NCBI', type='url_citation', url='https://www.ncbi.nlm.nih.gov/gene?Cmd=DetailsSearch&amp;Db=gene&amp;Term=10156#:~:text=that%20suppresses%20the%20Ras%2Fmitogen,Expression')</li>
+<li>AnnotationURLCitation(end_index=7108, start_index=6978, title='GAP1 Family Members Constitute Bifunctional Ras and Rap GTPase-activating Proteins - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC1904491/#:~:text=GAP1,For%20this%20dual%20activity%2C%20regions')</li>
+<li>AnnotationURLCitation(end_index=7244, start_index=7109, title='GAP1 Family Members Constitute Bifunctional Ras and Rap GTPase-activating Proteins - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC1904491/#:~:text=domain,association%20with%20the%20plasma%20membrane')</li>
+<li>AnnotationURLCitation(end_index=7653, start_index=7518, title='GAP1 Family Members Constitute Bifunctional Ras and Rap GTPase-activating Proteins - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC1904491/#:~:text=domain,association%20with%20the%20plasma%20membrane')</li>
+<li>AnnotationURLCitation(end_index=8025, start_index=7861, title='Interactions between Ras and Rap signaling pathways during neurodevelopment in health and disease - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10920261/#:~:text=In%20addition%20to%20SynGAP%2C%20most,study%20suggests%20that%20modulation%20of')</li>
+<li>AnnotationURLCitation(end_index=8167, start_index=8026, title='Ca2+-dependent Monomer and Dimer Formation Switches CAPRI Protein between Ras GTPase-activating Protein (GAP) and RapGAP Activities - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3103366/#:~:text=dimer%20formation,Ras%20and%20Rap1%20signaling%20pathways')</li>
+<li>AnnotationURLCitation(end_index=8447, start_index=8287, title='Interactions between Ras and Rap signaling pathways during neurodevelopment in health and disease - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10920261/#:~:text=%28Kupzig%20et%20al,translational%20modifications%20or%20second%20messenger')</li>
+<li>AnnotationURLCitation(end_index=8589, start_index=8448, title='Ca2+-dependent Monomer and Dimer Formation Switches CAPRI Protein between Ras GTPase-activating Protein (GAP) and RapGAP Activities - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3103366/#:~:text=dimer%20formation,Ras%20and%20Rap1%20signaling%20pathways')</li>
+<li>AnnotationURLCitation(end_index=8942, start_index=8801, title='Ca2+-dependent Monomer and Dimer Formation Switches CAPRI Protein between Ras GTPase-activating Protein (GAP) and RapGAP Activities - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3103366/#:~:text=dimer%20formation,Ras%20and%20Rap1%20signaling%20pathways')</li>
+<li>AnnotationURLCitation(end_index=9479, start_index=9319, title='Interactions between Ras and Rap signaling pathways during neurodevelopment in health and disease - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10920261/#:~:text=%28Kupzig%20et%20al,translational%20modifications%20or%20second%20messenger')</li>
+<li>AnnotationURLCitation(end_index=9651, start_index=9480, title='Ca2+-dependent Monomer and Dimer Formation Switches CAPRI Protein between Ras GTPase-activating Protein (GAP) and RapGAP Activities - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3103366/#:~:text=RapGAP%20activity%20than%20RasGAP%20activity%2C,Ras%20and%20Rap1%20signaling%20pathways')</li>
+<li>AnnotationURLCitation(end_index=10341, start_index=10208, title='A critical role for the Calcium-promoted Ras Inactivator in Fcγ receptor-mediated phagocytosis - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC1464573/#:~:text=as%20a%20Ras,a%20critical%20role%20in%20Fc%CE%B3R')</li>
+<li>AnnotationURLCitation(end_index=10719, start_index=10583, title='Ca2+-dependent Monomer and Dimer Formation Switches CAPRI Protein between Ras GTPase-activating Protein (GAP) and RapGAP Activities - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3103366/#:~:text=intracellular%20Ca,We%20found%20that%20dimeric%20and')</li>
+<li>AnnotationURLCitation(end_index=10889, start_index=10720, title='Ca2+-dependent Monomer and Dimer Formation Switches CAPRI Protein between Ras GTPase-activating Protein (GAP) and RapGAP Activities - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3103366/#:~:text=CAPRI%20increases%20upon%20cell%20stimulation,Ras%20and%20Rap1%20signaling%20pathways')</li>
+<li>AnnotationURLCitation(end_index=11184, start_index=11019, title='Ca2+-dependent Monomer and Dimer Formation Switches CAPRI Protein between Ras GTPase-activating Protein (GAP) and RapGAP Activities - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3103366/#:~:text=dual%20RasGAP%20and%20RapGAP%20activities,and%20Rap1GAP%20activities%20of%20CAPRI')</li>
+<li>AnnotationURLCitation(end_index=11340, start_index=11185, title='Ca2+-dependent Monomer and Dimer Formation Switches CAPRI Protein between Ras GTPase-activating Protein (GAP) and RapGAP Activities - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3103366/#:~:text=of%20the%20GAP1%20family%20that,RasGAP%20and%20RapGAP%20activities%20of')</li>
+<li>AnnotationURLCitation(end_index=11780, start_index=11647, title='A critical role for the Calcium-promoted Ras Inactivator in Fcγ receptor-mediated phagocytosis - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC1464573/#:~:text=as%20a%20Ras,a%20critical%20role%20in%20Fc%CE%B3R')</li>
+<li>AnnotationURLCitation(end_index=12354, start_index=12199, title='Ca2+-dependent Monomer and Dimer Formation Switches CAPRI Protein between Ras GTPase-activating Protein (GAP) and RapGAP Activities - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3103366/#:~:text=of%20the%20GAP1%20family%20that,RasGAP%20and%20RapGAP%20activities%20of')</li>
+<li>AnnotationURLCitation(end_index=12915, start_index=12782, title='A critical role for the Calcium-promoted Ras Inactivator in Fcγ receptor-mediated phagocytosis - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC1464573/#:~:text=as%20a%20Ras,a%20critical%20role%20in%20Fc%CE%B3R')</li>
+<li>AnnotationURLCitation(end_index=13657, start_index=13474, title='RASA4 RAS p21 protein activator 4 [Homo sapiens (human)] - Gene - NCBI', type='url_citation', url='https://www.ncbi.nlm.nih.gov/gene?Cmd=DetailsSearch&amp;Db=gene&amp;Term=10156#:~:text=that%20suppresses%20the%20Ras%2Fmitogen,provided%20by%20RefSeq%2C%20Jul%202008')</li>
+<li>AnnotationURLCitation(end_index=14007, start_index=13859, title='Ca2+-dependent Monomer and Dimer Formation Switches CAPRI Protein between Ras GTPase-activating Protein (GAP) and RapGAP Activities - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3103366/#:~:text=CAPRI%20is%20a%20member%20of,forms%20a%20hydrophobic%20face%20in')</li>
+<li>AnnotationURLCitation(end_index=14472, start_index=14312, title='Interactions between Ras and Rap signaling pathways during neurodevelopment in health and disease - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10920261/#:~:text=%28Kupzig%20et%20al,translational%20modifications%20or%20second%20messenger')</li>
+<li>AnnotationURLCitation(end_index=14614, start_index=14473, title='Ca2+-dependent Monomer and Dimer Formation Switches CAPRI Protein between Ras GTPase-activating Protein (GAP) and RapGAP Activities - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3103366/#:~:text=dimer%20formation,Ras%20and%20Rap1%20signaling%20pathways')</li>
+<li>AnnotationURLCitation(end_index=15522, start_index=15350, title='Ras inhibitor CAPRI enables neutrophil-like cells to chemotax through a higher-concentration range of gradients - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8639426/#:~:text=Neutrophils%20sense%20and%20migrate%20through,chemoattractants%2C%20as%20a%20result%20of')</li>
+<li>AnnotationURLCitation(end_index=15695, start_index=15523, title='Ras inhibitor CAPRI enables neutrophil-like cells to chemotax through a higher-concentration range of gradients - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8639426/#:~:text=locally%20controls%20the%20GPCR,actin%20polymerization%3B%20and%20subsequent%20defective')</li>
+<li>AnnotationURLCitation(end_index=16022, start_index=15866, title='Ras inhibitor CAPRI enables neutrophil-like cells to chemotax through a higher-concentration range of gradients - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8639426/#:~:text=gradients%20through%20adaptation,data%20reveal%20that%20CAPRI%20controls')</li>
+<li>AnnotationURLCitation(end_index=16703, start_index=16549, title='A critical role for the Calcium-promoted Ras Inactivator in Fcγ receptor-mediated phagocytosis - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC1464573/#:~:text=that%20the%20Ca%5E%7B2%2B%7D,defective%20activation%20of%20Cdc42%20and')</li>
+<li>AnnotationURLCitation(end_index=17097, start_index=16943, title='A critical role for the Calcium-promoted Ras Inactivator in Fcγ receptor-mediated phagocytosis - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC1464573/#:~:text=that%20the%20Ca%5E%7B2%2B%7D,defective%20activation%20of%20Cdc42%20and')</li>
+<li>AnnotationURLCitation(end_index=17217, start_index=17098, title='A critical role for the Calcium-promoted Ras Inactivator in Fcγ receptor-mediated phagocytosis - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC1464573/#:~:text=Rac1,and%20Cdc42%20and%20Rac1%20and')</li>
+<li>AnnotationURLCitation(end_index=17520, start_index=17366, title='A critical role for the Calcium-promoted Ras Inactivator in Fcγ receptor-mediated phagocytosis - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC1464573/#:~:text=that%20the%20Ca%5E%7B2%2B%7D,defective%20activation%20of%20Cdc42%20and')</li>
+<li>AnnotationURLCitation(end_index=17860, start_index=17706, title='A critical role for the Calcium-promoted Ras Inactivator in Fcγ receptor-mediated phagocytosis - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC1464573/#:~:text=that%20the%20Ca%5E%7B2%2B%7D,defective%20activation%20of%20Cdc42%20and')</li>
+<li>AnnotationURLCitation(end_index=17980, start_index=17861, title='A critical role for the Calcium-promoted Ras Inactivator in Fcγ receptor-mediated phagocytosis - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC1464573/#:~:text=Rac1,and%20Cdc42%20and%20Rac1%20and')</li>
+<li>AnnotationURLCitation(end_index=18368, start_index=18214, title='A critical role for the Calcium-promoted Ras Inactivator in Fcγ receptor-mediated phagocytosis - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC1464573/#:~:text=that%20the%20Ca%5E%7B2%2B%7D,defective%20activation%20of%20Cdc42%20and')</li>
+<li>AnnotationURLCitation(end_index=18504, start_index=18369, title='A critical role for the Calcium-promoted Ras Inactivator in Fcγ receptor-mediated phagocytosis - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC1464573/#:~:text=purified%20form,Fc%CE%B3R%20to%20Cdc42%20and%20Rac1')</li>
+<li>AnnotationURLCitation(end_index=18882, start_index=18728, title='A critical role for the Calcium-promoted Ras Inactivator in Fcγ receptor-mediated phagocytosis - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC1464573/#:~:text=that%20the%20Ca%5E%7B2%2B%7D,defective%20activation%20of%20Cdc42%20and')</li>
+<li>AnnotationURLCitation(end_index=19018, start_index=18883, title='A critical role for the Calcium-promoted Ras Inactivator in Fcγ receptor-mediated phagocytosis - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC1464573/#:~:text=purified%20form,Fc%CE%B3R%20to%20Cdc42%20and%20Rac1')</li>
+<li>AnnotationURLCitation(end_index=19870, start_index=19698, title='Ras inhibitor CAPRI enables neutrophil-like cells to chemotax through a higher-concentration range of gradients - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8639426/#:~:text=Neutrophils%20sense%20and%20migrate%20through,chemoattractants%2C%20as%20a%20result%20of')</li>
+<li>AnnotationURLCitation(end_index=20517, start_index=20361, title='Ras inhibitor CAPRI enables neutrophil-like cells to chemotax through a higher-concentration range of gradients - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8639426/#:~:text=gradients%20through%20adaptation,data%20reveal%20that%20CAPRI%20controls')</li>
+<li>AnnotationURLCitation(end_index=20759, start_index=20628, title='Ras inhibitor CAPRI enables neutrophil-like cells to chemotax through a higher-concentration range of gradients - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8639426/#:~:text=calcium,data%20reveal%20that%20CAPRI%20controls')</li>
+<li>AnnotationURLCitation(end_index=20932, start_index=20760, title='Ras inhibitor CAPRI enables neutrophil-like cells to chemotax through a higher-concentration range of gradients - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8639426/#:~:text=locally%20controls%20the%20GPCR,actin%20polymerization%3B%20and%20subsequent%20defective')</li>
+<li>AnnotationURLCitation(end_index=21361, start_index=21231, title='Ras inhibitor CAPRI enables neutrophil-like cells to chemotax through a higher-concentration range of gradients - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8639426/#:~:text=GSK,findings%20show%20that%20CAPRI%20functions')</li>
+<li>AnnotationURLCitation(end_index=21750, start_index=21583, title='Ras inhibitor CAPRI enables neutrophil-like cells to chemotax through a higher-concentration range of gradients - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8639426/#:~:text=Neutrophils%20provide%20first,mechanism%20largely%20remains%20elusive%2C%20although')</li>
+<li>AnnotationURLCitation(end_index=21901, start_index=21751, title='Ras inhibitor CAPRI enables neutrophil-like cells to chemotax through a higher-concentration range of gradients - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8639426/#:~:text=recruit%20Ras%20inhibitor%2C%20CAPRI%2C%20to,mediated%20adaptation')</li>
+<li>AnnotationURLCitation(end_index=22257, start_index=22090, title='Ras inhibitor CAPRI enables neutrophil-like cells to chemotax through a higher-concentration range of gradients - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8639426/#:~:text=Neutrophils%20provide%20first,mechanism%20largely%20remains%20elusive%2C%20although')</li>
+<li>AnnotationURLCitation(end_index=22408, start_index=22258, title='Ras inhibitor CAPRI enables neutrophil-like cells to chemotax through a higher-concentration range of gradients - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8639426/#:~:text=recruit%20Ras%20inhibitor%2C%20CAPRI%2C%20to,mediated%20adaptation')</li>
+<li>AnnotationURLCitation(end_index=23008, start_index=22855, title='A critical role for the Calcium-promoted Ras Inactivator in Fcγ receptor-mediated phagocytosis - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC1464573/#:~:text=Bacterial%20clearance%20in%20CAPRI,the%20expression%20of%20CAPRI%20in')</li>
+<li>AnnotationURLCitation(end_index=23254, start_index=23106, title='A critical role for the Calcium-promoted Ras Inactivator in Fcγ receptor-mediated phagocytosis - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC1464573/#:~:text=macrophages%2C%20we%20examined%20the%20innate,5%7D%20CFU%2Fmouse')</li>
+<li>AnnotationURLCitation(end_index=23549, start_index=23401, title='A critical role for the Calcium-promoted Ras Inactivator in Fcγ receptor-mediated phagocytosis - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC1464573/#:~:text=macrophages%2C%20we%20examined%20the%20innate,5%7D%20CFU%2Fmouse')</li>
+<li>AnnotationURLCitation(end_index=23797, start_index=23668, title='A critical role for the Calcium-promoted Ras Inactivator in Fcγ receptor-mediated phagocytosis - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC1464573/#:~:text=whereas%20none%20of%20the%20controls,acquired')</li>
+<li>AnnotationURLCitation(end_index=24120, start_index=23966, title='A critical role for the Calcium-promoted Ras Inactivator in Fcγ receptor-mediated phagocytosis - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC1464573/#:~:text=that%20the%20Ca%5E%7B2%2B%7D,defective%20activation%20of%20Cdc42%20and')</li>
+<li>AnnotationURLCitation(end_index=24427, start_index=24273, title='A critical role for the Calcium-promoted Ras Inactivator in Fcγ receptor-mediated phagocytosis - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC1464573/#:~:text=that%20the%20Ca%5E%7B2%2B%7D,defective%20activation%20of%20Cdc42%20and')</li>
+<li>AnnotationURLCitation(end_index=24563, start_index=24428, title='A critical role for the Calcium-promoted Ras Inactivator in Fcγ receptor-mediated phagocytosis - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC1464573/#:~:text=purified%20form,Fc%CE%B3R%20to%20Cdc42%20and%20Rac1')</li>
+<li>AnnotationURLCitation(end_index=26657, start_index=26507, title='RASA4 inhibits the HIFα signaling pathway to suppress proliferation of cervical cancer cells - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8809920/#:~:text=Luciferase%20reporter%20assays%20and%20LW6,Based%20on%20the%20TCGA')</li>
+<li>AnnotationURLCitation(end_index=26937, start_index=26778, title='RASA4 inhibits the HIFα signaling pathway to suppress proliferation of cervical cancer cells - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8809920/#:~:text=RAS%20p21%20protein%20activator%204,to%20determine%20the%20prognostic%20and')</li>
+<li>AnnotationURLCitation(end_index=27266, start_index=27118, title='RASA4 inhibits the HIFα signaling pathway to suppress proliferation of cervical cancer cells - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8809920/#:~:text=the%20CRISPR%2FCas9%20technology,was%20noted%20in%20the%20colony')</li>
+<li>AnnotationURLCitation(end_index=27415, start_index=27267, title='RASA4 inhibits the HIFα signaling pathway to suppress proliferation of cervical cancer cells - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8809920/#:~:text=the%20CRISPR%2FCas9%20technology,was%20noted%20in%20the%20colony')</li>
+<li>AnnotationURLCitation(end_index=27714, start_index=27537, title='RASA4 inhibits the HIFα signaling pathway to suppress proliferation of cervical cancer cells - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8809920/#:~:text=RASA4%20may%20negatively%20regulate%20HIF1%CE%B1,cells%20by%20inactivating%20the%20HIF1%CE%B1')</li>
+<li>AnnotationURLCitation(end_index=27856, start_index=27715, title='RASA4 inhibits the HIFα signaling pathway to suppress proliferation of cervical cancer cells - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8809920/#:~:text=Figure%205,Consistently%2C%20Western%20blotting%20results')</li>
+<li>AnnotationURLCitation(end_index=28306, start_index=28168, title='RASA4 inhibits the HIFα signaling pathway to suppress proliferation of cervical cancer cells - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8809920/#:~:text=that%20both%20RASA4%20and%20HIF1%CE%B1,As%20shown%20in')</li>
+<li>AnnotationURLCitation(end_index=28473, start_index=28307, title='RASA4 inhibits the HIFα signaling pathway to suppress proliferation of cervical cancer cells - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8809920/#:~:text=match%20at%20L366%20RASA4%20inactivated,revealed%20that%20survivin%20protein%20was')</li>
+<li>AnnotationURLCitation(end_index=28759, start_index=28615, title='RASA4 inhibits the HIFα signaling pathway to suppress proliferation of cervical cancer cells - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8809920/#:~:text=was%20also%20recorded%20in%20vivo,Our%20findings%20indicated')</li>
+<li>AnnotationURLCitation(end_index=28913, start_index=28760, title='RASA4 inhibits the HIFα signaling pathway to suppress proliferation of cervical cancer cells - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8809920/#:~:text=RASA4%20regulates%20proliferation%20through%20the,Furthermore%2C%20we')</li>
+<li>AnnotationURLCitation(end_index=29539, start_index=29376, title='RASA4 inhibits the HIFα signaling pathway to suppress proliferation of cervical cancer cells - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8809920/#:~:text=match%20at%20L44%20inactivating%20the,for%20targeted%20therapy%20against%20CESC')</li>
+<li>AnnotationURLCitation(end_index=29811, start_index=29660, title='RASA4 inhibits the HIFα signaling pathway to suppress proliferation of cervical cancer cells - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8809920/#:~:text=match%20at%20L251%20value%20of,of%20RASA4%20in%20CESC%20progression')</li>
+<li>AnnotationURLCitation(end_index=30266, start_index=30152, title='Mutated RAS-associating proteins and ERK activation in relapse/refractory diffuse large B cell lymphoma - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8764096/#:~:text=SOS1%20%20,Possibly%20damaging')</li>
+<li>AnnotationURLCitation(end_index=30368, start_index=30267, title='Mutated RAS-associating proteins and ERK activation in relapse/refractory diffuse large B cell lymphoma - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8764096/#:~:text=RASA2%20%20,N%2FA')</li>
+<li>AnnotationURLCitation(end_index=30716, start_index=30567, title='Mutated RAS-associating proteins and ERK activation in relapse/refractory diffuse large B cell lymphoma - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8764096/#:~:text=hypothesized%20that%20RAS,In%20silico%20modeling%20indicated%20an')</li>
+<li>AnnotationURLCitation(end_index=30842, start_index=30717, title='Mutated RAS-associating proteins and ERK activation in relapse/refractory diffuse large B cell lymphoma - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8764096/#:~:text=proteins,to%20a%20growth%20advantage%20in')</li>
+<li>AnnotationURLCitation(end_index=32906, start_index=32723, title='RASA4 RAS p21 protein activator 4 [Homo sapiens (human)] - Gene - NCBI', type='url_citation', url='https://www.ncbi.nlm.nih.gov/gene?Cmd=DetailsSearch&amp;Db=gene&amp;Term=10156#:~:text=that%20suppresses%20the%20Ras%2Fmitogen,provided%20by%20RefSeq%2C%20Jul%202008')</li>
+<li>AnnotationURLCitation(end_index=33183, start_index=33016, title='Ras inhibitor CAPRI enables neutrophil-like cells to chemotax through a higher-concentration range of gradients - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8639426/#:~:text=Neutrophils%20provide%20first,mechanism%20largely%20remains%20elusive%2C%20although')</li>
+<li>AnnotationURLCitation(end_index=33402, start_index=33248, title='A critical role for the Calcium-promoted Ras Inactivator in Fcγ receptor-mediated phagocytosis - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC1464573/#:~:text=that%20the%20Ca%5E%7B2%2B%7D,defective%20activation%20of%20Cdc42%20and')</li>
+<li>AnnotationURLCitation(end_index=33618, start_index=33459, title='RASA4 inhibits the HIFα signaling pathway to suppress proliferation of cervical cancer cells - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8809920/#:~:text=RAS%20p21%20protein%20activator%204,to%20determine%20the%20prognostic%20and')</li>
+<li>AnnotationURLCitation(end_index=33928, start_index=33759, title='Ca2+-dependent Monomer and Dimer Formation Switches CAPRI Protein between Ras GTPase-activating Protein (GAP) and RapGAP Activities - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3103366/#:~:text=CAPRI%20increases%20upon%20cell%20stimulation,Ras%20and%20Rap1%20signaling%20pathways')</li>
+<li>AnnotationURLCitation(end_index=34089, start_index=33929, title='Interactions between Ras and Rap signaling pathways during neurodevelopment in health and disease - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10920261/#:~:text=%28Kupzig%20et%20al,translational%20modifications%20or%20second%20messenger')</li>
+<li>AnnotationURLCitation(end_index=34569, start_index=34402, title='Ras inhibitor CAPRI enables neutrophil-like cells to chemotax through a higher-concentration range of gradients - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8639426/#:~:text=Neutrophils%20provide%20first,mechanism%20largely%20remains%20elusive%2C%20although')</li>
+<li>AnnotationURLCitation(end_index=34720, start_index=34570, title='Ras inhibitor CAPRI enables neutrophil-like cells to chemotax through a higher-concentration range of gradients - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8639426/#:~:text=recruit%20Ras%20inhibitor%2C%20CAPRI%2C%20to,mediated%20adaptation')</li>
+<li>AnnotationURLCitation(end_index=34989, start_index=34870, title='A critical role for the Calcium-promoted Ras Inactivator in Fcγ receptor-mediated phagocytosis - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC1464573/#:~:text=Rac1,and%20Cdc42%20and%20Rac1%20and')</li>
+<li>AnnotationURLCitation(end_index=35415, start_index=35259, title='RASA4 inhibits the HIFα signaling pathway to suppress proliferation of cervical cancer cells - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8809920/#:~:text=results%20indicate%20the%20tumor,Therefore%2C%20our%20results%20strongly')</li>
+<li>AnnotationURLCitation(end_index=35593, start_index=35416, title='RASA4 inhibits the HIFα signaling pathway to suppress proliferation of cervical cancer cells - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8809920/#:~:text=RASA4%20may%20negatively%20regulate%20HIF1%CE%B1,cells%20by%20inactivating%20the%20HIF1%CE%B1')</li>
+<li>AnnotationURLCitation(end_index=36745, start_index=36574, title='Ca2+-dependent Monomer and Dimer Formation Switches CAPRI Protein between Ras GTPase-activating Protein (GAP) and RapGAP Activities - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3103366/#:~:text=RapGAP%20activity%20than%20RasGAP%20activity%2C,Ras%20and%20Rap1%20signaling%20pathways')</li>
+<li>AnnotationURLCitation(end_index=36902, start_index=36746, title='Ras inhibitor CAPRI enables neutrophil-like cells to chemotax through a higher-concentration range of gradients - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8639426/#:~:text=gradients%20through%20adaptation,data%20reveal%20that%20CAPRI%20controls')</li>
+<li>AnnotationURLCitation(end_index=37222, start_index=37081, title='A critical role for the Calcium-promoted Ras Inactivator in Fcγ receptor-mediated phagocytosis - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC1464573/#:~:text=CAPRI%20is%20a%20member%20of,cells%20but%20not%20in%20its')</li>
+<li>AnnotationURLCitation(end_index=37356, start_index=37223, title='A critical role for the Calcium-promoted Ras Inactivator in Fcγ receptor-mediated phagocytosis - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC1464573/#:~:text=as%20a%20Ras,a%20critical%20role%20in%20Fc%CE%B3R')</li>
+<li>AnnotationURLCitation(end_index=37660, start_index=37506, title='A critical role for the Calcium-promoted Ras Inactivator in Fcγ receptor-mediated phagocytosis - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC1464573/#:~:text=that%20the%20Ca%5E%7B2%2B%7D,defective%20activation%20of%20Cdc42%20and')</li>
+<li>AnnotationURLCitation(end_index=37796, start_index=37661, title='A critical role for the Calcium-promoted Ras Inactivator in Fcγ receptor-mediated phagocytosis - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC1464573/#:~:text=purified%20form,Fc%CE%B3R%20to%20Cdc42%20and%20Rac1')</li>
+<li>AnnotationURLCitation(end_index=38077, start_index=37947, title='GAP1 Family Members Constitute Bifunctional Ras and Rap GTPase-activating Proteins - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC1904491/#:~:text=GAP1,For%20this%20dual%20activity%2C%20regions')</li>
+<li>AnnotationURLCitation(end_index=38213, start_index=38078, title='GAP1 Family Members Constitute Bifunctional Ras and Rap GTPase-activating Proteins - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC1904491/#:~:text=domain,association%20with%20the%20plasma%20membrane')</li>
+<li>AnnotationURLCitation(end_index=38561, start_index=38392, title='Ca2+-dependent Monomer and Dimer Formation Switches CAPRI Protein between Ras GTPase-activating Protein (GAP) and RapGAP Activities - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3103366/#:~:text=CAPRI%20increases%20upon%20cell%20stimulation,Ras%20and%20Rap1%20signaling%20pathways')</li>
+<li>AnnotationURLCitation(end_index=38722, start_index=38562, title='Interactions between Ras and Rap signaling pathways during neurodevelopment in health and disease - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10920261/#:~:text=%28Kupzig%20et%20al,translational%20modifications%20or%20second%20messenger')</li>
+<li>AnnotationURLCitation(end_index=39092, start_index=38920, title='Ras inhibitor CAPRI enables neutrophil-like cells to chemotax through a higher-concentration range of gradients - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8639426/#:~:text=Neutrophils%20sense%20and%20migrate%20through,chemoattractants%2C%20as%20a%20result%20of')</li>
+<li>AnnotationURLCitation(end_index=39243, start_index=39093, title='Ras inhibitor CAPRI enables neutrophil-like cells to chemotax through a higher-concentration range of gradients - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8639426/#:~:text=recruit%20Ras%20inhibitor%2C%20CAPRI%2C%20to,mediated%20adaptation')</li>
+<li>AnnotationURLCitation(end_index=39595, start_index=39418, title='RASA4 inhibits the HIFα signaling pathway to suppress proliferation of cervical cancer cells - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8809920/#:~:text=RASA4%20may%20negatively%20regulate%20HIF1%CE%B1,cells%20by%20inactivating%20the%20HIF1%CE%B1')</li>
+<li>AnnotationURLCitation(end_index=39737, start_index=39596, title='RASA4 inhibits the HIFα signaling pathway to suppress proliferation of cervical cancer cells - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8809920/#:~:text=Figure%205,Consistently%2C%20Western%20blotting%20results')</li>
+<li>AnnotationURLCitation(end_index=40013, start_index=39899, title='Mutated RAS-associating proteins and ERK activation in relapse/refractory diffuse large B cell lymphoma - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8764096/#:~:text=SOS1%20%20,Possibly%20damaging')</li>
+<li>AnnotationURLCitation(end_index=40388, start_index=40224, title='Interactions between Ras and Rap signaling pathways during neurodevelopment in health and disease - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10920261/#:~:text=In%20addition%20to%20SynGAP%2C%20most,study%20suggests%20that%20modulation%20of')</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: O43374
+gene_symbol: RASA4
+product_type: PROTEIN
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &#39;RAS p21 protein activator 4 (CAPRI - Calcium-Promoted Ras Inactivator),
+  calcium-regulated GTPase-activating protein for RAS and RAP1 small GTPases. Member
+  of GAP1 family with two tandem C2 domains (Ca2+ and phospholipid binding), central
+  GAP-related domain (GRD) for catalytic activity, and C-terminal pleckstrin homology
+  (PH) domain with Bruton&#39;&#39;s tyrosine kinase (Btk) motif. Unique calcium sensor that
+  links intracellular Ca2+ signals to Ras inactivation. Cytosolic protein at rest
+  that rapidly translocates to inner plasma membrane upon Ca2+ elevation via C2 domain
+  binding to anionic phospholipids (phosphatidylserine). PH domain atypical - does
+  not bind phosphoinositides due to Leu→Arg substitution. Dual substrate specificity:
+  catalyzes GTP hydrolysis on Ras family GTPases (H-Ras, N-Ras, K-Ras) and Rap1 via
+  arginine-finger mechanism. Oligomerization state regulates substrate preference
+  - monomeric form predominantly RasGAP, while Ca2+-induced homodimers exhibit enhanced
+  Rap1GAP activity. Functions as negative regulator of Ras-MAPK and Rap1-integrin
+  signaling pathways. Critical for immune cell function: in neutrophils, enables chemotaxis
+  through high-concentration gradients by mediating GPCR-induced Ras adaptation -
+  loss causes hyperactive Ras-GTP, excessive F-actin polymerization, and defective
+  directional migration. In macrophages, essential for Fcγ receptor-mediated phagocytosis
+  - CAPRI acts as adaptor linking FcγR calcium signals to coordinated regulation of
+  Ras (inactivation) and Cdc42/Rac1 (activation) for phagosome formation. CAPRI-knockout
+  mice show ~80% lethality to Salmonella infection due to impaired bacterial clearance.
+  Tumor suppressor-like function - loss leads to prolonged Ras-MAPK signaling. Downregulated
+  in cervical cancer (~AUC 0.986 diagnostic value); forced expression suppresses proliferation
+  by inactivating HIF-1α/survivin pathway. Somatic mutations (e.g. D111N in DLBCL)
+  associated with enhanced ERK/MAPK activation and cancer progression. Broadly expressed
+  with high levels in immune organs (spleen, lymph nodes). Acts as amplitude sensor
+  for Ca2+ bursts, translating calcium signal intensity into proportional Ras inactivation.
+  Provides negative feedback loop preventing overactivation of growth and immune signaling
+  pathways.&#39;
+existing_annotations:
+- term:
+    id: GO:0005096
+    label: GTPase activator activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: GTPase activator activity - dual RasGAP and Rap1GAP function.
+    action: ACCEPT
+    reason: Core enzymatic function.
+- term:
+    id: GO:1902531
+    label: regulation of intracellular signal transduction
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: Regulation of intracellular signal transduction - regulates Ras/Rap1
+      signaling.
+    action: ACCEPT
+    reason: Core regulatory role.
+- term:
+    id: GO:0005096
+    label: GTPase activator activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: GTPase activator activity - dual RasGAP and Rap1GAP function.
+    action: ACCEPT
+    reason: Core enzymatic function.
+- term:
+    id: GO:0005543
+    label: phospholipid binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: Phospholipid binding - C2 domains bind membrane phospholipids in Ca2+-dependent
+      manner.
+    action: ACCEPT
+    reason: Domain function for membrane targeting.
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: Cytosol - cytosolic at rest with Ca2+-triggered membrane translocation.
+    action: ACCEPT
+    reason: Core resting localization.
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: Plasma membrane - translocates to inner plasma membrane upon Ca2+ elevation.
+    action: ACCEPT
+    reason: Activity-dependent localization.
+- term:
+    id: GO:0008270
+    label: zinc ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: Zinc ion binding - RasGAP domain requires metal cofactors.
+    action: ACCEPT
+    reason: Enzymatic requirement.
+- term:
+    id: GO:0035556
+    label: intracellular signal transduction
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: Intracellular signal transduction - participates in Ras/Rap1 signaling
+      pathways.
+    action: ACCEPT
+    reason: Signaling role.
+- term:
+    id: GO:0046580
+    label: negative regulation of Ras protein signal transduction
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: Negative regulation of Ras protein signal transduction - core function.
+    action: ACCEPT
+    reason: Core regulatory function.
+- term:
+    id: GO:0046872
+    label: metal ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: Metal ion binding - requires metal cofactors.
+    action: ACCEPT
+    reason: Enzymatic requirement.
+- term:
+    id: GO:0071277
+    label: cellular response to calcium ion
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: Cellular response to calcium ion - Ca2+-regulated membrane translocation
+      and activation.
+    action: ACCEPT
+    reason: Core regulatory mechanism.
+- term:
+    id: GO:0005096
+    label: GTPase activator activity
+  evidence_type: IDA
+  original_reference_id: PMID:16009725
+  review:
+    summary: GTPase activator activity - dual RasGAP and Rap1GAP function.
+    action: ACCEPT
+    reason: Core enzymatic function.
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-5658231
+  review:
+    summary: Cytosol - cytosolic at rest with Ca2+-triggered membrane translocation.
+    action: ACCEPT
+    reason: Core resting localization.
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-5658435
+  review:
+    summary: Cytosol - cytosolic at rest with Ca2+-triggered membrane translocation.
+    action: ACCEPT
+    reason: Core resting localization.
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IDA
+  original_reference_id: PMID:16009725
+  review:
+    summary: Cytosol - cytosolic at rest with Ca2+-triggered membrane translocation.
+    action: ACCEPT
+    reason: Core resting localization.
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IDA
+  original_reference_id: PMID:16009725
+  review:
+    summary: Plasma membrane - translocates to inner plasma membrane upon Ca2+ elevation.
+    action: ACCEPT
+    reason: Activity-dependent localization.
+- term:
+    id: GO:0071277
+    label: cellular response to calcium ion
+  evidence_type: IMP
+  original_reference_id: PMID:16009725
+  review:
+    summary: Cellular response to calcium ion - Ca2+-regulated membrane translocation
+      and activation.
+    action: ACCEPT
+    reason: Core regulatory mechanism.
+- term:
+    id: GO:0034260
+    label: negative regulation of GTPase activity
+  evidence_type: IMP
+  original_reference_id: PMID:11448776
+  review:
+    summary: Negative regulation of GTPase activity - stimulates GTP hydrolysis on
+      Ras/Rap1.
+    action: ACCEPT
+    reason: Core enzymatic function (GAP activity).
+- term:
+    id: GO:0034260
+    label: negative regulation of GTPase activity
+  evidence_type: IDA
+  original_reference_id: PMID:12845332
+  review:
+    summary: Negative regulation of GTPase activity - stimulates GTP hydrolysis on
+      Ras/Rap1.
+    action: ACCEPT
+    reason: Core enzymatic function (GAP activity).
+- term:
+    id: GO:0005096
+    label: GTPase activator activity
+  evidence_type: IDA
+  original_reference_id: PMID:11448776
+  review:
+    summary: GTPase activator activity - dual RasGAP and Rap1GAP function.
+    action: ACCEPT
+    reason: Core enzymatic function.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms.
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt.
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods.
+  findings: []
+- id: PMID:11448776
+  title: CAPRI regulates Ca(2+)-dependent inactivation of the Ras-MAPK pathway.
+  findings: []
+- id: PMID:12845332
+  title: Phospholipase Cgamma activates Ras on the Golgi apparatus by means of RasGRP1.
+  findings: []
+- id: PMID:16009725
+  title: CAPRI and RASAL impose different modes of information processing on Ras due
+    to contrasting temporal filtering of Ca2+.
+  findings: []
+- id: Reactome:R-HSA-5658231
+  title: RAS GAPs stimulate RAS GTPase activity
+  findings: []
+- id: Reactome:R-HSA-5658435
+  title: RAS GAPs bind RAS:GTP
+  findings: []
+aliases:
+- RAS p21 protein activator 4
+- CAPRI
+- Calcium-promoted Ras inactivator
+core_functions:
+- molecular_function:
+    id: GO:0005096
+    label: GTPase activator activity
+  description: Calcium-regulated dual-specificity RasGAP that catalyzes GTP hydrolysis
+    on both RAS proteins (H-Ras, N-Ras, K-Ras) and RAP1 GTPase. Monomeric form predominantly
+    RasGAP; Ca2+-induced dimers exhibit enhanced Rap1GAP activity. C2 domains mediate
+    Ca2+-dependent membrane translocation. Critical for neutrophil chemotaxis adaptation
+    and macrophage phagocytosis. Tumor suppressor-like function.
+  locations:
+  - id: GO:0005737
+    label: cytoplasm
+  - id: GO:0005886
+    label: plasma membrane
+  directly_involved_in:
+  - id: GO:0046580
+    label: negative regulation of Ras protein signal transduction
+  - id: GO:0071277
+    label: cellular response to calcium ion
+  - id: GO:0006935
+    label: chemotaxis
+  supported_by:
+  - reference_id: UniProt:O43374
+    supporting_text: RASA4/CAPRI is Ca2+-regulated dual Ras/Rap1 GAP essential for
+      neutrophil chemotaxis and macrophage phagocytosis. CAPRI-KO mice show 80% lethality
+      to Salmonella infection. Oligomerization state regulates substrate preference.
+status: DRAFT
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

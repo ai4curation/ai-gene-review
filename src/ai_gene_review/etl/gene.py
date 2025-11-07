@@ -19,6 +19,59 @@ from pathlib import Path
 from typing import Tuple, Optional, List, Dict, Any
 import requests
 import yaml
+import re
+
+
+def _extract_panther_family_id(uniprot_data: str) -> Optional[str]:
+    """Extract PANTHER family ID from UniProt data.
+
+    Args:
+        uniprot_data: Raw UniProt text data
+
+    Returns:
+        PANTHER family ID (e.g., "PTHR11447") or None if not found
+    """
+    # Look for lines like: DR   PANTHER; PTHR11447; CELLULAR TUMOR ANTIGEN P53; 1.
+    # We want the family ID, not the subfamily (PTHR11447:SF6)
+    pattern = r'^DR\s+PANTHER;\s+(PTHR\d+);\s+.*$'
+
+    for line in uniprot_data.split('\n'):
+        match = re.match(pattern, line.strip())
+        if match:
+            family_id = match.group(1)
+            # Skip subfamily IDs (those with colons)
+            if ':' not in family_id:
+                return family_id
+
+    return None
+
+
+def _fetch_panther_family_data(family_id: str, base_path: Path) -> bool:
+    """Fetch PANTHER family data using the InterPro fetcher.
+
+    Args:
+        family_id: PANTHER family ID (e.g., "PTHR11447")
+        base_path: Base directory where interpro/ folder should be created
+
+    Returns:
+        True if successful, False otherwise
+    """
+    try:
+        # Import the InterPro fetcher class directly
+        from ai_gene_review.tools.fetch_interpro_family_simple import InterProFamilyFetcherSimple
+
+        # Create fetcher instance with the correct output directory
+        fetcher = InterProFamilyFetcherSimple(output_dir=str(base_path))
+
+        # Fetch and save the family data
+        fetcher.fetch_and_save("panther", family_id, include_proteins=True)
+
+        print(f"  ✓ Fetched PANTHER family data for {family_id}")
+        return True
+
+    except Exception as e:
+        print(f"  ⚠ Error fetching PANTHER family {family_id}: {e}")
+        return False
 
 
 def _compare_file_content(file_path: Path, new_content: str) -> bool:
@@ -75,6 +128,8 @@ def fetch_gene_data(
             - goa_updated: bool - True if GOA file was updated
             - uniprot_differences: bool - True if UniProt content differs from existing
             - goa_differences: bool - True if GOA content differs from existing
+            - panther_family_fetched: bool - True if PANTHER family data was fetched
+            - panther_family_id: str or None - PANTHER family ID if found
 
     Raises:
         ValueError: If UniProt ID cannot be resolved or data cannot be fetched.
@@ -204,6 +259,7 @@ def fetch_gene_data(
                 "id": uniprot_id,
                 "gene_symbol": gene_name,
                 "product_type": "PROTEIN",
+                "status": "INITIALIZED",
                 "taxon": {"id": taxon_id, "label": taxon_label},
                 "description": f"TODO: Add description for {gene_name}",
             }
@@ -236,6 +292,28 @@ def fetch_gene_data(
                 print(
                     f"  - {file_prefix}-ai-review.yaml already contains all GOA annotations"
                 )
+
+    # Auto-fetch PANTHER family data if found in UniProt data
+    panther_family_id = _extract_panther_family_id(uniprot_data)
+    if panther_family_id:
+        # Check if PANTHER family data already exists
+        panther_family_dir = base_path / "interpro" / "panther" / panther_family_id
+        panther_metadata_file = panther_family_dir / f"{panther_family_id}-metadata.yaml"
+        panther_entries_file = panther_family_dir / f"{panther_family_id}-entries.csv"
+
+        if not (panther_metadata_file.exists() and panther_entries_file.exists()):
+            print(f"  🔍 Found PANTHER family {panther_family_id}, fetching family data...")
+            family_fetch_success = _fetch_panther_family_data(panther_family_id, base_path)
+            result["panther_family_fetched"] = family_fetch_success
+            result["panther_family_id"] = panther_family_id
+        else:
+            print(f"  - PANTHER family {panther_family_id} data already exists")
+            result["panther_family_fetched"] = False
+            result["panther_family_id"] = panther_family_id
+    else:
+        print(f"  - No PANTHER family found in UniProt data")
+        result["panther_family_fetched"] = False
+        result["panther_family_id"] = None
 
     return result
 
@@ -707,6 +785,133 @@ def fetch_goa_data(uniprot_id: str) -> str:
     return "\n".join(tsv_lines) + "\n"
 
 
+def fetch_rnacentral_data_by_id(rnacentral_id: str) -> str:
+    """Fetch RNAcentral data directly by RNAcentral ID.
+
+    This is more reliable than searching by gene name when you already have the ID.
+    Also fetches publications for the RNA and removes the sequence field (which can be huge).
+
+    Args:
+        rnacentral_id: RNAcentral ID (e.g., "URS0000759CF4_9606" or "URS0000759CF4")
+
+    Returns:
+        RNAcentral data in JSON format as text (without sequence, with publications)
+
+    Raises:
+        ValueError: If RNAcentral data cannot be fetched
+
+    Example:
+        >>> data = fetch_rnacentral_data_by_id("URS0000759CF4_9606")  # doctest: +SKIP
+        >>> assert "rnacentral_id" in data  # doctest: +SKIP
+    """
+    import json
+
+    # Clean up ID - remove species suffix if present for the API call
+    clean_id = rnacentral_id.split("_")[0] if "_" in rnacentral_id else rnacentral_id
+
+    url = f"https://rnacentral.org/api/v1/rna/{clean_id}"
+    headers = {
+        "Accept": "application/json",
+        "User-Agent": "ai-gene-review/1.0"
+    }
+
+    try:
+        # Fetch basic RNA data
+        response = requests.get(url, headers=headers, timeout=30)
+        response.raise_for_status()
+        rna_data = response.json()
+
+        # Remove sequence field (can be huge for long ncRNAs)
+        if "sequence" in rna_data:
+            del rna_data["sequence"]
+
+        # Fetch publications for this RNA
+        publications_url = f"https://rnacentral.org/api/v1/rna/{clean_id}/publications"
+        publications_data = []
+        try:
+            pub_response = requests.get(publications_url, headers=headers, timeout=30)
+            pub_response.raise_for_status()
+            pub_json = pub_response.json()
+
+            # Collect all publications (handle pagination)
+            publications_data = pub_json.get("results", [])
+            next_url = pub_json.get("next")
+
+            while next_url:
+                pub_response = requests.get(next_url, headers=headers, timeout=30)
+                pub_response.raise_for_status()
+                pub_json = pub_response.json()
+                publications_data.extend(pub_json.get("results", []))
+                next_url = pub_json.get("next")
+
+        except requests.exceptions.RequestException:
+            # If publications fetch fails, continue without them
+            pass
+
+        # Add publications to the RNA data
+        rna_data["publications"] = publications_data
+
+        # Wrap single result in the same format as search results for consistency
+        data = {
+            "count": 1,
+            "next": None,
+            "previous": None,
+            "results": [rna_data]
+        }
+
+        return json.dumps(data, indent=2, ensure_ascii=False)
+
+    except requests.exceptions.Timeout as e:
+        raise ValueError(f"RNAcentral API request timed out after 30 seconds for ID {rnacentral_id}: {e}")
+    except requests.exceptions.RequestException as e:
+        raise ValueError(f"Failed to fetch RNAcentral data for ID {rnacentral_id}: {e}")
+    except json.JSONDecodeError as e:
+        raise ValueError(f"Failed to parse RNAcentral JSON response: {e}")
+
+
+def resolve_gene_to_rnacentral_via_hgnc(gene_symbol: str) -> Optional[str]:
+    """Resolve a human gene symbol to an RNAcentral ID using HGNC API.
+
+    This is the most reliable method for human genes as HGNC maintains
+    authoritative cross-references to RNAcentral.
+
+    Args:
+        gene_symbol: Human gene symbol (e.g., "KCNQ1OT1", "XIST")
+
+    Returns:
+        RNAcentral ID without species suffix (e.g., "URS0000759CF4") or None if not found
+
+    Raises:
+        ValueError: If HGNC API request fails
+
+    Example:
+        >>> rna_id = resolve_gene_to_rnacentral_via_hgnc("KCNQ1OT1")  # doctest: +SKIP
+        >>> print(rna_id)  # doctest: +SKIP
+        URS0000759CF4
+    """
+    try:
+        url = f"https://rest.genenames.org/fetch/symbol/{gene_symbol}"
+        headers = {"Accept": "application/json"}
+        response = requests.get(url, headers=headers, timeout=30)
+        response.raise_for_status()
+
+        data = response.json()
+        docs = data.get("response", {}).get("docs", [])
+
+        if not docs:
+            return None
+
+        # Get the first RNAcentral ID from the cross-references
+        rna_central_ids = docs[0].get("rna_central_id", [])
+        if rna_central_ids:
+            return rna_central_ids[0]
+
+        return None
+
+    except requests.exceptions.RequestException as e:
+        raise ValueError(f"Failed to query HGNC API for gene {gene_symbol}: {e}")
+
+
 def fetch_rnacentral_data(gene_symbol: str, organism: str) -> str:
     """Fetch ncRNA data from RNAcentral API.
 
@@ -797,32 +1002,19 @@ def fetch_rnacentral_data(gene_symbol: str, organism: str) -> str:
         import json
         return json.dumps(data, indent=2, ensure_ascii=False)
 
+    except requests.exceptions.Timeout as e:
+        raise ValueError(f"RNAcentral API request timed out after 30 seconds for gene {gene_symbol}: {e}")
     except requests.exceptions.RequestException as e:
-        # Create a minimal mock response for testing when API is not accessible
-        import json
-        mock_data = {
-            "count": 1,
-            "next": None,
-            "previous": None,
-            "results": [
-                {
-                    "rnacentral_id": f"URS_MOCK_{gene_symbol}_{taxon_id}",
-                    "description": f"Mock {gene_symbol} ncRNA from {organism}",
-                    "length": 100,
-                    "sequence": "AUCGAUCGAUCGAUCG" * 6 + "AUCG",  # Mock 100nt sequence
-                    "rna_type": "misc_RNA",
-                    "species": int(taxon_id) if taxon_id.isdigit() else 9606
-                }
-            ]
-        }
-        print(f"  ⚠ RNAcentral API not accessible, using mock data: {e}")
-        return json.dumps(mock_data, indent=2, ensure_ascii=False)
+        raise ValueError(f"Failed to fetch RNAcentral data for gene {gene_symbol} in {organism}: {e}")
     except json.JSONDecodeError as e:
         raise ValueError(f"Failed to parse RNAcentral JSON response: {e}")
 
 
 def resolve_gene_to_rnacentral(gene_symbol: str, organism: str) -> Optional[str]:
     """Resolve a gene symbol to an RNAcentral ID.
+
+    For human genes, uses HGNC API for reliable cross-reference mapping.
+    For other organisms, attempts to use RNAcentral API directly.
 
     Args:
         gene_symbol: Gene symbol to search for
@@ -831,11 +1023,44 @@ def resolve_gene_to_rnacentral(gene_symbol: str, organism: str) -> Optional[str]
     Returns:
         RNAcentral ID (e.g., "URS0000000001_9606") or None if not found
 
+    Raises:
+        ValueError: If gene cannot be resolved to RNAcentral ID
+
     Example:
-        >>> rna_id = resolve_gene_to_rnacentral("SNORD3A", "human")  # doctest: +SKIP
+        >>> rna_id = resolve_gene_to_rnacentral("KCNQ1OT1", "human")  # doctest: +SKIP
         >>> print(rna_id)  # doctest: +SKIP
-        URS0000000001_9606
+        URS0000759CF4_9606
     """
+    # Map organism names to taxon IDs
+    organism_to_taxon = {
+        "human": "9606",
+        "mouse": "10090",
+        "rat": "10116",
+        "yeast": "559292",
+        "fly": "7227",
+        "worm": "6239",
+        "zebrafish": "7955",
+    }
+
+    # Get taxon ID
+    taxon_id = organism_to_taxon.get(organism.lower(), organism)
+
+    # For human genes, use HGNC API (most reliable)
+    if organism.lower() == "human":
+        rna_id = resolve_gene_to_rnacentral_via_hgnc(gene_symbol)
+        if rna_id:
+            # Add species suffix if not present
+            if "_" not in rna_id:
+                return f"{rna_id}_{taxon_id}"
+            return rna_id
+        else:
+            raise ValueError(
+                f"Could not find RNAcentral ID for human gene {gene_symbol} in HGNC. "
+                "The gene may not be an ncRNA or may not have RNAcentral cross-references."
+            )
+
+    # For non-human organisms, try RNAcentral API
+    # (Note: This approach is less reliable and may need improvement for specific organisms)
     try:
         data_text = fetch_rnacentral_data(gene_symbol, organism)
         import json
@@ -848,23 +1073,17 @@ def resolve_gene_to_rnacentral(gene_symbol: str, organism: str) -> Optional[str]
             rna_id = first_result.get("rnacentral_id")
             # Add species suffix if not present
             if rna_id and "_" not in rna_id:
-                # Map organism to taxon ID
-                organism_to_taxon = {
-                    "human": "9606",
-                    "mouse": "10090",
-                    "rat": "10116",
-                    "yeast": "559292",
-                    "fly": "7227",
-                    "worm": "6239",
-                    "zebrafish": "7955",
-                }
-                taxon_id = organism_to_taxon.get(organism.lower(), organism)
                 if taxon_id.isdigit():
                     rna_id = f"{rna_id}_{taxon_id}"
             return rna_id
-        return None
+
+        raise ValueError(
+            f"Could not find RNAcentral ID for gene {gene_symbol} in {organism}. "
+            "No matching entries found in RNAcentral database."
+        )
     except ValueError:
-        return None
+        # Re-raise ValueError with context
+        raise
 
 
 def fetch_gene_data_ncRNA(
@@ -916,12 +1135,57 @@ def fetch_gene_data_ncRNA(
 
     # Determine file paths
     rnacentral_file = gene_dir / f"{file_prefix}-rnacentral.json"
+    goa_file = gene_dir / f"{file_prefix}-goa.tsv"
 
     # Fetch RNAcentral data
-    rnacentral_data = fetch_rnacentral_data(gene_name, organism)
+    # If we have the RNAcentral ID, fetch directly by ID (more reliable)
+    # Otherwise fall back to searching by gene name
+    if rnacentral_id:
+        rnacentral_data = fetch_rnacentral_data_by_id(rnacentral_id)
+    else:
+        rnacentral_data = fetch_rnacentral_data(gene_name, organism)
+
+    # Download publications from RNAcentral to publications folder
+    import json
+    try:
+        rnacentral_json = json.loads(rnacentral_data)
+        results = rnacentral_json.get("results", [])
+        if results and "publications" in results[0]:
+            publications = results[0]["publications"]
+            pmids_to_fetch = []
+
+            for pub in publications:
+                pmid = pub.get("pubmed_id")
+                if pmid:
+                    pmids_to_fetch.append(pmid)
+
+            if pmids_to_fetch:
+                print(f"  Fetching {len(pmids_to_fetch)} publications from RNAcentral...")
+
+                # Import publication fetcher
+                from ai_gene_review.etl.publication import cache_publications
+
+                # Create publications directory
+                pubs_dir = base_path / "publications"
+                pubs_dir.mkdir(exist_ok=True)
+
+                # Fetch publications (prefix with PMID: if needed)
+                pmid_ids = [f"PMID:{pmid}" if not pmid.startswith("PMID:") else pmid for pmid in pmids_to_fetch]
+                fetched_count = cache_publications(pmid_ids, pubs_dir, force=False, delay=0.5)
+
+                if fetched_count > 0:
+                    print(f"  ✓ Downloaded {fetched_count} publications to publications/")
+    except (json.JSONDecodeError, Exception) as e:
+        # Continue if publication download fails
+        pass
+
+    # Fetch GOA data using the RNAcentral ID
+    # QuickGO API accepts RNAcentral IDs just like UniProt IDs
+    goa_data = fetch_goa_data(rnacentral_id)
 
     # Check for differences
     rnacentral_differs = _compare_file_content(rnacentral_file, rnacentral_data)
+    goa_differs = _compare_file_content(goa_file, goa_data)
 
     # Initialize result status
     result = {
@@ -930,7 +1194,9 @@ def fetch_gene_data_ncRNA(
         "annotations_added": 0,
         "references_added": 0,
         "rnacentral_updated": False,
+        "goa_updated": False,
         "rnacentral_differences": rnacentral_differs,
+        "goa_differences": goa_differs,
     }
 
     # Handle RNAcentral file
@@ -947,6 +1213,21 @@ def fetch_gene_data_ncRNA(
             print(f"  ⚠ RNAcentral data differs from existing {file_prefix}-rnacentral.json (use --force to overwrite)")
     else:
         print(f"  - {file_prefix}-rnacentral.json is up to date")
+
+    # Handle GOA file
+    if goa_differs:
+        if force or not goa_file.exists():
+            file_existed = goa_file.exists()
+            goa_file.write_text(goa_data)
+            result["goa_updated"] = True
+            if not file_existed:
+                print(f"  ✓ Created {file_prefix}-goa.tsv")
+            elif force:
+                print(f"  ✓ Updated {file_prefix}-goa.tsv (forced)")
+        else:
+            print(f"  ⚠ GOA data differs from existing {file_prefix}-goa.tsv (use --force to overwrite)")
+    else:
+        print(f"  - {file_prefix}-goa.tsv is up to date")
 
     # Seed ai-review.yaml with basic ncRNA structure if requested
     if seed_annotations:
@@ -986,6 +1267,7 @@ def fetch_gene_data_ncRNA(
                 "id": rnacentral_id,
                 "gene_symbol": gene_name,
                 "product_type": "OTHER_NCRNA",  # Default, should be updated based on RNA type
+                "status": "INITIALIZED",
                 "taxon": {"id": taxon_id, "label": taxon_label},
                 "description": f"TODO: Add description for {gene_name}",
                 "references": [],
@@ -1003,6 +1285,24 @@ def fetch_gene_data_ncRNA(
                     allow_unicode=True,
                 )
             result["yaml_created"] = True
-            print(f"  ✓ Created {file_prefix}-ai-review.yaml with ncRNA structure")
+
+        # Now seed missing GOA annotations (same as for protein-coding genes)
+        from ai_gene_review.validation.goa_validator import GOAValidator
+        validator = GOAValidator()
+        added_count, _, refs_added = validator.seed_missing_annotations(
+            yaml_file, goa_file, fetch_titles=True
+        )
+        result["annotations_added"] = added_count
+        result["references_added"] = refs_added
+
+        if added_count > 0:
+            print(
+                f"  ✓ Seeded {added_count} GOA annotations in {file_prefix}-ai-review.yaml"
+            )
+        else:
+            if yaml_existed:
+                print(
+                    f"  - {file_prefix}-ai-review.yaml already contains all GOA annotations"
+                )
 
     return result

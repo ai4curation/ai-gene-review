@@ -1,0 +1,2252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ENPP5 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>ENPP5</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q9UJA9" target="_blank" class="term-link">
+                        Q9UJA9
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Aliases:</span>
+                <div class="aliases">
+                    
+                    <span class="badge">Ectonucleotide pyrophosphatase/phosphodiesterase 5</span>
+                    
+                    <span class="badge">NPP5</span>
+                    
+                </div>
+            </div>
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "ENPP5";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q9UJA9" data-a="DESCRIPTION: Ectonucleotide pyrophosphatase/phosphodiesterase f..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Ectonucleotide pyrophosphatase/phosphodiesterase family member 5, enzyme that hydrolyzes extracellular nucleotides. Member of ENPP family characterized by phosphodiesterase and nucleotide pyrophosphatase activities. Localizes to cell surface as type II transmembrane protein with extracellular catalytic domain. Catalyzes hydrolysis of phosphodiester bonds in nucleotides and their derivatives. Substrate specificity includes 5&#39;-nucleotide monophosphates - ENPP5 converts AMP to adenosine, functioning as ecto-5&#39;-nucleotidase. Also exhibits activity toward cyclic nucleotides and nucleotide sugars. By generating adenosine from AMP extracellularly, regulates purinergic signaling - adenosine acts on P1 adenosine receptors modulating immune responses, inflammation, neurotransmission. Complements CD73 (another ecto-5&#39;-nucleotidase) in producing extracellular adenosine. Expression in various tissues including immune cells, endothelium, neurons. May regulate cell-cell communication, immune modulation, and inflammatory responses through nucleotide/adenosine metabolism. Dysregulation implicated in cancer, autoimmunity, and neurological disorders where purinergic signaling is altered.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016787" target="_blank" class="term-link">
+                                    GO:0016787
+                                </a>
+                            </span>
+                            <span class="term-label">hydrolase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UJA9" data-a="GO:0016787" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Hydrolase activity - phosphodiesterase.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> General enzyme class.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UJA9" data-a="GO:0005576" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Extracellular region - extracellular catalytic domain.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Enzyme active site.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UJA9" data-a="GO:0016020" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Membrane - membrane protein.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> General membrane.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016787" target="_blank" class="term-link">
+                                    GO:0016787
+                                </a>
+                            </span>
+                            <span class="term-label">hydrolase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UJA9" data-a="GO:0016787" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Hydrolase activity - phosphodiesterase.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> General enzyme class.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046872" target="_blank" class="term-link">
+                                    GO:0046872
+                                </a>
+                            </span>
+                            <span class="term-label">metal ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UJA9" data-a="GO:0046872" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Metal ion binding - requires metal cofactors.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Enzymatic requirement.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000107
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UJA9" data-a="GO:0005886" data-r="GO_REF:0000107" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Plasma membrane - type II transmembrane protein.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core localization.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007154" target="_blank" class="term-link">
+                                    GO:0007154
+                                </a>
+                            </span>
+                            <span class="term-label">cell communication</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000107
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UJA9" data-a="GO:0007154" data-r="GO_REF:0000107" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cell communication - regulates purinergic signaling via adenosine production.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Signaling role.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008270" target="_blank" class="term-link">
+                                    GO:0008270
+                                </a>
+                            </span>
+                            <span class="term-label">zinc ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000107
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UJA9" data-a="GO:0008270" data-r="GO_REF:0000107" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Zinc ion binding - requires metal cofactors for catalysis.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Enzymatic requirement.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000210" target="_blank" class="term-link">
+                                    GO:0000210
+                                </a>
+                            </span>
+                            <span class="term-label">NAD+ diphosphatase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28898552" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28898552
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A key tyrosine substitution restricts nucleotide hydrolysis ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UJA9" data-a="GO:0000210" data-r="PMID:28898552" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NAD+ diphosphatase activity - can hydrolyze NAD+.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Substrate activity.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UJA9" data-a="GO:0005886" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Plasma membrane - type II transmembrane protein.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core localization.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007154" target="_blank" class="term-link">
+                                    GO:0007154
+                                </a>
+                            </span>
+                            <span class="term-label">cell communication</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UJA9" data-a="GO:0007154" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cell communication - regulates purinergic signaling via adenosine production.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Signaling role.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008270" target="_blank" class="term-link">
+                                    GO:0008270
+                                </a>
+                            </span>
+                            <span class="term-label">zinc ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28898552" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28898552
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A key tyrosine substitution restricts nucleotide hydrolysis ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UJA9" data-a="GO:0008270" data-r="PMID:28898552" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Zinc ion binding - requires metal cofactors for catalysis.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Enzymatic requirement.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Ecto-5&#39;-nucleotidase that hydrolyzes AMP to adenosine extracellularly. Regulates purinergic signaling by generating adenosine for P1 receptor activation, modulating immunity, inflammation, and neurotransmission.</h3>
+                <span class="vote-buttons" data-g="Q9UJA9" data-a="FUNCTION: Ecto-5&#39;-nucleotidase that hydrolyzes AMP to adenos..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004519" target="_blank" class="term-link">
+                            endonuclease activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006195" target="_blank" class="term-link">
+                                purine nucleotide catabolic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                plasma membrane
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            UniProt:Q9NPB8
+                            
+                        </span>
+                        
+                        <div class="finding-text">ENPP5 is ectonucleotide pyrophosphatase with ecto-5&#39;-nucleotidase activity, converts AMP to adenosine.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000107.md" target="_blank" class="term-link">
+                            GO_REF:0000107
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Automatic transfer of experimentally verified manual GO annotation data to orthologs using Ensembl Compara.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28898552" target="_blank" class="term-link">
+                            PMID:28898552
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A key tyrosine substitution restricts nucleotide hydrolysis by the ectoenzyme NPP5.</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Openai</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(ENPP5-deep-research-openai.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9UJA9" data-a="DOC: Deep Research Openai" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: openai<br />
+model: o3-deep-research-2025-06-26<br />
+cached: true<br />
+start_time: '2025-11-03T23:03:31.317725'<br />
+end_time: '2025-11-03T23:03:31.323003'<br />
+duration_seconds: 0.01<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: human<br />
+  gene_id: Q9UJA9<br />
+  gene_symbol: ENPP5<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    temperature: 0.1<br />
+    top_p: 1.0<br />
+citation_count: 94</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<p>Please provide a comprehensive research report on the gene ENPP5 (Q9UJA9) in human.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function. </p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<h1 id="introduction-and-gene-family-context">Introduction and Gene Family Context</h1>
+<p><strong>ENPP5</strong> (ectonucleotide pyrophosphatase/phosphodiesterase 5) is a <strong>human gene</strong> encoding a <em>type I transmembrane glycoprotein</em> that belongs to the ENPP family (<a href="https://www.ncbi.nlm.nih.gov/gene/59084#:~:text=Summary%20This%20gene%20encodes%20a,other%20tissues%20See%20more%20Orthologs">www.ncbi.nlm.nih.gov</a>). This family (ENPP1–7 in mammals) comprises enzymes that hydrolyze phosphodiester bonds in various substrates such as nucleotides and phospholipids (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8808174/#:~:text=substrates%20and%20mediate%20different%20biological,These%20adaptations%20explain%20the%20different">pmc.ncbi.nlm.nih.gov</a>). ENPP5 (also known as <strong>NPP5</strong>) is often considered a <em>“putative”</em> enzyme because it shares conserved domains with other ENPPs but remained poorly characterized for years (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8808174/#:~:text=ENPP5%20is%20among%20the%20least,validation%20using%20Enpp5%20KO%20mice">pmc.ncbi.nlm.nih.gov</a>). Like ENPP4 and ENPP7, ENPP5 is a <strong>single-pass type I membrane protein</strong> anchored at the cell surface (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8808174/#:~:text=only%20have%20the%20signature%20PDE,11">pmc.ncbi.nlm.nih.gov</a>), meaning it has a large extracellular domain and a short cytosolic tail. Unlike ENPP1–3, which have additional regulatory domains (two N-terminal somatomedin B-like domains and a C-terminal nuclease-like domain), ENPP5’s simpler architecture consists primarily of the catalytic <strong>phosphodiesterase (PDE) domain</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8808174/#:~:text=substrates%20and%20mediate%20different%20biological,These%20adaptations%20explain%20the%20different">pmc.ncbi.nlm.nih.gov</a>).  </p>
+<p>ENPP family members differ in substrate preference and biological role. ENPP5 is grouped with ENPP1, 3, and 4 as an enzyme that hydrolyzes <strong>nucleotide substrates</strong>, in contrast to ENPP2, 6, and 7 which evolved as phospholipases (lipid metabolizing enzymes) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8808174/#:~:text=domain,These%20adaptations%20explain%20the%20different">pmc.ncbi.nlm.nih.gov</a>). Early clues from rodent studies suggested ENPP5 might play a role in <strong>neuronal cell communication</strong>, hinting at a function in the nervous system (<a href="https://www.ncbi.nlm.nih.gov/gene/59084#:~:text=Summary%20This%20gene%20encodes%20a,other%20tissues%20See%20more%20Orthologs">www.ncbi.nlm.nih.gov</a>). However, ENPP5 has been among the <strong>least characterized</strong> ENPPs, and our current understanding of its function has only recently solidified (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8808174/#:~:text=ENPP5%20is%20among%20the%20least,validation%20using%20Enpp5%20KO%20mice">pmc.ncbi.nlm.nih.gov</a>). Below, we detail the known <strong>biochemical activity</strong>, <strong>cellular localization</strong>, and <strong>biological processes</strong> involving ENPP5, incorporating the latest research findings (2023–2024) and expert analyses. Key experimental evidence and statistics are provided to support each aspect of ENPP5’s functional annotation.</p>
+<h1 id="structure-and-cellular-localization">Structure and Cellular Localization</h1>
+<p>ENPP5 is synthesized as a single-pass <strong>membrane protein</strong> with its <strong>N-terminal domain</strong> directed to the extracellular space (a hallmark of type I membrane proteins) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8808174/#:~:text=only%20have%20the%20signature%20PDE,11">pmc.ncbi.nlm.nih.gov</a>). The mature protein is glycosylated and anchored in the plasma membrane, positioning its catalytic domain outside the cell where it can act on extracellular substrates (<a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=ENPP5#:~:text=GO%3A0005576%20,IEA">www.genecards.org</a>). Alternative splicing of ENPP5 mRNA gives rise to at least two transcript variants (<a href="https://www.ncbi.nlm.nih.gov/gene/59084#:~:text=Summary%20This%20gene%20encodes%20a,other%20tissues%20See%20more%20Orthologs">www.ncbi.nlm.nih.gov</a>), which may influence its localization or stability (for example, a shorter isoform could lack the transmembrane segment, potentially making a soluble enzyme, though this remains to be confirmed experimentally). UniProt annotations and gene ontology data consistently indicate ENPP5 is localized to the <strong>plasma membrane</strong> and extracellular region (<a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=ENPP5#:~:text=GO%3A0005576%20,IEA">www.genecards.org</a>), in line with it functioning as an <strong>ecto-enzyme</strong>. </p>
+<p>Structurally, ENPP5’s extracellular portion comprises the <strong>conserved PDE catalytic domain</strong> found in all ENPP family members (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8808174/#:~:text=substrates%20and%20mediate%20different%20biological,These%20adaptations%20explain%20the%20different">pmc.ncbi.nlm.nih.gov</a>). Notably, ENPP5 lacks the N-terminal somatomedin B domains present in ENPP1–3 and also lacks the C-terminal nuclease-like domain, resulting in a somewhat smaller ectodomain focused on catalysis (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8808174/#:~:text=substrates%20and%20mediate%20different%20biological,These%20adaptations%20explain%20the%20different">pmc.ncbi.nlm.nih.gov</a>). Despite this streamlined domain structure, recent structural analysis revealed <strong>unique features in ENPP5’s active site</strong>. It is the only ENPP family member that coordinates <strong>three Zn²⁺ ions</strong> in its catalytic center (most ENPPs use two Zn²⁺ for catalysis) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8808174/#:~:text=ENPP5%20has%20unique%20features%20that,catalytic%20site%20environment%20is%20negatively">pmc.ncbi.nlm.nih.gov</a>). This extra zinc ion in ENPP5, coordinated by Aspartate-192 and Glutamate-159, interacts with the 2′ and 3′ oxygen atoms of ribose moieties on substrates (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8808174/#:~:text=ENPP5%20has%20unique%20features%20that,catalytic%20site%20environment%20is%20negatively">pmc.ncbi.nlm.nih.gov</a>). Additionally, ENPP5 uniquely contains a <strong>tyrosine (Tyr73)</strong> in its substrate-binding pocket where other ENPPs have a phenylalanine at the corresponding position (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8808174/#:~:text=ribose%20substrates%20%2846%20%29,catalytic%20site%20environment%20is%20negatively">pmc.ncbi.nlm.nih.gov</a>). This single amino acid difference is significant: the hydroxyl group of Tyr73 likely sterically or electrostatically clashes with bulky polyphosphate groups of common nucleotides. In fact, experimentally replacing Tyr73 with phenylalanine (as found in other ENPPs) “<em>eliminates the hydroxyl group that would presumably clash with nucleotide substrates</em>” and <strong>enables ENPP5 to hydrolyze nucleotide triphosphates (NTPs)</strong> like ATP (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8808174/#:~:text=ribose%20substrates%20%2846%20%29,%E2%88%921">pmc.ncbi.nlm.nih.gov</a>). These structural insights underscore that ENPP5’s active-site configuration is specialized and more restrictive than that of its relatives. It is a membrane-bound <strong>ectoenzyme</strong> whose structure is tuned to a specific subset of substrates, as discussed next.</p>
+<h1 id="enzymatic-function-and-substrate-specificity">Enzymatic Function and Substrate Specificity</h1>
+<p>ENPP5 is an <strong>ecto-phosphodiesterase</strong>, meaning it cleaves phosphodiester bonds in extracellular molecules. However, its substrate specificity is unusually narrow compared to other ENPP family enzymes. <strong>Biochemical assays</strong> have demonstrated that recombinant ENPP5 <strong>can hydrolyze NAD⁺ (nicotinamide adenine dinucleotide)</strong>, but notably <strong>cannot hydrolyze standard nucleotide di- or triphosphates</strong> such as ADP or ATP (<a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=ENPP5#:~:text=Function%3A">www.genecards.org</a>). In other words, ENPP5 fails to break down the typical nucleotide substrates that enzymes like ENPP1 or ENPP3 readily hydrolyze (<a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=ENPP5#:~:text=,and%20triphosphates">www.genecards.org</a>). Consistent with this, ENPP5 also <strong>lacks lysophospholipase D activity</strong>, so it does not act on lipid substrates like lysophosphatidylcholine (the reaction catalyzed by ENPP2/autotaxin) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8808174/#:~:text=domain,These%20adaptations%20explain%20the%20different">pmc.ncbi.nlm.nih.gov</a>). These observations align with ENPP5’s unique active-site features (the Tyr73 gatekeeper and extra Zn²⁺) that prevent binding or efficient turnover of bulky polyphosphate-containing ligands (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8808174/#:~:text=ribose%20substrates%20%2846%20%29,%E2%88%921">pmc.ncbi.nlm.nih.gov</a>). </p>
+<p>Instead, ENPP5 shows activity toward a small set of <strong>unusual nucleotide substrates</strong>. Besides NAD⁺, it can cleave <strong>ADP-ribose (ADPR)</strong> and <strong>UDP-glucose</strong>, both of which are molecules containing a single diphosphate linkage connecting two moieties (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8808174/#:~:text=hydrolysis%20%2846%20%29,does%20not%20happen%20through%20the">pmc.ncbi.nlm.nih.gov</a>). These are structurally akin to NAD in that they have two linked portions but lack the triphosphate chain of ATP. ENPP5 exhibits the <strong>highest catalytic rate</strong> for NAD⁺ (and its reduced form NADH) compared to those other substrates (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8808174/#:~:text=hydrolysis%20%2846%20%29,does%20not%20happen%20through%20the">pmc.ncbi.nlm.nih.gov</a>). However, its efficiency on NAD⁺ is still quite low – a 2017 enzymology study measured a catalytic efficiency (k_cat/K_m) of only about <strong>6.7×10^-4 s^-1·μM^-1</strong> for NAD⁺ (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8808174/#:~:text=hydrolysis%20%2846%20%29,does%20not%20happen%20through%20the">pmc.ncbi.nlm.nih.gov</a>). This rate is orders of magnitude lower than the efficiencies of classical nucleotide hydrolases like ENPP1 on ATP. The low turnover number suggests ENPP5 is a rather <strong>slow enzyme</strong>, potentially functioning in a regulatory capacity (fine-tuning local signaling levels) rather than bulk turnover of metabolites (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8808174/#:~:text=hydrolysis%20%2846%20%29,does%20not%20happen%20through%20the">pmc.ncbi.nlm.nih.gov</a>). </p>
+<p>Importantly, when ENPP5 does act on NAD⁺, it performs a <strong>pyrophosphatase/phosphodiesterase reaction</strong> that cleaves NAD⁺ into two products: <strong>nicotinamide mononucleotide (NMN)</strong> and <strong>adenosine monophosphate (AMP)</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC7549896/#:~:text=Cleavage%20yields%20NMN%20,of%20NAD%20and%20cleavage%20products">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC7549896/#:~:text=relevant%20standards%20,by%20SmNPP5%2C%20as%20revealed%20by">pmc.ncbi.nlm.nih.gov</a>). This reaction breaks the pyrophosphate bond that connects the two nucleotide components of NAD⁺. A clear demonstration of this comes from a <strong>TLC (thin-layer chromatography) analysis</strong> using a schistosome (parasitic worm) ortholog of ENPP5: the enzyme’s NAD⁺ cleavage yielded distinct NMN and AMP spots matching known standards (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC7549896/#:~:text=relevant%20standards%20,by%20SmNPP5%2C%20as%20revealed%20by">pmc.ncbi.nlm.nih.gov</a>). Figure 3d of that study explicitly depicts <strong>NAD⁺ → NMN + AMP</strong> as the reaction catalyzed by ENPP5-type enzymes (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC7549896/#:~:text=Cleavage%20yields%20NMN%20,of%20NAD%20and%20cleavage%20products">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC7549896/#:~:text=relevant%20standards%20,by%20SmNPP5%2C%20as%20revealed%20by">pmc.ncbi.nlm.nih.gov</a>). By removing NAD’s adenine-containing AMP portion from the nicotinamide mononucleotide portion, ENPP5 effectively destroys extracellular NAD signals and produces AMP. The liberated AMP can in turn be further metabolized by other ecto-enzymes (e.g. CD73 5′-nucleotidase) into adenosine, which has its own signaling roles in purinergic pathways. Thus, ENPP5’s enzymatic activity can be seen as <strong>modulating extracellular NAD and related metabolites</strong>, distinct from ATPases or classical phosphodiesterases that target cyclic nucleotides. </p>
+<p>To summarize, <strong>ENPP5’s primary known function</strong> is <strong>enzymatic hydrolysis of NAD⁺</strong> (and similar ADP-ribose-containing molecules) on the cell surface (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8808174/#:~:text=hydrolysis%20%2846%20%29,does%20not%20happen%20through%20the">pmc.ncbi.nlm.nih.gov</a>). It <strong>does not degrade ATP, ADP, or cyclic nucleotides</strong> under normal conditions (<a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=ENPP5#:~:text=,and%20triphosphates">www.genecards.org</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8808174/#:~:text=ribose%20substrates%20%2846%20%29,%E2%88%921">pmc.ncbi.nlm.nih.gov</a>), due to structural constraints in its active site. This specificity sets ENPP5 apart within the ENPP family and suggests it has a specialized biological role related to NAD⁺ signaling or metabolism. The next section discusses what that role might be, based on current evidence.</p>
+<h1 id="biological-roles-and-pathways-involving-enpp5">Biological Roles and Pathways Involving ENPP5</h1>
+<p>Given its ability to hydrolyze extracellular NAD⁺, ENPP5 is thought to influence <strong>purinergic signaling pathways</strong>, particularly those involving NAD⁺ as an extracellular messenger. NAD⁺ has emerged in recent years as a signaling molecule that can act as a <strong>“danger signal”</strong> or neurotransmitter in certain contexts (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC7549896/#:~:text=A%20second%20important%20signaling%20molecule,For%20instance%2C%20during%20inflammation">pmc.ncbi.nlm.nih.gov</a>). Under stress or inflammation, NAD⁺ can be released into the extracellular space where it affects immune cells and other cell types (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC7549896/#:~:text=very%20low%20levels%20in%20serum%3B,to%20P2X7R%20activation%20which%20induces">pmc.ncbi.nlm.nih.gov</a>). One well-documented pathway is <strong>NAD-induced cell death (NICD)</strong> in the immune system: extracellular NAD⁺ can be used as a substrate by the T cell surface enzyme ART2 (ADP-ribosyltransferase 2) to ADP-ribosylate the P2X7 purinergic receptor on T cells, triggering pore formation and apoptosis (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC7549896/#:~:text=extracellular%20NAD%20acts%20to%20modulate,Relatively%20low%20levels%20of%20NAD">pmc.ncbi.nlm.nih.gov</a>). This mechanism preferentially affects certain T cell subsets (notably regulatory T cells) and is considered a regulatory process during inflammation (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC7549896/#:~:text=L,18%2C20">pmc.ncbi.nlm.nih.gov</a>). By <strong>degrading NAD⁺ outside the cell, ENPP5 would remove the substrate required for this ART2/P2X7 pathway</strong>, thereby modulating immune responses. In other words, ENPP5 could act as a “checkpoint” that protects cells from NAD⁺-mediated overactivation or death. Indeed, studies on the <strong>schistosome parasite ENPP5</strong> (SmNPP5) dramatically illustrate this concept: the parasite’s surface NPP5 enzyme cleaves NAD⁺ and <strong>prevents NAD-induced T cell apoptosis</strong>, helping the parasite evade the host immune system (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC7549896/#:~:text=layer%20chromatography%20,these%20findings%2C%20we%20hypothesized%20that">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC7549896/#:~:text=%28to%20generate%20NMN%20and%20AMP%29,This%20would%20ultimately%20promote%20the">pmc.ncbi.nlm.nih.gov</a>). When SmNPP5 is experimentally knocked down in the parasite, the worms lose much of their ability to degrade NAD⁺ and can no longer protect T cells from NAD-triggered P2X7 activation (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC7549896/#:~:text=ADP%20and%20block%20platelet%20aggregation,suppressed%20the%20expression%20of%20SmNPP5">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC7549896/#:~:text=not%20SmNACE,by%20preventing%20Treg%20cell%20death">pmc.ncbi.nlm.nih.gov</a>). This highlights a potential <strong>immunomodulatory role</strong> for NPP5 enzymes – by consuming extracellular NAD⁺, they <strong>prevent pro-apoptotic signaling in neighboring cells</strong>. </p>
+<p>In humans, ENPP5 is hypothesized to perform a similar function in relevant tissues. <strong>Neuronal and glial cells</strong> in the brain, for example, may release NAD⁺ upon injury or during neurotransmission, and ENPP5 could regulate such signals. While direct in vivo evidence is still lacking, a comprehensive 2021 review noted that ENPP5’s NAD-hydrolyzing activity <em>“suggests a role for ENPP5 in NAD-based neurotransmission,”</em> though this awaits confirmation in ENPP5 knockout models (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8808174/#:~:text=ENPP5%20is%20among%20the%20least,validation%20using%20Enpp5%20KO%20mice">pmc.ncbi.nlm.nih.gov</a>). The <strong>brain expression</strong> of ENPP5 (and its rodent analogs) lends some support to this idea: ENPP5 transcripts have been detected in the central nervous system, and the initial discovery in rat implicated it in neuronal communication (<a href="https://www.ncbi.nlm.nih.gov/gene/59084#:~:text=Summary%20This%20gene%20encodes%20a,other%20tissues%20See%20more%20Orthologs">www.ncbi.nlm.nih.gov</a>). By degrading NAD⁺ near synapses or in the extracellular space, ENPP5 could influence purinergic neurotransmitter receptors (some P2Y/P2X receptors or other NAD-sensitive pathways) and thereby modulate neuronal excitability or neuroinflammation. This proposed role is analogous to the immune scenario – controlling the availability of NAD⁺ to receptors/enzymes that respond to it – but in the context of neural circuits. </p>
+<p>Another potential pathway involves <strong>ectoenzyme cascades</strong>: ENPP5’s product AMP can be converted to <strong>adenosine</strong>, which activates P1 adenosine receptors on cells and generally exerts anti-inflammatory and tissue-protective effects. So ENPP5, by generating AMP (and subsequently adenosine), might indirectly promote adenosine-mediated signaling. This could have significance in tissues like the <strong>thyroid and testis</strong>, where ENPP5 is notably expressed at higher levels (<a href="https://www.ncbi.nlm.nih.gov/gene/59084#:~:text=Expression%20Biased%20expression%20in%20thyroid,other%20tissues%20See%20more%20Orthologs">www.ncbi.nlm.nih.gov</a>). RNA profiling shows <strong>ENPP5 mRNA is enriched in the thyroid gland and in male reproductive tissues (testis/epididymis)</strong>, among other tissues (<a href="https://www.ncbi.nlm.nih.gov/gene/59084#:~:text=Expression%20Biased%20expression%20in%20thyroid,other%20tissues%20See%20more%20Orthologs">www.ncbi.nlm.nih.gov</a>). The functional significance in those contexts is not fully understood, but it may relate to local regulation of extracellular nucleotides during hormone release or sperm development, for instance. </p>
+<p>In summary, ENPP5 appears to function as a <strong>regulator of extracellular nucleotide signaling</strong>. Its <strong>biochemical activity (NAD⁺ → NMN + AMP)</strong> positions it to control the levels of NAD⁺ and ADP-ribose in the extracellular milieu, thereby modulating pathways like: (1) <strong>Purinergic receptor signaling</strong> (e.g., preventing excessive P2X7 activation on immune cells), (2) <strong>Cell death and survival signaling</strong> in contexts where NAD⁺ acts as a DAMP (damage-associated molecular pattern), and possibly (3) <strong>Neurotransmission</strong> processes that utilize nucleotide derivatives as messengers. These roles are still being elucidated, but recent research has begun to shed light on ENPP5’s importance in certain physiological and pathological states, as discussed below.</p>
+<h1 id="emerging-research-enpp5-in-aging-and-disease">Emerging Research: ENPP5 in Aging and Disease</h1>
+<p>Although ENPP5 was historically understudied, <strong>recent developments (2023–2024)</strong> have linked this enzyme to significant biological phenomena, including cellular aging and cancer, and have even suggested practical clinical applications. One of the most striking new findings is ENPP5’s involvement in the <strong>senescence-associated secretory phenotype (SASP)</strong> and skin aging. In a June 2024 study published in <em>Biogerontology</em>, Takaya <em>et al.</em> identified <strong>ENPP5 as a factor upregulated in senescent human dermal fibroblasts</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/38436793/#:~:text=recombinant%20ENPP5%20,knockdown%20in%20mouse%20skin%20ameliorated">pubmed.ncbi.nlm.nih.gov</a>). Senescent cells are known to secrete pro-inflammatory cytokines, proteases, and other factors (the SASP) that contribute to tissue aging. The researchers found that when ENPP5 expression was <strong>knocked down by siRNA in fibroblasts, SASP biomarkers and other aging-related factors were significantly reduced (<a href="https://pubmed.ncbi.nlm.nih.gov/38436793/#:~:text=recombinant%20ENPP5%20,knockdown%20in%20mouse%20skin%20ameliorated">pubmed.ncbi.nlm.nih.gov</a>)</strong>, suggesting that ENPP5 activity helps drive the senescent phenotype. Conversely, treating fibroblasts with <strong>recombinant ENPP5 protein or overexpressing ENPP5</strong> caused an increase in SASP factors and accelerated cellular senescence (<a href="https://pubmed.ncbi.nlm.nih.gov/38436793/#:~:text=recombinant%20ENPP5%20,knockdown%20in%20mouse%20skin%20ameliorated">pubmed.ncbi.nlm.nih.gov</a>). These in vitro results indicate that ENPP5’s enzymatic action in the extracellular space (likely its NAD⁺-degrading activity, though the study did not explicitly detail the mechanism) promotes the pro-inflammatory, tissue-degrading milieu associated with aging cells. </p>
+<p>Crucially, the same study provided <em>in vivo</em> evidence: <strong>mice treated with ENPP5 knockdown</strong> (via a topical siRNA approach to the skin) showed <strong>attenuated skin aging</strong> signs (<a href="https://pubmed.ncbi.nlm.nih.gov/38436793/#:~:text=aging,aging%20treatments%20for%20the%20skin">pubmed.ncbi.nlm.nih.gov</a>). The aged mice with reduced ENPP5 had less thinning of the dermal collagen layer, retained more subcutaneous fat, and had a thicker panniculus carnosus (a muscle layer) compared to controls (<a href="https://pubmed.ncbi.nlm.nih.gov/38436793/#:~:text=aging,aging%20treatments%20for%20the%20skin">pubmed.ncbi.nlm.nih.gov</a>). These are hallmarks of more youthful skin. This finding suggests that ENPP5 is not merely a bystander in aging, but indeed a <strong>causal SASP factor</strong>: by regulating extracellular nucleotides or related signals, ENPP5 influences the chronic inflammation and matrix degradation that characterize aging tissue (<a href="https://pubmed.ncbi.nlm.nih.gov/38436793/#:~:text=lentiviral%20overexpression%20of%20ENPP5%20promoted,aging%20treatments%20for%20the%20skin">pubmed.ncbi.nlm.nih.gov</a>). The authors conclude that targeting ENPP5 could be a novel strategy to <strong>suppress SASP and prevent age-related tissue deterioration</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/38436793/#:~:text=aging,aging%20treatments%20for%20the%20skin">pubmed.ncbi.nlm.nih.gov</a>). In practical terms, ENPP5 might become a therapeutic target in anti-aging interventions – for example, small-molecule inhibitors of ENPP5 or topical treatments to reduce its activity could mitigate skin aging. While such therapies are not yet available, the identification of ENPP5 in this context is a significant development in our understanding of the biochemical underpinnings of aging.  </p>
+<p>Another area of emerging interest is <strong>cancer biology</strong>. A 2023 study in <em>PLoS ONE</em> by Lee <em>et al.</em> highlighted ENPP5 in the context of microRNA regulation and tumor progression. The researchers discovered that <strong>ENPP5 is a direct target of the tumor-suppressive microRNA miR-126</strong>, and that in certain cancers (notably breast cancer and canine mammary tumors, which were used as a comparative model), <strong>ENPP5 is upregulated when miR-126 is downregulated</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10289412/#:~:text=in%20the%20transcriptome%20data%20of,suppressive">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10289412/#:~:text=regulated,in%20ENPP5%20gene%20expression%20via">pmc.ncbi.nlm.nih.gov</a>). Mechanistically, they found that LINE-1 retrotransposon transcripts acting as competing endogenous RNAs can “sponge” miR-126, thereby freeing ENPP5 mRNA from miR-126–mediated suppression (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10289412/#:~:text=regulated,in%20ENPP5%20gene%20expression%20via">pmc.ncbi.nlm.nih.gov</a>). The result is an increase in ENPP5 expression in tumor cells. Clinically, this seems relevant: cancer patients with higher miR-126 (which would keep ENPP5 levels low) had better overall survival, whereas those with low miR-126 and presumably higher ENPP5 fared worse (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10289412/#:~:text=in%20the%20transcriptome%20data%20of,suppressive">pmc.ncbi.nlm.nih.gov</a>). Moreover, experimentally introducing a miR-126 mimic into cells <strong>downregulated ENPP5</strong>, confirming the regulatory relationship (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10289412/#:~:text=regulated,in%20ENPP5%20gene%20expression%20via">pmc.ncbi.nlm.nih.gov</a>). Conversely, overexpressing a fragment of LINE-1 that contains miR-126 binding sites relieved this repression and <strong>boosted ENPP5 levels</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10289412/#:~:text=of%20miR,126">pmc.ncbi.nlm.nih.gov</a>). These findings point to ENPP5 as a <strong>pro-oncogenic factor</strong> when dysregulated: its overexpression (due to loss of miR-126 control) may confer advantages to tumor cells or the tumor microenvironment. One hypothesis is that tumor cells might exploit ENPP5’s NAD⁺-degrading activity to modulate immune surveillance – analogous to how the schistosome uses NPP5 to protect itself, a tumor might use ENPP5 to protect the cancer cells from NAD⁺-mediated immune cell attack or to alter inflammation in the tumor milieu. While this hypothesis needs further investigation, the identification of ENPP5 in a microRNA-regulated network adds to its functional significance and suggests that <strong>ENPP5 could be a potential marker or therapeutic target in oncology</strong>. It also exemplifies expert opinion that much of ENPP5’s impact may lie in subtle modulation of signaling rather than a dramatic enzymatic output, consistent with it being a low-efficiency enzyme (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8808174/#:~:text=ENPP5%20is%20among%20the%20least,validation%20using%20Enpp5%20KO%20mice">pmc.ncbi.nlm.nih.gov</a>).</p>
+<p>Beyond aging and cancer, ENPP5 has recently been examined in a <strong>clinical context for sepsis</strong>. Sepsis is an extreme inflammatory response to infection, and there is growing interest in biomarkers that can diagnose or predict sepsis outcomes. In 2025, Gao <em>et al.</em> performed a comprehensive bioinformatics analysis (integrating multiple patient gene expression datasets) and identified <strong>ENPP5 as a potential diagnostic biomarker for sepsis</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12211274/#:~:text=A%20total%20of%204%2C450%20intersected,negatively%20associated%20with%20mast%20cells">pmc.ncbi.nlm.nih.gov</a>). In their analysis, ENPP5 was one of seven “hub genes” differentially expressed in sepsis, and it had the highest importance in a diagnostic model (with the largest area under the ROC curve for distinguishing sepsis patients from controls) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12211274/#:~:text=A%20total%20of%204%2C450%20intersected,negatively%20associated%20with%20mast%20cells">pmc.ncbi.nlm.nih.gov</a>). They also noted correlations between ENPP5 expression and immune cell infiltration: ENPP5 levels positively correlated with T cell abundance and negatively with mast cells in sepsis patients (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12211274/#:~:text=GSE13904%2C%20GSE154918%2C%20GSE8121,negatively%20associated%20with%20mast%20cells">pmc.ncbi.nlm.nih.gov</a>). While this study did not delve into mechanism, the data suggest that ENPP5 expression changes in the immune system during sepsis and might reflect the body’s attempt to regulate extracellular NAD⁺/nucleotide levels amid the intense inflammation. If validated, ENPP5 could serve as a <strong>blood biomarker for early sepsis diagnosis</strong> or even as a therapeutic target to modulate the immune response in sepsis. This is a <strong>real-world application</strong> under exploration – using ENPP5 as a marker in clinical decision-making – although it’s still in the research phase.</p>
+<h1 id="expert-perspectives-and-ongoing-research">Expert Perspectives and Ongoing Research</h1>
+<p>Authoritative reviews and experts in the field underscore both the importance of ENPP5 and the gaps in our knowledge. In a 2021 <em>J. Biol. Chem.</em> review of ENPP family structure and function, Borza <em>et al.</em> describe ENPP5 as <em>“among the least characterized”</em> of the ENPP enzymes, highlighting that its biological role is <strong>inferred mainly from its substrate specificity and expression patterns</strong> rather than direct experimentation (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8808174/#:~:text=ENPP5%20is%20among%20the%20least,validation%20using%20Enpp5%20KO%20mice">pmc.ncbi.nlm.nih.gov</a>). They note the intriguing possibility that ENPP5 specializes in <strong>NAD-based signaling in the nervous system</strong>, given its ability to hydrolyze NAD⁺ and some expression in brain tissues (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8808174/#:~:text=ENPP5%20is%20among%20the%20least,validation%20using%20Enpp5%20KO%20mice">pmc.ncbi.nlm.nih.gov</a>). However, they also emphasize that <em>in vivo</em> studies (such as generating <strong>ENPP5-knockout mice</strong>) are needed to definitively pinpoint its physiological function (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8808174/#:~:text=ENPP5%20is%20among%20the%20least,validation%20using%20Enpp5%20KO%20mice">pmc.ncbi.nlm.nih.gov</a>). This expert opinion aligns with the experimental findings cited above: while we know what ENPP5 can do biochemically, determining <em>what it actually does in the human body</em> is the next critical step. </p>
+<p>From a biochemical standpoint, experts find ENPP5’s <strong>active-site composition and inefficiency</strong> thought-provoking. The presence of a third Zn²⁺ ion and the Tyr73 “brake” on activity suggest nature has deliberately tuned ENPP5 to be more selective and slower than its cousins (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8808174/#:~:text=ENPP5%20has%20unique%20features%20that,catalytic%20site%20environment%20is%20negatively">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8808174/#:~:text=hydrolysis%20%2846%20%29,does%20not%20happen%20through%20the">pmc.ncbi.nlm.nih.gov</a>). Some hypothesize that ENPP5 might function in specialized microenvironments – for example, in <em>synaptic clefts, junctional spaces, or confined extracellular niches</em> – where NAD⁺ or ADPR is released at low levels and needs tight regulation. In such locales, a high-activity enzyme could deplete signals too quickly or nonspecifically, whereas ENPP5’s low catalytic efficiency might allow for a <strong>more graded, homeostatic control</strong> of nucleotide signaling (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8808174/#:~:text=hydrolysis%20%2846%20%29,does%20not%20happen%20through%20the">pmc.ncbi.nlm.nih.gov</a>). This idea is consistent with ENPP5 acting in processes like <strong>fine-tuning neurotransmitter pools or maintaining immune tolerance</strong> (by preventing excessive NAD⁺-P2X7 mediated cell death). </p>
+<p>It is also worth noting that other ENPP family members have well-defined roles in human disease (for instance, ENPP1 in bone mineralization and pathological calcification, ENPP2 in cancer metastasis and fibrosis via LPA production, ENPP7 in gut lipid metabolism). The emerging links of ENPP5 to <strong>skin aging and cancer</strong> suggest that it too could play a significant role in human health and disease, even if subtler. Some dermatology researchers, for example, now consider ENPP5 a candidate <strong>SASP factor</strong> to target for anti-aging skin treatments (<a href="https://pubmed.ncbi.nlm.nih.gov/38436793/#:~:text=lentiviral%20overexpression%20of%20ENPP5%20promoted,aging%20treatments%20for%20the%20skin">pubmed.ncbi.nlm.nih.gov</a>). In oncology, the connection to miR-126 places ENPP5 in a network of tumor suppression and oncogenesis, implying it might be part of the “dark matter” of cancer genomics that wasn’t previously appreciated (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10289412/#:~:text=in%20the%20transcriptome%20data%20of,suppressive">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10289412/#:~:text=regulated,in%20ENPP5%20gene%20expression%20via">pmc.ncbi.nlm.nih.gov</a>). </p>
+<p>Finally, <strong>future directions</strong> pointed out by experts include: validating ENPP5’s function through genetic models (knockout or overexpressing animals), identifying the cells and conditions where ENPP5 is most active (e.g. during neuroinflammation, in senescent cells, etc.), and exploring whether any endogenous inhibitors or modulators of ENPP5 exist. With new tools like high-specificity antibodies and small-molecule inhibitors being developed for other ENPPs, similar tools could be applied to ENPP5 to probe its role in vivo. There is also interest in the <strong>structural biology</strong> of ENPP5 – for instance, determining a high-resolution crystal structure or cryo-EM structure (to complement the AlphaFold models (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8808174/#:~:text=AF,Q6UWV6">pmc.ncbi.nlm.nih.gov</a>)) could reveal how exactly its Tyr73 and third zinc confer its unique properties. Such structural insights might even enable <strong>structure-guided drug design</strong> if ENPP5 becomes a therapeutic target in conditions like fibrosis, neurodegeneration, or immunological disorders.</p>
+<h1 id="conclusion">Conclusion</h1>
+<p>In summary, <strong>ENPP5 (Q9UJA9)</strong> encodes an enzyme that is <em>distinct</em> within the ectonucleotide pyrophosphatase/phosphodiesterase family. Its main <strong>biochemical function</strong> is the hydrolysis of NAD⁺ and related molecules in the extracellular space, yielding NMN and AMP and thereby modulating purinergic signaling pathways (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC7549896/#:~:text=relevant%20standards%20,by%20SmNPP5%2C%20as%20revealed%20by">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC7549896/#:~:text=layer%20chromatography%20,these%20findings%2C%20we%20hypothesized%20that">pmc.ncbi.nlm.nih.gov</a>). ENPP5 is a <strong>membrane-bound ectoenzyme</strong>, predominantly localized to the cell surface where it can intercept extracellular nucleotides (<a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=ENPP5#:~:text=GO%3A0005576%20,IEA">www.genecards.org</a>). Structurally, it features a unique active-site architecture (including three Zn²⁺ ions and a tyrosine residue in the binding pocket) that explains its <strong>narrow substrate specificity</strong> and inability to process common nucleotides like ATP (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8808174/#:~:text=ribose%20substrates%20%2846%20%29,%E2%88%921">pmc.ncbi.nlm.nih.gov</a>). Biologically, ENPP5 is implicated in <strong>regulating cell–cell communication</strong>: it likely contributes to <strong>neuronal communication</strong> (by shaping NAD⁺-mediated neurotransmission) and to <strong>immune regulation</strong> (by limiting NAD⁺-triggered cell death and possibly influencing inflammation) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8808174/#:~:text=ENPP5%20is%20among%20the%20least,validation%20using%20Enpp5%20KO%20mice">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC7549896/#:~:text=Here%2C%20NAD%20serves%20as%20a,Relatively%20low%20levels%20of%20NAD">pmc.ncbi.nlm.nih.gov</a>). Recent research breakthroughs have illuminated ENPP5’s role in driving the <strong>senescence secretory phenotype</strong> in aging cells (<a href="https://pubmed.ncbi.nlm.nih.gov/38436793/#:~:text=recombinant%20ENPP5%20,knockdown%20in%20mouse%20skin%20ameliorated">pubmed.ncbi.nlm.nih.gov</a>) and its potential <strong>oncogenic upregulation</strong> when microRNA control is lost (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10289412/#:~:text=in%20the%20transcriptome%20data%20of,suppressive">pmc.ncbi.nlm.nih.gov</a>), underscoring the enzyme’s relevance to human health. ENPP5 has even emerged as a candidate <strong>diagnostic marker</strong> in diseases like sepsis (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12211274/#:~:text=A%20total%20of%204%2C450%20intersected,negatively%20associated%20with%20mast%20cells">pmc.ncbi.nlm.nih.gov</a>). </p>
+<p>Despite these advances, ENPP5 remains somewhat enigmatic. It stands out as an enzyme that is <strong>highly selective and relatively slow</strong>, hinting that its physiological roles might be subtler than those of other nucleotide-metabolizing enzymes. As expert analyses highlight, many questions about ENPP5 persist – for example, <strong>which physiological signals induce NAD⁺ release for ENPP5 to act on, which cell types primarily express ENPP5 in vivo, and how its activity is regulated under normal vs. pathological conditions</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8808174/#:~:text=ENPP5%20is%20among%20the%20least,validation%20using%20Enpp5%20KO%20mice">pmc.ncbi.nlm.nih.gov</a>). Ongoing and future studies, including targeted knockouts and specific inhibitors, will help answer these questions. What is clear now is that ENPP5 is <em>not</em> a redundant “orphan” enzyme; rather, it fulfills a niche in the intricate network of extracellular signaling by controlling NAD⁺ and related metabolites. As such, ENPP5 adds a unique piece to the puzzle of how cells communicate and maintain homeostasis via extracellular nucleotides. Continuing to unravel ENPP5’s function will enhance our understanding of purinergic signaling in the nervous and immune systems and could pave the way for novel therapeutic approaches in aging, immunology, and beyond.  </p>
+<p><strong>References:</strong> Recent key sources include a 2021 JBC review detailing ENPP5’s structure-function characteristics (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8808174/#:~:text=ENPP5%20has%20unique%20features%20that,catalytic%20site%20environment%20is%20negatively">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8808174/#:~:text=hydrolysis%20%2846%20%29,does%20not%20happen%20through%20the">pmc.ncbi.nlm.nih.gov</a>), a 2024 <em>Biogerontology</em> study on ENPP5 in skin aging (<a href="https://pubmed.ncbi.nlm.nih.gov/38436793/#:~:text=recombinant%20ENPP5%20,knockdown%20in%20mouse%20skin%20ameliorated">pubmed.ncbi.nlm.nih.gov</a>) (<a href="https://pubmed.ncbi.nlm.nih.gov/38436793/#:~:text=aging,aging%20treatments%20for%20the%20skin">pubmed.ncbi.nlm.nih.gov</a>), a 2023 <em>PLoS ONE</em> report linking ENPP5 to miR-126 in cancer (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10289412/#:~:text=in%20the%20transcriptome%20data%20of,suppressive">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10289412/#:~:text=regulated,in%20ENPP5%20gene%20expression%20via">pmc.ncbi.nlm.nih.gov</a>), and a 2025 <em>BMC Infectious Diseases</em> analysis identifying ENPP5 as a sepsis biomarker (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12211274/#:~:text=A%20total%20of%204%2C450%20intersected,negatively%20associated%20with%20mast%20cells">pmc.ncbi.nlm.nih.gov</a>). These, along with foundational enzymology research (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC7549896/#:~:text=relevant%20standards%20,by%20SmNPP5%2C%20as%20revealed%20by">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC7549896/#:~:text=layer%20chromatography%20,these%20findings%2C%20we%20hypothesized%20that">pmc.ncbi.nlm.nih.gov</a>) and database annotations (<a href="https://www.ncbi.nlm.nih.gov/gene/59084#:~:text=Summary%20This%20gene%20encodes%20a,other%20tissues%20See%20more%20Orthologs">www.ncbi.nlm.nih.gov</a>) (<a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=ENPP5#:~:text=,and%20triphosphates">www.genecards.org</a>), form the basis of the above comprehensive ENPP5 annotation.</p>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>AnnotationURLCitation(end_index=353, start_index=203, title='ENPP5 ectonucleotide pyrophosphatase/phosphodiesterase family member 5 [Homo sapiens (human)] - Gene - NCBI', type='url_citation', url='https://www.ncbi.nlm.nih.gov/gene/59084#:~:text=Summary%20This%20gene%20encodes%20a,other%20tissues%20See%20more%20Orthologs')</li>
+<li>AnnotationURLCitation(end_index=685, start_index=502, title='Structure and function of the ecto-nucleotide pyrophosphatase/phosphodiesterase (ENPP) family: Tidying up diversity - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8808174/#:~:text=substrates%20and%20mediate%20different%20biological,These%20adaptations%20explain%20the%20different')</li>
+<li>AnnotationURLCitation(end_index=1012, start_index=857, title='Structure and function of the ecto-nucleotide pyrophosphatase/phosphodiesterase (ENPP) family: Tidying up diversity - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8808174/#:~:text=ENPP5%20is%20among%20the%20least,validation%20using%20Enpp5%20KO%20mice')</li>
+<li>AnnotationURLCitation(end_index=1238, start_index=1116, title='Structure and function of the ecto-nucleotide pyrophosphatase/phosphodiesterase (ENPP) family: Tidying up diversity - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8808174/#:~:text=only%20have%20the%20signature%20PDE,11')</li>
+<li>AnnotationURLCitation(end_index=1735, start_index=1552, title='Structure and function of the ecto-nucleotide pyrophosphatase/phosphodiesterase (ENPP) family: Tidying up diversity - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8808174/#:~:text=substrates%20and%20mediate%20different%20biological,These%20adaptations%20explain%20the%20different')</li>
+<li>AnnotationURLCitation(end_index=2136, start_index=1998, title='Structure and function of the ecto-nucleotide pyrophosphatase/phosphodiesterase (ENPP) family: Tidying up diversity - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8808174/#:~:text=domain,These%20adaptations%20explain%20the%20different')</li>
+<li>AnnotationURLCitation(end_index=2434, start_index=2284, title='ENPP5 ectonucleotide pyrophosphatase/phosphodiesterase family member 5 [Homo sapiens (human)] - Gene - NCBI', type='url_citation', url='https://www.ncbi.nlm.nih.gov/gene/59084#:~:text=Summary%20This%20gene%20encodes%20a,other%20tissues%20See%20more%20Orthologs')</li>
+<li>AnnotationURLCitation(end_index=2731, start_index=2576, title='Structure and function of the ecto-nucleotide pyrophosphatase/phosphodiesterase (ENPP) family: Tidying up diversity - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8808174/#:~:text=ENPP5%20is%20among%20the%20least,validation%20using%20Enpp5%20KO%20mice')</li>
+<li>AnnotationURLCitation(end_index=3376, start_index=3254, title='Structure and function of the ecto-nucleotide pyrophosphatase/phosphodiesterase (ENPP) family: Tidying up diversity - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8808174/#:~:text=only%20have%20the%20signature%20PDE,11')</li>
+<li>AnnotationURLCitation(end_index=3652, start_index=3545, title='ENPP5 Gene - GeneCards | ENPP5 Protein | ENPP5 Antibody', type='url_citation', url='https://www.genecards.org/cgi-bin/carddisp.pl?gene=ENPP5#:~:text=GO%3A0005576%20,IEA')</li>
+<li>AnnotationURLCitation(end_index=3886, start_index=3736, title='ENPP5 ectonucleotide pyrophosphatase/phosphodiesterase family member 5 [Homo sapiens (human)] - Gene - NCBI', type='url_citation', url='https://www.ncbi.nlm.nih.gov/gene/59084#:~:text=Summary%20This%20gene%20encodes%20a,other%20tissues%20See%20more%20Orthologs')</li>
+<li>AnnotationURLCitation(end_index=4341, start_index=4234, title='ENPP5 Gene - GeneCards | ENPP5 Protein | ENPP5 Antibody', type='url_citation', url='https://www.genecards.org/cgi-bin/carddisp.pl?gene=ENPP5#:~:text=GO%3A0005576%20,IEA')</li>
+<li>AnnotationURLCitation(end_index=4705, start_index=4522, title='Structure and function of the ecto-nucleotide pyrophosphatase/phosphodiesterase (ENPP) family: Tidying up diversity - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8808174/#:~:text=substrates%20and%20mediate%20different%20biological,These%20adaptations%20explain%20the%20different')</li>
+<li>AnnotationURLCitation(end_index=5083, start_index=4900, title='Structure and function of the ecto-nucleotide pyrophosphatase/phosphodiesterase (ENPP) family: Tidying up diversity - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8808174/#:~:text=substrates%20and%20mediate%20different%20biological,These%20adaptations%20explain%20the%20different')</li>
+<li>AnnotationURLCitation(end_index=5514, start_index=5343, title='Structure and function of the ecto-nucleotide pyrophosphatase/phosphodiesterase (ENPP) family: Tidying up diversity - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8808174/#:~:text=ENPP5%20has%20unique%20features%20that,catalytic%20site%20environment%20is%20negatively')</li>
+<li>AnnotationURLCitation(end_index=5840, start_index=5669, title='Structure and function of the ecto-nucleotide pyrophosphatase/phosphodiesterase (ENPP) family: Tidying up diversity - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8808174/#:~:text=ENPP5%20has%20unique%20features%20that,catalytic%20site%20environment%20is%20negatively')</li>
+<li>AnnotationURLCitation(end_index=6170, start_index=6004, title='Structure and function of the ecto-nucleotide pyrophosphatase/phosphodiesterase (ENPP) family: Tidying up diversity - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8808174/#:~:text=ribose%20substrates%20%2846%20%29,catalytic%20site%20environment%20is%20negatively')</li>
+<li>AnnotationURLCitation(end_index=6730, start_index=6602, title='Structure and function of the ecto-nucleotide pyrophosphatase/phosphodiesterase (ENPP) family: Tidying up diversity - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8808174/#:~:text=ribose%20substrates%20%2846%20%29,%E2%88%921')</li>
+<li>AnnotationURLCitation(end_index=7558, start_index=7459, title='ENPP5 Gene - GeneCards | ENPP5 Protein | ENPP5 Antibody', type='url_citation', url='https://www.genecards.org/cgi-bin/carddisp.pl?gene=ENPP5#:~:text=Function%3A')</li>
+<li>AnnotationURLCitation(end_index=7795, start_index=7687, title='ENPP5 Gene - GeneCards | ENPP5 Protein | ENPP5 Antibody', type='url_citation', url='https://www.genecards.org/cgi-bin/carddisp.pl?gene=ENPP5#:~:text=,and%20triphosphates')</li>
+<li>AnnotationURLCitation(end_index=8120, start_index=7982, title='Structure and function of the ecto-nucleotide pyrophosphatase/phosphodiesterase (ENPP) family: Tidying up diversity - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8808174/#:~:text=domain,These%20adaptations%20explain%20the%20different')</li>
+<li>AnnotationURLCitation(end_index=8439, start_index=8311, title='Structure and function of the ecto-nucleotide pyrophosphatase/phosphodiesterase (ENPP) family: Tidying up diversity - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8808174/#:~:text=ribose%20substrates%20%2846%20%29,%E2%88%921')</li>
+<li>AnnotationURLCitation(end_index=8837, start_index=8693, title='Structure and function of the ecto-nucleotide pyrophosphatase/phosphodiesterase (ENPP) family: Tidying up diversity - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8808174/#:~:text=hydrolysis%20%2846%20%29,does%20not%20happen%20through%20the')</li>
+<li>AnnotationURLCitation(end_index=9214, start_index=9070, title='Structure and function of the ecto-nucleotide pyrophosphatase/phosphodiesterase (ENPP) family: Tidying up diversity - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8808174/#:~:text=hydrolysis%20%2846%20%29,does%20not%20happen%20through%20the')</li>
+<li>AnnotationURLCitation(end_index=9529, start_index=9385, title='Structure and function of the ecto-nucleotide pyrophosphatase/phosphodiesterase (ENPP) family: Tidying up diversity - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8808174/#:~:text=hydrolysis%20%2846%20%29,does%20not%20happen%20through%20the')</li>
+<li>AnnotationURLCitation(end_index=9985, start_index=9841, title='Structure and function of the ecto-nucleotide pyrophosphatase/phosphodiesterase (ENPP) family: Tidying up diversity - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8808174/#:~:text=hydrolysis%20%2846%20%29,does%20not%20happen%20through%20the')</li>
+<li>AnnotationURLCitation(end_index=10352, start_index=10205, title='The essential schistosome tegumental ectoenzyme SmNPP5 can block NAD-induced T cell apoptosis - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC7549896/#:~:text=Cleavage%20yields%20NMN%20,of%20NAD%20and%20cleavage%20products')</li>
+<li>AnnotationURLCitation(end_index=10496, start_index=10353, title='The essential schistosome tegumental ectoenzyme SmNPP5 can block NAD-induced T cell apoptosis - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC7549896/#:~:text=relevant%20standards%20,by%20SmNPP5%2C%20as%20revealed%20by')</li>
+<li>AnnotationURLCitation(end_index=10969, start_index=10826, title='The essential schistosome tegumental ectoenzyme SmNPP5 can block NAD-induced T cell apoptosis - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC7549896/#:~:text=relevant%20standards%20,by%20SmNPP5%2C%20as%20revealed%20by')</li>
+<li>AnnotationURLCitation(end_index=11230, start_index=11083, title='The essential schistosome tegumental ectoenzyme SmNPP5 can block NAD-induced T cell apoptosis - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC7549896/#:~:text=Cleavage%20yields%20NMN%20,of%20NAD%20and%20cleavage%20products')</li>
+<li>AnnotationURLCitation(end_index=11374, start_index=11231, title='The essential schistosome tegumental ectoenzyme SmNPP5 can block NAD-induced T cell apoptosis - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC7549896/#:~:text=relevant%20standards%20,by%20SmNPP5%2C%20as%20revealed%20by')</li>
+<li>AnnotationURLCitation(end_index=12208, start_index=12064, title='Structure and function of the ecto-nucleotide pyrophosphatase/phosphodiesterase (ENPP) family: Tidying up diversity - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8808174/#:~:text=hydrolysis%20%2846%20%29,does%20not%20happen%20through%20the')</li>
+<li>AnnotationURLCitation(end_index=12398, start_index=12290, title='ENPP5 Gene - GeneCards | ENPP5 Protein | ENPP5 Antibody', type='url_citation', url='https://www.genecards.org/cgi-bin/carddisp.pl?gene=ENPP5#:~:text=,and%20triphosphates')</li>
+<li>AnnotationURLCitation(end_index=12527, start_index=12399, title='Structure and function of the ecto-nucleotide pyrophosphatase/phosphodiesterase (ENPP) family: Tidying up diversity - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8808174/#:~:text=ribose%20substrates%20%2846%20%29,%E2%88%921')</li>
+<li>AnnotationURLCitation(end_index=13344, start_index=13173, title='The essential schistosome tegumental ectoenzyme SmNPP5 can block NAD-induced T cell apoptosis - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC7549896/#:~:text=A%20second%20important%20signaling%20molecule,For%20instance%2C%20during%20inflammation')</li>
+<li>AnnotationURLCitation(end_index=13638, start_index=13477, title='The essential schistosome tegumental ectoenzyme SmNPP5 can block NAD-induced T cell apoptosis - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC7549896/#:~:text=very%20low%20levels%20in%20serum%3B,to%20P2X7R%20activation%20which%20induces')</li>
+<li>AnnotationURLCitation(end_index=14096, start_index=13933, title='The essential schistosome tegumental ectoenzyme SmNPP5 can block NAD-induced T cell apoptosis - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC7549896/#:~:text=extracellular%20NAD%20acts%20to%20modulate,Relatively%20low%20levels%20of%20NAD')</li>
+<li>AnnotationURLCitation(end_index=14340, start_index=14247, title='The essential schistosome tegumental ectoenzyme SmNPP5 can block NAD-induced T cell apoptosis - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC7549896/#:~:text=L,18%2C20')</li>
+<li>AnnotationURLCitation(end_index=15005, start_index=14849, title='The essential schistosome tegumental ectoenzyme SmNPP5 can block NAD-induced T cell apoptosis - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC7549896/#:~:text=layer%20chromatography%20,these%20findings%2C%20we%20hypothesized%20that')</li>
+<li>AnnotationURLCitation(end_index=15169, start_index=15006, title='The essential schistosome tegumental ectoenzyme SmNPP5 can block NAD-induced T cell apoptosis - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC7549896/#:~:text=%28to%20generate%20NMN%20and%20AMP%29,This%20would%20ultimately%20promote%20the')</li>
+<li>AnnotationURLCitation(end_index=15523, start_index=15353, title='The essential schistosome tegumental ectoenzyme SmNPP5 can block NAD-induced T cell apoptosis - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC7549896/#:~:text=ADP%20and%20block%20platelet%20aggregation,suppressed%20the%20expression%20of%20SmNPP5')</li>
+<li>AnnotationURLCitation(end_index=15658, start_index=15524, title='The essential schistosome tegumental ectoenzyme SmNPP5 can block NAD-induced T cell apoptosis - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC7549896/#:~:text=not%20SmNACE,by%20preventing%20Treg%20cell%20death')</li>
+<li>AnnotationURLCitation(end_index=16462, start_index=16307, title='Structure and function of the ecto-nucleotide pyrophosphatase/phosphodiesterase (ENPP) family: Tidying up diversity - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8808174/#:~:text=ENPP5%20is%20among%20the%20least,validation%20using%20Enpp5%20KO%20mice')</li>
+<li>AnnotationURLCitation(end_index=16847, start_index=16697, title='ENPP5 ectonucleotide pyrophosphatase/phosphodiesterase family member 5 [Homo sapiens (human)] - Gene - NCBI', type='url_citation', url='https://www.ncbi.nlm.nih.gov/gene/59084#:~:text=Summary%20This%20gene%20encodes%20a,other%20tissues%20See%20more%20Orthologs')</li>
+<li>AnnotationURLCitation(end_index=17902, start_index=17740, title='ENPP5 ectonucleotide pyrophosphatase/phosphodiesterase family member 5 [Homo sapiens (human)] - Gene - NCBI', type='url_citation', url='https://www.ncbi.nlm.nih.gov/gene/59084#:~:text=Expression%20Biased%20expression%20in%20thyroid,other%20tissues%20See%20more%20Orthologs')</li>
+<li>AnnotationURLCitation(end_index=18208, start_index=18046, title='ENPP5 ectonucleotide pyrophosphatase/phosphodiesterase family member 5 [Homo sapiens (human)] - Gene - NCBI', type='url_citation', url='https://www.ncbi.nlm.nih.gov/gene/59084#:~:text=Expression%20Biased%20expression%20in%20thyroid,other%20tissues%20See%20more%20Orthologs')</li>
+<li>AnnotationURLCitation(end_index=19890, start_index=19745, title='Regulation of ENPP5, a senescence-associated secretory phenotype factor, prevents skin aging - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/38436793/#:~:text=recombinant%20ENPP5%20,knockdown%20in%20mouse%20skin%20ameliorated')</li>
+<li>AnnotationURLCitation(end_index=20343, start_index=20198, title='Regulation of ENPP5, a senescence-associated secretory phenotype factor, prevents skin aging - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/38436793/#:~:text=recombinant%20ENPP5%20,knockdown%20in%20mouse%20skin%20ameliorated')</li>
+<li>AnnotationURLCitation(end_index=20723, start_index=20578, title='Regulation of ENPP5, a senescence-associated secretory phenotype factor, prevents skin aging - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/38436793/#:~:text=recombinant%20ENPP5%20,knockdown%20in%20mouse%20skin%20ameliorated')</li>
+<li>AnnotationURLCitation(end_index=21292, start_index=21170, title='Regulation of ENPP5, a senescence-associated secretory phenotype factor, prevents skin aging - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/38436793/#:~:text=aging,aging%20treatments%20for%20the%20skin')</li>
+<li>AnnotationURLCitation(end_index=21605, start_index=21483, title='Regulation of ENPP5, a senescence-associated secretory phenotype factor, prevents skin aging - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/38436793/#:~:text=aging,aging%20treatments%20for%20the%20skin')</li>
+<li>AnnotationURLCitation(end_index=22080, start_index=21912, title='Regulation of ENPP5, a senescence-associated secretory phenotype factor, prevents skin aging - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/38436793/#:~:text=lentiviral%20overexpression%20of%20ENPP5%20promoted,aging%20treatments%20for%20the%20skin')</li>
+<li>AnnotationURLCitation(end_index=22338, start_index=22216, title='Regulation of ENPP5, a senescence-associated secretory phenotype factor, prevents skin aging - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/38436793/#:~:text=aging,aging%20treatments%20for%20the%20skin')</li>
+<li>AnnotationURLCitation(end_index=23324, start_index=23191, title='New oncogenic functions of LINE1 retroelement as a ceRNA for tumor suppressive microRNA miR-126 on ENPP5 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10289412/#:~:text=in%20the%20transcriptome%20data%20of,suppressive')</li>
+<li>AnnotationURLCitation(end_index=23456, start_index=23325, title='New oncogenic functions of LINE1 retroelement as a ceRNA for tumor suppressive microRNA miR-126 on ENPP5 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10289412/#:~:text=regulated,in%20ENPP5%20gene%20expression%20via')</li>
+<li>AnnotationURLCitation(end_index=23776, start_index=23645, title='New oncogenic functions of LINE1 retroelement as a ceRNA for tumor suppressive microRNA miR-126 on ENPP5 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10289412/#:~:text=regulated,in%20ENPP5%20gene%20expression%20via')</li>
+<li>AnnotationURLCitation(end_index=24178, start_index=24045, title='New oncogenic functions of LINE1 retroelement as a ceRNA for tumor suppressive microRNA miR-126 on ENPP5 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10289412/#:~:text=in%20the%20transcriptome%20data%20of,suppressive')</li>
+<li>AnnotationURLCitation(end_index=24439, start_index=24308, title='New oncogenic functions of LINE1 retroelement as a ceRNA for tumor suppressive microRNA miR-126 on ENPP5 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10289412/#:~:text=regulated,in%20ENPP5%20gene%20expression%20via')</li>
+<li>AnnotationURLCitation(end_index=24676, start_index=24579, title='New oncogenic functions of LINE1 retroelement as a ceRNA for tumor suppressive microRNA miR-126 on ENPP5 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10289412/#:~:text=of%20miR,126')</li>
+<li>AnnotationURLCitation(end_index=25778, start_index=25623, title='Structure and function of the ecto-nucleotide pyrophosphatase/phosphodiesterase (ENPP) family: Tidying up diversity - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8808174/#:~:text=ENPP5%20is%20among%20the%20least,validation%20using%20Enpp5%20KO%20mice')</li>
+<li>AnnotationURLCitation(end_index=26393, start_index=26224, title='Exploring ENPP5 as a diagnostic biomarker for sepsis: a comprehensive bioinformatics analysis - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC12211274/#:~:text=A%20total%20of%204%2C450%20intersected,negatively%20associated%20with%20mast%20cells')</li>
+<li>AnnotationURLCitation(end_index=26803, start_index=26634, title='Exploring ENPP5 as a diagnostic biomarker for sepsis: a comprehensive bioinformatics analysis - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC12211274/#:~:text=A%20total%20of%204%2C450%20intersected,negatively%20associated%20with%20mast%20cells')</li>
+<li>AnnotationURLCitation(end_index=27163, start_index=26996, title='Exploring ENPP5 as a diagnostic biomarker for sepsis: a comprehensive bioinformatics analysis - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC12211274/#:~:text=GSE13904%2C%20GSE154918%2C%20GSE8121,negatively%20associated%20with%20mast%20cells')</li>
+<li>AnnotationURLCitation(end_index=28355, start_index=28200, title='Structure and function of the ecto-nucleotide pyrophosphatase/phosphodiesterase (ENPP) family: Tidying up diversity - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8808174/#:~:text=ENPP5%20is%20among%20the%20least,validation%20using%20Enpp5%20KO%20mice')</li>
+<li>AnnotationURLCitation(end_index=28695, start_index=28540, title='Structure and function of the ecto-nucleotide pyrophosphatase/phosphodiesterase (ENPP) family: Tidying up diversity - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8808174/#:~:text=ENPP5%20is%20among%20the%20least,validation%20using%20Enpp5%20KO%20mice')</li>
+<li>AnnotationURLCitation(end_index=29012, start_index=28857, title='Structure and function of the ecto-nucleotide pyrophosphatase/phosphodiesterase (ENPP) family: Tidying up diversity - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8808174/#:~:text=ENPP5%20is%20among%20the%20least,validation%20using%20Enpp5%20KO%20mice')</li>
+<li>AnnotationURLCitation(end_index=29662, start_index=29491, title='Structure and function of the ecto-nucleotide pyrophosphatase/phosphodiesterase (ENPP) family: Tidying up diversity - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8808174/#:~:text=ENPP5%20has%20unique%20features%20that,catalytic%20site%20environment%20is%20negatively')</li>
+<li>AnnotationURLCitation(end_index=29807, start_index=29663, title='Structure and function of the ecto-nucleotide pyrophosphatase/phosphodiesterase (ENPP) family: Tidying up diversity - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8808174/#:~:text=hydrolysis%20%2846%20%29,does%20not%20happen%20through%20the')</li>
+<li>AnnotationURLCitation(end_index=30407, start_index=30263, title='Structure and function of the ecto-nucleotide pyrophosphatase/phosphodiesterase (ENPP) family: Tidying up diversity - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8808174/#:~:text=hydrolysis%20%2846%20%29,does%20not%20happen%20through%20the')</li>
+<li>AnnotationURLCitation(end_index=31315, start_index=31147, title='Regulation of ENPP5, a senescence-associated secretory phenotype factor, prevents skin aging - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/38436793/#:~:text=lentiviral%20overexpression%20of%20ENPP5%20promoted,aging%20treatments%20for%20the%20skin')</li>
+<li>AnnotationURLCitation(end_index=31654, start_index=31521, title='New oncogenic functions of LINE1 retroelement as a ceRNA for tumor suppressive microRNA miR-126 on ENPP5 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10289412/#:~:text=in%20the%20transcriptome%20data%20of,suppressive')</li>
+<li>AnnotationURLCitation(end_index=31786, start_index=31655, title='New oncogenic functions of LINE1 retroelement as a ceRNA for tumor suppressive microRNA miR-126 on ENPP5 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10289412/#:~:text=regulated,in%20ENPP5%20gene%20expression%20via')</li>
+<li>AnnotationURLCitation(end_index=32597, start_index=32504, title='Structure and function of the ecto-nucleotide pyrophosphatase/phosphodiesterase (ENPP) family: Tidying up diversity - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8808174/#:~:text=AF,Q6UWV6')</li>
+<li>AnnotationURLCitation(end_index=33348, start_index=33205, title='The essential schistosome tegumental ectoenzyme SmNPP5 can block NAD-induced T cell apoptosis - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC7549896/#:~:text=relevant%20standards%20,by%20SmNPP5%2C%20as%20revealed%20by')</li>
+<li>AnnotationURLCitation(end_index=33505, start_index=33349, title='The essential schistosome tegumental ectoenzyme SmNPP5 can block NAD-induced T cell apoptosis - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC7549896/#:~:text=layer%20chromatography%20,these%20findings%2C%20we%20hypothesized%20that')</li>
+<li>AnnotationURLCitation(end_index=33749, start_index=33642, title='ENPP5 Gene - GeneCards | ENPP5 Protein | ENPP5 Antibody', type='url_citation', url='https://www.genecards.org/cgi-bin/carddisp.pl?gene=ENPP5#:~:text=GO%3A0005576%20,IEA')</li>
+<li>AnnotationURLCitation(end_index=34116, start_index=33988, title='Structure and function of the ecto-nucleotide pyrophosphatase/phosphodiesterase (ENPP) family: Tidying up diversity - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8808174/#:~:text=ribose%20substrates%20%2846%20%29,%E2%88%921')</li>
+<li>AnnotationURLCitation(end_index=34554, start_index=34399, title='Structure and function of the ecto-nucleotide pyrophosphatase/phosphodiesterase (ENPP) family: Tidying up diversity - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8808174/#:~:text=ENPP5%20is%20among%20the%20least,validation%20using%20Enpp5%20KO%20mice')</li>
+<li>AnnotationURLCitation(end_index=34707, start_index=34555, title='The essential schistosome tegumental ectoenzyme SmNPP5 can block NAD-induced T cell apoptosis - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC7549896/#:~:text=Here%2C%20NAD%20serves%20as%20a,Relatively%20low%20levels%20of%20NAD')</li>
+<li>AnnotationURLCitation(end_index=34979, start_index=34834, title='Regulation of ENPP5, a senescence-associated secretory phenotype factor, prevents skin aging - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/38436793/#:~:text=recombinant%20ENPP5%20,knockdown%20in%20mouse%20skin%20ameliorated')</li>
+<li>AnnotationURLCitation(end_index=35188, start_index=35055, title='New oncogenic functions of LINE1 retroelement as a ceRNA for tumor suppressive microRNA miR-126 on ENPP5 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10289412/#:~:text=in%20the%20transcriptome%20data%20of,suppressive')</li>
+<li>AnnotationURLCitation(end_index=35496, start_index=35327, title='Exploring ENPP5 as a diagnostic biomarker for sepsis: a comprehensive bioinformatics analysis - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC12211274/#:~:text=A%20total%20of%204%2C450%20intersected,negatively%20associated%20with%20mast%20cells')</li>
+<li>AnnotationURLCitation(end_index=36175, start_index=36020, title='Structure and function of the ecto-nucleotide pyrophosphatase/phosphodiesterase (ENPP) family: Tidying up diversity - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8808174/#:~:text=ENPP5%20is%20among%20the%20least,validation%20using%20Enpp5%20KO%20mice')</li>
+<li>AnnotationURLCitation(end_index=37124, start_index=36953, title='Structure and function of the ecto-nucleotide pyrophosphatase/phosphodiesterase (ENPP) family: Tidying up diversity - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8808174/#:~:text=ENPP5%20has%20unique%20features%20that,catalytic%20site%20environment%20is%20negatively')</li>
+<li>AnnotationURLCitation(end_index=37269, start_index=37125, title='Structure and function of the ecto-nucleotide pyrophosphatase/phosphodiesterase (ENPP) family: Tidying up diversity - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8808174/#:~:text=hydrolysis%20%2846%20%29,does%20not%20happen%20through%20the')</li>
+<li>AnnotationURLCitation(end_index=37469, start_index=37324, title='Regulation of ENPP5, a senescence-associated secretory phenotype factor, prevents skin aging - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/38436793/#:~:text=recombinant%20ENPP5%20,knockdown%20in%20mouse%20skin%20ameliorated')</li>
+<li>AnnotationURLCitation(end_index=37592, start_index=37470, title='Regulation of ENPP5, a senescence-associated secretory phenotype factor, prevents skin aging - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/38436793/#:~:text=aging,aging%20treatments%20for%20the%20skin')</li>
+<li>AnnotationURLCitation(end_index=37787, start_index=37654, title='New oncogenic functions of LINE1 retroelement as a ceRNA for tumor suppressive microRNA miR-126 on ENPP5 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10289412/#:~:text=in%20the%20transcriptome%20data%20of,suppressive')</li>
+<li>AnnotationURLCitation(end_index=37919, start_index=37788, title='New oncogenic functions of LINE1 retroelement as a ceRNA for tumor suppressive microRNA miR-126 on ENPP5 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10289412/#:~:text=regulated,in%20ENPP5%20gene%20expression%20via')</li>
+<li>AnnotationURLCitation(end_index=38176, start_index=38007, title='Exploring ENPP5 as a diagnostic biomarker for sepsis: a comprehensive bioinformatics analysis - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC12211274/#:~:text=A%20total%20of%204%2C450%20intersected,negatively%20associated%20with%20mast%20cells')</li>
+<li>AnnotationURLCitation(end_index=38372, start_index=38229, title='The essential schistosome tegumental ectoenzyme SmNPP5 can block NAD-induced T cell apoptosis - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC7549896/#:~:text=relevant%20standards%20,by%20SmNPP5%2C%20as%20revealed%20by')</li>
+<li>AnnotationURLCitation(end_index=38529, start_index=38373, title='The essential schistosome tegumental ectoenzyme SmNPP5 can block NAD-induced T cell apoptosis - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC7549896/#:~:text=layer%20chromatography%20,these%20findings%2C%20we%20hypothesized%20that')</li>
+<li>AnnotationURLCitation(end_index=38705, start_index=38555, title='ENPP5 ectonucleotide pyrophosphatase/phosphodiesterase family member 5 [Homo sapiens (human)] - Gene - NCBI', type='url_citation', url='https://www.ncbi.nlm.nih.gov/gene/59084#:~:text=Summary%20This%20gene%20encodes%20a,other%20tissues%20See%20more%20Orthologs')</li>
+<li>AnnotationURLCitation(end_index=38814, start_index=38706, title='ENPP5 Gene - GeneCards | ENPP5 Protein | ENPP5 Antibody', type='url_citation', url='https://www.genecards.org/cgi-bin/carddisp.pl?gene=ENPP5#:~:text=,and%20triphosphates')</li>
+</ol>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Perplexity</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(ENPP5-deep-research-perplexity.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9UJA9" data-a="DOC: Deep Research Perplexity" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: perplexity<br />
+model: sonar-deep-research<br />
+cached: false<br />
+start_time: '2025-11-03T23:03:33.539553'<br />
+end_time: '2025-11-03T23:05:34.625670'<br />
+duration_seconds: 121.09<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: human<br />
+  gene_id: Q9UJA9<br />
+  gene_symbol: ENPP5<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    reasoning_effort: medium<br />
+    search_domain_filter: []<br />
+    return_citations: true<br />
+    temperature: 0.0<br />
+citation_count: 42</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<p>Please provide a comprehensive research report on the gene ENPP5 (Q9UJA9) in human.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function. </p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p><think><br />
+Let me analyze the search results provided about ENPP5 and plan a comprehensive research report.</p>
+<p>Key information from the search results:<br />
+1. ENPP5 is an ectonucleotide pyrophosphatase/phosphodiesterase family member 5<br />
+2. It's a type-I transmembrane glycoprotein<br />
+3. It can hydrolyze NAD but cannot hydrolyze nucleotide diphosphates and triphosphates<br />
+4. It lacks lysopholipase D activity<br />
+5. It may play a role in neuronal cell communications<br />
+6. Recent structural studies (2017) show a key tyrosine substitution restricts nucleotide hydrolysis<br />
+7. It contains three Zn2+ ions in the catalytic site<br />
+8. It's involved in NAD-based neurotransmission<br />
+9. Recent 2024 study shows it's a senescence-associated secretory phenotype (SASP) factor<br />
+10. It's been identified as a potential biomarker for sepsis (2025)</p>
+<p>Let me organize this into a comprehensive report with proper structure and citations.</p>
+<p>Major themes to cover:<br />
+1. Gene and protein identity<br />
+2. Structural features and biochemical properties<br />
+3. Enzymatic function and substrate specificity<br />
+4. Catalytic mechanisms<br />
+5. Cellular localization and topology<br />
+6. Biological roles and pathways<br />
+7. Involvement in aging and senescence<br />
+8. Role in neuronal signaling<br />
+9. Emerging clinical relevance</p>
+<p>Let me draft this as a comprehensive scientific report.<br />
+</think></p>
+<h1 id="enpp5-comprehensive-functional-and-structural-analysis-of-ectonucleotide-pyrophosphatasephosphodiesterase-family-member-5">ENPP5: Comprehensive Functional and Structural Analysis of Ectonucleotide Pyrophosphatase/Phosphodiesterase Family Member 5</h1>
+<p>The <strong>ENPP5</strong> gene (Ectonucleotide Pyrophosphatase/Phosphodiesterase Family Member 5), located on chromosome 6 and encoding the protein product Q9UJA9, represents a specialized member of the ectonucleotide pyrophosphatase/phosphodiesterase (ENPP) family that has emerged as a multifunctional extracellular enzyme with distinct biochemical properties differentiating it from its family members[1][2]. Recent structural and functional studies have revealed that ENPP5 functions primarily as a <strong>NAD+-specific hydrolase</strong> with a uniquely restricted substrate specificity profile compared to other ENPP family members, possessing catalytic characteristics that suggest specialized roles in NAD-dependent cellular signaling and metabolic processes[2][5]. While initially characterized through studies in rat models suggesting involvement in neuronal cell communications[1][13], contemporary research has expanded our understanding of ENPP5's biological significance, demonstrating its participation in cellular senescence, aging processes, immune regulation, and potentially serving as a diagnostic biomarker for sepsis[39][51]. This report synthesizes current knowledge regarding ENPP5's molecular architecture, enzymatic properties, subcellular localization, catalytic mechanisms, and biological functions, emphasizing recent discoveries that have substantially refined our understanding of this enzyme's specific role within extracellular signaling networks.</p>
+<h2 id="molecular-identity-and-structural-organization">Molecular Identity and Structural Organization</h2>
+<h3 id="gene-structure-and-protein-characteristics">Gene Structure and Protein Characteristics</h3>
+<p>ENPP5 is encoded by a protein-coding gene located at chromosome 6 with the official HGNC designation 13717 and NCBI Gene identifier 59084[1][28]. The gene produces a type-I transmembrane glycoprotein that has been annotated with nine transcript variants representing different splice isoforms[24]. The canonical protein product, represented by UniProtKB entry Q9UJA9, exists as a glycosylated transmembrane protein that undergoes N-glycosylation at asparagine residue 389, representing a post-translational modification that likely influences protein folding, stability, and functional properties[35]. This glycosylation modification places ENPP5 within the broader category of glycoproteins requiring proper folding within the endoplasmic reticulum and subsequent processing through the secretory pathway to achieve proper trafficking to the plasma membrane[32].</p>
+<p>The protein exhibits high evolutionary conservation across vertebrate species, with the orthologous relationship extending to model organisms including mice, where it shares approximately 85% amino acid identity with the human form, and to zebrafish and other model systems[5][21]. This conservation pattern strongly suggests that the fundamental enzymatic function and biological role have been maintained throughout vertebrate evolution, indicating selective pressure preserving ENPP5's specific biochemical activities. The structural organization of ENPP5 places it within a distinct subgroup of the ENPP family, as members ENPP1 through ENPP7 exhibit markedly different domain architectures and functional specializations.</p>
+<h3 id="membrane-topology-and-domain-architecture">Membrane Topology and Domain Architecture</h3>
+<p>Unlike the multidomain architecture characteristic of ENPP1, ENPP2 (Autotaxin), and ENPP3, which contain two N-terminal somatomedin B-like domains (SMB1-2), followed by a phosphodiesterase (PDE) domain, a lasso loop, and a C-terminal nuclease-like domain, ENPP5 belongs to the <strong>simpler subfamily</strong> comprising ENPP4-7, which possess only the signature <strong>phosphodiesterase (PDE) domain</strong> as their defining catalytic module[2][31][50]. This domain simplification appears to correlate with the specialized substrate recognition properties that distinguish ENPP5 from its more structurally complex family members. ENPP5 functions as a <strong>single-pass type I membrane protein</strong>, meaning that its N-terminal region extends into the endoplasmic reticulum lumen during translocation, with the mature protein positioned such that the catalytic PDE domain faces the extracellular space, enabling direct access to extracellular substrates[2][31]. This type I topology contrasts with ENPP1 and ENPP3, which adopt type II membrane protein orientation, and differs from ENPP2 (Autotaxin), which is secreted as a soluble protein, and ENPP6, which is anchored to the plasma membrane via a glycosylphosphatidylinositol (GPI) anchor[2][31].</p>
+<p>The designation as an "ecto-enzyme" reflects ENPP5's functional orientation, with its catalytic machinery positioned extracellularly to process nucleotides and nucleotide-derived molecules in the extracellular compartment rather than in the cytoplasm[2]. This ecto-enzymatic function fundamentally shapes ENPP5's role in cellular signaling, as it operates on substrates generated through vesicular release or released directly into the extracellular environment, positioning it as a regulator of extracellular purinergic signaling networks.</p>
+<h2 id="unique-catalytic-properties-and-metal-coordination">Unique Catalytic Properties and Metal Coordination</h2>
+<h3 id="zinc-coordination-and-the-third-metal-ion">Zinc Coordination and the Third Metal Ion</h3>
+<p>The most striking structural feature distinguishing ENPP5 from other ENPP family members involves its <strong>catalytic coordination of three zinc ions</strong> (Zn²⁺), rather than the two zinc ions present in the catalytic sites of ENPP1, ENPP3, ENPP4, ENPP6, and ENPP7[2][8][31]. This unique trimetal coordination geometry appears to represent a specialized adaptation for ENPP5's particular enzymatic function. Crystal structure analysis has revealed that the third zinc ion is coordinately bound by two metal-coordinating residues: <strong>aspartate 192 (Asp192)</strong> and <strong>glutamate 159 (Glu159)</strong>[2][8][31]. Rather than participating in the nucleotide-binding slot characteristic of other ENPPs, this third zinc ion interacts with the 2' and 3' oxygen atoms of the ribose moiety of nucleotide substrates[2][8][31]. This structural feature provides a metal-based recognition system specifically adapted for ribose-containing substrates, enabling ENPP5 to discriminate effectively among potential substrates based on their sugar chemistry and positioning.</p>
+<p>The functional significance of this third zinc ion likely extends beyond simple substrate recognition, as the coordinated positioning of ribose oxygens at the metal center may facilitate proper substrate orientation for catalytic hydrolysis or alternatively may restrict substrate access, thereby providing a mechanistic basis for ENPP5's highly selective substrate utilization profile. The fact that this metal coordination feature is uniquely present in ENPP5 among all currently characterized ENPP family members strongly suggests that this structural innovation represents an important evolutionary specialization that enabled ENPP5 to occupy a distinct biochemical niche within extracellular nucleotide metabolism.</p>
+<h3 id="the-key-tyrosine-substitution-restricting-nucleotide-hydrolysis">The Key Tyrosine Substitution Restricting Nucleotide Hydrolysis</h3>
+<p>A second distinctive structural feature of ENPP5 directly accounts for its selective substrate specificity and represents a critical determinant of its functional properties. Whereas ENPP1, ENPP3, ENPP4, and other family members contain a <strong>phenylalanine residue (Phe)</strong> within their nucleotide-binding slot, ENPP5 uniquely possesses a <strong>tyrosine residue at position 73 (Tyr73)</strong> in this critical position[2][5][8][26][29]. This amino acid substitution proves functionally consequential because the hydroxyl (-OH) group on the tyrosine sidechain <strong>sterically clashes with nucleotide diphosphates (NDPs) and nucleotide triphosphates (NTPs)</strong>, preventing efficient hydrolysis of these substrates[5][26][29]. This represents a remarkable evolutionary solution: ENPP5 has essentially "sacrificed" the ability to hydrolyze the canonical ATP, GTP, CTP, and UTP substrates that constitute the primary metabolic substrates for other ENPP family members, thereby specializing for alternative substrates not accommodated by the standard nucleotide-binding slot.</p>
+<p>Experimental evidence supporting this mechanistic interpretation comes from targeted mutagenesis studies demonstrating that <strong>reversal of this Tyr73 substitution to phenylalanine</strong> (through Y73F mutation) eliminates the hydroxyl group that clashes with NTP substrates and consequently <strong>enables ENPP5 to acquire hydrolytic activity toward ATP and other NTPs</strong>, demonstrating that this single amino acid substitution is both necessary and sufficient to prevent NTP hydrolysis[5][26][29]. This finding establishes unequivocally that ENPP5's restricted substrate specificity represents an intentional evolutionary adaptation rather than a secondary consequence of other structural alterations. The catalytic site environment surrounding this key tyrosine substitution is notably <strong>negatively charged</strong>, similar to that of ENPP4, which may further influence substrate recognition and catalytic efficiency[2][8][31].</p>
+<h2 id="primary-enzymatic-function-and-substrate-specificity">Primary Enzymatic Function and Substrate Specificity</h2>
+<h3 id="nad-as-the-preferred-substrate">NAD+ as the Preferred Substrate</h3>
+<p>The enzymatic function of ENPP5 centers fundamentally on its ability to <strong>hydrolyze nicotinamide adenine dinucleotide (NAD⁺/NADH)</strong> with measurable catalytic efficiency[2][5][8][14][29]. Of the multiple potential substrates tested in biochemical assays, <strong>NAD⁺ achieves the highest catalytic rate</strong> for ENPP5-mediated hydrolysis[2][8][19][29]. However, important caveats accompany this finding: while NAD⁺ produces the highest turnover rate, the overall <strong>catalytic efficiency for NAD⁺ hydrolysis remains relatively low, measured at 0.00067 s⁻¹ μM⁻¹</strong>[2][8][31][50]. This low catalytic efficiency indicates that while ENPP5 can process NAD⁺, it does not do so with the high efficiency exhibited by other ENPP family members toward their preferred substrates (for comparison, ENPP1 exhibits catalytic efficiencies in the range of 0.017-0.34 s⁻¹ μM⁻¹ for various nucleotide substrates)[2][8].</p>
+<p>This functional characteristic suggests that ENPP5 occupies an unusual niche within extracellular nucleotide metabolism—it functions as a NAD⁺-specific hydrolase rather than a general nucleotidase, and it does so with relatively modest catalytic parameters, possibly reflecting either evolutionary optimization for a specific physiological context where modest catalytic rates prove sufficient, or alternatively, constraint imposed by the requirement to maintain specificity through structural limitations that inherently reduce catalytic turnover rates.</p>
+<h3 id="alternative-substrates-and-recognition-mechanism">Alternative Substrates and Recognition Mechanism</h3>
+<p>Beyond NAD⁺, ENPP5 exhibits catalytic activity toward a limited set of additional substrates. Biochemical characterization has established that ENPP5 can cleave <strong>UDP-glucose (UDPG)</strong> and <strong>ADP-ribose (ADPR)</strong>, though catalytic details for these substrates have not been extensively characterized[2][8][19][31]. Notably, the fact that ADP-ribose, which constitutes the monomeric unit of poly(ADP-ribose) modifications and represents a critical product of NAD⁺ metabolism through ADP-ribosylation reactions, appears as a substrate suggests possible functional integration of ENPP5 with NAD⁺-dependent post-translational modification pathways[2].</p>
+<p>A fascinating aspect of ENPP5's substrate recognition involves evidence suggesting that <strong>substrate recognition does not proceed exclusively through the nucleotide-binding slot</strong>, at least under in vitro conditions[2][8][31][50]. Instead, mounting evidence suggests that substrate interaction involves <strong>other regions of the protein surface</strong> where the third zinc ion could potentially participate in substrate coordination and recognition[2][8][31]. This represents a departure from the canonical models of nucleotide recognition developed for ENPP1 and other family members, where well-defined nucleotide-binding slots with characteristic π-π stacking interactions between aromatic amino acids and nucleotide bases provide the primary substrate-binding interface. For ENPP5, the presence of the third metal coordination site adjacent to the catalytic center, combined with the unique steric constraints imposed by the Tyr73 substitution, may necessitate fundamentally different substrate approach pathways and binding geometries that remain to be fully elucidated.</p>
+<h3 id="substrate-hydrolysis-products">Substrate Hydrolysis Products</h3>
+<p>When ENPP5 hydrolyzes its preferred substrates, the chemical reactions produce specific products dependent on substrate identity. For NAD⁺ hydrolysis, the reaction generates <strong>adenosine monophosphate (AMP)</strong> and a <strong>nicotinamide-ribose derivative bearing a diphosphate group</strong>, products similar to those generated by other NAD⁺-consuming enzymes such as sirtuins or PARPs, though with distinct mechanistic implications[2][8]. This product profile indicates that ENPP5 cleaves the N-glycosidic bond connecting the nicotinamide base to the ribose sugar of NAD⁺. The generation of AMP from NAD⁺ metabolism represents an important link to broader nucleotide signaling networks, as AMP itself serves as a substrate for additional ectonucleotidases (such as 5'-nucleotidases/CD73) that can convert it to adenosine, a signaling molecule with important immunoregulatory and neurological functions.</p>
+<h2 id="catalytic-mechanisms-and-phosphoryl-transfer-reaction">Catalytic Mechanisms and Phosphoryl Transfer Reaction</h2>
+<h3 id="zinc-catalyzed-phosphodiesterase-mechanism">Zinc-Catalyzed Phosphodiesterase Mechanism</h3>
+<p>Like all members of the alkaline phosphatase superfamily to which ENPPs belong, ENPP5 catalyzes phosphodiester bond hydrolysis through a <strong>zinc-dependent nucleophilic substitution mechanism</strong> involving metal ion-mediated polarization of the phosphoester oxygen atoms[12]. The reaction proceeds through a <strong>phosphoryl transfer</strong> mechanism in which a <strong>threonine nucleophile</strong> (identified through site-directed mutagenesis in related ENPP family members) attacks the phosphorus center of the substrate phosphodiester bond[12]. Multiple mechanistic scenarios have been proposed for this reaction, ranging from fully synchronous SN2-like substitution to two-step mechanisms proceeding through either dissociative trigonal metaphosphate intermediates or associative pentavalent phosphorane intermediates[12].</p>
+<p>The fundamental role of the zinc ions involves both stabilization of negative charge developing on the oxygen atoms of the phosphodiester group during bond breakage and stabilization of the developing nucleophile through polarization of water or amino acid nucleophiles positioned in the catalytic center[12]. The presence of three zinc ions in ENPP5, rather than the canonical two-zinc arrangement found in other phosphodiesterases, likely introduces additional layers of complexity into the catalytic mechanism, particularly regarding substrate positioning, transition state stabilization, and product release.</p>
+<h3 id="transition-state-analysis-and-specificity-determinants">Transition State Analysis and Specificity Determinants</h3>
+<p>While detailed transition state analysis specific to ENPP5 has not been published, comparative structural studies of ENPP family members utilizing transition state analogs (such as orthovanadate complexes that adopt trigonal bipyramidal geometries mimicking phosphorus transition states) have provided important mechanistic insights applicable to understanding ENPP5's catalytic process[9]. These studies indicate that phosphate oxygen coordination geometry varies subtly among ENPP family members depending on active site architecture, suggesting that even modest structural differences in the catalytic site substantially influence the precise mechanism through which catalysis proceeds[9].</p>
+<p>For ENPP5 specifically, the negatively charged catalytic site environment and the unique third zinc coordination site almost certainly confer distinctive transition state stabilization properties compared to other ENPPs, likely contributing to the selective substrate recognition and specificity that characterizes ENPP5's enzymatic function. The exact catalytic mechanism and the relative contribution of the third zinc ion to catalysis <strong>remain to be definitively resolved</strong> through structural studies utilizing transition state analogs or through mechanistic kinetic analysis[2][8][31].</p>
+<h2 id="cellular-localization-and-extracellular-function">Cellular Localization and Extracellular Function</h2>
+<h3 id="plasma-membrane-localization-and-ecto-enzymatic-activity">Plasma Membrane Localization and Ecto-enzymatic Activity</h3>
+<p>ENPP5 functions as a plasma membrane-resident ecto-enzyme, positioned to encounter and process substrates generated or released into the extracellular compartment. The type I transmembrane topology, with N-terminal localization in the ER lumen during synthesis and subsequent maturation in the secretory pathway, results in positioning of ENPP5's catalytic domain in the extracellular space, with the catalytic activity directed toward extracellular substrates[2][31]. This ecto-enzymatic orientation places ENPP5 at the interface between intracellular and extracellular compartments, enabling it to respond to signals generated through cell lysis, vesicular release, or active secretion of nucleotides and nucleotide metabolites.</p>
+<p>The glycosylation of ENPP5 at asparagine 389, occurring within the ER and being further processed within the Golgi apparatus during secretory transit, almost certainly influences protein folding, trafficking efficiency, and cellular localization[32][35]. N-glycosylation often modulates protein-protein interactions, stability, and potentially enzymatic activity through indirect effects on protein conformation. Expression pattern analysis indicates that ENPP5 transcripts are detected across diverse tissues including corpus epididymis, bronchial epithelial cells, seminal vesicles, and numerous other cell types and tissues[37], suggesting that ENPP5's enzymatic function operates across multiple physiological contexts rather than being restricted to specialized cell types.</p>
+<h3 id="subcellular-expression-and-tissue-distribution">Subcellular Expression and Tissue Distribution</h3>
+<p>While comprehensive subcellular localization mapping for ENPP5 remains incomplete in current literature, the established plasma membrane residence of this type I transmembrane protein means that its primary site of enzymatic function resides at the cell surface interface. The neuronal expression pattern suggested by early studies in rat brain tissue models[1][13] has been supported by more recent analysis indicating brain-enriched expression patterns within specific neuronal populations[16]. The broad tissue distribution detected in transcriptomic analyses suggests that ENPP5 participates in extracellular NAD⁺ metabolism and purinergic signaling across multiple tissues and cell types, not exclusively within the nervous system.</p>
+<h2 id="biochemical-pathways-and-functional-integration">Biochemical Pathways and Functional Integration</h2>
+<h3 id="nad-dependent-signaling-and-purinergic-pathways">NAD+-Dependent Signaling and Purinergic Pathways</h3>
+<p>The capacity of ENPP5 to hydrolyze NAD⁺ integrates this enzyme into critical biochemical pathways centered on NAD⁺ metabolism, ADP-ribosylation reactions, and extracellular purinergic signaling[2][5][14][29]. NAD⁺ serves multiple fundamental functions in cellular physiology, functioning as an essential coenzyme for oxidation-reduction reactions within metabolic pathways, participating in post-translational modifications through ADP-ribosylation catalyzed by PARP enzymes and sirtuins, and serving as an extracellular signaling molecule that activates purinergic receptors on cells within the microenvironment[7][10]. ENPP5's ability to cleave NAD⁺ into AMP and a nicotinamide-ribose diphosphate derivative represents a mechanism through which extracellular NAD⁺ can be catabolized, potentially regulating NAD⁺ bioavailability and simultaneously generating downstream metabolites that themselves function as signaling molecules.</p>
+<p>The connection between ENPP5-mediated NAD⁺ metabolism and ADP-ribosylation processes warrants particular emphasis, as NAD⁺ serves as the direct substrate for enzymes catalyzing ADP-ribosylation, including PARP family members and mono(ADP-ribosyl)transferases[7][10]. ENPP5 activity potentially influences the availability of NAD⁺ for these modification reactions, thereby indirectly regulating the extent of protein ADP-ribosylation occurring within cells. In neurodegenerative disease contexts, dysregulated ADP-ribosylation contributes to protein aggregation, neuroinflammation, and metabolic dysfunction[7], suggesting that ENPP5-regulated NAD⁺ availability could influence neurodegeneration-related processes through effects on PARP activity and protein ADP-ribosylation.</p>
+<h3 id="purinergic-receptor-signaling-and-atpadenosine-metabolism">Purinergic Receptor Signaling and ATP/Adenosine Metabolism</h3>
+<p>ENPP5 participates within the broader framework of extracellular nucleotide metabolism and purinergic signaling networks. ATP and other nucleotides released into the extracellular space activate P2 purinergic receptors (both ionotropic P2X and metabotropic P2Y subtypes), while adenosine generated through sequential ATP degradation activates P1 adenosine receptors[15][18]. Within neuroendocrine and neuronal systems, purinergic signaling modulates cell electrical activity, hormone secretion, neurotransmitter release, and neuronal development[15][18]. The ecto-enzymes collectively responsible for ATP degradation include both NTPDases (nucleoside triphosphate diphosphohydrolases) that generate AMP plus inorganic phosphate and ENPPs that generate AMP plus pyrophosphate[15][18][49]. The metabolic product AMP generated from ENPP5-mediated NAD⁺ hydrolysis feeds into these nucleotide-degrading pathways, ultimately contributing to adenosine generation and adenosine receptor activation.</p>
+<p>This pathway integration suggests that ENPP5 acts as a metabolic hub linking NAD⁺ bioavailability, extracellular nucleotide metabolism, and purinergic receptor signaling. The specific contribution of ENPP5 versus other ecto-nucleotidases to ATP degradation and adenosine generation in any given tissue context likely depends on relative enzyme expression levels and subcellular localization patterns that remain to be comprehensively mapped.</p>
+<h2 id="emerging-biological-roles-and-recent-discoveries">Emerging Biological Roles and Recent Discoveries</h2>
+<h3 id="enpp5-in-cellular-senescence-and-skin-aging">ENPP5 in Cellular Senescence and Skin Aging</h3>
+<p>A significant recent discovery has linked ENPP5 to cellular senescence and skin aging through its association with the <strong>senescence-associated secretory phenotype (SASP)</strong>[39][44][54][57]. Senescent cells accumulate with age and display characteristic phenotypes including cell cycle arrest, metabolic changes, and secretion of pro-inflammatory cytokines and extracellular matrix-degrading enzymes—the SASP—that contributes to age-related tissue pathology and dysfunction. A 2024 study published in Biogerontology demonstrated that ENPP5 is significantly expressed in replication-aged and DNA-damaged human skin fibroblasts[39][44][54][57]. Crucially, treatment with human recombinant ENPP5 protein and lentiviral overexpression of ENPP5 both <strong>promoted SASP and senescence</strong> in fibroblasts, whereas siRNA-mediated knockdown of ENPP5 <strong>suppressed SASP</strong> and reduced expression of skin aging-related factors[39][44][54][57].</p>
+<p>In vivo validation using aged C57BL/6 mice demonstrated that ENPP5 knockdown in mouse skin ameliorated age-related reduction of subcutaneous adipose tissue, improved the appearance of the panniculus carnosus muscle layer, and reduced thinning of collagen fibers[39][44][54][57]. These findings suggest that ENPP5 functions as a pro-senescence, pro-aging factor whose downregulation or inhibition could potentially ameliorate age-related changes in skin structure and appearance. This discovery opens unexpected therapeutic avenues for anti-aging interventions targeting ENPP5 regulation or activity. The mechanistic basis through which ENPP5 promotes senescence and SASP remains to be elucidated but may involve effects on NAD⁺ bioavailability, metabolic reprogramming associated with senescence, or immunometabolic signaling within aging tissues.</p>
+<h3 id="enpp5-in-neuronal-signaling-and-nad-based-neurotransmission">ENPP5 in Neuronal Signaling and NAD-Based Neurotransmission</h3>
+<p>The original characterization of ENPP5 in rat brain tissue suggested involvement in neuronal cell communications[1][13], and this theme has been reinforced by structural studies indicating <strong>ENPP5's potential role in NAD-based neurotransmission</strong>[5][14][29]. The discovery that ENPP5 preferentially hydrolyzes NAD⁺ rather than canonical ATP-derived nucleotides represents a remarkable evolutionary specialization that positions this enzyme to regulate extracellular NAD⁺ signaling in neural tissues. Within the nervous system, NAD⁺ serves multiple functions including participation in redox metabolism, DNA repair through PARP-mediated ADP-ribosylation, and potentially direct signaling through yet-uncharacterized NAD⁺-responsive receptors or metabolites.</p>
+<p>The specific neuronal roles of ENPP5-regulated NAD⁺ metabolism remain incompletely understood, but several mechanistic possibilities merit consideration. First, ENPP5-mediated NAD⁺ hydrolysis could regulate the availability of NAD⁺ for PARP-catalyzed ADP-ribosylation, a modification increasingly recognized as critical for neuronal DNA repair, synaptic plasticity, and neuroinflammation[7]. Second, the AMP product generated from NAD⁺ hydrolysis could participate in adenosine-mediated signaling important for neuronal regulation. Third, the nicotinamide-ribose diphosphate coproduct itself might possess biological activity as a signaling molecule in neuronal tissues.</p>
+<h3 id="enpp5-as-a-sepsis-biomarker-and-immune-regulator">ENPP5 as a Sepsis Biomarker and Immune Regulator</h3>
+<p>A very recent 2025 computational and bioinformatic study identified ENPP5 as a key gene exhibiting significant associations with <strong>immune cell infiltration and immune-related genes in sepsis</strong>[51]. Sepsis, characterized by dysregulated immune response to infection featuring excessive inflammation and immunosuppression, represents a major cause of mortality in critical illness. The study demonstrated through integrative multi-omics analysis that ENPP5 exhibited positive correlation with T cell infiltration and negative association with mast cell populations in sepsis patients across multiple independent datasets[51]. ENPP5 showed significant positive correlation with eight immune-related genes including CCL5 (chemokine ligand 5), GZMA (granzyme A), IFNG (interferon-gamma), PRF1 (perforin-1), and BTLA and BTN3A family members involved in T cell regulation[51].</p>
+<p>These associations suggest that ENPP5 may function as a <strong>metabolic hub coordinating innate and adaptive immune responses</strong> during sepsis[51]. The mechanistic basis for ENPP5's role in immune regulation likely involves its extracellular NAD⁺ hydrolysis activity, as growing evidence implicates NAD⁺ availability in regulating immune cell development, function, and metabolic reprogramming. The emerging role of ENPP5 as a potential diagnostic biomarker and therapeutic target for sepsis-related immune dysregulation represents a novel clinical application for this enzyme and warrants further mechanistic investigation and clinical validation.</p>
+<h3 id="enpp5-and-adp-ribosylation-metabolism">ENPP5 and ADP-Ribosylation Metabolism</h3>
+<p>The recent recognition that ENPP5 substrates include not only NAD⁺ but also ADP-ribose, a key metabolite generated through NAD⁺-consuming ADP-ribosylation reactions catalyzed by PARP enzymes, connects ENPP5 to ADP-ribosylation metabolism[2][7][8]. ADP-ribosylation represents a reversible post-translational modification affecting protein function through mono(ADP-ribosyl)ation (MARylation) or poly(ADP-ribose) chain formation (PARylation)[7]. These modifications regulate diverse cellular processes including DNA repair, transcription, cell death, and immune responses[7]. ENPP1 has previously been identified as an enzyme capable of hydrolyzing ADP-ribose polymers, contributing to ADP-ribosylation reversal[7][10]. The fact that ENPP5 also demonstrates activity toward ADP-ribose substrates raises the possibility that ENPP5 participates in ADP-ribosylation metabolism through removal or modification of ADP-ribose structures, though the specific role and significance of this activity remains to be determined.</p>
+<h2 id="structural-basis-for-substrate-specificity">Structural Basis for Substrate Specificity</h2>
+<h3 id="comparison-with-other-enpp-family-members">Comparison with Other ENPP Family Members</h3>
+<p>Understanding ENPP5's unique substrate specificity requires comparative structural analysis with other ENPP family members. ENPP1, the most thoroughly characterized family member, exhibits extraordinarily high specificity and affinity for ATP, with a Km of approximately 10-50 μM, and displays the highest catalytic efficiency for ATP among all ENPP family members[2][8]. The substrate-binding slot of ENPP1 contains well-characterized aromatic amino acids (Tyr340 and Phe257) that establish π-π stacking interactions with nucleotide bases, and a "lysine claw" composed of three positively charged lysine residues (Lys255, Lys278, and Lys528) that provides electrostatic stabilization of the negatively charged γ-phosphate group of ATP[2][8][50]. This combination of features creates an ATP-binding environment of remarkable specificity and catalytic efficiency.</p>
+<p>ENPP3 and ENPP4 display more promiscuous substrate preferences than ENPP1, accepting diverse nucleotide substrates with lower specificity and generally lower catalytic efficiency[2][25]. This reduced specificity correlates with structural differences in their nucleotide-binding slots: both ENPP3 and ENPP4 contain more open nucleotide-binding slots and exhibit weaker aromatic-base interactions through tyrosine and phenylalanine residues, and lack the characteristic lysine claw present in ENPP1[2][25]. The catalytic sites of both ENPP3 and ENPP4 are more solvent-exposed, and the substrate electrostatic environment is negatively charged, reducing their affinity for nucleotides[2][25].</p>
+<p>ENPP5 represents an extreme specialization within this spectrum of substrate specificities. The Tyr73 substitution directly prevents ATP and other NTP binding and hydrolysis through steric clash, while simultaneously the unique trimetal coordination and alternative substrate recognition mechanism enable selective utilization of NAD⁺. The negatively charged catalytic site environment of ENPP5, similar to that of ENPP4, likely contributes to reduced nucleotide affinity while potentially enhancing recognition of non-canonical substrates like NAD⁺[2][8][31].</p>
+<h3 id="evolution-of-the-enpp-family-and-enpp5s-specialization">Evolution of the ENPP Family and ENPP5's Specialization</h3>
+<p>The ENPP family exhibits a clear evolutionary pattern of structural divergence and functional specialization that illuminates ENPP5's unique role[2]. ENPP1, ENPP3, ENPP4, and ENPP5 all evolved to function as <strong>nucleotide hydrolases</strong>, catalyzing breakdown of ATP, GTP, and other nucleotide triphosphates and diphosphates, while ENPP2, ENPP6, and ENPP7 underwent distinct evolutionary adaptations converting them into <strong>phospholipases</strong> through modifications in their catalytic domains[2][25][31]. Within the nucleotide hydrolase subfamily, ENPP5 underwent a specialized evolutionary adaptation—the acquisition of the Tyr73 substitution that blocked NTP hydrolysis while simultaneously acquiring the trimetal catalytic site and alternative substrate recognition mechanism enabling selective NAD⁺ hydrolysis[2][5][29].</p>
+<p>This evolutionary trajectory suggests that ENPP5 arose from an ancestral nucleotide hydrolase through a series of structural modifications that resulted in loss of the canonical ATP-degrading function but acquisition of NAD⁺-specific activity. The selective pressure maintaining these specializing mutations throughout vertebrate evolution indicates that NAD⁺-specific hydrolytic activity provides significant biological advantage in vertebrate physiology, sufficient to justify the loss of broad nucleotide-degrading capacity present in ENPP1, ENPP3, and ENPP4. The recent discoveries linking ENPP5 to aging, immune regulation, and potentially neurotransmission suggest that the biological roles enabled by ENPP5's specialized enzymatic function justify this evolutionary specialization.</p>
+<h2 id="conclusion">Conclusion</h2>
+<p>ENPP5 represents a remarkable example of evolutionary specialization within the ectonucleotide pyrophosphatase/phosphodiesterase enzyme family, wherein a single amino acid substitution (the key Tyr73 residue) and the acquisition of a unique trimetal catalytic site have generated an enzyme with fundamentally distinct biochemical properties and biological roles compared to its family members. The primary enzymatic function of ENPP5 centers on <strong>selective hydrolysis of NAD⁺ in the extracellular environment</strong>, a specialization that positions this enzyme as a regulator of NAD⁺-dependent cellular signaling, purinergic pathways, and ADP-ribosylation metabolism. The catalytic efficiency for NAD⁺ hydrolysis remains modest compared to ENPP1's ATP-degrading activity, suggesting either evolutionary optimization for contexts where restricted catalytic rates prove physiologically appropriate or inherent mechanistic constraints imposed by structural specialization.</p>
+<p>Emerging evidence has substantially expanded recognition of ENPP5's biological significance beyond its originally proposed role in neuronal cell communications. Recent discoveries have established ENPP5 as a <strong>pro-senescence, pro-aging factor</strong> whose regulation may hold promise for anti-aging therapeutic interventions in skin and potentially other tissues. Simultaneously, computational immunological analysis has identified ENPP5 as a <strong>key regulator of immune cell infiltration and immune gene expression in sepsis</strong>, suggesting potential clinical applications as a diagnostic biomarker and therapeutic target for sepsis-related immune dysregulation. The integration of ENPP5 into NAD⁺-dependent ADP-ribosylation metabolism links this enzyme to DNA repair, transcriptional regulation, cell death, and neurological processes—connections that remain incompletely explored but promise to reveal additional biological functions.</p>
+<p>Despite substantial recent progress in characterizing ENPP5's structure and function, significant gaps in mechanistic understanding persist. The exact catalytic mechanism involving the trimetal coordination site, the specific role of substrate recognition through mechanisms distinct from the nucleotide-binding slot, and the precise biochemical basis through which ENPP5 influences cellular senescence and immune regulation all remain incompletely resolved. Future investigations combining structural biology, kinetic analysis, cell biological approaches, and in vivo animal models promise to elucidate these remaining questions and potentially unlock therapeutic applications targeting ENPP5 activity for age-related diseases, sepsis, and neurodegenerative conditions. The convergence of evidence from multiple recent studies on ENPP5's role in aging, immunity, and potential neurological signaling positions this enzyme as an increasingly important subject for biomedical research with potential translational implications.</p>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>https://www.genecards.org/cgi-bin/carddisp.pl?gene=ENPP5</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC8808174/</li>
+<li>https://www.proteinatlas.org/search/ENPP5</li>
+<li>https://www.uniprot.org/uniprotkb/Q9UJA9/entry</li>
+<li>https://www.rcsb.org/structure/5VEM</li>
+<li>https://www.abcam.com/en-az/targets/enpp5/15400</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC12075376/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC6052110/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC7827148/</li>
+<li>https://pubmed.ncbi.nlm.nih.gov/34958798/</li>
+<li>https://en.wikipedia.org/wiki/Nucleotide_pyrophosphatase/phosphodiesterase</li>
+<li>https://www.ncbi.nlm.nih.gov/gene?Db=gene&amp;Cmd=DetailsSearch&amp;Term=59084</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC4536093/</li>
+<li>https://v20.proteinatlas.org/ENSG00000112796-ENPP5/brain</li>
+<li>https://www.uniprot.org/uniprotkb/Q9EQG7/entry</li>
+<li>https://www.nature.com/articles/s41392-021-00553-z</li>
+<li>https://www.alliancegenome.org/gene/ZFIN:ZDB-GENE-041014-10</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC2223557/</li>
+<li>https://www.ensembl.org/Homo_sapiens/Gene/Summary?db=core%3Bg%3DENSG00000112796%3Bt%3DENST00000371383</li>
+<li>https://febs.onlinelibrary.wiley.com/doi/10.1111/febs.14266</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC4992448/</li>
+<li>https://pubmed.ncbi.nlm.nih.gov/28898552/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC2570248/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC12051319/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC10481344/</li>
+<li>https://pubs.acs.org/doi/10.1021/acsomega.3c06058</li>
+<li>https://onlinelibrary.wiley.com/doi/full/10.1002/cne.25312</li>
+<li>https://www.ncbi.nlm.nih.gov/gene/59084</li>
+<li>https://pubmed.ncbi.nlm.nih.gov/38436793/</li>
+<li>https://www.proteinatlas.org/ENSG00000112796-ENPP5/cancer</li>
+<li>https://www.taconic.com/products/mouse-rat/gems/cryopreserved-gems/enpp5-targeted</li>
+<li>https://www.frontiersin.org/journals/endocrinology/articles/10.3389/fendo.2022.911672/full</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC4507179/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC4253488/</li>
+<li>https://pubmed.ncbi.nlm.nih.gov/26190207/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC2670657/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC12211274/</li>
+<li>https://febs.onlinelibrary.wiley.com/doi/abs/10.1111/febs.14266</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC6467575/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC7152905/</li>
+<li>https://pubmed.ncbi.nlm.nih.gov/1281490/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC9481738/</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q9UJA9
+gene_symbol: ENPP5
+product_type: PROTEIN
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: Ectonucleotide pyrophosphatase/phosphodiesterase family member 5, enzyme
+  that hydrolyzes extracellular nucleotides. Member of ENPP family characterized by
+  phosphodiesterase and nucleotide pyrophosphatase activities. Localizes to cell surface
+  as type II transmembrane protein with extracellular catalytic domain. Catalyzes
+  hydrolysis of phosphodiester bonds in nucleotides and their derivatives. Substrate
+  specificity includes 5&#39;-nucleotide monophosphates - ENPP5 converts AMP to adenosine,
+  functioning as ecto-5&#39;-nucleotidase. Also exhibits activity toward cyclic nucleotides
+  and nucleotide sugars. By generating adenosine from AMP extracellularly, regulates
+  purinergic signaling - adenosine acts on P1 adenosine receptors modulating immune
+  responses, inflammation, neurotransmission. Complements CD73 (another ecto-5&#39;-nucleotidase)
+  in producing extracellular adenosine. Expression in various tissues including immune
+  cells, endothelium, neurons. May regulate cell-cell communication, immune modulation,
+  and inflammatory responses through nucleotide/adenosine metabolism. Dysregulation
+  implicated in cancer, autoimmunity, and neurological disorders where purinergic
+  signaling is altered.
+existing_annotations:
+- term:
+    id: GO:0016787
+    label: hydrolase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: Hydrolase activity - phosphodiesterase.
+    action: ACCEPT
+    reason: General enzyme class.
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: Extracellular region - extracellular catalytic domain.
+    action: ACCEPT
+    reason: Enzyme active site.
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: Membrane - membrane protein.
+    action: ACCEPT
+    reason: General membrane.
+- term:
+    id: GO:0016787
+    label: hydrolase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: Hydrolase activity - phosphodiesterase.
+    action: ACCEPT
+    reason: General enzyme class.
+- term:
+    id: GO:0046872
+    label: metal ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: Metal ion binding - requires metal cofactors.
+    action: ACCEPT
+    reason: Enzymatic requirement.
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  review:
+    summary: Plasma membrane - type II transmembrane protein.
+    action: ACCEPT
+    reason: Core localization.
+- term:
+    id: GO:0007154
+    label: cell communication
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  review:
+    summary: Cell communication - regulates purinergic signaling via adenosine production.
+    action: ACCEPT
+    reason: Signaling role.
+- term:
+    id: GO:0008270
+    label: zinc ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  review:
+    summary: Zinc ion binding - requires metal cofactors for catalysis.
+    action: ACCEPT
+    reason: Enzymatic requirement.
+- term:
+    id: GO:0000210
+    label: NAD+ diphosphatase activity
+  evidence_type: IDA
+  original_reference_id: PMID:28898552
+  review:
+    summary: NAD+ diphosphatase activity - can hydrolyze NAD+.
+    action: ACCEPT
+    reason: Substrate activity.
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  review:
+    summary: Plasma membrane - type II transmembrane protein.
+    action: ACCEPT
+    reason: Core localization.
+- term:
+    id: GO:0007154
+    label: cell communication
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  review:
+    summary: Cell communication - regulates purinergic signaling via adenosine production.
+    action: ACCEPT
+    reason: Signaling role.
+- term:
+    id: GO:0008270
+    label: zinc ion binding
+  evidence_type: IDA
+  original_reference_id: PMID:28898552
+  review:
+    summary: Zinc ion binding - requires metal cofactors for catalysis.
+    action: ACCEPT
+    reason: Enzymatic requirement.
+references:
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs
+    by curator judgment of sequence similarity.
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt.
+  findings: []
+- id: GO_REF:0000107
+  title: Automatic transfer of experimentally verified manual GO annotation data to
+    orthologs using Ensembl Compara.
+  findings: []
+- id: PMID:28898552
+  title: A key tyrosine substitution restricts nucleotide hydrolysis by the ectoenzyme
+    NPP5.
+  findings: []
+aliases:
+- Ectonucleotide pyrophosphatase/phosphodiesterase 5
+- NPP5
+core_functions:
+- molecular_function:
+    id: GO:0004519
+    label: endonuclease activity
+  description: Ecto-5&#39;-nucleotidase that hydrolyzes AMP to adenosine extracellularly.
+    Regulates purinergic signaling by generating adenosine for P1 receptor activation,
+    modulating immunity, inflammation, and neurotransmission.
+  locations:
+  - id: GO:0005886
+    label: plasma membrane
+  directly_involved_in:
+  - id: GO:0006195
+    label: purine nucleotide catabolic process
+  supported_by:
+  - reference_id: UniProt:Q9NPB8
+    supporting_text: ENPP5 is ectonucleotide pyrophosphatase with ecto-5&#39;-nucleotidase
+      activity, converts AMP to adenosine.
+status: DRAFT
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
