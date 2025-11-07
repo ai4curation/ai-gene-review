@@ -75,7 +75,7 @@ def fetch_gene(
         typer.Option(
             "--force",
             "-f",
-            help="Force overwrite existing UniProt and GOA files even if they exist",
+            help="Force overwrite existing UniProt and GOA files even if they differ from remote sources",
         ),
     ] = False,
 ):
@@ -87,12 +87,16 @@ def fetch_gene(
         <gene>-goa.tsv
         <gene>-ai-review.yaml (seeded with GOA annotations and reference titles)
 
-    By default, fetches titles from PubMed and GO_REF sources to avoid validation errors.
+    By default, compares remote data with existing files and only overwrites if content differs.
+    Existing files are preserved unless --force is used to override this protection.
+
     Use --no-fetch-titles to skip title fetching for faster execution.
-    
     Use --alias to specify a custom name for the directory and file prefixes.
-    For example: just fetch-gene 9BACT F0JBF1 --alias HgcB
-    Creates: genes/9BACT/HgcB/ with files HgcB-uniprot.txt, HgcB-goa.tsv, etc.
+
+    Examples:
+        ai-gene-review fetch-gene human TP53
+        ai-gene-review fetch-gene human TP53 --force  # Force overwrite existing files
+        ai-gene-review fetch-gene 9BACT F0JBF1 --alias HgcB
     """
     try:
         typer.echo(f"Fetching data for {gene} ({organism})...")
@@ -244,6 +248,8 @@ def fetch_ncrna(
         if not force:
             if result.get("rnacentral_differences") and not result.get("rnacentral_updated"):
                 differences_not_updated.append(f"{file_prefix}-rnacentral.json differs from remote")
+            if result.get("goa_differences") and not result.get("goa_updated"):
+                differences_not_updated.append(f"{file_prefix}-goa.tsv differs from remote")
 
         if differences_not_updated:
             typer.echo("")
@@ -1184,6 +1190,117 @@ def visualize(
         raise typer.Exit(code=1)
     except Exception as e:
         typer.echo(f"Error creating visualization: {e}", err=True)
+        raise typer.Exit(code=1)
+
+
+@app.command()
+def update_status(
+    files: Annotated[
+        Optional[List[Path]],
+        typer.Argument(help="Gene review YAML file(s) to check/update (if omitted, scans all genes)"),
+    ] = None,
+    dry_run: Annotated[
+        bool,
+        typer.Option("--dry-run", "-n", help="Don't actually update files, just report what would be done"),
+    ] = False,
+    verbose: Annotated[
+        bool,
+        typer.Option("--verbose", "-v", help="Show detailed information for each file"),
+    ] = False,
+    report_only: Annotated[
+        bool,
+        typer.Option("--report-only", "-r", help="Only show files with status issues (mismatch or missing)"),
+    ] = False,
+):
+    """Check and update the status field in gene review files.
+
+    This command computes the expected status based on annotation states and validation warnings:
+    - INITIALIZED: All annotations have action PENDING
+    - IN_PROGRESS: At least one annotation is PENDING and at least one is not PENDING
+    - DRAFT: No PENDING annotations, but may have validation warnings
+    - COMPLETE: No PENDING annotations and no validation warnings
+
+    Examples:
+        # Update status for a specific file
+        ai-gene-review update-status genes/human/CFAP300/CFAP300-ai-review.yaml
+
+        # Check all gene review files (dry run)
+        ai-gene-review update-status --dry-run
+
+        # Update all files with verbose output
+        ai-gene-review update-status --verbose
+
+        # Only show files with issues
+        ai-gene-review update-status --report-only
+    """
+    from ai_gene_review.status_manager import check_and_update_status
+
+    # Determine which files to process
+    if files:
+        yaml_files = [Path(f) for f in files]
+    else:
+        # Scan all gene review files
+        genes_dir = Path("genes")
+        if not genes_dir.exists():
+            typer.echo("Error: 'genes' directory not found", err=True)
+            raise typer.Exit(code=1)
+
+        yaml_files = list(genes_dir.glob("*/*/*.yaml"))
+        # Filter to ai-review files only
+        yaml_files = [f for f in yaml_files if f.stem.endswith("-ai-review")]
+
+        if not yaml_files:
+            typer.echo("No gene review files found in genes directory", err=True)
+            raise typer.Exit(code=1)
+
+    # Process files
+    results = []
+    for yaml_file in yaml_files:
+        if not yaml_file.exists():
+            typer.echo(f"Warning: File not found: {yaml_file}", err=True)
+            continue
+
+        result = check_and_update_status(yaml_file, dry_run=dry_run, verbose=verbose)
+        results.append(result)
+
+    # Summary reporting
+    total = len(results)
+    missing = sum(1 for r in results if r["needs_update"])
+    mismatched = sum(1 for r in results if r["status_mismatch"])
+    updated = sum(1 for r in results if r["updated"])
+    has_warnings = sum(1 for r in results if r["has_warnings"])
+
+    if report_only:
+        # Only show files with issues
+        issues = [r for r in results if r["needs_update"] or r["status_mismatch"]]
+
+        if not issues:
+            typer.echo("✓ All files have correct status")
+        else:
+            typer.echo(f"\nFiles with status issues: {len(issues)}/{total}")
+            for result in issues:
+                file_path = Path(result["file"])
+                if result["needs_update"]:
+                    typer.echo(f"  ⚠ {file_path}: status not set (should be {result['expected_status']})")
+                elif result["status_mismatch"]:
+                    typer.echo(
+                        f"  ⚠ {file_path}: status mismatch "
+                        f"(current={result['current_status']}, expected={result['expected_status']})"
+                    )
+    else:
+        # Full summary
+        typer.echo(f"\nProcessed {total} file(s)")
+        typer.echo(f"  Status missing: {missing}")
+        typer.echo(f"  Status mismatch: {mismatched}")
+        if not dry_run:
+            typer.echo(f"  Updated: {updated}")
+        typer.echo(f"  Files with validation warnings: {has_warnings}")
+
+        if dry_run and (missing > 0 or mismatched > 0):
+            typer.echo(f"\nRun without --dry-run to apply updates")
+
+    # Exit with error if there are mismatches
+    if mismatched > 0:
         raise typer.Exit(code=1)
 
 

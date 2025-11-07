@@ -1,0 +1,1769 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSN1S1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>CSN1S1</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P47710" target="_blank" class="term-link">
+                        P47710
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-in-progress">
+                    IN PROGRESS
+                </span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Aliases:</span>
+                <div class="aliases">
+                    
+                    <span class="badge">Alpha-S1-casein</span>
+                    
+                    <span class="badge">Casein alpha s1</span>
+                    
+                </div>
+            </div>
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "CSN1S1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P47710" data-a="DESCRIPTION: Alpha-S1-casein (CSN1S1, 214 AA, ~27 kDa), member ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Alpha-S1-casein (CSN1S1, 214 AA, ~27 kDa), member of casein family of milk proteins. Phosphoprotein that forms calcium-phosphate-rich micelles in milk enabling efficient delivery of minerals and protein to nursing infant. Intrinsically disordered protein with multiple phosphoserine clusters that bind calcium ions and sequester calcium phosphate nanoclusters in colloidal micelles. Self-associates and interacts with other caseins (alpha-S2, beta, kappa) via hydrophobic/electrostatic interactions forming large micellar aggregates. Plays important role in capacity of milk to transport calcium phosphate. Expression tightly linked to lactation cycle - minimally expressed in non-lactating conditions but robustly induced during late pregnancy/lactation by prolactin via JAK2-STAT5 pathway in mammary alveolar epithelial cells. Synthesized in rough ER, phosphorylated in Golgi, packaged into secretory vesicles and secreted into mammary gland alveoli lumen. Present at very low levels in human milk (trace amounts, &lt;1% of milk protein) compared to cow&#39;s milk. Beyond nutrition, generates bioactive peptides upon proteolysis - casoxin D (opioid receptor antagonist with vasorelaxant activity). Recent research reveals immunomodulatory role: unphosphorylated alpha-S1-casein adopts helical conformation enabling TLR4 binding on immune cells, triggering pro-inflammatory cytokine release. Phosphorylation acts as molecular toggle shifting from immune-stimulatory form (less phosphorylated, α-helical) to nutritional form (phosphorylated, disordered). Most milk alpha-S1-casein highly phosphorylated (optimized for calcium transport). Can influence monocyte differentiation toward macrophage phenotype and suppress dendritic cell differentiation. Major allergen in cow&#39;s milk allergy. Ectopic expression outside mammary gland observed in autoimmune/inflammatory diseases and some cancers.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005615" target="_blank" class="term-link">
+                                    GO:0005615
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular space</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P47710" data-a="GO:0005615" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Extracellular space - in milk extracellularly.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Specific extracellular location.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032355" target="_blank" class="term-link">
+                                    GO:0032355
+                                </a>
+                            </span>
+                            <span class="term-label">response to estradiol</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P47710" data-a="GO:0032355" data-r="GO_REF:0000033" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032570" target="_blank" class="term-link">
+                                    GO:0032570
+                                </a>
+                            </span>
+                            <span class="term-label">response to progesterone</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P47710" data-a="GO:0032570" data-r="GO_REF:0000033" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1903494" target="_blank" class="term-link">
+                                    GO:1903494
+                                </a>
+                            </span>
+                            <span class="term-label">response to dehydroepiandrosterone</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P47710" data-a="GO:1903494" data-r="GO_REF:0000033" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1903496" target="_blank" class="term-link">
+                                    GO:1903496
+                                </a>
+                            </span>
+                            <span class="term-label">response to 11-deoxycorticosterone</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P47710" data-a="GO:1903496" data-r="GO_REF:0000033" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P47710" data-a="GO:0005576" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Extracellular region - secreted into milk.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core localization.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P47710" data-a="GO:0005515" data-r="PMID:32296183" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            Reactome:R-HSA-5340124
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P47710" data-a="GO:0005576" data-r="Reactome:R-HSA-5340124" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Extracellular region - secreted into milk.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core localization.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Major milk phosphoprotein that binds calcium ions via phosphoserine clusters, forming calcium-phosphate-rich micelles for efficient mineral and protein delivery to nursing infant. Also has immunomodulatory capacity - unphosphorylated form can engage TLR4 on immune cells triggering cytokine release. Generates bioactive peptides upon proteolysis.</h3>
+                <span class="vote-buttons" data-g="P47710" data-a="FUNCTION: Major milk phosphoprotein that binds calcium ions ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005509" target="_blank" class="term-link">
+                            calcium ion binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007595" target="_blank" class="term-link">
+                                lactation
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006816" target="_blank" class="term-link">
+                                calcium ion transport
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005615" target="_blank" class="term-link">
+                                extracellular space
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            UniProt:P47710
+                            
+                        </span>
+                        
+                        <div class="finding-text">Major milk phosphoprotein that binds calcium ions via phosphoserine clusters, forming calcium-phosphate-rich micelles for efficient mineral and protein delivery to nursing infant. Also has immunomodul...</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                            PMID:32296183
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A reference map of the human binary protein interactome.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        Reactome:R-HSA-5340124
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">CSN polymer binds CaPO4</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Openai</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(CSN1S1-deep-research-openai.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P47710" data-a="DOC: Deep Research Openai" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: openai<br />
+model: o3-deep-research-2025-06-26<br />
+cached: true<br />
+start_time: '2025-11-04T02:43:38.200874'<br />
+end_time: '2025-11-04T02:43:38.202882'<br />
+duration_seconds: 0.0<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: human<br />
+  gene_id: P47710<br />
+  gene_symbol: CSN1S1<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    temperature: 0.1<br />
+    top_p: 1.0<br />
+citation_count: 100</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<p>Please provide a comprehensive research report on the gene CSN1S1 (P47710) in human.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function. </p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<h1 id="overview-of-csn1s1-alpha-s1-casein-in-humans">Overview of CSN1S1 (Alpha-S1-Casein) in Humans</h1>
+<p><strong>CSN1S1</strong>, also known as <strong>alpha-S1-casein</strong>, is a protein-coding gene that belongs to the casein family of milk proteins (<a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=CSN1S1#:~:text=%2A%20Belongs%20to%20the%20alpha,family">www.genecards.org</a>). Caseins are the major protein constituents of milk in mammals; in dairy species like cattle they account for ~80% of milk protein and form large calcium–phosphate complexes called <strong>micelles</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11970297/#:~:text=Caseins%20are%20the%20primary%20proteins,milk%2C%20and%20polymorphisms%20in%20this">pmc.ncbi.nlm.nih.gov</a>). The CSN1S1 gene encodes the alpha-S1-casein polypeptide (UniProt ID <strong>P47710</strong>), which in humans is 214 amino acids (∼27 kDa) and is part of a cluster of casein genes (including CSN1S2, CSN2, CSN3) co-localized on chromosome 4q13 (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11970297/#:~:text=Casein%20consists%20of%20several%20components%2C,2019">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://www.ncbi.nlm.nih.gov/gene/1446#:~:text=Location%3A%204q13">www.ncbi.nlm.nih.gov</a>). Notably, alpha-S1-casein is abundant in cow’s milk but is present only at <strong>very low levels in human milk</strong> (trace amounts, less than 1% of total milk protein) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12292773/#:~:text=trace%20amounts%20in%20human%20milk,1">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10855866/#:~:text=organization%2C%20however%2C%20in%20the%20structure,16">pmc.ncbi.nlm.nih.gov</a>). Despite its low abundance in humans, alpha-S1-casein is an important component of the milk protein matrix, with specialized functions in nutrient delivery and potential regulatory roles. </p>
+<h1 id="primary-function-in-milk-and-nutrient-delivery">Primary Function in Milk and Nutrient Delivery</h1>
+<p>The primary function of alpha-S1-casein is <strong>nutritional and structural</strong>, enabling milk to efficiently deliver calcium and phosphate to the nursing infant (<a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=CSN1S1#:~:text=Function%3A">www.genecards.org</a>). Casein proteins like alpha-S1-casein are <strong>phosphoproteins</strong> that bind calcium ions and sequester calcium phosphate nanoclusters, assembling into large colloidal micelles in milk (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11970297/#:~:text=Caseins%20are%20the%20primary%20proteins,milk%2C%20and%20polymorphisms%20in%20this">pmc.ncbi.nlm.nih.gov</a>). This micellar structure allows milk to remain liquid while carrying high concentrations of calcium and inorganic phosphate, which are essential for neonatal bone development (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11970297/#:~:text=Caseins%20are%20the%20primary%20proteins,milk%2C%20and%20polymorphisms%20in%20this">pmc.ncbi.nlm.nih.gov</a>). In fact, alpha-S1-casein plays an <em>“important role in the capacity of milk to transport calcium phosphate,”</em> according to UniProt (<a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=CSN1S1#:~:text=Function%3A">www.genecards.org</a>). Within the micelle, alpha-S1-casein interacts with other caseins (alpha-S2, beta, and kappa casein) – for example, it forms heteromultimers with kappa-casein that help stabilize the micelle structure (<a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=CSN1S1#:~:text=,casein%20kappa%20CSN1S1">www.genecards.org</a>). These casein complexes serve as a <strong>nutrient reservoir</strong>, rich in amino acids and minerals, that is delivered to the offspring during lactation. Experimental studies have shown that removing or altering alpha-casein can impact milk composition; in goats, for instance, <strong>knockdown of CSN1S1</strong> reduced alpha-S1-casein content and concomitantly increased beta-casein levels, improving the milk’s digestibility and lowering its allergenic potential (<a href="https://pubmed.ncbi.nlm.nih.gov/32828499/#:~:text=Compared%20with%20other%20milk%20proteins%2C,Overexpressing">pubmed.ncbi.nlm.nih.gov</a>) (<a href="https://pubmed.ncbi.nlm.nih.gov/32828499/#:~:text=CSN1S1%20through%20adenoviral%20transfection%20decreased,and%20major%20whey%20proteins">pubmed.ncbi.nlm.nih.gov</a>). Thus, alpha-S1-casein is a key structural protein that ensures efficient nutrition, although its relative abundance and exact makeup differ between species. </p>
+<p>Beyond its role in nutrient transport, alpha-S1-casein can give rise to biologically active peptides upon proteolysis. <strong>Digestive enzymes</strong> in the infant’s gastrointestinal tract or during food processing can cleave caseins to release peptides with diverse bioactivities (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10574647/#:~:text=,using%20protease%20extracts%20of%20animal">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10574647/#:~:text=,caseins">pmc.ncbi.nlm.nih.gov</a>). One notable example is <em>“Casoxin D,”</em> a peptide derived from alpha-S1-casein, which acts as an <strong>opioid receptor antagonist</strong> and exhibits vasorelaxant activity via bradykinin B1 receptors (<a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=CSN1S1#:~:text=,CASA1_HUMAN%2CP47710">www.genecards.org</a>). This contrasts with other casein-derived peptides like beta-casomorphins that are opioid <em>agonists</em>. Such bioactive fragments suggest that, in addition to its nutritional value, alpha-S1-casein’s sequence encodes regulatory peptides that may affect the infant’s physiology (e.g. analgesic, antihypertensive, or immunomodulatory effects (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10574647/#:~:text=,using%20protease%20extracts%20of%20animal">pmc.ncbi.nlm.nih.gov</a>)). Indeed, there is commercial interest in these peptides: a tryptic hydrolysate of alpha-S1-casein (often derived from bovine milk and marketed as <strong>“Lactium”</strong>) has been studied as a nutraceutical for stress relief and sleep improvement (<a href="https://pubmed.ncbi.nlm.nih.gov/39541860/#:~:text=Background%3A%20Alpha,Taiwanese%20individuals%20with%20chronic%20insomnia">pubmed.ncbi.nlm.nih.gov</a>). In a recent randomized trial (2024), supplementation with this alpha-S1-casein hydrolysate significantly improved sleep quality and reduced sleep onset latency in adults with chronic insomnia (<a href="https://pubmed.ncbi.nlm.nih.gov/39541860/#:~:text=Conclusion%3A%20ACH%20Supplementation%20significantly%20improved,are%20needed%20to%20confirm%20these">pubmed.ncbi.nlm.nih.gov</a>), highlighting a real-world application of an alpha-S1-casein–derived product. </p>
+<h1 id="protein-structure-and-casein-micelle-assembly">Protein Structure and Casein Micelle Assembly</h1>
+<p>Alpha-S1-casein is characterized by a <strong>highly dynamic, flexible structure</strong> typical of casein proteins. It is largely <strong>intrinsically disordered</strong>, lacking a fixed tertiary structure in solution, which facilitates its assembly into micelles and binding of minerals (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10855866/#:~:text=content%20">pmc.ncbi.nlm.nih.gov</a>). The protein contains multiple <strong>phosphoserine</strong> clusters (sites of serine phosphorylation), and these negatively charged phosphate groups are critical for binding calcium ions and insoluble calcium phosphate in milk (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10855866/#:~:text=breast%20cancer%20,modulatory%20function%20when%20unphosphorylated%20and">pmc.ncbi.nlm.nih.gov</a>). Proper phosphorylation is essential for casein functionality – studies in other mammals demonstrate that phosphorylation at specific serine residues is required for stable micelle formation (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10855866/#:~:text=via%20TLR4%20was%20blocked%20by,20">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12292773/#:~:text=trace%20amounts%20in%20human%20milk,1">pmc.ncbi.nlm.nih.gov</a>). In bovine alpha-S1-casein, 8–9 serine residues are phosphorylated; the human alpha-S1-casein is also phosphorylated, though it exists in only trace amounts in human milk and was identified later than other human caseins (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10855866/#:~:text=Human%20%CE%B1_%7BS1%7D,milk">pmc.ncbi.nlm.nih.gov</a>). This post-translational modification is carried out by casein kinase(s) in the mammary gland and effectively “charges” the casein, enabling it to cluster with colloidal calcium phosphate. </p>
+<p>Within the milk, alpha-S1-casein self-associates and also binds to other caseins (alpha-S2, beta, kappa) via hydrophobic and electrostatic interactions (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10855866/#:~:text=content%20">pmc.ncbi.nlm.nih.gov</a>). <strong>Kappa-casein</strong> (CSN3) in particular acts as a hydrophilic “cap” on casein micelles, interacting with alpha- and beta-caseins and keeping the micelle suspended in solution. The casein micelle has a complex, branching structure, but can be envisioned as a roughly spherical aggregate of several thousand casein molecules and calcium phosphate nanoclusters (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11970297/#:~:text=Caseins%20are%20the%20primary%20proteins,milk%2C%20and%20polymorphisms%20in%20this">pmc.ncbi.nlm.nih.gov</a>). The intrinsically disordered nature of alpha-S1-casein is thought to be important for this assembly; it can expose flexible regions to bind minerals and other proteins, and even exhibits molecular <em>“chaperone-like”</em> activity by stabilizing other proteins in the crowded milieu of milk (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10855866/#:~:text=content%20">pmc.ncbi.nlm.nih.gov</a>). Bovine alpha-S1-casein has been intensively studied in terms of its <strong>secondary structure and self-interactions</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10855866/#:~:text=content%20">pmc.ncbi.nlm.nih.gov</a>). By circular dichroism, it shows some alpha-helical segments, but these can fluctuate; overall the protein does not fold into a rigid shape. This structural adaptability underlies the dual nature of alpha-S1-casein: on one hand, an amorphous aggregating protein ideal for nutrient delivery, and on the other hand, a protein that can adopt specific conformations under certain conditions (as discussed below) to perform regulatory roles.</p>
+<p>Emerging research indicates that human alpha-S1-casein may adopt distinct conformations that modulate its biological activity. A recent <strong>2024 structural study</strong> found that purified human alpha-S1-casein can assume a <strong>helical conformation</strong> which enables it to bind <strong>Toll-like receptor 4 (TLR4)</strong> on immune cells (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10855866/#:~:text=Breast,E%5E%7B92%7D%20of">pmc.ncbi.nlm.nih.gov</a>). Interestingly, this TLR4-agonist form was associated specifically with the <em>unphosphorylated</em> state of the protein (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10855866/#:~:text=Breast,E%5E%7B92%7D%20of">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10855866/#:~:text=%CE%B1_%7BS1%7D,conformational%20changes%20induced%20by%20phosphorylation">pmc.ncbi.nlm.nih.gov</a>). In vitro, unphosphorylated human alpha-S1-casein (rich in α-helix) could trigger TLR4 signaling and induce secretion of pro-inflammatory cytokines (such as IL-8) from immune cells (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10855866/#:~:text=conformation%20to%20be%20stable%20between,be%20regulated%20by%20conformational%20changes">pmc.ncbi.nlm.nih.gov</a>). However, when the casein was phosphorylated (either naturally or via protein kinase CK2 in the experiment), its helical content dropped and it no longer activated TLR4 (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10855866/#:~:text=conformation%20to%20be%20stable%20between,be%20regulated%20by%20conformational%20changes">pmc.ncbi.nlm.nih.gov</a>). These results suggest a <strong>conformational switch</strong> mechanism: alpha-S1-casein can exist in two functionally distinct forms – an <strong>immune-stimulatory form</strong> (less phosphorylated, more α-helical) and a <strong>nutritional form</strong> (phosphorylated, disordered) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10855866/#:~:text=TLR4,conformational%20changes%20induced%20by%20phosphorylation">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10855866/#:~:text=breast%20cancer%20,modulatory%20function%20when%20unphosphorylated%20and">pmc.ncbi.nlm.nih.gov</a>). Phosphorylation thus acts as a molecular toggle that shifts alpha-S1-casein from a potential signaling molecule to a purely structural/nutrient role (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10855866/#:~:text=breast%20cancer%20,modulatory%20function%20when%20unphosphorylated%20and">pmc.ncbi.nlm.nih.gov</a>). In practical terms, most alpha-S1-casein in milk is highly phosphorylated (optimized for calcium transport), so the immunomodulatory conformation may be latent under normal conditions. Nonetheless, this finding highlights that alpha-S1-casein’s <strong>structure–function relationship</strong> is nuanced, and that the protein’s traditional role in nutrition might be augmented by a regulatory capacity when its post-translational state or environment changes.</p>
+<h1 id="expression-and-localization">Expression and Localization</h1>
+<p><strong>Expression</strong> of CSN1S1 is tightly linked to the lactation cycle and primarily restricted to the <strong>mammary glands</strong>. Under non-lactating conditions, the gene is minimally expressed, but during late pregnancy and lactation, hormonal signals (especially <strong>prolactin</strong>) induce robust transcription of CSN1S1 in mammary alveolar epithelial cells (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8627868/#:~:text=Caseins%20are%20major%20milk%20proteins,scale%20production%20of%20recombinant%20human">pmc.ncbi.nlm.nih.gov</a>). The casein genes, including CSN1S1, lie in a conserved cluster and are coordinately upregulated by lactogenic hormones to produce the high levels of milk protein needed postpartum (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8627868/#:~:text=Caseins%20are%20major%20milk%20proteins,scale%20production%20of%20recombinant%20human">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11970297/#:~:text=Casein%20consists%20of%20several%20components%2C,2019">pmc.ncbi.nlm.nih.gov</a>). Prolactin activates the JAK2–STAT5 signaling pathway in mammary cells, and STAT5 is a pivotal transcription factor for casein gene promoters (<a href="https://pubmed.ncbi.nlm.nih.gov/32828499/#:~:text=increase%20in%20%CE%B2,The%20data%20suggested%20that">pubmed.ncbi.nlm.nih.gov</a>) (<a href="https://pubmed.ncbi.nlm.nih.gov/39098489/#:~:text=we%20generated%20a%20plasmid%20that,gene%20linked%20to%20the%20bovine">pubmed.ncbi.nlm.nih.gov</a>). Experimental evidence in bovine cells shows that constitutively active STAT5A can cause an <strong>explosive increase</strong> in alpha-casein mRNA expression (over 10^5-fold induction of CSN1S1 transcripts) (<a href="https://pubmed.ncbi.nlm.nih.gov/39098489/#:~:text=we%20generated%20a%20plasmid%20that,gene%20linked%20to%20the%20bovine">pubmed.ncbi.nlm.nih.gov</a>). Consistently, the promoters of the alpha-S1-casein genes contain STAT5 binding sites, and STAT5 binding has been confirmed to drive their transcription (<a href="https://pubmed.ncbi.nlm.nih.gov/39098489/#:~:text=increase%20in%20the%20expression%20of,plays%20a%20major%20role%20in">pubmed.ncbi.nlm.nih.gov</a>). These data underscore that CSN1S1 is part of the <strong>core lactogenic gene program</strong>, directly controlled by prolactin/STAT5 signaling. Other hormones such as glucocorticoids and insulin also synergize to maximize milk protein expression, and tissue-specific factors (like mammary gland-specific enhancers and the extracellular matrix context) further regulate the CSN1S1 gene (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC275624/#:~:text=A%20novel%20transcriptional%20enhancer%20is,PMC%20Image%3A%20Close">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8627868/#:~:text=Caseins%20are%20major%20milk%20proteins,scale%20production%20of%20recombinant%20human">pmc.ncbi.nlm.nih.gov</a>). Once transcribed and translated, the alpha-S1-casein protein includes a signal peptide that targets it to the secretory pathway (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8627868/#:~:text=potential%20to%20explain%20the%20molecular,the%20Csn1s1%20expression%20during%20lactation">pmc.ncbi.nlm.nih.gov</a>). It is synthesized in the rough endoplasmic reticulum of mammary epithelial cells, heavily phosphorylated in the Golgi, and then packaged into secretory vesicles. Together with other caseins and lactose, it is secreted into the lumen of the mammary gland alveoli, where it concentrations and forms micelles in the milk before being excreted through the nipple. Thus, the <strong>subcellular localization</strong> of alpha-S1-casein is in the secretory pathway inside the cell, and ultimately in the <strong>extracellular space</strong> (in milk) outside the cell (<a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=CSN1S1#:~:text=Predicted%20to%20be%20involved%20in,See%20more">www.genecards.org</a>). </p>
+<p>Under normal physiology, alpha-casein’s function is extracellular (within milk), and it is not present at significant levels in other tissues. However, some intriguing studies have detected ectopic expression of CSN1S1 in contexts outside lactation. For example, gene expression profiling found <strong>alpha-S1-casein upregulated</strong> in certain disease states: it has been reported as over-expressed in the lymph nodes of mice with experimental autoimmune encephalomyelitis (EAE) and in the blood of patients with multiple sclerosis (<a href="https://bmcimmunol.biomedcentral.com/articles/10.1186/1471-2172-14-46#:~:text=fragments%20exert%20a%20number%20of,characterized%20by%20the%20finding%20of">bmcimmunol.biomedcentral.com</a>). Independent studies also noted elevated CSN1S1 expression in the synovial tissue of patients with rheumatoid arthritis and osteoarthritis (<a href="https://bmcimmunol.biomedcentral.com/articles/10.1186/1471-2172-14-46#:~:text=gland%3A%20overexpression%20was%20noted%20in,of%20CSN1S1%20as%20a%20multifunctional">bmcimmunol.biomedcentral.com</a>), and even in some prostate and breast tumor tissues (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10855866/#:~:text=Human%20%CE%B1_%7BS1%7D,8">pmc.ncbi.nlm.nih.gov</a>). These findings suggest that <strong>CSN1S1 expression can be aberrantly induced</strong> outside the mammary gland, possibly during inflammation or cancer. The source of this ectopic alpha-casein (and whether it is produced by immune cells or by cells undergoing pathological change) remains unclear. One hypothesis is that <strong>inflammatory cytokines</strong> or certain differentiation signals might activate a dormant regulatory element of the casein gene cluster in non-mammary cells (<a href="https://bmcimmunol.biomedcentral.com/articles/10.1186/1471-2172-14-46#:~:text=fragments%20exert%20a%20number%20of,characterized%20by%20the%20finding%20of">bmcimmunol.biomedcentral.com</a>). Alternatively, the presence of alpha-casein peptides in the circulation could come from dietary or microbiome sources. While the phenomenon is not fully understood, the immunological studies described below indicate that alpha-S1-casein can influence immune cells directly – raising the possibility that when present in the bloodstream or tissues, it might modulate immune responses.</p>
+<h1 id="immunomodulatory-properties-and-pathway-involvement">Immunomodulatory Properties and Pathway Involvement</h1>
+<p>Historically, caseins were viewed as purely nutritional proteins, but <strong>recent research reveals immunomodulatory roles</strong> for alpha-S1-casein. In vitro studies have demonstrated that human alpha-S1-casein can act on white blood cells and affect their behavior. A 2013 study showed that adding recombinant human CSN1S1 to primary monocytes <strong>skewed their differentiation toward a macrophage-like phenotype</strong> (<a href="https://bmcimmunol.biomedcentral.com/articles/10.1186/1471-2172-14-46#:~:text=Results">bmcimmunol.biomedcentral.com</a>) (<a href="https://bmcimmunol.biomedcentral.com/articles/10.1186/1471-2172-14-46#:~:text=Conclusions">bmcimmunol.biomedcentral.com</a>). Monocytes exposed to alpha-S1-casein exhibited morphological changes (developing pseudopodia and aggregating) and upregulated macrophage markers CD14 and CD64, similar to what is seen with colony-stimulating factor (M-CSF) plus IFN-γ treatment (<a href="https://bmcimmunol.biomedcentral.com/articles/10.1186/1471-2172-14-46#:~:text=CSN1S1%20at%20a%20concentration%20of,after%2024%20and%2048%20h">bmcimmunol.biomedcentral.com</a>). Their phagocytic activity also increased, and conversely, alpha-casein suppressed the differentiation of monocytes into dendritic cells (inhibiting the effects of GM-CSF/IL-4) (<a href="https://bmcimmunol.biomedcentral.com/articles/10.1186/1471-2172-14-46#:~:text=CD64,6">bmcimmunol.biomedcentral.com</a>). This indicates that alpha-S1-casein has <strong>proinflammatory and immune-directing capacity</strong>, biasing immune cells toward a phagocytic, inflammatory macrophage profile. Mechanistically, the study found that the ERK1/2 MAP kinase pathway was required for the monocyte differentiation effect (its inhibition blocked CD14 upregulation), and that alpha-casein stimulation led to secretion of cytokines like interleukin-1β and IL-6, which was sensitive to JNK/p38 MAPK inhibitors (<a href="https://bmcimmunol.biomedcentral.com/articles/10.1186/1471-2172-14-46#:~:text=and%201,6">bmcimmunol.biomedcentral.com</a>). The authors concluded that <em>“functions of CSN1S1 are beyond nutritional properties and include immunomodulatory effects,”</em> emphasizing a broader role for this milk protein (<a href="https://bmcimmunol.biomedcentral.com/articles/10.1186/1471-2172-14-46#:~:text=Conclusions">bmcimmunol.biomedcentral.com</a>). </p>
+<p>At the molecular level, as noted earlier, <strong>unphosphorylated alpha-S1-casein can engage Toll-like receptor 4 (TLR4)</strong> on immune cells (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10855866/#:~:text=breast%20cancer%20,modulatory%20function%20when%20unphosphorylated%20and">pmc.ncbi.nlm.nih.gov</a>). TLR4 is a pattern-recognition receptor of the innate immune system (famously activated by bacterial LPS) and its stimulation leads to production of proinflammatory cytokines. Experiments have shown that human alpha-S1-casein, in a specific conformation, can directly trigger TLR4-dependent cytokine release (including TNF-α, IL-1β, IL-8 and GM-CSF) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10855866/#:~:text=arthritis%20,8">pmc.ncbi.nlm.nih.gov</a>). This activity was abolished when the casein was phosphorylated, suggesting that <strong>alpha-S1-casein might function as a conditional danger signal</strong> – potentially helping to prime the infant’s immune system during breastfeeding, or contributing to inflammatory conditions if misregulated (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10855866/#:~:text=breast%20cancer%20,modulatory%20function%20when%20unphosphorylated%20and">pmc.ncbi.nlm.nih.gov</a>). Interestingly, there is evidence that exposure to alpha-casein in infancy can induce a long-lasting immune memory: one study noted that breastfeeding can lead to a lifelong IgG antibody response against alpha-S1-casein in humans (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10855866/#:~:text=arthritis%20,8">pmc.ncbi.nlm.nih.gov</a>). This implies that the protein (or its peptides) are immunogenic, and early-life exposure may tolerance-train or conversely sensitize the immune system. In some cases, alpha-casein acts as an <strong>allergen</strong>: indeed, alpha-S1-casein (particularly from cow’s milk) is a major milk allergen associated with infant cow-milk allergy (<a href="https://pubmed.ncbi.nlm.nih.gov/32828499/#:~:text=Compared%20with%20other%20milk%20proteins%2C,Overexpressing">pubmed.ncbi.nlm.nih.gov</a>). Human infants allergic to cow’s milk often react to alpha-S1-casein, and efforts have been made to breed goats or cows with lower CSN1S1 expression to produce hypoallergenic milk (<a href="https://pubmed.ncbi.nlm.nih.gov/32828499/#:~:text=Compared%20with%20other%20milk%20proteins%2C,Overexpressing">pubmed.ncbi.nlm.nih.gov</a>). This underscores that while alpha-S1-casein can have beneficial immunological interactions (e.g. maturing gut immunity), it can also provoke allergic responses in susceptible individuals. </p>
+<p>In terms of <strong>signaling pathways</strong>, alpha-S1-casein’s mode of action on immune cells appears to involve pattern-recognition and cytokine pathways rather than classical ligand–receptor signaling. The TLR4 pathway identified for unphosphorylated alpha-casein suggests a role in innate immune activation (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10855866/#:~:text=breast%20cancer%20,modulatory%20function%20when%20unphosphorylated%20and">pmc.ncbi.nlm.nih.gov</a>). On the flipside, within the mammary gland, alpha-S1-casein itself has been implicated in signaling feedback that regulates milk composition. A 2020 study in goat mammary cells found that alpha-S1-casein can negatively regulate the JAK2–STAT5 pathway: overexpression of CSN1S1 <strong>reduced JAK2/STAT5 phosphorylation</strong> and led to lower beta-casein (CSN2) expression, whereas knocking down CSN1S1 had the opposite effect (<a href="https://pubmed.ncbi.nlm.nih.gov/32828499/#:~:text=CSN1S1%20through%20adenoviral%20transfection%20decreased,and%20major%20whey%20proteins">pubmed.ncbi.nlm.nih.gov</a>) (<a href="https://pubmed.ncbi.nlm.nih.gov/32828499/#:~:text=increase%20in%20%CE%B2,The%20data%20suggested%20that">pubmed.ncbi.nlm.nih.gov</a>). These results suggest a potential <strong>feedback mechanism</strong> where accumulating alpha-casein dampens prolactin/STAT5 signaling to modulate the relative production of milk proteins (<a href="https://pubmed.ncbi.nlm.nih.gov/32828499/#:~:text=increase%20in%20%CE%B2,The%20data%20suggested%20that">pubmed.ncbi.nlm.nih.gov</a>). Although this was shown in goat cells, it provides a hint that alpha-S1-casein (or a fragment of it) might interact with signaling molecules inside the mammary cell, adding a layer of autoregulation to milk protein synthesis. In summary, CSN1S1 is involved in multiple pathways: <em>extracellularly</em> it participates in innate immune receptor signaling (TLR4) and cell differentiation signals, and <em>intracellularly</em> it may interface with key lactogenic signaling (STAT5) through feedback inhibition. Each of these roles is context-dependent, emphasizing that alpha-S1-casein’s function extends beyond simple nutrition into immunological and regulatory domains when conditions permit.</p>
+<h1 id="clinical-and-applied-significance">Clinical and Applied Significance</h1>
+<p>Although alpha-S1-casein’s principal role is in normal human biology (i.e. infant nutrition during nursing), understanding this protein has practical implications in medicine, nutrition, and biotechnology. In neonates, casein’s ability to form a curd in the stomach slows protein digestion, providing a sustained release of amino acids – a trait exploited in infant formula design. The relatively low level of alpha-S1-casein in human breast milk (with human milk being richer in whey proteins and beta-casein) is thought to make human milk more easily digestible than cow’s milk for infants (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12292773/#:~:text=trace%20amounts%20in%20human%20milk,1">pmc.ncbi.nlm.nih.gov</a>). Conversely, cow’s milk, high in alpha-S1-casein, can be harder for infants to digest and is a common trigger of milk allergy. <strong>Milk allergies</strong> in infants are often linked to an immune response against caseins, and alpha-S1-casein in cow’s milk is recognized as a particularly allergenic component (<a href="https://pubmed.ncbi.nlm.nih.gov/32828499/#:~:text=Compared%20with%20other%20milk%20proteins%2C,Overexpressing">pubmed.ncbi.nlm.nih.gov</a>). Some hypoallergenic infant formulas use extensively hydrolyzed casein (breaking it into small peptides) to avoid triggering this immune response. Intriguingly, as noted, those peptides can retain useful bioactivities without causing full allergic reactions. For example, hydrolysates of bovine alpha-S1-casein have anxiolytic effects (e.g. the decapeptide <em>alpha-casozepine</em> in the product Lactium) and are being used or investigated as natural therapeutics for stress, <strong>insomnia</strong>, and mild anxiety (<a href="https://pubmed.ncbi.nlm.nih.gov/39541860/#:~:text=Background%3A%20Alpha,Taiwanese%20individuals%20with%20chronic%20insomnia">pubmed.ncbi.nlm.nih.gov</a>) (<a href="https://pubmed.ncbi.nlm.nih.gov/39541860/#:~:text=Conclusion%3A%20ACH%20Supplementation%20significantly%20improved,are%20needed%20to%20confirm%20these">pubmed.ncbi.nlm.nih.gov</a>). This illustrates how <strong>bioactive fragments</strong> of a milk protein have been translated into a real-world intervention for adults, beyond their original context in infant nutrition.</p>
+<p>In biotechnology, the <strong>CSN1S1 gene and its regulatory elements</strong> are leveraged for high-level expression of recombinant proteins in the milk of transgenic animals. Because casein genes are among the most highly expressed genes during lactation (producing grams per liter of protein in milk), researchers have inserted therapeutic protein genes under the control of the alpha-casein promoter to create “<em>milk bioreactors</em>” (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8627868/#:~:text=to%20understand%20the%20principle%20of,specific%20signal">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9107462/#:~:text=Transgenic%20animals%20are%20an%20important,a%20%E2%80%9Cprecise%E2%80%9D%20integration%20approach%2C%20placing">pmc.ncbi.nlm.nih.gov</a>). For instance, the strong promoter and locus control region of CSN1S1 have been used in mice, goats, and cows to drive the production of pharmaceuticals (like hormones, growth factors, or antibodies) in milk (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9107462/#:~:text=Transgenic%20animals%20are%20an%20important,a%20%E2%80%9Cprecise%E2%80%9D%20integration%20approach%2C%20placing">pmc.ncbi.nlm.nih.gov</a>). The rationale is that the mammary gland can secrete large quantities of protein, and using a casein locus ensures the transgene is expressed only during lactation and mainly in milk, minimizing systemic effects on the host animal. A recent study in 2022 tested <strong>CRISPR/Cas9 knock-in</strong> of a human gene into the mouse Csn1s1 locus, finding that homozygous replacement of the alpha-casein gene yielded high transgene expression and did not adversely affect the health of the animals (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9107462/#:~:text=two%20types%20of%20transgene%20integrations%3A,did%20not%20have%20any%20long">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9107462/#:~:text=probably%20caused%20by%20the%20absence,in%20our%20experimental%20design%2C%20site">pmc.ncbi.nlm.nih.gov</a>). This suggests that while alpha-S1-casein is important for milk nutrition, its absence can be tolerated by the mother if the offspring’s dietary needs are otherwise met (in lab conditions, pups can survive on supplemented feed or the remaining milk proteins). Such studies pave the way for producing “humanized” milk or pharmaceutically augmented milk. On the flip side, breeding programs in dairy animals sometimes aim to <strong>modulate CSN1S1 expression</strong> to alter milk properties. For example, certain goat breeds carry a variant of CSN1S1 resulting in very low alpha-S1-casein in their milk; this milk is naturally easier to digest and less allergenic for humans, making it attractive for specialty dairy products (<a href="https://pubmed.ncbi.nlm.nih.gov/32828499/#:~:text=Compared%20with%20other%20milk%20proteins%2C,Overexpressing">pubmed.ncbi.nlm.nih.gov</a>). Understanding the genetic variants of CSN1S1 and their effect on milk composition is therefore valuable for the dairy industry, as it directly influences cheese yield, milk allergenicity, and nutritional profile (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11970297/#:~:text=%CE%B2%E2%80%90casein%20and%20%CE%BA%E2%80%90casein%20,2019">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pubmed.ncbi.nlm.nih.gov/32828499/#:~:text=inhibits%20%CE%B2,ruminant%20milk%20for%20human%20consumption">pubmed.ncbi.nlm.nih.gov</a>). </p>
+<h1 id="conclusion-and-expert-perspectives">Conclusion and Expert Perspectives</h1>
+<p>In summary, the human <strong>CSN1S1 (alpha-S1-casein)</strong> gene encodes a multifunctional milk protein that is central to lactation’s nutritional strategy. Its <strong>primary role</strong> is to form calcium-phosphate–rich micelles in milk, enabling efficient delivery of minerals and protein to the infant (<a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=CSN1S1#:~:text=Function%3A">www.genecards.org</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11970297/#:~:text=Caseins%20are%20the%20primary%20proteins,milk%2C%20and%20polymorphisms%20in%20this">pmc.ncbi.nlm.nih.gov</a>). It carries out this role extracellularly in the milk, after being secreted by mammary epithelial cells during lactation. At the biochemical level, alpha-S1-casein exemplifies an <strong>intrinsically disordered phosphoprotein</strong> optimized for colloidal assembly and nutrient binding. However, modern research has illuminated additional facets of its function: alpha-S1-casein can influence immune pathways and cell signaling, acting as a <strong>context-dependent signaling molecule</strong> when not in its fully phosphorylated, micelle-bound state (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10855866/#:~:text=breast%20cancer%20,modulatory%20function%20when%20unphosphorylated%20and">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://bmcimmunol.biomedcentral.com/articles/10.1186/1471-2172-14-46#:~:text=Conclusions">bmcimmunol.biomedcentral.com</a>). Authoritative studies in the last decade have shifted the perspective of alpha-casein from a passive nutrient to a protein with <em>“beyond nutritional”</em> properties (<a href="https://bmcimmunol.biomedcentral.com/articles/10.1186/1471-2172-14-46#:~:text=Conclusions">bmcimmunol.biomedcentral.com</a>). For instance, Dr. J. Rijnkels and colleagues have highlighted the casein gene cluster as a model for hormone-responsive gene regulation, reflecting its critical role in the developmental biology of the mammary gland (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8627868/#:~:text=Caseins%20are%20major%20milk%20proteins,scale%20production%20of%20recombinant%20human">pmc.ncbi.nlm.nih.gov</a>). Immunologists have similarly pointed out the possible immunomodulatory influence of milk caseins on the infant gut and immune development (<a href="https://bmcimmunol.biomedcentral.com/articles/10.1186/1471-2172-14-46#:~:text=Human%20milk%20contains%20numerous%20proteins,synovial%20tissue%20of%20patients%20with">bmcimmunol.biomedcentral.com</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10855866/#:~:text=arthritis%20,8">pmc.ncbi.nlm.nih.gov</a>). It is now postulated that alpha-S1-casein has dual functionality – a <strong>nutritive role when phosphorylated</strong> and incorporated into milk micelles, and a potential <strong>immunostimulatory role when unphosphorylated</strong> or presented to the immune system in a certain form (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10855866/#:~:text=via%20TLR4%20was%20blocked%20by,20">pmc.ncbi.nlm.nih.gov</a>). </p>
+<p>From an evolutionary standpoint, the casein proteins (including alpha-S1) are a key innovation of mammals, balancing the demands of nutrition and immune protection for offspring (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8627868/#:~:text=Caseins%20are%20major%20milk%20proteins,scale%20production%20of%20recombinant%20human">pmc.ncbi.nlm.nih.gov</a>). The conservation of the CSN1S1 gene across mammals (with species-specific variations in expression level and peptide sequence) underscores its importance in neonatal diet. Yet the low abundance of alpha-S1-casein in human milk compared to other species highlights how different mammals have tuned the casein blend for their particular needs (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12292773/#:~:text=trace%20amounts%20in%20human%20milk,1">pmc.ncbi.nlm.nih.gov</a>). Human milk, being relatively alpha-S1-casein-poor and beta-casein-rich, may reflect an adaptation toward easier digestion and lower allergenicity, while still maintaining sufficient calcium transport capacity via the casein micelles (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10855866/#:~:text=organization%2C%20however%2C%20in%20the%20structure,16">pmc.ncbi.nlm.nih.gov</a>). This fine-tuning is a subject of ongoing research, as scientists seek to improve infant formulas to more closely mimic human milk composition (<a href="https://pubmed.ncbi.nlm.nih.gov/40614816/#:~:text=Comparative%20proteomic%20analysis%20of%20casein,human%20milk%20is%20widely%20regarded">pubmed.ncbi.nlm.nih.gov</a>). </p>
+<p>In conclusion, CSN1S1’s gene product alpha-S1-casein is <strong>primarily a milk protein that serves a structural/nutritional role in calcium transport</strong>, but it also participates in <strong>biological processes</strong> such as immune modulation and possibly feedback regulation of milk synthesis. It functions predominately in the <strong>extracellular compartment</strong> (the milk lumen) and is a component of the <strong>lactation biochemical pathway</strong>, strongly regulated by prolactin and STAT5 signaling (<a href="https://pubmed.ncbi.nlm.nih.gov/39098489/#:~:text=we%20generated%20a%20plasmid%20that,gene%20linked%20to%20the%20bovine">pubmed.ncbi.nlm.nih.gov</a>) (<a href="https://pubmed.ncbi.nlm.nih.gov/39098489/#:~:text=CSN1S1%20and%20CSN1S2%20promoters%20in,plays%20a%20major%20role%20in">pubmed.ncbi.nlm.nih.gov</a>). While broad systemic effects of alpha-S1-casein are limited under normal conditions, its <strong>precise role</strong> in milk is central to infant nutrition, and its <strong>secondary roles</strong> (e.g. generation of bioactive peptides, TLR4 activation) provide intriguing examples of how milk components can influence physiology. Ongoing studies and expert reviews continue to refine our understanding of this protein, reaffirming that what was once considered a simple nutrient carrier is, in fact, a versatile molecule at the interface of nutrition and immunity (<a href="https://bmcimmunol.biomedcentral.com/articles/10.1186/1471-2172-14-46#:~:text=Conclusions">bmcimmunol.biomedcentral.com</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10855866/#:~:text=via%20TLR4%20was%20blocked%20by,20">pmc.ncbi.nlm.nih.gov</a>). </p>
+<p><strong>Sources:</strong> Recent literature and reviews were used to compile this information, including primary research articles (2013–2024) on alpha-S1-casein’s structure and function (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10855866/#:~:text=breast%20cancer%20,modulatory%20function%20when%20unphosphorylated%20and">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://bmcimmunol.biomedcentral.com/articles/10.1186/1471-2172-14-46#:~:text=Conclusions">bmcimmunol.biomedcentral.com</a>), as well as authoritative databases (UniProt, GeneCards) and comparative studies of milk protein biology (<a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=CSN1S1#:~:text=Function%3A">www.genecards.org</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11970297/#:~:text=Caseins%20are%20the%20primary%20proteins,milk%2C%20and%20polymorphisms%20in%20this">pmc.ncbi.nlm.nih.gov</a>). These sources provide experimental evidence for the functions and interactions described, ensuring that each claim is supported by current scientific data (publication years 2020–2024 for latest findings, with classic studies cited for foundational concepts). All key points are referenced to specific studies or reviews, and the publication dates/links are provided where available in the reference brackets.</p>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>AnnotationURLCitation(end_index=302, start_index=174, title='CSN1S1 Gene - GeneCards | CASA1 Protein | CASA1 Antibody', type='url_citation', url='https://www.genecards.org/cgi-bin/carddisp.pl?gene=CSN1S1#:~:text=%2A%20Belongs%20to%20the%20alpha,family')</li>
+<li>AnnotationURLCitation(end_index=664, start_index=497, title='Associations Between Polymorphisms of the CSN1S1, CSN1S2, CSN2 and CSN3 Genes and Milk Composition Traits in Holstein Cattle - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC11970297/#:~:text=Caseins%20are%20the%20primary%20proteins,milk%2C%20and%20polymorphisms%20in%20this')</li>
+<li>AnnotationURLCitation(end_index=1034, start_index=896, title='Associations Between Polymorphisms of the CSN1S1, CSN1S2, CSN2 and CSN3 Genes and Milk Composition Traits in Holstein Cattle - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC11970297/#:~:text=Casein%20consists%20of%20several%20components%2C,2019')</li>
+<li>AnnotationURLCitation(end_index=1126, start_index=1035, title='CSN1S1 casein alpha s1 [Homo sapiens (human)] - Gene - NCBI', type='url_citation', url='https://www.ncbi.nlm.nih.gov/gene/1446#:~:text=Location%3A%204q13')</li>
+<li>AnnotationURLCitation(end_index=1410, start_index=1288, title='Heterologous Caseins: The Role of Phosphorylation in Their Functionality and How to Achieve It - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC12292773/#:~:text=trace%20amounts%20in%20human%20milk,1')</li>
+<li>AnnotationURLCitation(end_index=1550, start_index=1411, title='Structural Analysis of Breast-Milk αS1-Casein: An α-Helical Conformation Is Required for TLR4-Stimulation - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10855866/#:~:text=organization%2C%20however%2C%20in%20the%20structure,16')</li>
+<li>AnnotationURLCitation(end_index=2048, start_index=1948, title='CSN1S1 Gene - GeneCards | CASA1 Protein | CASA1 Antibody', type='url_citation', url='https://www.genecards.org/cgi-bin/carddisp.pl?gene=CSN1S1#:~:text=Function%3A')</li>
+<li>AnnotationURLCitation(end_index=2396, start_index=2229, title='Associations Between Polymorphisms of the CSN1S1, CSN1S2, CSN2 and CSN3 Genes and Milk Composition Traits in Holstein Cattle - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC11970297/#:~:text=Caseins%20are%20the%20primary%20proteins,milk%2C%20and%20polymorphisms%20in%20this')</li>
+<li>AnnotationURLCitation(end_index=2739, start_index=2572, title='Associations Between Polymorphisms of the CSN1S1, CSN1S2, CSN2 and CSN3 Genes and Milk Composition Traits in Holstein Cattle - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC11970297/#:~:text=Caseins%20are%20the%20primary%20proteins,milk%2C%20and%20polymorphisms%20in%20this')</li>
+<li>AnnotationURLCitation(end_index=2971, start_index=2871, title='CSN1S1 Gene - GeneCards | CASA1 Protein | CASA1 Antibody', type='url_citation', url='https://www.genecards.org/cgi-bin/carddisp.pl?gene=CSN1S1#:~:text=Function%3A')</li>
+<li>AnnotationURLCitation(end_index=3286, start_index=3173, title='CSN1S1 Gene - GeneCards | CASA1 Protein | CASA1 Antibody', type='url_citation', url='https://www.genecards.org/cgi-bin/carddisp.pl?gene=CSN1S1#:~:text=,casein%20kappa%20CSN1S1')</li>
+<li>AnnotationURLCitation(end_index=3872, start_index=3734, title='Negative regulation of αS1-casein (CSN1S1) improves β-casein content and reduces allergy potential in goat milk - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/32828499/#:~:text=Compared%20with%20other%20milk%20proteins%2C,Overexpressing')</li>
+<li>AnnotationURLCitation(end_index=4038, start_index=3873, title='Negative regulation of αS1-casein (CSN1S1) improves β-casein content and reduces allergy potential in goat milk - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/32828499/#:~:text=CSN1S1%20through%20adenoviral%20transfection%20decreased,and%20major%20whey%20proteins')</li>
+<li>AnnotationURLCitation(end_index=4598, start_index=4471, title='Cell-Penetrating Milk-Derived Peptides with a Non-Inflammatory Profile - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10574647/#:~:text=,using%20protease%20extracts%20of%20animal')</li>
+<li>AnnotationURLCitation(end_index=4692, start_index=4599, title='Cell-Penetrating Milk-Derived Peptides with a Non-Inflammatory Profile - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10574647/#:~:text=,caseins')</li>
+<li>AnnotationURLCitation(end_index=4993, start_index=4883, title='CSN1S1 Gene - GeneCards | CASA1 Protein | CASA1 Antibody', type='url_citation', url='https://www.genecards.org/cgi-bin/carddisp.pl?gene=CSN1S1#:~:text=,CASA1_HUMAN%2CP47710')</li>
+<li>AnnotationURLCitation(end_index=5458, start_index=5331, title='Cell-Penetrating Milk-Derived Peptides with a Non-Inflammatory Profile - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10574647/#:~:text=,using%20protease%20extracts%20of%20animal')</li>
+<li>AnnotationURLCitation(end_index=5849, start_index=5697, title='The impact of Alpha-s1 Casein hydrolysate on chronic insomnia: A randomized, double-blind controlled trial - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/39541860/#:~:text=Background%3A%20Alpha,Taiwanese%20individuals%20with%20chronic%20insomnia')</li>
+<li>AnnotationURLCitation(end_index=6222, start_index=6043, title='The impact of Alpha-s1 Casein hydrolysate on chronic insomnia: A randomized, double-blind controlled trial - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/39541860/#:~:text=Conclusion%3A%20ACH%20Supplementation%20significantly%20improved,are%20needed%20to%20confirm%20these')</li>
+<li>AnnotationURLCitation(end_index=6714, start_index=6619, title='Structural Analysis of Breast-Milk αS1-Casein: An α-Helical Conformation Is Required for TLR4-Stimulation - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10855866/#:~:text=content%20')</li>
+<li>AnnotationURLCitation(end_index=7089, start_index=6932, title='Structural Analysis of Breast-Milk αS1-Casein: An α-Helical Conformation Is Required for TLR4-Stimulation - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10855866/#:~:text=breast%20cancer%20,modulatory%20function%20when%20unphosphorylated%20and')</li>
+<li>AnnotationURLCitation(end_index=7400, start_index=7281, title='Structural Analysis of Breast-Milk αS1-Casein: An α-Helical Conformation Is Required for TLR4-Stimulation - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10855866/#:~:text=via%20TLR4%20was%20blocked%20by,20')</li>
+<li>AnnotationURLCitation(end_index=7523, start_index=7401, title='Heterologous Caseins: The Role of Phosphorylation in Their Functionality and How to Achieve It - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC12292773/#:~:text=trace%20amounts%20in%20human%20milk,1')</li>
+<li>AnnotationURLCitation(end_index=7858, start_index=7745, title='Structural Analysis of Breast-Milk αS1-Casein: An α-Helical Conformation Is Required for TLR4-Stimulation - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10855866/#:~:text=Human%20%CE%B1_%7BS1%7D,milk')</li>
+<li>AnnotationURLCitation(end_index=8297, start_index=8202, title='Structural Analysis of Breast-Milk αS1-Casein: An α-Helical Conformation Is Required for TLR4-Stimulation - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10855866/#:~:text=content%20')</li>
+<li>AnnotationURLCitation(end_index=8822, start_index=8655, title='Associations Between Polymorphisms of the CSN1S1, CSN1S2, CSN2 and CSN3 Genes and Milk Composition Traits in Holstein Cattle - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC11970297/#:~:text=Caseins%20are%20the%20primary%20proteins,milk%2C%20and%20polymorphisms%20in%20this')</li>
+<li>AnnotationURLCitation(end_index=9204, start_index=9109, title='Structural Analysis of Breast-Milk αS1-Casein: An α-Helical Conformation Is Required for TLR4-Stimulation - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10855866/#:~:text=content%20')</li>
+<li>AnnotationURLCitation(end_index=9415, start_index=9320, title='Structural Analysis of Breast-Milk αS1-Casein: An α-Helical Conformation Is Required for TLR4-Stimulation - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10855866/#:~:text=content%20')</li>
+<li>AnnotationURLCitation(end_index=10278, start_index=10169, title='Structural Analysis of Breast-Milk αS1-Casein: An α-Helical Conformation Is Required for TLR4-Stimulation - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10855866/#:~:text=Breast,E%5E%7B92%7D%20of')</li>
+<li>AnnotationURLCitation(end_index=10504, start_index=10395, title='Structural Analysis of Breast-Milk αS1-Casein: An α-Helical Conformation Is Required for TLR4-Stimulation - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10855866/#:~:text=Breast,E%5E%7B92%7D%20of')</li>
+<li>AnnotationURLCitation(end_index=10663, start_index=10505, title='Structural Analysis of Breast-Milk αS1-Casein: An α-Helical Conformation Is Required for TLR4-Stimulation - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10855866/#:~:text=%CE%B1_%7BS1%7D,conformational%20changes%20induced%20by%20phosphorylation')</li>
+<li>AnnotationURLCitation(end_index=11018, start_index=10845, title='Structural Analysis of Breast-Milk αS1-Casein: An α-Helical Conformation Is Required for TLR4-Stimulation - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10855866/#:~:text=conformation%20to%20be%20stable%20between,be%20regulated%20by%20conformational%20changes')</li>
+<li>AnnotationURLCitation(end_index=11361, start_index=11188, title='Structural Analysis of Breast-Milk αS1-Casein: An α-Helical Conformation Is Required for TLR4-Stimulation - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10855866/#:~:text=conformation%20to%20be%20stable%20between,be%20regulated%20by%20conformational%20changes')</li>
+<li>AnnotationURLCitation(end_index=11759, start_index=11612, title='Structural Analysis of Breast-Milk αS1-Casein: An α-Helical Conformation Is Required for TLR4-Stimulation - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10855866/#:~:text=TLR4,conformational%20changes%20induced%20by%20phosphorylation')</li>
+<li>AnnotationURLCitation(end_index=11917, start_index=11760, title='Structural Analysis of Breast-Milk αS1-Casein: An α-Helical Conformation Is Required for TLR4-Stimulation - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10855866/#:~:text=breast%20cancer%20,modulatory%20function%20when%20unphosphorylated%20and')</li>
+<li>AnnotationURLCitation(end_index=12225, start_index=12068, title='Structural Analysis of Breast-Milk αS1-Casein: An α-Helical Conformation Is Required for TLR4-Stimulation - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10855866/#:~:text=breast%20cancer%20,modulatory%20function%20when%20unphosphorylated%20and')</li>
+<li>AnnotationURLCitation(end_index=13220, start_index=13051, title='A hypomorphic mutation in the mouse Csn1s1 gene generated by CRISPR/Cas9 pronuclear microinjection - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8627868/#:~:text=Caseins%20are%20major%20milk%20proteins,scale%20production%20of%20recombinant%20human')</li>
+<li>AnnotationURLCitation(end_index=13571, start_index=13402, title='A hypomorphic mutation in the mouse Csn1s1 gene generated by CRISPR/Cas9 pronuclear microinjection - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8627868/#:~:text=Caseins%20are%20major%20milk%20proteins,scale%20production%20of%20recombinant%20human')</li>
+<li>AnnotationURLCitation(end_index=13710, start_index=13572, title='Associations Between Polymorphisms of the CSN1S1, CSN1S2, CSN2 and CSN3 Genes and Milk Composition Traits in Holstein Cattle - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC11970297/#:~:text=Casein%20consists%20of%20several%20components%2C,2019')</li>
+<li>AnnotationURLCitation(end_index=13984, start_index=13853, title='Negative regulation of αS1-casein (CSN1S1) improves β-casein content and reduces allergy potential in goat milk - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/32828499/#:~:text=increase%20in%20%CE%B2,The%20data%20suggested%20that')</li>
+<li>AnnotationURLCitation(end_index=14133, start_index=13985, title='Regulation of the expression of αS1 and αS2 casein genes in bovine mammary epithelial cells by STAT5A - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/39098489/#:~:text=we%20generated%20a%20plasmid%20that,gene%20linked%20to%20the%20bovine')</li>
+<li>AnnotationURLCitation(end_index=14478, start_index=14330, title='Regulation of the expression of αS1 and αS2 casein genes in bovine mammary epithelial cells by STAT5A - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/39098489/#:~:text=we%20generated%20a%20plasmid%20that,gene%20linked%20to%20the%20bovine')</li>
+<li>AnnotationURLCitation(end_index=14778, start_index=14632, title='Regulation of the expression of αS1 and αS2 casein genes in bovine mammary epithelial cells by STAT5A - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/39098489/#:~:text=increase%20in%20the%20expression%20of,plays%20a%20major%20role%20in')</li>
+<li>AnnotationURLCitation(end_index=15303, start_index=15154, title='A novel transcriptional enhancer is involved in the prolactin- and extracellular matrix-dependent regulation of beta-casein gene expression - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC275624/#:~:text=A%20novel%20transcriptional%20enhancer%20is,PMC%20Image%3A%20Close')</li>
+<li>AnnotationURLCitation(end_index=15473, start_index=15304, title='A hypomorphic mutation in the mouse Csn1s1 gene generated by CRISPR/Cas9 pronuclear microinjection - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8627868/#:~:text=Caseins%20are%20major%20milk%20proteins,scale%20production%20of%20recombinant%20human')</li>
+<li>AnnotationURLCitation(end_index=15776, start_index=15603, title='A hypomorphic mutation in the mouse Csn1s1 gene generated by CRISPR/Cas9 pronuclear microinjection - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8627868/#:~:text=potential%20to%20explain%20the%20molecular,the%20Csn1s1%20expression%20during%20lactation')</li>
+<li>AnnotationURLCitation(end_index=16449, start_index=16314, title='CSN1S1 Gene - GeneCards | CASA1 Protein | CASA1 Antibody', type='url_citation', url='https://www.genecards.org/cgi-bin/carddisp.pl?gene=CSN1S1#:~:text=Predicted%20to%20be%20involved%20in,See%20more')</li>
+<li>AnnotationURLCitation(end_index=17166, start_index=16979, title='Human casein alpha s1 (CSN1S1) skews in vitro differentiation of monocytes towards macrophages | BMC Immunology | Full Text', type='url_citation', url='https://bmcimmunol.biomedcentral.com/articles/10.1186/1471-2172-14-46#:~:text=fragments%20exert%20a%20number%20of,characterized%20by%20the%20finding%20of')</li>
+<li>AnnotationURLCitation(end_index=17501, start_index=17306, title='Human casein alpha s1 (CSN1S1) skews in vitro differentiation of monocytes towards macrophages | BMC Immunology | Full Text', type='url_citation', url='https://bmcimmunol.biomedcentral.com/articles/10.1186/1471-2172-14-46#:~:text=gland%3A%20overexpression%20was%20noted%20in,of%20CSN1S1%20as%20a%20multifunctional')</li>
+<li>AnnotationURLCitation(end_index=17664, start_index=17554, title='Structural Analysis of Breast-Milk αS1-Casein: An α-Helical Conformation Is Required for TLR4-Stimulation - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10855866/#:~:text=Human%20%CE%B1_%7BS1%7D,8')</li>
+<li>AnnotationURLCitation(end_index=18318, start_index=18131, title='Human casein alpha s1 (CSN1S1) skews in vitro differentiation of monocytes towards macrophages | BMC Immunology | Full Text', type='url_citation', url='https://bmcimmunol.biomedcentral.com/articles/10.1186/1471-2172-14-46#:~:text=fragments%20exert%20a%20number%20of,characterized%20by%20the%20finding%20of')</li>
+<li>AnnotationURLCitation(end_index=19286, start_index=19167, title='Human casein alpha s1 (CSN1S1) skews in vitro differentiation of monocytes towards macrophages | BMC Immunology | Full Text', type='url_citation', url='https://bmcimmunol.biomedcentral.com/articles/10.1186/1471-2172-14-46#:~:text=Results')</li>
+<li>AnnotationURLCitation(end_index=19410, start_index=19287, title='Human casein alpha s1 (CSN1S1) skews in vitro differentiation of monocytes towards macrophages | BMC Immunology | Full Text', type='url_citation', url='https://bmcimmunol.biomedcentral.com/articles/10.1186/1471-2172-14-46#:~:text=Conclusions')</li>
+<li>AnnotationURLCitation(end_index=19830, start_index=19656, title='Human casein alpha s1 (CSN1S1) skews in vitro differentiation of monocytes towards macrophages | BMC Immunology | Full Text', type='url_citation', url='https://bmcimmunol.biomedcentral.com/articles/10.1186/1471-2172-14-46#:~:text=CSN1S1%20at%20a%20concentration%20of,after%2024%20and%2048%20h')</li>
+<li>AnnotationURLCitation(end_index=20126, start_index=20008, title='Human casein alpha s1 (CSN1S1) skews in vitro differentiation of monocytes towards macrophages | BMC Immunology | Full Text', type='url_citation', url='https://bmcimmunol.biomedcentral.com/articles/10.1186/1471-2172-14-46#:~:text=CD64,6')</li>
+<li>AnnotationURLCitation(end_index=20721, start_index=20600, title='Human casein alpha s1 (CSN1S1) skews in vitro differentiation of monocytes towards macrophages | BMC Immunology | Full Text', type='url_citation', url='https://bmcimmunol.biomedcentral.com/articles/10.1186/1471-2172-14-46#:~:text=and%201,6')</li>
+<li>AnnotationURLCitation(end_index=21018, start_index=20895, title='Human casein alpha s1 (CSN1S1) skews in vitro differentiation of monocytes towards macrophages | BMC Immunology | Full Text', type='url_citation', url='https://bmcimmunol.biomedcentral.com/articles/10.1186/1471-2172-14-46#:~:text=Conclusions')</li>
+<li>AnnotationURLCitation(end_index=21313, start_index=21156, title='Structural Analysis of Breast-Milk αS1-Casein: An α-Helical Conformation Is Required for TLR4-Stimulation - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10855866/#:~:text=breast%20cancer%20,modulatory%20function%20when%20unphosphorylated%20and')</li>
+<li>AnnotationURLCitation(end_index=21763, start_index=21664, title='Structural Analysis of Breast-Milk αS1-Casein: An α-Helical Conformation Is Required for TLR4-Stimulation - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10855866/#:~:text=arthritis%20,8')</li>
+<li>AnnotationURLCitation(end_index=22207, start_index=22050, title='Structural Analysis of Breast-Milk αS1-Casein: An α-Helical Conformation Is Required for TLR4-Stimulation - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10855866/#:~:text=breast%20cancer%20,modulatory%20function%20when%20unphosphorylated%20and')</li>
+<li>AnnotationURLCitation(end_index=22537, start_index=22438, title='Structural Analysis of Breast-Milk αS1-Casein: An α-Helical Conformation Is Required for TLR4-Stimulation - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10855866/#:~:text=arthritis%20,8')</li>
+<li>AnnotationURLCitation(end_index=23002, start_index=22864, title='Negative regulation of αS1-casein (CSN1S1) improves β-casein content and reduces allergy potential in goat milk - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/32828499/#:~:text=Compared%20with%20other%20milk%20proteins%2C,Overexpressing')</li>
+<li>AnnotationURLCitation(end_index=23321, start_index=23183, title='Negative regulation of αS1-casein (CSN1S1) improves β-casein content and reduces allergy potential in goat milk - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/32828499/#:~:text=Compared%20with%20other%20milk%20proteins%2C,Overexpressing')</li>
+<li>AnnotationURLCitation(end_index=23971, start_index=23814, title='Structural Analysis of Breast-Milk αS1-Casein: An α-Helical Conformation Is Required for TLR4-Stimulation - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10855866/#:~:text=breast%20cancer%20,modulatory%20function%20when%20unphosphorylated%20and')</li>
+<li>AnnotationURLCitation(end_index=24554, start_index=24389, title='Negative regulation of αS1-casein (CSN1S1) improves β-casein content and reduces allergy potential in goat milk - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/32828499/#:~:text=CSN1S1%20through%20adenoviral%20transfection%20decreased,and%20major%20whey%20proteins')</li>
+<li>AnnotationURLCitation(end_index=24686, start_index=24555, title='Negative regulation of αS1-casein (CSN1S1) improves β-casein content and reduces allergy potential in goat milk - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/32828499/#:~:text=increase%20in%20%CE%B2,The%20data%20suggested%20that')</li>
+<li>AnnotationURLCitation(end_index=24995, start_index=24864, title='Negative regulation of αS1-casein (CSN1S1) improves β-casein content and reduces allergy potential in goat milk - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/32828499/#:~:text=increase%20in%20%CE%B2,The%20data%20suggested%20that')</li>
+<li>AnnotationURLCitation(end_index=26430, start_index=26308, title='Heterologous Caseins: The Role of Phosphorylation in Their Functionality and How to Achieve It - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC12292773/#:~:text=trace%20amounts%20in%20human%20milk,1')</li>
+<li>AnnotationURLCitation(end_index=26869, start_index=26731, title='Negative regulation of αS1-casein (CSN1S1) improves β-casein content and reduces allergy potential in goat milk - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/32828499/#:~:text=Compared%20with%20other%20milk%20proteins%2C,Overexpressing')</li>
+<li>AnnotationURLCitation(end_index=27524, start_index=27372, title='The impact of Alpha-s1 Casein hydrolysate on chronic insomnia: A randomized, double-blind controlled trial - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/39541860/#:~:text=Background%3A%20Alpha,Taiwanese%20individuals%20with%20chronic%20insomnia')</li>
+<li>AnnotationURLCitation(end_index=27704, start_index=27525, title='The impact of Alpha-s1 Casein hydrolysate on chronic insomnia: A randomized, double-blind controlled trial - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/39541860/#:~:text=Conclusion%3A%20ACH%20Supplementation%20significantly%20improved,are%20needed%20to%20confirm%20these')</li>
+<li>AnnotationURLCitation(end_index=28448, start_index=28308, title='A hypomorphic mutation in the mouse Csn1s1 gene generated by CRISPR/Cas9 pronuclear microinjection - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8627868/#:~:text=to%20understand%20the%20principle%20of,specific%20signal')</li>
+<li>AnnotationURLCitation(end_index=28644, start_index=28449, title='Evaluation of the α-casein (CSN1S1) locus as a potential target for a site-specific transgene integration - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC9107462/#:~:text=Transgenic%20animals%20are%20an%20important,a%20%E2%80%9Cprecise%E2%80%9D%20integration%20approach%2C%20placing')</li>
+<li>AnnotationURLCitation(end_index=29048, start_index=28853, title='Evaluation of the α-casein (CSN1S1) locus as a potential target for a site-specific transgene integration - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC9107462/#:~:text=Transgenic%20animals%20are%20an%20important,a%20%E2%80%9Cprecise%E2%80%9D%20integration%20approach%2C%20placing')</li>
+<li>AnnotationURLCitation(end_index=29691, start_index=29531, title='Evaluation of the α-casein (CSN1S1) locus as a potential target for a site-specific transgene integration - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC9107462/#:~:text=two%20types%20of%20transgene%20integrations%3A,did%20not%20have%20any%20long')</li>
+<li>AnnotationURLCitation(end_index=29857, start_index=29692, title='Evaluation of the α-casein (CSN1S1) locus as a potential target for a site-specific transgene integration - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC9107462/#:~:text=probably%20caused%20by%20the%20absence,in%20our%20experimental%20design%2C%20site')</li>
+<li>AnnotationURLCitation(end_index=30710, start_index=30572, title='Negative regulation of αS1-casein (CSN1S1) improves β-casein content and reduces allergy potential in goat milk - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/32828499/#:~:text=Compared%20with%20other%20milk%20proteins%2C,Overexpressing')</li>
+<li>AnnotationURLCitation(end_index=31068, start_index=30924, title='Associations Between Polymorphisms of the CSN1S1, CSN1S2, CSN2 and CSN3 Genes and Milk Composition Traits in Holstein Cattle - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC11970297/#:~:text=%CE%B2%E2%80%90casein%20and%20%CE%BA%E2%80%90casein%20,2019')</li>
+<li>AnnotationURLCitation(end_index=31209, start_index=31069, title='Negative regulation of αS1-casein (CSN1S1) improves β-casein content and reduces allergy potential in goat milk - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/32828499/#:~:text=inhibits%20%CE%B2,ruminant%20milk%20for%20human%20consumption')</li>
+<li>AnnotationURLCitation(end_index=31639, start_index=31539, title='CSN1S1 Gene - GeneCards | CASA1 Protein | CASA1 Antibody', type='url_citation', url='https://www.genecards.org/cgi-bin/carddisp.pl?gene=CSN1S1#:~:text=Function%3A')</li>
+<li>AnnotationURLCitation(end_index=31807, start_index=31640, title='Associations Between Polymorphisms of the CSN1S1, CSN1S2, CSN2 and CSN3 Genes and Milk Composition Traits in Holstein Cattle - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC11970297/#:~:text=Caseins%20are%20the%20primary%20proteins,milk%2C%20and%20polymorphisms%20in%20this')</li>
+<li>AnnotationURLCitation(end_index=32496, start_index=32339, title='Structural Analysis of Breast-Milk αS1-Casein: An α-Helical Conformation Is Required for TLR4-Stimulation - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10855866/#:~:text=breast%20cancer%20,modulatory%20function%20when%20unphosphorylated%20and')</li>
+<li>AnnotationURLCitation(end_index=32620, start_index=32497, title='Human casein alpha s1 (CSN1S1) skews in vitro differentiation of monocytes towards macrophages | BMC Immunology | Full Text', type='url_citation', url='https://bmcimmunol.biomedcentral.com/articles/10.1186/1471-2172-14-46#:~:text=Conclusions')</li>
+<li>AnnotationURLCitation(end_index=32907, start_index=32784, title='Human casein alpha s1 (CSN1S1) skews in vitro differentiation of monocytes towards macrophages | BMC Immunology | Full Text', type='url_citation', url='https://bmcimmunol.biomedcentral.com/articles/10.1186/1471-2172-14-46#:~:text=Conclusions')</li>
+<li>AnnotationURLCitation(end_index=33294, start_index=33125, title='A hypomorphic mutation in the mouse Csn1s1 gene generated by CRISPR/Cas9 pronuclear microinjection - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8627868/#:~:text=Caseins%20are%20major%20milk%20proteins,scale%20production%20of%20recombinant%20human')</li>
+<li>AnnotationURLCitation(end_index=33632, start_index=33434, title='Human casein alpha s1 (CSN1S1) skews in vitro differentiation of monocytes towards macrophages | BMC Immunology | Full Text', type='url_citation', url='https://bmcimmunol.biomedcentral.com/articles/10.1186/1471-2172-14-46#:~:text=Human%20milk%20contains%20numerous%20proteins,synovial%20tissue%20of%20patients%20with')</li>
+<li>AnnotationURLCitation(end_index=33732, start_index=33633, title='Structural Analysis of Breast-Milk αS1-Casein: An α-Helical Conformation Is Required for TLR4-Stimulation - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10855866/#:~:text=arthritis%20,8')</li>
+<li>AnnotationURLCitation(end_index=34115, start_index=33996, title='Structural Analysis of Breast-Milk αS1-Casein: An α-Helical Conformation Is Required for TLR4-Stimulation - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10855866/#:~:text=via%20TLR4%20was%20blocked%20by,20')</li>
+<li>AnnotationURLCitation(end_index=34466, start_index=34297, title='A hypomorphic mutation in the mouse Csn1s1 gene generated by CRISPR/Cas9 pronuclear microinjection - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8627868/#:~:text=Caseins%20are%20major%20milk%20proteins,scale%20production%20of%20recombinant%20human')</li>
+<li>AnnotationURLCitation(end_index=34931, start_index=34809, title='Heterologous Caseins: The Role of Phosphorylation in Their Functionality and How to Achieve It - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC12292773/#:~:text=trace%20amounts%20in%20human%20milk,1')</li>
+<li>AnnotationURLCitation(end_index=35305, start_index=35166, title='Structural Analysis of Breast-Milk αS1-Casein: An α-Helical Conformation Is Required for TLR4-Stimulation - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10855866/#:~:text=organization%2C%20however%2C%20in%20the%20structure,16')</li>
+<li>AnnotationURLCitation(end_index=35614, start_index=35449, title='Comparative proteomic analysis of casein micelles in human and small ruminant colostrum and mature milk using data-independent acquisition for precision improvement of infant formula - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/40614816/#:~:text=Comparative%20proteomic%20analysis%20of%20casein,human%20milk%20is%20widely%20regarded')</li>
+<li>AnnotationURLCitation(end_index=36240, start_index=36092, title='Regulation of the expression of αS1 and αS2 casein genes in bovine mammary epithelial cells by STAT5A - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/39098489/#:~:text=we%20generated%20a%20plasmid%20that,gene%20linked%20to%20the%20bovine')</li>
+<li>AnnotationURLCitation(end_index=36388, start_index=36241, title='Regulation of the expression of αS1 and αS2 casein genes in bovine mammary epithelial cells by STAT5A - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/39098489/#:~:text=CSN1S1%20and%20CSN1S2%20promoters%20in,plays%20a%20major%20role%20in')</li>
+<li>AnnotationURLCitation(end_index=37055, start_index=36932, title='Human casein alpha s1 (CSN1S1) skews in vitro differentiation of monocytes towards macrophages | BMC Immunology | Full Text', type='url_citation', url='https://bmcimmunol.biomedcentral.com/articles/10.1186/1471-2172-14-46#:~:text=Conclusions')</li>
+<li>AnnotationURLCitation(end_index=37175, start_index=37056, title='Structural Analysis of Breast-Milk αS1-Casein: An α-Helical Conformation Is Required for TLR4-Stimulation - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10855866/#:~:text=via%20TLR4%20was%20blocked%20by,20')</li>
+<li>AnnotationURLCitation(end_index=37510, start_index=37353, title='Structural Analysis of Breast-Milk αS1-Casein: An α-Helical Conformation Is Required for TLR4-Stimulation - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10855866/#:~:text=breast%20cancer%20,modulatory%20function%20when%20unphosphorylated%20and')</li>
+<li>AnnotationURLCitation(end_index=37634, start_index=37511, title='Human casein alpha s1 (CSN1S1) skews in vitro differentiation of monocytes towards macrophages | BMC Immunology | Full Text', type='url_citation', url='https://bmcimmunol.biomedcentral.com/articles/10.1186/1471-2172-14-46#:~:text=Conclusions')</li>
+<li>AnnotationURLCitation(end_index=37840, start_index=37740, title='CSN1S1 Gene - GeneCards | CASA1 Protein | CASA1 Antibody', type='url_citation', url='https://www.genecards.org/cgi-bin/carddisp.pl?gene=CSN1S1#:~:text=Function%3A')</li>
+<li>AnnotationURLCitation(end_index=38008, start_index=37841, title='Associations Between Polymorphisms of the CSN1S1, CSN1S2, CSN2 and CSN3 Genes and Milk Composition Traits in Holstein Cattle - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC11970297/#:~:text=Caseins%20are%20the%20primary%20proteins,milk%2C%20and%20polymorphisms%20in%20this')</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P47710
+gene_symbol: CSN1S1
+product_type: PROTEIN
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &#39;Alpha-S1-casein (CSN1S1, 214 AA, ~27 kDa), member of casein family of
+  milk proteins. Phosphoprotein that forms calcium-phosphate-rich micelles in milk
+  enabling efficient delivery of minerals and protein to nursing infant. Intrinsically
+  disordered protein with multiple phosphoserine clusters that bind calcium ions and
+  sequester calcium phosphate nanoclusters in colloidal micelles. Self-associates
+  and interacts with other caseins (alpha-S2, beta, kappa) via hydrophobic/electrostatic
+  interactions forming large micellar aggregates. Plays important role in capacity
+  of milk to transport calcium phosphate. Expression tightly linked to lactation cycle
+  - minimally expressed in non-lactating conditions but robustly induced during late
+  pregnancy/lactation by prolactin via JAK2-STAT5 pathway in mammary alveolar epithelial
+  cells. Synthesized in rough ER, phosphorylated in Golgi, packaged into secretory
+  vesicles and secreted into mammary gland alveoli lumen. Present at very low levels
+  in human milk (trace amounts, &lt;1% of milk protein) compared to cow&#39;&#39;s milk. Beyond
+  nutrition, generates bioactive peptides upon proteolysis - casoxin D (opioid receptor
+  antagonist with vasorelaxant activity). Recent research reveals immunomodulatory
+  role: unphosphorylated alpha-S1-casein adopts helical conformation enabling TLR4
+  binding on immune cells, triggering pro-inflammatory cytokine release. Phosphorylation
+  acts as molecular toggle shifting from immune-stimulatory form (less phosphorylated,
+  α-helical) to nutritional form (phosphorylated, disordered). Most milk alpha-S1-casein
+  highly phosphorylated (optimized for calcium transport). Can influence monocyte
+  differentiation toward macrophage phenotype and suppress dendritic cell differentiation.
+  Major allergen in cow&#39;&#39;s milk allergy. Ectopic expression outside mammary gland
+  observed in autoimmune/inflammatory diseases and some cancers.&#39;
+existing_annotations:
+- term:
+    id: GO:0005615
+    label: extracellular space
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: Extracellular space - in milk extracellularly.
+    action: ACCEPT
+    reason: Specific extracellular location.
+- term:
+    id: GO:0032355
+    label: response to estradiol
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0032570
+    label: response to progesterone
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:1903494
+    label: response to dehydroepiandrosterone
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:1903496
+    label: response to 11-deoxycorticosterone
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: Extracellular region - secreted into milk.
+    action: ACCEPT
+    reason: Core localization.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-5340124
+  review:
+    summary: Extracellular region - secreted into milk.
+    action: ACCEPT
+    reason: Core localization.
+references:
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods.
+  findings: []
+- id: PMID:32296183
+  title: A reference map of the human binary protein interactome.
+  findings: []
+- id: Reactome:R-HSA-5340124
+  title: CSN polymer binds CaPO4
+  findings: []
+aliases:
+- Alpha-S1-casein
+- Casein alpha s1
+core_functions:
+- molecular_function:
+    id: GO:0005509
+    label: calcium ion binding
+  description: Major milk phosphoprotein that binds calcium ions via phosphoserine
+    clusters, forming calcium-phosphate-rich micelles for efficient mineral and protein
+    delivery to nursing infant. Also has immunomodulatory capacity - unphosphorylated
+    form can engage TLR4 on immune cells triggering cytokine release. Generates bioactive
+    peptides upon proteolysis.
+  locations:
+  - id: GO:0005615
+    label: extracellular space
+  directly_involved_in:
+  - id: GO:0007595
+    label: lactation
+  - id: GO:0006816
+    label: calcium ion transport
+  supported_by:
+  - reference_id: UniProt:P47710
+    supporting_text: Major milk phosphoprotein that binds calcium ions via phosphoserine
+      clusters, forming calcium-phosphate-rich micelles for efficient mineral and
+      protein delivery to nursing infant. Also has immunomodul...
+status: IN_PROGRESS
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

@@ -1,0 +1,1504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>mllA - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>mllA</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/C5B1I4" target="_blank" class="term-link">
+                        C5B1I4
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Methylorubrum extorquens AM1</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "mllA";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="C5B1I4" data-a="DESCRIPTION: Metallophore synthetase component (mllA) belonging..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Metallophore synthetase component (mllA) belonging to the IucA/IucC family. Functions as an acid-amino acid ligase involved in methylolanthanin biosynthesis. Methylolanthanin is a lanthanide-chelating metallophore (lanthanophore) that enables bacteria to acquire rare earth elements from the environment, which are essential cofactors for lanthanide-dependent methanol dehydrogenases.</p>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Proposed New Ontology Terms</h2>
+        
+        <div class="proposed-term">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>lanthanophore biosynthetic process</h3>
+                <span class="vote-buttons" data-g="C5B1I4" data-a="lanthanophore biosynthetic process" data-r="" data-act="NEW">
+                    <button class="vote-btn" data-v="up" title="Agree this term should be created">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with creating this term">👎</button>
+                </span>
+            </div>
+
+            
+            <p><strong>Definition:</strong> The chemical reactions and pathways resulting in the formation of lanthanophores, small molecules that chelate lanthanide rare earth elements to facilitate their uptake by organisms</p>
+            
+
+            
+
+            
+
+            
+
+            
+            <p><strong>Supporting Evidence:</strong></p>
+            <ul style="margin-left: 1rem;">
+                
+                <li>
+                    
+                    UniProt:C5B1I4
+                    
+                    
+                    : Siderophore synthetase component...Belongs to the IucA/IucC family
+                    
+                </li>
+                
+            </ul>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016881" target="_blank" class="term-link">
+                                    GO:0016881
+                                </a>
+                            </span>
+                            <span class="term-label">acid-amino acid ligase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="C5B1I4" data-a="GO:0016881" data-r="GO_REF:0000117" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct molecular function - IucA/IucC family proteins catalyze ATP-dependent formation of amide/ester bonds during metallophore biosynthesis. Function is conserved whether product is iron-siderophore or lanthanide-metallophore
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019290" target="_blank" class="term-link">
+                                    GO:0019290
+                                </a>
+                            </span>
+                            <span class="term-label">siderophore biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="C5B1I4" data-a="GO:0019290" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Analogous but not specific - mllA synthesizes methylolanthanin, a LANTHANIDE-chelating metallophore (lanthanophore), not an iron-chelating siderophore. The chemistry and gene family are analogous to siderophore biosynthesis, but the product chelates lanthanides not iron. Based on literature about mll biosynthetic gene cluster in M. extorquens AM1. No specific GO term exists for lanthanophore biosynthesis yet.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Biosynthesis of methylolanthanin lanthanophore for rare earth element acquisition</h3>
+                <span class="vote-buttons" data-g="C5B1I4" data-a="FUNCTION: Biosynthesis of methylolanthanin lanthanophore for..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016881" target="_blank" class="term-link">
+                            acid-amino acid ligase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        UniProt:C5B1I4
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">UniProt entry for mllA siderophore synthetase</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Siderophore synthetase component</div>
+                        
+                        <div class="finding-text">"SubName: Full=Siderophore synthetase component"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Belongs to the IucA/IucC family</div>
+                        
+                        <div class="finding-text">"SIMILARITY: Belongs to the IucA/IucC family"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Contains aerobactin biosynthesis IucA/IucC N-terminal domain (residues 139-364)</div>
+                        
+                        <div class="finding-text">"DOMAIN 139..364 /note=Aerobactin siderophore biosynthesis IucA/IucC N-terminal"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Contains aerobactin biosynthesis IucA/IucC-like C-terminal domain (residues 396-556)</div>
+                        
+                        <div class="finding-text">"DOMAIN 396..556 /note=Aerobactin siderophore biosynthesis IucA/IucC-like C-terminal"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Perplexity</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(mllA-deep-research-perplexity.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="C5B1I4" data-a="DOC: Deep Research Perplexity" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: perplexity<br />
+model: sonar-deep-research<br />
+cached: false<br />
+start_time: '2025-10-31T09:39:28.932127'<br />
+end_time: '2025-10-31T09:41:45.393981'<br />
+duration_seconds: 136.46<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: METEA<br />
+  gene_or_uniprot: mllA<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    reasoning_effort: medium<br />
+    search_domain_filter: []<br />
+    return_citations: true<br />
+    temperature: 0.0<br />
+citation_count: 59</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-template-for-go-annotation-curation">Gene Research Template for GO Annotation Curation</h1>
+<p>Please provide a comprehensive research report on the gene mllA in METEA.</p>
+<h2 id="research-focus-areas-for-go-annotation">Research Focus Areas for GO Annotation</h2>
+<p>I need detailed information covering these areas specifically for GO annotation curation:</p>
+<h3 id="1-molecular-function-mf">1. Molecular Function (MF)</h3>
+<ul>
+<li><strong>Primary molecular function(s)</strong> - specific biochemical activities</li>
+<li><strong>Enzymatic properties</strong> - catalytic activities, substrate specificity, cofactor requirements</li>
+<li><strong>Binding activities</strong> - what molecules does the protein bind (DNA, RNA, proteins, small molecules)</li>
+<li><strong>Regulatory functions</strong> - transcriptional regulation, kinase/phosphatase activities</li>
+<li><strong>Transport functions</strong> - ion channels, transporters, carriers</li>
+</ul>
+<h3 id="2-cellular-component-cc">2. Cellular Component (CC)</h3>
+<ul>
+<li><strong>Subcellular localization</strong> - where is the protein located within the cell</li>
+<li><strong>Membrane association</strong> - integral membrane, peripheral membrane, or cytosolic</li>
+<li><strong>Organellar localization</strong> - nucleus, mitochondria, ER, Golgi, etc.</li>
+<li><strong>Protein complexes</strong> - what complexes does this protein participate in</li>
+<li><strong>Cellular structures</strong> - cytoskeleton, ribosomes, proteasome components</li>
+</ul>
+<h3 id="3-biological-process-bp">3. Biological Process (BP)</h3>
+<ul>
+<li><strong>Primary biological pathways</strong> - metabolic, signaling, developmental processes</li>
+<li><strong>Physiological roles</strong> - what happens when this gene is mutated or deleted</li>
+<li><strong>Developmental processes</strong> - embryogenesis, organogenesis, differentiation</li>
+<li><strong>Response to stimuli</strong> - environmental, chemical, biological responses</li>
+<li><strong>Cellular processes</strong> - cell cycle, apoptosis, DNA repair, protein folding</li>
+</ul>
+<h3 id="4-experimental-evidence-quality">4. Experimental Evidence Quality</h3>
+<ul>
+<li><strong>Direct experimental evidence</strong> - biochemical assays, functional studies</li>
+<li><strong>Genetic evidence</strong> - knockout/knockdown phenotypes, complementation</li>
+<li><strong>Physical evidence</strong> - protein interactions, localization studies</li>
+<li><strong>Expression evidence</strong> - tissue/stage-specific expression patterns</li>
+<li><strong>Comparative evidence</strong> - ortholog function in other species</li>
+</ul>
+<h3 id="5-disease-and-phenotype-associations">5. Disease and Phenotype Associations</h3>
+<ul>
+<li><strong>Human disease associations</strong> - genetic disorders, cancer involvement</li>
+<li><strong>Model organism phenotypes</strong> - what happens when gene function is disrupted</li>
+<li><strong>Clinical relevance</strong> - therapeutic targets, biomarkers</li>
+<li><strong>Population genetics</strong> - natural variants and their effects</li>
+</ul>
+<h3 id="6-protein-structure-and-domains">6. Protein Structure and Domains</h3>
+<ul>
+<li><strong>Functional domains</strong> - catalytic domains, binding domains, regulatory regions</li>
+<li><strong>Structural features</strong> - transmembrane regions, signal peptides, nuclear localization signals</li>
+<li><strong>Post-translational modifications</strong> - phosphorylation, ubiquitination, glycosylation sites</li>
+<li><strong>Protein-protein interaction interfaces</strong> - binding sites for partners</li>
+</ul>
+<h3 id="7-evolutionary-conservation-and-orthologs">7. Evolutionary Conservation and Orthologs</h3>
+<ul>
+<li><strong>Conservation across species</strong> - which functions are conserved</li>
+<li><strong>Ortholog studies</strong> - functional evidence from other organisms</li>
+<li><strong>Paralog relationships</strong> - functional divergence within gene families</li>
+<li><strong>Essential gene status</strong> - is this gene required for viability</li>
+</ul>
+<h2 id="output-requirements-for-go-curation">Output Requirements for GO Curation</h2>
+<ul>
+<li><strong>Provide specific GO term suggestions</strong> where experimental evidence supports them</li>
+<li><strong>Include PMID citations</strong> for all major functional claims</li>
+<li><strong>Distinguish experimental evidence levels</strong> (direct vs. inferred)</li>
+<li><strong>Focus on experimental data over computational predictions</strong></li>
+<li><strong>Highlight recent discoveries</strong> (last 5 years) that might affect annotation</li>
+<li><strong>Note any conflicting evidence</strong> or ambiguous experimental results</li>
+<li><strong>Specify organism-specific differences</strong> if orthologs have different functions</li>
+</ul>
+<h2 id="gene-information">Gene Information</h2>
+<ul>
+<li><strong>Gene Symbol</strong>: mllA</li>
+<li><strong>Organism</strong>: METEA</li>
+<li><strong>Focus</strong>: Gene Ontology annotation curation and functional characterization</li>
+</ul>
+<p>Please prioritize experimental evidence and be explicit about the strength and type of evidence supporting each functional claim.</p>
+<h2 id="output">Output</h2>
+<p><think><br />
+The user is asking for a comprehensive research report on the gene "mllA" in "METEA" with a focus on Gene Ontology (GO) annotation curation. They want information covering molecular function, cellular component, biological process, experimental evidence, disease associations, protein structure, and evolutionary conservation.</p>
+<p>However, looking at the search results provided, I don't see any specific information about a gene called "mllA" in an organism called "METEA." </p>
+<p>Let me scan through the search results:<br />
+1. Results about mtlA gene (not mllA) in Vibrio species<br />
+2. Results about Mla transport system in E. coli (not mllA)<br />
+3. Medea genetic elements<br />
+4. LAMA4 gene<br />
+5. MlaC-MlaD complex<br />
+6. Various other topics about archaea, methylation, protein annotation, etc.</p>
+<p>I see references to:<br />
+- "mllA" or "MlLa" in barley (Hordeum vulgare) as a powdery mildew resistance locus (results 25, 28)<br />
+- Various MLA/Mla proteins and systems<br />
+- Methanocaldococcus jannaschii and other methanogens<br />
+- "METEA" doesn't appear to be a standard organism abbreviation I can find</p>
+<p>The user mentions "METEA" as the organism. Looking at result [47], there's a reference to "metea-c5awv9" which appears to be related to Methanococcus extract. But this is very limited information.</p>
+<p>Given the search results don't contain specific information about "mllA in METEA," I need to:<br />
+1. Clarify that the search results don't contain direct information about this specific gene-organism combination<br />
+2. Note what I do find that might be relevant (MLA/MlLa references, methanogen information)<br />
+3. Follow the instructions to provide the best answer I can with existing knowledge while being clear about the limitations</p>
+<ol>
+<li>Develop a comprehensive research approach despite limited initial information</li>
+</ol>
+<p>I notice subtle connections between the limited search results. While "mllA in METEA" lacks direct documentation, there are peripheral references to similar gene nomenclature and potential related biological systems. The powdery mildew resistance locus in barley and methanogen-related extracts suggest potential avenues for further investigation, though not definitively addressing the specific query.</p>
+<p>My strategy involves creating a flexible framework that can accommodate uncertain gene characterization scenarios. By systematically exploring potential interpretations and maintaining methodological rigor, I can construct a meaningful analytical pathway even with minimal initial data.<br />
+</think></p>
+<h1 id="comprehensive-research-report-on-gene-annotation-curation-a-framework-for-mlla-in-metea-with-gene-ontology-standards">Comprehensive Research Report on Gene Annotation Curation: A Framework for mllA in METEA with Gene Ontology Standards</h1>
+<p>This report addresses the critical challenge of functional annotation for the gene mllA in the organism METEA through the lens of contemporary Gene Ontology (GO) curation standards. While direct experimental evidence specifically characterizing mllA in METEA was not identified in the provided search results, this report synthesizes current best practices for GO annotation, drawing on relevant molecular characterization methodologies, protein function analysis approaches, and evolutionary conservation strategies documented in recent scientific literature. The report provides a comprehensive framework for annotation curation that integrates molecular function assessment, cellular localization determination, biological process involvement, experimental evidence evaluation, and cross-organism comparative analysis to establish robust and evidence-based functional annotations for this gene.</p>
+<h2 id="understanding-go-annotation-principles-and-curation-standards">Understanding GO Annotation Principles and Curation Standards</h2>
+<p>The Gene Ontology consortium has established comprehensive guidelines for manual annotation that represent the accumulated expertise of biocurators across diverse research domains[8][11]. Gene Ontology annotations function as standardized statements linking gene products to specific biological concepts through three independent but interconnected vocabularies that describe distinct aspects of protein function[8]. These three fundamental aspects—molecular function, biological process, and cellular component—must be carefully distinguished during annotation curation, as each describes a different dimension of how a gene product operates within living systems[8][11].</p>
+<p>Molecular function terms describe the biochemical or catalytic activities performed by gene products at the molecular level, focusing on what the protein does rather than where it does it or why it does it[11]. For instance, molecular functions encompass activities such as kinase activity, transporter activity, or DNA-binding capacity. Biological process terms, conversely, describe the larger cellular, physiological, or developmental programs to which the gene product's activities contribute, such as signal transduction, metabolic pathways, or developmental differentiation[8][11]. Cellular component terms identify the locations or structures where the gene product functions, ranging from subcellular compartments like the endoplasmic reticulum or nucleus to macromolecular complexes such as the ribosome or proteasome[8]. This tripartite classification system ensures that annotations capture the complete functional context of gene products without conflating different types of biological information[11].</p>
+<p>The foundation of robust GO annotation rests upon explicit evidence codes that indicate the type and quality of evidence supporting each functional claim[8][11]. Manual curation represents the highest tier of evidence quality, as trained biocurators carefully evaluate experimental data, consult primary literature, and apply expert judgment to assign annotations[8][11]. Evidence codes range from direct experimental evidence such as Inferred from Direct Assay (IDA) or Inferred from Biochemical Activity (IBA), to sequence similarity-based inferences such as Inferred from Sequence Homology (ISH), to automated computational predictions with varying levels of confidence[8][11]. The choice of evidence code directly reflects the reliability and specificity of the annotation, enabling downstream users to filter annotations based on the confidence level appropriate for their particular research applications[8][11].</p>
+<h2 id="molecular-function-characterization-establishing-biochemical-activities">Molecular Function Characterization: Establishing Biochemical Activities</h2>
+<p>Determining the primary molecular functions of a gene product represents perhaps the most critical and foundational aspect of GO annotation curation[11][13]. Direct experimental evidence for molecular function typically derives from biochemical assays that measure the catalytic activity, binding capacity, or regulatory capability of purified or recombinant proteins under controlled laboratory conditions[13]. Recent advances in activity-based annotation methodologies have expanded the toolkit available to researchers for comprehensive functional characterization beyond traditional approaches[13].</p>
+<p>Activity-based metabolite profiling (ABMP) has emerged as a powerful unbiased methodology for discovering and confirming enzyme function by incubating purified proteins with cellular metabolite extracts and monitoring changes in metabolite abundance over time[13]. This approach provides direct substrate-level enzyme annotation without requiring prior knowledge of specific substrates or reaction products[13]. The advantage of ABMP lies in its capacity to reveal enzymatic activities against physiologically relevant substrate mixtures, thereby identifying functions that might be missed by assays employing single synthetic substrates[13]. For enzyme discovery in previously uncharacterized proteins, ABMP combined with mass spectrometry-based metabolomics can systematically profile substrate consumption and product formation across diverse enzyme classes including phosphatases, aminotransferases, and monooxygenases[13].</p>
+<p>For transporters and channels, molecular function annotation requires specification of the substrate or ion being transported, the direction of transport (active versus passive), and any specific cofactor requirements[11]. Ion channel proteins exhibit molecular functions related to ion passage through cellular membranes, while ATP-binding cassette transporters demonstrate ATPase activity coupled to substrate translocation[11]. The specificity of these molecular functions must be precisely captured in GO annotations, as incorrect substrate specification would represent a fundamental mischaracterization of the protein's biochemical role[11].</p>
+<p>Protein-protein interaction studies provide essential evidence for binding molecular functions, particularly for proteins that operate as components of larger regulatory or catalytic complexes[2][5]. The MlaC-MlaD interaction exemplifies how structural biology combined with biochemical validation can establish specific protein-protein interfaces underlying biological function[2][5]. The MlaC protein serves as a periplasmic lipid-trafficking protein that binds to multiple partners, including the MlaD membrane-anchored protein and the outer membrane MlaA protein, with distinct binding surfaces that may overlap[2][5]. Such specificity in protein-protein interactions must be captured through appropriate molecular function annotations describing the specific binding or catalytic activities involved[2][5].</p>
+<h2 id="cellular-component-localization-establishing-subcellular-context">Cellular Component Localization: Establishing Subcellular Context</h2>
+<p>Accurate annotation of cellular component localization provides critical context for interpreting molecular function and biological process involvement[8][11]. Cellular component terms in the Gene Ontology encompass subcellular compartments such as the nucleus, mitochondria, endoplasmic reticulum, and Golgi apparatus, as well as supramolecular complexes and structures like the ribosome, proteasome, and various membrane-associated protein complexes[8][11]. Localization information is essential because identical molecular activities may have vastly different physiological consequences depending on where in the cell those activities occur[8][11].</p>
+<p>Recent advances in subcellular localization prediction leverage both sequence-based features and structural information to predict cellular component localization with high accuracy[40]. Sequence-based predictive tools identify signal peptides indicating secretion, transmembrane domains indicating integral membrane proteins, and nuclear localization signals indicating nuclear import, providing computational predictions that can guide experimental validation[40]. Structure-based approaches utilizing AlphaFold2 predictions can now identify previously unknown structural features associated with specific organellar localizations[14]. For example, the cryo-electron tomography and subtomogram averaging studies of the Methanospirillum hungatei surface layer revealed a hexagonal lattice of dome-shaped tiles with specific structural interactions controlling cell architecture and permeability[14][17]. Such structural details establish the cellular component context necessary for proper functional annotation[14][17].</p>
+<p>Transmembrane topology represents a particular challenge in cellular component annotation, as proteins may contain multiple membrane-spanning regions with complex topologies including non-contiguous domains and insertional domains[27]. The DomainMapper algorithm exemplifies advances in domain topology prediction, identifying non-contiguous protein domains that form functional units despite interrupted residue ranges[27]. For membrane proteins, distinguishing between integral membrane proteins embedded within the lipid bilayer, peripheral membrane proteins associated with membrane surfaces, and soluble proteins temporarily associated with membranes requires careful integration of biochemical, structural, and sequence evidence[40].</p>
+<h2 id="biological-process-contextualizing-function-within-cellular-systems">Biological Process: Contextualizing Function Within Cellular Systems</h2>
+<p>Biological process annotations situate gene product activities within the larger physiological and cellular contexts in which they operate, describing pathways, regulatory mechanisms, and developmental programs[8][11]. A single gene product may participate in multiple biological processes, and the GO annotation framework accommodates this complexity by allowing multiple process annotations for individual genes[8][11]. For example, a kinase might be annotated as participating in signal transduction (the broader process), mitogen-activated protein kinase cascade (the specific pathway), and cell proliferation (the downstream physiological outcome), with each annotation capturing a different level of biological organization[11].</p>
+<p>The relationship between gut microbiota composition and immune regulation exemplifies how biological process annotation must integrate multiple levels of functional organization[7][9][12]. Specific bacterial taxa including members of the Clostridia class influence T cell polarization toward regulatory T cell (Treg) differentiation through mechanisms involving bacterial metabolite production, direct bacterial-epithelial cell interactions, and innate immune activation[7][9][12]. Genes encoding enzymes involved in short-chain fatty acid production by gut bacteria participate in biological processes including immune regulation, epithelial barrier maintenance, and metabolic homeostasis[7][9]. Proper annotation of such genes requires understanding not only their immediate enzymatic function but their ultimate physiological consequence—immune tolerance development through Treg induction[7][9][12].</p>
+<p>The temporal dimension of biological processes requires careful specification in GO annotations, particularly for genes involved in developmental programs or cell cycle regulation[11]. For example, genes encoding DNA methylation-associated enzymes participate in distinct developmental windows—early blastocyst formation, placental development, organogenesis, and specific phases of cellular differentiation[55]. The GO annotation framework allows specification of developmental stage or cell cycle phase through annotation extensions using relationships like "happens_during" to capture this temporal specificity[11].</p>
+<h2 id="experimental-evidence-evaluation-distinguishing-evidence-quality">Experimental Evidence Evaluation: Distinguishing Evidence Quality</h2>
+<p>The strength and relevance of experimental evidence fundamentally determines annotation confidence and reliability[11][13][40]. Direct experimental evidence obtained through biochemical assays in vitro, cellular studies in native tissues, or purified protein characterization provides the highest level of confidence for specific molecular function and cellular component annotations[11][13]. Enzyme kinetic analysis measuring Michaelis constants (Km), maximum velocity (Vmax), and substrate specificity establishes quantitative molecular function characterization suitable for enzyme activity annotations[41]. Cell-based localization studies utilizing fluorescent protein tagging, immunofluorescence microscopy, or subcellular fractionation provide direct cellular component evidence[42].</p>
+<p>Genetic evidence including knockout or knockdown phenotypes, complementation studies, and forward genetics approaches provides biological process evidence by revealing the physiological consequences of disrupting gene function[11][37]. High-throughput phenotypic profiling of phospho-mutant strains demonstrates how genetic variants of specific residues produce distinct growth and molecular phenotypes, allowing functional classification of individual phosphorylation sites through guilt-by-association with genes of characterized function[37]. Such approaches systematically map functional consequences of specific protein modifications across large libraries of mutant strains[37].</p>
+<p>Orthologous gene function transfer represents a common but potentially problematic annotation approach requiring careful validation[50]. The orthology-function conjecture—the assumption that orthologous genes carry out identical or biologically equivalent functions in different organisms—has been increasingly challenged by recent research suggesting that orthologous genes may show greater functional divergence than previously appreciated[50]. This is particularly important for genes from distant evolutionary lineages, where sequence divergence may not accurately predict functional divergence[50]. Systematic comparative analysis of ortholog function across species, rather than simple assumption of functional equivalence, should precede annotation based on orthologous gene characterization[50].</p>
+<p>Archaea represent a particularly interesting case for orthology-based functional annotation, as over half of archaeal genes encode proteins of unknown function despite substantial genomic sequencing[43]. The limited virulence factor characterization in archaea and the unique metabolic capabilities of methanogenic and extremophilic archaea mean that functional inference from bacterial orthologs may prove unreliable[43]. For genes in archaea like METEA, experimental validation of predicted functions becomes especially important rather than relying solely on sequence similarity[43].</p>
+<h2 id="vibrio-gene-characterization-case-study-in-typing-and-functional-genomics">Vibrio Gene Characterization: Case Study in Typing and Functional Genomics</h2>
+<p>The mtlA gene in Vibrio species provides an informative case study in establishing robust functional annotations through comprehensive phylogenetic and comparative genomic analysis[1]. The mtlA gene encodes the mannitol transporter subunit IICBA of the phosphotransferase system, representing a core gene with substantial variability within Vibrio parahaemolyticus that could serve as a novel typing marker superior to multilocus sequence typing (MLST)[1]. Analysis revealed that mtlA was present in all common pathogenic Vibrio species, providing comparable or even higher typing resolution than MLST especially in Vibrio cholerae, Vibrio alginolyticus, Vibrio harveyi, and Vibrio anguillarum[1].</p>
+<p>The evolutionary analysis of mtlA demonstrated its presence across nine bacterial phyla, 371 genera, and 1,662 species, primarily distributed in Bacillota (including Paenibacillus, Enterococcus, and Clostridium), Actinomycetota (including Mycolicibacterium and Nocardioides), and Pseudomonadota (including Vibrio and Aeromonas)[1]. Conservation analysis identified eight completely conserved sites with 100% identity across all examined sequences, including critical leucine, asparagine, glycine, glutamic acid, and proline residues—positions likely correlated with the biological function of transmembrane transport of mannitol[1]. This degree of conservation across distantly related bacterial taxa suggests functional constraint on these positions, supporting their identification as critical residues for transporter function[1].</p>
+<p>Phylogenetic tree construction using mtlA sequences from common Vibrio species revealed clustering patterns consistent with known species relationships, suggesting the gene exhibits both sufficient variability for strain differentiation and sufficient conservation for species-level phylogenetic signal[1]. This example illustrates how comprehensive molecular function characterization integrates sequence analysis, structural prediction, phylogenetic reconstruction, and comparative genomic context to establish robust functional understanding of gene products[1].</p>
+<h2 id="lipid-transport-systems-molecular-mechanisms-underlying-membrane-biology">Lipid Transport Systems: Molecular Mechanisms Underlying Membrane Biology</h2>
+<p>The Maintenance of Lipid Asymmetry (Mla) pathway presents a sophisticated example of how multicomponent systems achieve specialized cellular functions through coordinated protein-protein interactions[2][5]. The Mla system removes ectopic phospholipids from the outer leaflet of the outer membrane in gram-negative bacteria and returns them to the inner membrane, thereby maintaining asymmetry of the bacterial outer membrane barrier[2][5]. This process involves three main functional components: the MlaA-OmpC complex in the outer membrane, the periplasmic lipid-binding shuttle protein MlaC, and the inner membrane ABC transporter complex MlaFEDB[2][5].</p>
+<p>The MlaC protein exhibits a hydrophobic cavity between its β-sheet and α-helical subdomains that binds lipid cargo through a proposed clamshell mechanism[2][5]. Recent structural characterization revealed the MlaC-MlaD hexamer complex in two distinct stoichiometries (1:6 and 2:6), stabilized through cardiolipin binding[5]. The MlaD β6-β7 loop emerged as essential for MlaCD function, with mutations in this region abolishing complementation of mlaD knockout strains in tests for sensitivity to detergent and EDTA[2][5]. Molecular dynamics simulations provided insight into the trajectory of glycerophospholipid transfer between MlaC and MlaD, revealing that phospholipids likely pass between the C-terminal helices of the MlaD hexamer to reach the central pore[5].</p>
+<p>These mechanistic details establish precise molecular function annotations for the MlaC and MlaD proteins, including specific protein-protein interaction functions, lipid-binding capacity, and translocation capabilities[2][5]. The periplasmic localization of MlaC and the integral membrane localization of MlaD within the inner membrane complex establish their cellular component context[2][5]. The biological process of outer membrane lipid asymmetry maintenance and preservation of barrier function constitutes their ultimate physiological role[2][5].</p>
+<h2 id="archaeal-methane-metabolism-a-model-for-cofactor-dependent-catalysis">Archaeal Methane Metabolism: A Model for Cofactor-Dependent Catalysis</h2>
+<p>The methyl-coenzyme M reductase (MCR) complex represents one of the most ancient and fundamental bioenergetic systems in nature, catalyzing the final step of methanogenesis and the first step in anaerobic methane oxidation[54][57]. MCR exhibits remarkable structural and biochemical complexity, including a dimer of heterotrimers with α₂β₂γ₂ configuration containing two active sites, each housing the nickel-containing prosthetic group coenzyme F₄₃₀[54]. The Ni(I) oxidation state represents the catalytically active form of F₄₃₀, though achieving and maintaining this reduced state represents a major bioenergetic challenge[57].</p>
+<p>Recent structural characterization of the MCR activation complex from Methanococcus maripaludis revealed an ATP-dependent system involving McrC, Mmp7, Mmp17, and Mmp3 proteins that mediate the reductive activation of F₄₃₀[57]. The activation complex structure exhibited local resolutions reaching 1.8-2.1 Å, revealing three complex iron-sulfur clusters that form an electron transfer pathway toward F₄₃₀[57]. These FeS clusters exhibited structural similarity to the [8Fe-9S-C] cluster representing a maturation intermediate of the nitrogenase catalytic cofactor, suggesting evolutionary relationships between these two ancient enzyme systems[57]. The McrC protein used a flexible loop to bind to the DUF2098 domain of McrA, while a second loop wedged into the N-terminal helix of McrA, creating a groove toward F₄₃₀ at the active site[57]. ATP hydrolysis appeared to facilitate collective motions in the activation complex subunits, stabilizing the opening of the McrA latch and enabling access to the F₄₃₀ binding cavity[57].</p>
+<p>The MCR system exemplifies how precise molecular function annotation must capture the complete catalytic mechanism including cofactor specification (coenzyme F₄₃₀ containing Ni in the (I) oxidation state), substrate specificity (methyl-coenzyme M and coenzyme B heterodisulfide), post-translational modification state, and accessory protein requirements[54][57]. The "half-of-the-sites reactivity" mechanism whereby only one active site is activated at any given time, with the two active sites proposed to function analogously to a two-stroke engine, establishes mechanistic details that refine molecular function understanding[54]. Biological process annotation must situate MCR within methanogenesis pathways, energy conservation mechanisms, and biogeochemical cycling of methane in diverse environments[54][57].</p>
+<h2 id="methanogenic-archaea-evolutionary-conservation-and-organismal-context">Methanogenic Archaea: Evolutionary Conservation and Organismal Context</h2>
+<p>Methanogenic archaea occupy unique ecological niches as terminal electron acceptors in anaerobic environments, with genomes displaying significant shifts toward energy conservation mechanisms[35]. Methanobrevibacter smithii represents the dominant archaeon in the human gut ecosystem, where it affects the specificity and efficiency of bacterial digestion of dietary compounds through syntrophic associations with saccharolytic bacteria[33][36]. Comparative genomic analysis of isolated methanogens including Methanobacterium bryantii, Methanosarcina spelaei, Methanosphaera cuniculi, and Methanocorpusculum parvum revealed distinct metabolic capabilities—methylotrophic, acetoclastic, and hydrogenotrophic methanogenesis—with energy conservation accomplished through differing mechanisms including chemiosmotic coupling and electron bifurcation[35].</p>
+<p>The genome of Methanocaldococcus jannaschii, the first archaeon to have its complete genome sequenced, contains 1,738 protein-coding genes with approximately 56% lacking similarity to any known genes at the time of sequencing[23]. The synthesis pathways for methanogenic cofactors including coenzyme F₄₃₀, riboflavin, and archaeal-specific amino acids were biochemically characterized in this organism, providing foundational knowledge of methanogen metabolism[23]. The discovery that translation and transcription machinery genes exhibited greater similarity to eukaryotic proteins than to eubacterial proteins provided strong molecular evidence supporting the three-domain model of cellular life[23].</p>
+<p>M. smithii possesses adhesin-like proteins (ALPs) with specific evolutionary clades of these predicted surface proteins, several exhibiting homology to pectin esterases associated with binding of chondroitin, a major component of mucosal glycosaminoglycans[36]. This specialized surface protein complement reflects the organism's adaptation to persistent colonization of the human intestinal mucosa through specific host-microbe interactions[36]. Regulated expression of distinct ALP subsets directs M. smithii to specific intestinal microhabitats promoting syntrophic relationships with saccharolytic bacterial partners[36]. Gene expression studies utilizing quantitative reverse-transcription PCR revealed that methanol:cobalamin methyltransferase, NADP-dependent alcohol dehydrogenase, and F₄₂₀-dependent NADP oxidoreductase were significantly upregulated in cocolonized animals compared to monoassociated controls, indicating the capacity of M. smithii to utilize diverse fermentation products beyond methane production[36].</p>
+<h2 id="gene-ontology-extensions-capturing-mechanistic-and-contextual-detail">Gene Ontology Extensions: Capturing Mechanistic and Contextual Detail</h2>
+<p>The Gene Ontology annotation framework has evolved to incorporate annotation extensions that capture additional mechanistic and contextual information beyond the basic triplet of gene product, GO term, and evidence code[11]. These extensions employ relationships from the Relations Ontology (RO) combined with terms from GO or external ontologies including tissue-specific cellular components, developmental stages, and regulatory targets[11]. For instance, a kinase involved in signal transduction only during specific developmental stages can be annotated with the extension "happens_during" (developmental stage term), capturing temporal specificity that would be lost with the basic annotation alone[11].</p>
+<p>Regulatory target specification through the "has_regulation_target" extension allows annotation of transcription factors and signaling proteins with their specific targets, converting a general "transcription regulation" annotation into a specific statement about which genes are regulated[11]. Substrate specification for enzymes through the "has_direct_input" extension transforms a generic "kinase activity" annotation into a precise statement about which proteins or peptides serve as substrates[11]. Spatial localization through the "occurs_in" extension combined with cell type ontology terms enables specification of gene product activities within particular cell types or tissues, critical for distinguishing activities in specialized cellular contexts[11].</p>
+<p>Disease-associated gene mutations often alter gene product activities within specific tissues or developmental periods, making annotation extensions particularly valuable for capturing these contextual factors[11]. A gene implicated in neural tube closure defects through MTHFR polymorphisms requires annotation capturing not only the enzymatic function (folate metabolism) but the specific developmental window (neural tube formation) during which normal function proves essential[15][18]. Annotation extensions enable this level of mechanistic precision[11].</p>
+<h2 id="protein-structural-features-domains-and-functional-constraints">Protein Structural Features: Domains and Functional Constraints</h2>
+<p>Protein domain architecture significantly constrains and determines functional properties, making domain identification central to molecular function prediction[27][30]. Hidden Markov model-based domain searching against databases like Pfam provides sequence-based domain annotation, though challenges arise with proteins containing non-contiguous domains, insertional domains, or circular permutants where domains interrupt each other[27][30]. The DomainMapper algorithm addresses these complexities through systematic identification of non-contiguous domain topologies validated against AlphaFold2 structure predictions[27].</p>
+<p>Functional domain annotation based on structural similarity offers promising advances for proteins at phylogenetic distances where sequence similarity drops below detection thresholds[30]. Leveraging high-quality protein structures from AlphaFold2 predictions, structural alignment tools like Foldseek enable identification of domains sharing fold similarity despite substantial sequence divergence[30]. Structure-based domain annotation particularly benefits prediction of longer domains (&gt;100 amino acids), where distinctive folds provide reliable functional signals[30].</p>
+<p>Signal peptides, transmembrane domains, and nuclear localization signals represent functional features with direct implications for cellular component annotation[40]. Signal peptide prediction identifies proteins destined for secretion or ER targeting, establishing their initial subcellular localization context[40]. Transmembrane domain topology prediction distinguishes integral membrane proteins with various architectures from peripheral membrane proteins and fully soluble proteins[40]. These structural features provide interpretable mechanistic links between protein sequence and cellular localization, supporting robust cellular component annotation[40].</p>
+<p>Post-translational modifications including phosphorylation, ubiquitination, lipidation, and glycosylation often critically modulate protein function and localization[37][42]. High-throughput characterization of phospho-mutant libraries reveals how specific phosphorylation sites influence protein stability, complex assembly, and biological activity[37]. Systematic identification of kinase substrate residues through phosphoproteomics provides direct evidence for kinase molecular function and substrate specificity[37].</p>
+<h2 id="comparative-and-evolutionary-approaches-to-functional-annotation">Comparative and Evolutionary Approaches to Functional Annotation</h2>
+<p>The identification of orthologous genes across evolutionary lineages has traditionally supported functional annotation transfer based on the orthology-function conjecture[50][52]. However, recent studies challenge this conjecture, demonstrating that orthologous genes can display greater functional divergence than paralogous genes at equivalent evolutionary distances when measured using functional ontologies and expression profiles[50]. This finding argues for explicit experimental validation of orthologous function rather than assumption of functional equivalence across species[50].</p>
+<p>For distantly related organisms, particularly archaea with limited pathogenic characterization, orthology-based functional inference requires particular caution[43][50]. The evolution of methane-metabolizing enzymes including methyl-coenzyme M reductase and divergent MCR-like complexes capable of oxidizing short-chain alkanes demonstrates functional divergence among MCR homologs despite their shared evolutionary origin[21][24]. Evolutionary rate analysis comparing synonymous substitution rates among orthologs and paralogs provides quantitative assessment of evolutionary divergence, with higher synonymous substitution rates (dS values) indicating greater time since divergence and potentially greater functional divergence[52].</p>
+<p>Paralogous gene analysis reveals functional divergence patterns following gene duplication events[50][52]. Large proportions of paralogous gene duplications result in predicted genes with in-frame stop codons or frameshifts, generating pseudogenes with divergent or absent functions[52]. Terminal lineage-specific duplications often show elevated rates in particular species, suggesting recent adaptive evolution or relaxed selective constraints on redundant gene copies[52]. Understanding these patterns enables more nuanced functional annotation incorporating paralogy relationships[50][52].</p>
+<h2 id="integration-of-multi-modal-biological-data-for-function-prediction">Integration of Multi-Modal Biological Data for Function Prediction</h2>
+<p>Recent advances integrate multiple biological modalities including protein sequences, interaction networks, pathway annotations, and expression data to enhance functional prediction accuracy[16]. The MIF2GO (Multimodal Information Fusion to infer Gene Ontology terms) approach sequentially fuses up to six biological modalities—domain information, subcellular localization, pathway membership, protein-protein interaction networks, gene expression patterns, and sequence features—through three major integration steps[16]. Evaluation across seven benchmark datasets demonstrated substantially improved prediction of Gene Ontology terms for molecular function, biological process, and cellular component compared to single-modality approaches[16].</p>
+<p>The Siamese Contrastive Autoencoder component of MIF2GO encodes domain, subcellular localization, and pathway modalities into interaction and homology relationships through self-supervised learning, bringing closer the representation spaces of different informational modalities[16]. Integration of sequence modality through a self-supervised Language Model with Hierarchical Adaptive Weighting (LM-HAW) deeply extracts different grains of protein features across sequence information at multiple levels of abstraction[16]. The Modal Hypernode Pooling layer performs final fusion to generate unified and effective protein representations integrating information from all available modalities[16].</p>
+<p>Ablation studies revealed that removal of protein-protein interaction modality substantially decreased performance for Gene Ontology terms describing biological processes requiring protein cooperation, such as B cell homeostasis, or cellular components with frequent protein interactions such as membrane domains[16]. Similarly, removal of pathway information decreased prediction accuracy for biological process annotations[16]. These results demonstrate the importance of integrating multiple biological information types for robust functional annotation[16].</p>
+<h2 id="disease-associations-and-phenotype-consequences-establishing-clinical-relevance">Disease Associations and Phenotype Consequences: Establishing Clinical Relevance</h2>
+<p>Gene function understanding gains critical clinical and research relevance through characterization of disease associations, natural genetic variants, and knockout or knockdown phenotypes[15][18][51]. The MTHFR gene provides an instructive example of how functional understanding of enzyme activity connects to multiple complex disease associations[15][18]. The 677C&gt;T polymorphism encodes a thermolabile enzyme variant with reduced activity, resulting in mild to moderate elevation of plasma homocysteine and emergence as a common genetic cause of hyperhomocysteinemia[15][18].</p>
+<p>MTHFR-associated homocystinuria, the most common inborn error of folate metabolism, results from severe MTHFR deficiency leading to accumulation of homocysteine and methionine depletion[15][18]. Patients develop eye problems including lens dislocation and myopia, abnormal blood clotting predisposing to thrombotic events, skeletal abnormalities including marfanoid features, and developmental delays[15][18]. The molecular basis involves impaired conversion of homocysteine to methionine, disrupting protein synthesis dependent on methionine and one-carbon metabolism-dependent methylation reactions[15][18].</p>
+<p>The 677C&gt;T MTHFR polymorphism exhibits widespread population distribution and has been extensively investigated as a risk factor for complex multifactorial disorders including cardiovascular disease, hypertension, blood clots, pregnancy loss, psychiatric disorders, and certain cancers[15][18]. However, most individuals carrying the MTHFR polymorphism do not develop these diseases, suggesting that MTHFR variants alone represent insufficient for disease causation, requiring additional genetic and environmental factors[15][18]. These genotype-phenotype relationships must be carefully characterized and qualified in functional annotations to avoid overstating the functional significance of particular variants[15].</p>
+<h2 id="recommendations-for-go-annotation-curation-of-mlla">Recommendations for GO Annotation Curation of mllA</h2>
+<p>Given the limited specific experimental characterization of mllA in METEA within the provided search results, annotation curation should prioritize the following sequential approaches: First, establish comprehensive sequence characterization through comparative genomic and phylogenetic analysis, identifying conserved domains, transmembrane topology, signal peptides, and orthologous sequences across bacterial taxa[1][27]. Second, conduct targeted literature review integrating any available biochemical characterization, cellular localization studies, and phenotypic data from both METEA and any methanogenic relatives that might inform functional predictions[1][50].</p>
+<p>Third, perform structural prediction utilizing AlphaFold2 and related tools to generate high-confidence structural models identifying likely functional sites, protein-protein interaction interfaces, and membrane topology features[30][40]. Fourth, conduct comparative functional analysis across available orthologs, explicitly testing the validity of functional orthology assumptions rather than assuming functional equivalence[50][52]. Fifth, prioritize direct experimental evidence—enzyme kinetics studies, substrate specificity determination, cellular localization validation, and protein-protein interaction characterization—over computational predictions when such evidence becomes available[11][13][40].</p>
+<p>Annotation should initially assign molecular function terms only with appropriate qualifier levels reflecting high evidence confidence (Inferred from Direct Assay or Inferred from Sequence Homology with appropriate caveats)[11]. Cellular component annotations should specify subcellular localization based on strongest available evidence, acknowledging uncertainty regarding membrane topology or organellar targeting through appropriate annotation qualifier notation[11]. Biological process annotations should remain restricted to processes directly supported by experimental or orthologous evidence rather than speculative inference[11]. All annotations should include explicit evidence codes and PMID citations enabling users to evaluate evidence quality and consult primary literature[11].</p>
+<h2 id="conclusion-establishing-rigorous-standards-for-novel-gene-annotation">Conclusion: Establishing Rigorous Standards for Novel Gene Annotation</h2>
+<p>The annotation of novel genes with limited experimental characterization, particularly those from organism groups like archaea with inherently limited research infrastructure, requires rigorous adherence to evidence-based curation standards while acknowledging the limitations of available information[8][11][43]. Rather than speculating about gene function based solely on sequence similarity or orthology assumptions increasingly shown to be unreliable, robust annotation prioritizes explicit documentation of evidence sources, confidence levels, and limitations[8][11][50]. The Gene Ontology framework provides sophisticated tools through its evidence codes, annotation extensions, and qualifier systems for capturing precise functional understanding while transparently indicating the confidence and type of evidence supporting each functional claim[8][11].</p>
+<p>The multi-modal integration of diverse biological information types—sequences, structures, interactions, expressions, and evolutionary relationships—offers promising advances for improved functional characterization even for understudied genes from poorly characterized organisms[16]. Experimental validation remains the gold standard for functional annotation, with biochemical assays, cellular studies, and genetic approaches providing the highest confidence evidence for specific molecular functions and biological processes[11][13][40]. As biological research increasingly emphasizes precision medicine and therapeutic target identification, rigorous, evidence-based gene annotation provides the essential foundation enabling translation from genomic information to functional understanding and ultimately to clinical application[11][16].</p>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC11792507/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC10245069/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC3601553/</li>
+<li>https://www.invitae.com/us/providers/test-catalog/gene-20306</li>
+<li>https://www.nature.com/articles/s41467-024-50615-3</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC3742681/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC9911673/</li>
+<li>http://geneontology.org/docs/go-annotations/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC4960998/</li>
+<li>https://besjournals.onlinelibrary.wiley.com/doi/full/10.1111/1365-2656.12214</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC3706743/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC11441905/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC9378515/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC11641113/</li>
+<li>https://medlineplus.gov/genetics/gene/mthfr/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC11681170/</li>
+<li>https://pubmed.ncbi.nlm.nih.gov/39671499/</li>
+<li>https://www.ncbi.nlm.nih.gov/books/NBK6561/</li>
+<li>https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=94025&amp;lvl=0</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC6616113/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC6453112/</li>
+<li>https://www.ncbi.nlm.nih.gov/taxonomy</li>
+<li>https://en.wikipedia.org/wiki/Methanocaldococcus_jannaschii</li>
+<li>https://pubmed.ncbi.nlm.nih.gov/30664670/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC5633382/</li>
+<li>https://www.uniprot.org/uniprotkb/Q8NB16/entry</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC9601794/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC6382739/</li>
+<li>https://www.uniprot.org/uniprotkb/Q9D2Y4/entry</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC10830352/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC8444396/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC10673094/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC11437934/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC7617265/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC5563889/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC1890564/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC7612524/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC6311692/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC4645406/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC10329489/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC5574136/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC12507117/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC145348/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC6557081/</li>
+<li>https://genome.jgi.doe.gov/portal/metmc/metmc.home.html</li>
+<li>https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=1615586</li>
+<li>https://www.uniprot.org/uniprot/C5AWV9</li>
+<li>https://en.wikipedia.org/wiki/Methanocaldococcus</li>
+<li>https://dr.lib.iastate.edu/bitstreams/d5cc5787-27cf-4401-971c-570deb9ae8c1/download</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC5877793/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC12095019/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC2099592/</li>
+<li>https://pubmed.ncbi.nlm.nih.gov/40775854/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC9081873/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC7730869/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC9401015/</li>
+<li>https://www.nature.com/articles/s41586-025-08890-7</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC5872691/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC9204698/</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: C5B1I4
+gene_symbol: mllA
+product_type: PROTEIN
+taxon:
+  id: NCBITaxon:272630
+  label: Methylorubrum extorquens AM1
+description: Metallophore synthetase component (mllA) belonging to the IucA/IucC family.
+  Functions as an acid-amino acid ligase involved in methylolanthanin biosynthesis.
+  Methylolanthanin is a lanthanide-chelating metallophore (lanthanophore) that enables
+  bacteria to acquire rare earth elements from the environment, which are essential
+  cofactors for lanthanide-dependent methanol dehydrogenases.
+existing_annotations:
+- term:
+    id: GO:0016881
+    label: acid-amino acid ligase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  review:
+    summary: Correct molecular function - IucA/IucC family proteins catalyze ATP-dependent
+      formation of amide/ester bonds during metallophore biosynthesis. Function is
+      conserved whether product is iron-siderophore or lanthanide-metallophore
+    action: ACCEPT
+- term:
+    id: GO:0019290
+    label: siderophore biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: Analogous but not specific - mllA synthesizes methylolanthanin, a LANTHANIDE-chelating
+      metallophore (lanthanophore), not an iron-chelating siderophore. The chemistry
+      and gene family are analogous to siderophore biosynthesis, but the product chelates
+      lanthanides not iron. Based on literature about mll biosynthetic gene cluster
+      in M. extorquens AM1. No specific GO term exists for lanthanophore biosynthesis
+      yet.
+    action: KEEP_AS_NON_CORE
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms.
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: UniProt:C5B1I4
+  title: UniProt entry for mllA siderophore synthetase
+  findings:
+  - statement: Siderophore synthetase component
+    supporting_text: &#39;SubName: Full=Siderophore synthetase component&#39;
+  - statement: Belongs to the IucA/IucC family
+    supporting_text: &#39;SIMILARITY: Belongs to the IucA/IucC family&#39;
+  - statement: Contains aerobactin biosynthesis IucA/IucC N-terminal domain (residues
+      139-364)
+    supporting_text: DOMAIN 139..364 /note=Aerobactin siderophore biosynthesis IucA/IucC
+      N-terminal
+  - statement: Contains aerobactin biosynthesis IucA/IucC-like C-terminal domain (residues
+      396-556)
+    supporting_text: DOMAIN 396..556 /note=Aerobactin siderophore biosynthesis IucA/IucC-like
+      C-terminal
+core_functions:
+- description: Biosynthesis of methylolanthanin lanthanophore for rare earth element
+    acquisition
+  molecular_function:
+    id: GO:0016881
+    label: acid-amino acid ligase activity
+proposed_new_terms:
+- proposed_name: lanthanophore biosynthetic process
+  proposed_definition: The chemical reactions and pathways resulting in the formation
+    of lanthanophores, small molecules that chelate lanthanide rare earth elements
+    to facilitate their uptake by organisms
+  supported_by:
+  - reference_id: UniProt:C5B1I4
+    supporting_text: Siderophore synthetase component...Belongs to the IucA/IucC family
+status: DRAFT
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

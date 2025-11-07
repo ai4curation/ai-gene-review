@@ -8,7 +8,7 @@ URI: [gene_review:reference_id](https://w3id.org/ai4curation/gene_review/referen
 
 ## Domain and Range
 
-None &#8594;  <sub>0..1</sub> [Reference](Reference.md)
+None &#8594;  <sub>1..1</sub> [Reference](Reference.md)
 
 ## Parents
 

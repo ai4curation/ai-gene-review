@@ -1,0 +1,2422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RASA3 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>RASA3</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q14644" target="_blank" class="term-link">
+                        Q14644
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Aliases:</span>
+                <div class="aliases">
+                    
+                    <span class="badge">RAS p21 protein activator 3</span>
+                    
+                    <span class="badge">GAP1(IP4BP)</span>
+                    
+                    <span class="badge">R-Ras GAP</span>
+                    
+                    <span class="badge">Inositol 1,3,4,5-tetrakisphosphate-binding protein</span>
+                    
+                </div>
+            </div>
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "RASA3";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q14644" data-a="DESCRIPTION: RAS p21 protein activator 3, bifunctional GTPase-a..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>RAS p21 protein activator 3, bifunctional GTPase-activating protein for both RAS and RAP1 small GTPases. Member of GAP1 family characterized by two N-terminal C2 domains (Ca2+ and phospholipid binding), central pleckstrin homology (PH) domain, and C-terminal RasGAP catalytic domain. Originally identified as first known receptor for inositol 1,3,4,5-tetrakisphosphate (IP4). Unique among RasGAPs for dual substrate specificity: stimulates GTP hydrolysis on both Ras family GTPases (H-Ras, N-Ras, K-Ras, R-Ras) and Rap1, using arginine-finger mechanism for both substrates. PH domain binds multiple lipids - high affinity for PIP3, PI(4,5)P2, and soluble IP4. Critically, PIP3 binding INHIBITS RASA3&#39;s GAP activity, providing negative feedback link between PI3K and Ras/Rap signaling - when PI3K generates PIP3, RASA3 is inactivated, relieving restraint on Ras/Rap1. Cytoplasmic protein with regulated membrane association via C2 and PH domains. Essential non-redundant role in vertebrate hematopoiesis: mouse scat mutant (G125V, disrupts membrane targeting) exhibits severe anemia and thrombocytopenia with ~94% lethality by 30 days due to bone marrow failure from unchecked Ras activity in erythroid cells. In platelets, RASA3 is major Rap1-GAP counterbalancing CalDAG-GEFI activator - loss causes spontaneous platelet activation, aberrant integrin αIIbβ3 activation, and consumptive thrombocytopenia. In T lymphocytes, acts as gatekeeper of activation and adhesion: restrains Rap1-driven LFA-1 integrin activation until proper TCR/costimulation occurs; RASA3-deficient T cells show increased Rap1-GTP, constitutive integrin high-affinity state, impaired egress from lymph nodes, and dysregulated immune responses. Human biallelic RASA3 loss-of-function mutations cause Rasopathy-like syndrome with developmental abnormalities and bone marrow failure. Expression in hematopoietic cells, platelets, megakaryocytes, T cells, and various tissues. Critical negative regulator that sets activation thresholds in signaling pathways to prevent overactivation.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005096" target="_blank" class="term-link">
+                                    GO:0005096
+                                </a>
+                            </span>
+                            <span class="term-label">GTPase activator activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q14644" data-a="GO:0005096" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> GTPase activator activity - RasGAP and Rap1GAP function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core enzymatic function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1902531" target="_blank" class="term-link">
+                                    GO:1902531
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of intracellular signal transduction</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q14644" data-a="GO:1902531" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Regulation of intracellular signal transduction - regulates Ras/Rap1 signaling.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core regulatory role.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005096" target="_blank" class="term-link">
+                                    GO:0005096
+                                </a>
+                            </span>
+                            <span class="term-label">GTPase activator activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q14644" data-a="GO:0005096" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> GTPase activator activity - RasGAP and Rap1GAP function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core enzymatic function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q14644" data-a="GO:0005886" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Plasma membrane - membrane-associated via C2 and PH domains.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core localization for substrate access.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006950" target="_blank" class="term-link">
+                                    GO:0006950
+                                </a>
+                            </span>
+                            <span class="term-label">response to stress</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q14644" data-a="GO:0006950" data-r="GO_REF:0000117" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Response to stress - may be involved in stress signaling.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Broad process.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008270" target="_blank" class="term-link">
+                                    GO:0008270
+                                </a>
+                            </span>
+                            <span class="term-label">zinc ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q14644" data-a="GO:0008270" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Zinc ion binding - RasGAP domain requires metal cofactors.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Enzymatic requirement.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035556" target="_blank" class="term-link">
+                                    GO:0035556
+                                </a>
+                            </span>
+                            <span class="term-label">intracellular signal transduction</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q14644" data-a="GO:0035556" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Intracellular signal transduction - participates in Ras/Rap1 signaling pathways.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Signaling role.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046580" target="_blank" class="term-link">
+                                    GO:0046580
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of Ras protein signal transduction</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q14644" data-a="GO:0046580" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Negative regulation of Ras protein signal transduction - core function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core regulatory function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046872" target="_blank" class="term-link">
+                                    GO:0046872
+                                </a>
+                            </span>
+                            <span class="term-label">metal ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q14644" data-a="GO:0046872" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Metal ion binding - requires metal cofactors.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Enzymatic requirement.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005246" target="_blank" class="term-link">
+                                    GO:0005246
+                                </a>
+                            </span>
+                            <span class="term-label">calcium channel regulator activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10828023" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10828023
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Distinct localization and function of (1,4,5)IP(3) receptor ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q14644" data-a="GO:0005246" data-r="PMID:10828023" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Calcium channel regulator activity - C2 domains bind Ca2+, may regulate Ca2+ signaling in platelets.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Regulatory function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030168" target="_blank" class="term-link">
+                                    GO:0030168
+                                </a>
+                            </span>
+                            <span class="term-label">platelet activation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10828023" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10828023
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Distinct localization and function of (1,4,5)IP(3) receptor ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q14644" data-a="GO:0030168" data-r="PMID:10828023" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Platelet activation - critical regulator of Rap1-dependent platelet activation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Key physiological role.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            Reactome:R-HSA-5658231
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q14644" data-a="GO:0005829" data-r="Reactome:R-HSA-5658231" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytosol - cytosolic protein with regulated membrane association.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core localization.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            Reactome:R-HSA-5658435
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q14644" data-a="GO:0005829" data-r="Reactome:R-HSA-5658435" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytosol - cytosolic protein with regulated membrane association.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core localization.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009898" target="_blank" class="term-link">
+                                    GO:0009898
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasmic side of plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10828023" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10828023
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Distinct localization and function of (1,4,5)IP(3) receptor ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q14644" data-a="GO:0009898" data-r="PMID:10828023" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytoplasmic side of plasma membrane - membrane-associated via lipid-binding domains.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Specific localization for function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005096" target="_blank" class="term-link">
+                                    GO:0005096
+                                </a>
+                            </span>
+                            <span class="term-label">GTPase activator activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7637787" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:7637787
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Identification of a specific Ins(1,3,4,5)P4-binding protein ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q14644" data-a="GO:0005096" data-r="PMID:7637787" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> GTPase activator activity - RasGAP and Rap1GAP function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core enzymatic function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007165" target="_blank" class="term-link">
+                                    GO:0007165
+                                </a>
+                            </span>
+                            <span class="term-label">signal transduction</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7637787" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:7637787
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Identification of a specific Ins(1,3,4,5)P4-binding protein ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q14644" data-a="GO:0007165" data-r="PMID:7637787" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Signal transduction - participates in Ras/Rap1-mediated signaling.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Signaling role.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Bifunctional RasGAP that catalyzes GTP hydrolysis on both RAS proteins (H-Ras, N-Ras, K-Ras, R-Ras) and RAP1, converting active GTP-bound forms to inactive GDP-bound states. Major Rap1-GAP in platelets and T cells. PH domain binds IP4, PIP3, and PI(4,5)P2; PIP3 binding inhibits GAP activity (feedback regulation). Essential for hematopoiesis, platelet activation threshold, and T cell adhesion control.</h3>
+                <span class="vote-buttons" data-g="Q14644" data-a="FUNCTION: Bifunctional RasGAP that catalyzes GTP hydrolysis ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005096" target="_blank" class="term-link">
+                            GTPase activator activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046580" target="_blank" class="term-link">
+                                negative regulation of Ras protein signal transduction
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030168" target="_blank" class="term-link">
+                                platelet activation
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030098" target="_blank" class="term-link">
+                                lymphocyte differentiation
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                plasma membrane
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            UniProt:Q14644
+                            
+                        </span>
+                        
+                        <div class="finding-text">RASA3 is bifunctional GAP for Ras and Rap1. PH domain binds IP4 and PIP3. Critical for erythropoiesis (scat mutant causes severe anemia), platelet Rap1 regulation, and T cell integrin activation control.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10828023" target="_blank" class="term-link">
+                            PMID:10828023
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Distinct localization and function of (1,4,5)IP(3) receptor subtypes and the (1,3,4,5)IP(4) receptor GAP1(IP4BP) in highly purified human platelet membranes.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/7637787" target="_blank" class="term-link">
+                            PMID:7637787
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Identification of a specific Ins(1,3,4,5)P4-binding protein as a member of the GAP1 family.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        Reactome:R-HSA-5658231
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">RAS GAPs stimulate RAS GTPase activity</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        Reactome:R-HSA-5658435
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">RAS GAPs bind RAS:GTP</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Openai</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(RASA3-deep-research-openai.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q14644" data-a="DOC: Deep Research Openai" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: openai<br />
+model: o3-deep-research-2025-06-26<br />
+cached: true<br />
+start_time: '2025-11-03T23:38:26.506442'<br />
+end_time: '2025-11-03T23:38:26.507702'<br />
+duration_seconds: 0.0<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: human<br />
+  gene_id: Q14644<br />
+  gene_symbol: RASA3<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    temperature: 0.1<br />
+    top_p: 1.0<br />
+citation_count: 77</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<p>Please provide a comprehensive research report on the gene RASA3 (Q14644) in human.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function. </p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<h1 id="rasa3-q14644-function-regulation-and-biological-role-in-human-cells">RASA3 (Q14644) – Function, Regulation, and Biological Role in Human Cells</h1>
+<h2 id="gene-and-protein-overview">Gene and Protein Overview</h2>
+<p><strong>RASA3</strong> (Ras p21 protein activator 3) is a human gene encoding a Ras GTPase-activating protein (RasGAP) of the GAP1 family (<a href="https://pubmed.ncbi.nlm.nih.gov/25294679/#:~:text=RASA3%20,1%2C3%2C4%2C5%29P4%20receptor">pubmed.ncbi.nlm.nih.gov</a>). It is also known by synonyms <strong>GAP1(IP4BP)</strong> (GTPase-activating protein 1, inositol 1,3,4,5-tetrakisphosphate-binding protein) and <strong>R-Ras GAP</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/25294679/#:~:text=RASA3%20,1%2C3%2C4%2C5%29P4%20receptor">pubmed.ncbi.nlm.nih.gov</a>). The UniProt identifier for the human RASA3 protein is <strong>Q14644</strong>. RASA3 was first identified in 1995 as a protein isolated from platelet membranes due to its high-affinity binding to inositol 1,3,4,5-tetrakisphosphate (IP₄) (<a href="https://pubmed.ncbi.nlm.nih.gov/25294679/#:~:text=GAP1,1%2C3%2C4%2C5%29P4%20receptor">pubmed.ncbi.nlm.nih.gov</a>). This discovery established RASA3 as the first known receptor for IP₄ and hinted at its regulatory role in signal transduction. At the sequence and structural level, RASA3 belongs to the GAP1 subfamily of RasGAPs, which is characterized by multiple conserved domains: <strong>two N-terminal C2 domains</strong> (calcium-dependent phospholipid-binding domains), a central <strong>pleckstrin homology (PH) domain</strong>, and a C-terminal <strong>RasGAP catalytic domain</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10621891/#:~:text=domain%20structures%2C%20including%20GAP%20domains,binding%20C2">pmc.ncbi.nlm.nih.gov</a>). The tandem C2 domains can bind Ca²⁺ and phospholipids, while the PH domain (sometimes termed a PH-BTK domain) can bind membrane phosphoinositides and signaling lipids (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10621891/#:~:text=domain%20structures%2C%20including%20GAP%20domains,binding%20C2">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10621891/#:~:text=domains%20and%20a%20Pleckstrin%20homology,spectometry%20of%20proteins%20that%20bound">pmc.ncbi.nlm.nih.gov</a>). These domains target RASA3 to cellular membranes and contribute to its regulation by lipid second messengers. </p>
+<h2 id="molecular-function-and-mechanism-of-rasa3">Molecular Function and Mechanism of RASA3</h2>
+<p><strong>RASA3’s primary function is as a GTPase-activating protein for Ras-related small GTPases</strong>, meaning it accelerates the hydrolysis of GTP bound to these signaling proteins, thereby switching them from an active (GTP-bound) to inactive (GDP-bound) state. Biochemically, RASA3 is <em>bifunctional</em> in its substrate specificity: it can act on <strong>Ras family GTPases (e.g. H-Ras, N-Ras, K-Ras, and R-Ras)</strong> as well as on the <strong>Ras-related protein Rap1</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/25294679/#:~:text=RASA3%20,1%2C3%2C4%2C5%29P4%20receptor">pubmed.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10621891/#:~:text=,Google%20Scholar">pmc.ncbi.nlm.nih.gov</a>). In vitro assays have demonstrated that RASA3’s GAP domain stimulates GTP hydrolysis on both Ras and Rap1, distinguishing it from some other RasGAPs that act only on Ras. A 2006 biochemical study by Kupzig <em>et al.</em> showed that all members of the GAP1 family (including RASA3) can function as GAPs for both Ras and Rap1, confirming RASA3’s dual specificity (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10621891/#:~:text=,Google%20Scholar">pmc.ncbi.nlm.nih.gov</a>). The catalytic mechanism of RASA3’s GAP domain follows the canonical RasGAP paradigm: it provides an “arginine finger” residue into the GTPase’s active site to stabilize the transition state of GTP hydrolysis (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10621891/#:~:text=,PMC%20free%20article">pmc.ncbi.nlm.nih.gov</a>). Notably, Rap1 is normally resistant to Ras-specific GAPs due to differences in its active site, but RASA3 uses the same arginine-finger mechanism to inactivate Rap1, rather than the “asparagine thumb” mechanism employed by dedicated Rap1GAPs (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10621891/#:~:text=,PMC%20free%20article">pmc.ncbi.nlm.nih.gov</a>). This indicates that RASA3’s GAP domain is structurally equipped to accommodate both Ras and Rap1, underscoring its role as a broad regulator of Ras superfamily signaling. In summary, the <strong>enzymatic reaction catalyzed by RASA3</strong> is: Ras-GTP → Ras-GDP + P<sub>i</sub> (with RASA3 greatly accelerating the release of inorganic phosphate), and similarly for Rap1-GTP. By stimulating GTP hydrolysis, RASA3 <strong>turns off Ras/Rap1 signaling pathways</strong>, acting as a critical negative regulator in cellular signal transduction (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10621891/#:~:text=mediating%20T%20cell%20activation%2C%20the,T%20cell%20activation%20and%20migration">pmc.ncbi.nlm.nih.gov</a>).</p>
+<h2 id="domain-structure-and-regulation-by-lipids">Domain Structure and Regulation by Lipids</h2>
+<p>The multidomain architecture of RASA3 (C2-C2-PH-GAP) is intimately linked to its regulation and localization. <strong>The C2 domains</strong> (at the N-terminus) are Ca²⁺-binding modules often found in signaling proteins that transiently associate with membranes. In RASA3, the two C2 domains likely cooperate to recruit or anchor the protein to intracellular membranes (such as the inner leaflet of the plasma membrane) in response to calcium influx (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10621891/#:~:text=domain%20structures%2C%20including%20GAP%20domains,binding%20C2">pmc.ncbi.nlm.nih.gov</a>). <strong>The PH domain</strong> of RASA3 binds to specific phosphoinositides and inositol phosphates, which modulate RASA3’s activity and subcellular localization. Quantitative binding studies and proteomic screens have shown that the RASA3 PH domain has high affinity for the tris-phosphorylated phosphoinositide PI(3,4,5)P₃ (PIP₃) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10621891/#:~:text=match%20at%20L285%20domains%20and,spectometry%20of%20proteins%20that%20bound">pmc.ncbi.nlm.nih.gov</a>), as well as notable binding to PI(4,5)P₂ (a membrane lipid) and soluble inositol 1,3,4,5-tetrakisphosphate (IP₄) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10621891/#:~:text=match%20at%20L289%20agarose%20beads,2%7D%20%5B31%2C32">pmc.ncbi.nlm.nih.gov</a>). In fact, RASA3’s original designation GAP1(IP4BP) reflects its ability to bind IP₄ with nanomolar affinity (<a href="https://pubmed.ncbi.nlm.nih.gov/25294679/#:~:text=GAP1,1%2C3%2C4%2C5%29P4%20receptor">pubmed.ncbi.nlm.nih.gov</a>). These interactions suggest a regulatory mechanism wherein <strong>second messengers</strong> control RASA3: for example, <strong>PIP₃ produced by PI3-kinase and IP₄ produced downstream of PLCγ can bind RASA3’s PH domain and alter its activity or localization</strong>. </p>
+<p>Crucially, recent studies indicate that <strong>PIP₃ binding inhibits RASA3’s GAP activity</strong>, providing a feedback link between PI3K signaling and Ras/Rap regulation. In T lymphocytes, it was observed that activating PI3K (which raises PIP₃ levels at the membrane) functionally <strong>inactivates RASA3</strong>, thereby relieving its restraining effect on Rap1 (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10621891/#:~:text=Furthermore%2C%20although%20most%20proteins%20with,suggesting%20that%20PI3K%20acts">pmc.ncbi.nlm.nih.gov</a>). In contrast, when PI3K is blocked pharmacologically, T-cell receptor stimulation fails to activate Rap1 unless RASA3 is missing, implying that PIP₃ generation is normally required to suppress RASA3 and allow Rap1 activation (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10621891/#:~:text=Furthermore%2C%20although%20most%20proteins%20with,suggesting%20that%20PI3K%20acts">pmc.ncbi.nlm.nih.gov</a>). Consistently, a mutant RASA3 PH domain that cannot bind PIP₃ was shown to render RASA3 <strong>constitutively active</strong> as a GAP; overexpression of this PH-mutant RASA3 more strongly suppressed integrin activation than wild-type RASA3, underscoring that <strong>PH domain binding to lipid inhibits RASA3’s function</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10621891/#:~:text=be%20inactivated%20by%20PI3K%20and,suggesting%20that%20PI3K%20acts">pmc.ncbi.nlm.nih.gov</a>). Together, these findings support a model in which <strong>RASA3 is kept active under resting conditions</strong> (when PIP₃ is low) to police basal Ras/Rap activity, but upon receptor stimulation (and PI3K activation), PIP₃ binding to RASA3’s PH domain <strong>releases the brake</strong> on Ras/Rap signaling. The role of soluble IP₄ in RASA3 regulation is less completely understood, but as an IP₃ metabolite, IP₄ may compete with phosphoinositides for the PH domain or promote a conformational state of RASA3. Early biochemical studies suggested IP₄ binding could sequester RASA3 or modulate its localization (<a href="https://pubmed.ncbi.nlm.nih.gov/25294679/#:~:text=GAP1,1%2C3%2C4%2C5%29P4%20receptor">pubmed.ncbi.nlm.nih.gov</a>), though the in vivo consequence remains an area of investigation. In summary, <strong>RASA3’s activity is tightly regulated by lipid messengers</strong>: it contains built-in lipid-sensing domains (C2 and PH) that control when and where it inactivates Ras and Rap1.</p>
+<h2 id="subcellular-localization">Subcellular Localization</h2>
+<p>RASA3 is predominantly a <strong>cytosolic protein with regulated membrane association</strong>. It lacks any transmembrane region, instead associating with membranes via its C2 and PH domains. Functional studies have shown that RASA3 must localize to the inner surface of the plasma membrane to access its GTPase substrates (which themselves are membrane-attached). For instance, the spontaneous mouse mutant <strong>“scat”</strong> (severe combined anemia and thrombocytopenia) carries a single G125V substitution in the Rasa3 protein that disrupts its membrane targeting (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3409772/#:~:text=regulatory%20feedback%20mechanism%20common%20to,is%20also%20defective%20during%20crisis">pmc.ncbi.nlm.nih.gov</a>). This mutation causes RASA3 to mislocalize to the cytosol in erythroid cells, rendering it unable to inactivate membrane-bound Ras (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3409772/#:~:text=Ras%20GTPase%20activating%20protein%20,is%20also%20defective%20during%20crisis">pmc.ncbi.nlm.nih.gov</a>). As a result, <strong>Ras-GTP levels in scat red blood cells are abnormally high</strong> due to the absence of RASA3 at the membrane (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3409772/#:~:text=Ras%20GTPase%20activating%20protein%20,is%20also%20defective%20during%20crisis">pmc.ncbi.nlm.nih.gov</a>). This provides compelling evidence that <strong>correct subcellular localization (membrane recruitment) is essential for RASA3’s function</strong>. Under normal circumstances, RASA3 is thought to cycle between the cytosol and the plasma membrane. When cytosolic Ca²⁺ rises or specific lipids are present, RASA3’s C2 and PH domains cooperate to recruit it to the membrane, where it can bind and deactivate Ras or Rap1. Conversely, signals like PIP₃ binding may alter its localization or conformation, possibly keeping it from the membrane (or in an inhibited membrane-bound state) during active signaling. In platelets and leukocytes, RASA3 is found in the cytosolic fraction at rest but rapidly relocalizes upon activation of upstream signals (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3409772/#:~:text=Ras%20GTPase%20activating%20protein%20,is%20also%20defective%20during%20crisis">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10621891/#:~:text=domain%20structures%2C%20including%20GAP%20domains,binding%20C2">pmc.ncbi.nlm.nih.gov</a>). Overall, RASA3 operates at the <strong>cytosol–membrane interface</strong>, carrying out its GAP function on the inner leaflet of the plasma membrane (and potentially endomembranes) where Ras/Rap1 signaling occurs.  </p>
+<h2 id="biological-processes-and-pathways-involving-rasa3">Biological Processes and Pathways Involving RASA3</h2>
+<h3 id="negative-regulator-of-rasmapk-signaling">Negative Regulator of Ras–MAPK Signaling</h3>
+<p>As a RasGAP, RASA3 is an important <strong>negative regulator of the Ras–RAF–MEK–ERK (MAPK) cascade</strong>. By accelerating Ras-GTP turnover, RASA3 dampens Ras-dependent signaling for cell proliferation and differentiation. This role is especially critical in hematopoietic cells. <strong>Erythropoiesis (red blood cell development)</strong> provides a clear example: RASA3 is required to keep Ras activity in check during red cell maturation. In the scat mouse model, loss of functional RASA3 led to <strong>excessive Ras-GTP in erythroid cells and a block in erythropoiesis</strong>, causing severe anemia (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3409772/#:~:text=Ras%20GTPase%20activating%20protein%20,critical%2C%20conserved%2C%20and%20nonredundant%20role">pmc.ncbi.nlm.nih.gov</a>). Approximately <em>94% of scat mutant mice die in early infancy</em> (by ~30 days of age) during acute “crisis” episodes of bone marrow failure (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3409772/#:~:text=scat%20red%20cells%20where%20it,for%20RASA3%20in%20vertebrate%20hematopoiesis">pmc.ncbi.nlm.nih.gov</a>). These crises are attributed to unchecked Ras signaling disrupting the normal feedback control of blood cell production (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3409772/#:~:text=The%20recessive%20mutant%20scat%20,catastrophic%20hematopoietic%20failure%20in%20the">pmc.ncbi.nlm.nih.gov</a>). The crucial involvement of RASA3 in the Ras/MAPK pathway is further supported by human data: <strong>biallelic loss-of-function mutation in RASA3 has been identified in a child with a Rasopathy-like syndrome</strong>, featuring developmental abnormalities and bone marrow failure (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11288707/#:~:text=had%20low,MAPK%20pathway.%20The">pmc.ncbi.nlm.nih.gov</a>). Rasopathies (such as Noonan, LEOPARD, or Costello syndromes) are typically caused by hyperactive Ras/MAPK signaling, and the patient with mutant RASA3 showed overlapping clinical features (growth delays, distinctive facial features, and cytopenias) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11288707/#:~:text=bone%20marrow%20failure%20are%20known,RASopathies">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11288707/#:~:text=which%20are%20characterized%20by%20many,of%20RASopathy%20genes%20was%20observed">pmc.ncbi.nlm.nih.gov</a>). The RASA3 variant (K385T) in this case affects the conserved RasGAP domain, and was predicted to abolish RASA3’s activity (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11288707/#:~:text=had%20low,MAPK%20pathway.%20The">pmc.ncbi.nlm.nih.gov</a>). Together with the mouse models, this suggests that <strong>RASA3 normally acts as a tumor suppressor-like brake on Ras</strong> in cells: when RASA3 function is lost, Ras-MAPK signaling becomes overactive, leading to disordered proliferation or differentiation (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3409772/#:~:text=Ras%20GTPase%20activating%20protein%20,critical%2C%20conserved%2C%20and%20nonredundant%20role">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11288707/#:~:text=%28Ras,of%20RASopathy%20genes%20was%20observed">pmc.ncbi.nlm.nih.gov</a>). Indeed, RASA3’s protein interaction network in human cells is enriched for Ras/MAPK pathway members and known Rasopathy genes (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11288707/#:~:text=which%20are%20characterized%20by%20many,putative%20function%20module%2C%20which%20further">pmc.ncbi.nlm.nih.gov</a>), consistent with its placement in this signaling pathway. While <strong>RASA3 is not redundant with other RasGAPs</strong> (e.g. RASA1 or NF1) in certain contexts (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3409772/#:~:text=the%20second%20crisis%20,for%20RASA3%20in%20vertebrate%20hematopoiesis">pmc.ncbi.nlm.nih.gov</a>), it may have specialized importance in blood lineages and perhaps other cell types where its expression is high. RASA3 has been reported as expressed in hematopoietic progenitors and various tissues, and its dysregulation could contribute to oncogenic processes in leukemia or other cancers through relief of Ras signaling constraints (<a href="https://pubmed.ncbi.nlm.nih.gov/25294679/#:~:text=Keywords%3A%20Cancer%3B%20GTPase%20activating%20protein%3B,Megakaryocyte%3B%20Platelet%3B%20RASA3%3B%20Rap%3B%20Ras">pubmed.ncbi.nlm.nih.gov</a>). However, direct mutations of RASA3 in sporadic cancers are not commonly reported; its role in cancer is thought to be functionally significant (through Ras hyperactivation) rather than as a frequent mutational target. </p>
+<h3 id="regulator-of-rap1-and-integrin-signaling-in-platelets">Regulator of Rap1 and Integrin Signaling in Platelets</h3>
+<p>One of the most prominent roles of RASA3 is in the regulation of <strong>platelet activation and blood clotting</strong>, via its action on Rap1. Platelets (the cell fragments responsible for blood clot formation) are critically controlled by the small GTPase <strong>Rap1</strong>. Upon vascular injury, Rap1 triggers “inside-out” signaling that activates platelet integrin receptors (especially αIIbβ3), allowing platelets to aggregate and form a clot. To prevent inappropriate clotting, Rap1 activity in resting platelets is kept low. <strong>RASA3 is the chief GAP that inactivates Rap1 in platelets, counterbalancing the Rap1 activator CalDAG-GEFI (a guanine nucleotide exchange factor)</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4396462/#:~:text=Abstract">pmc.ncbi.nlm.nih.gov</a>). In other words, <strong>platelet Rap1 activation is a push–pull system</strong>: CalDAG-GEFI rapidly loads Rap1 with GTP in response to calcium and DAG signals, and RASA3 hydrolyzes that GTP to turn Rap1 off (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4396462/#:~:text=Abstract">pmc.ncbi.nlm.nih.gov</a>). This balance ensures that platelets only fully activate when the proper signals are received. Genetic studies have confirmed RASA3’s essential role in this process. Mice lacking functional Rasa3 exhibit <strong>severe thrombocytopenia (low platelets)</strong> and a tendency for platelets to become spontaneously activated, leading to intermittent episodes of platelet consumption – observations made in both the scat mutant and tissue-specific Rasa3 knockouts (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3409772/#:~:text=The%20recessive%20mutant%20scat%20,catastrophic%20hematopoietic%20failure%20in%20the">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10621891/#:~:text=%2A%2049.Molina,trisphosphate">pmc.ncbi.nlm.nih.gov</a>). In one study, megakaryocyte-specific ablation of Rasa3 caused defects in proplatelet formation and aberrant integrin signaling, due to unrestrained Rap1 activity in these cells (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10621891/#:~:text=%2A%2049.Molina,trisphosphate">pmc.ncbi.nlm.nih.gov</a>). Similarly, <strong>Stefanini <em>et al.</em> (2015) showed that RASA3 is a critical inhibitor of Rap1-dependent platelet activation</strong>: platelets without RASA3 had elevated baseline levels of Rap1-GTP and exhibited excessive integrin αIIbβ3 activation even in the absence of stimuli (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4396462/#:~:text=Abstract">pmc.ncbi.nlm.nih.gov</a>). As a consequence, such platelets are prone to aggregate inappropriately, and the mice suffer from bleeding abnormalities despite paradoxical platelet activation (because the hyperactive platelets get cleared or degranulated) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3409772/#:~:text=The%20recessive%20mutant%20scat%20,catastrophic%20hematopoietic%20failure%20in%20the">pmc.ncbi.nlm.nih.gov</a>). Thus, RASA3 sets an activation threshold in platelets, preventing unwarranted clotting. Upon a real wound or pro-thrombotic signal, <strong>second messengers (like PI3K products and Ca²⁺) inhibit RASA3</strong>, allowing Rap1 to rapidly turn on and prompt integrin-mediated clot formation (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10621891/#:~:text=Furthermore%2C%20although%20most%20proteins%20with,suggesting%20that%20PI3K%20acts">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4396462/#:~:text=Abstract">pmc.ncbi.nlm.nih.gov</a>). After a clot is formed, RASA3 likely helps turn off Rap1 during the “outside-in” signaling phase that consolidates the clot – indeed, RASA3 has been implicated in moderating integrin outside-in signaling as well (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10621891/#:~:text=,PMC%20free%20article">pmc.ncbi.nlm.nih.gov</a>). For example, an in-depth biochemical study showed that RASA3’s PIP₃-binding PH domain can localize to sites of integrin signaling and that altering this interaction affects platelet spreading and clot retraction signals (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10621891/#:~:text=,PMC%20free%20article">pmc.ncbi.nlm.nih.gov</a>). Clinically, the importance of RASA3 is highlighted by inherited platelet disorders: the <strong>scat</strong> mutation in mice is a model of thrombocytopenia due to a RASA3 defect, and it mirrors key aspects of certain human platelet function disorders. In summary, in the platelet lineage <strong>RASA3 functions as a safeguard to ensure Rap1 (and integrin) activation is appropriately timed and limited</strong>, which is essential for normal hemostasis (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4396462/#:~:text=Abstract">pmc.ncbi.nlm.nih.gov</a>).</p>
+<h3 id="gatekeeper-of-t-cell-activation-and-adhesion">Gatekeeper of T Cell Activation and Adhesion</h3>
+<p>Beyond the blood production lineages, RASA3 also plays a pivotal role in the immune system, particularly in <strong>T lymphocytes</strong>. T cells require precise regulation of the small GTPases Ras and Rap1 during their activation: Ras drives proliferation and gene expression via the MAPK pathway, while Rap1 controls integrin-mediated adhesion (such as LFA-1 binding to ICAM-1) which governs T cell trafficking and immunological synapse formation. Recent research has identified RASA3 (along with the related GAP RASA2) as a key <strong>“brake” or gatekeeper on T cell activation</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10621891/#:~:text=mediating%20T%20cell%20activation%2C%20the,T%20cell%20activation%20and%20migration">pmc.ncbi.nlm.nih.gov</a>). In naive T cells, basal Ras and Rap1 activity must be kept low to prevent inappropriate activation or adhesion. RASA3 is highly expressed in T cells and restrains these GTPases until a true antigenic stimulus occurs (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10621891/#:~:text=induce%20MAPK%20pathways%20and%20cellular,T%20cell%20activation%20and%20migration">pmc.ncbi.nlm.nih.gov</a>). T cells genetically deficient in RASA3 show clear phenotypes that underscore this role: <strong>loss of RASA3 leads to hyper-responsiveness and aberrant adhesion</strong>. For example, mice with Rasa3 selectively knocked out in T cells (Rasa3^fl/fl CD4-Cre) have abnormally low numbers of circulating T cells and accumulation of T cells in lymphoid organs (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10621891/#:~:text=match%20at%20L498%20,4">pmc.ncbi.nlm.nih.gov</a>). This is explained by the fact that <strong>RASA3-deficient T cells have increased Rap1 activity, causing their integrin LFA-1 to remain in a high-affinity state</strong> that locks the cells onto integrin ligands in lymph nodes (impairing their egress and circulation) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10621891/#:~:text=datasets%20of%20T%20cell%20gene,Of">pmc.ncbi.nlm.nih.gov</a>). In experimental assays, naive Rasa3-null T cells showed a <em>marked increase</em> in binding to ICAM-1 upon TCR stimulation – much greater than that seen in wild-type T cells – indicating that RASA3 normally suppresses integrin activation downstream of the T cell receptor (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10621891/#:~:text=datasets%20of%20T%20cell%20gene,Of">pmc.ncbi.nlm.nih.gov</a>). These cells also exhibited enhanced spontaneous proliferation and morphological changes consistent with increased adherence and motility in response to chemokines (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10621891/#:~:text=migration%2C%20and%20localization%20,GAP%20in%20T%20cells">pmc.ncbi.nlm.nih.gov</a>). Notably, RASA3 appears to preferentially impact <strong>Rap1-mediated adhesion pathways in T cells</strong>, while the related RasGAP RASA2 predominantly regulates Ras/MAPK signaling (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10621891/#:~:text=mediating%20T%20cell%20activation%2C%20the,T%20cell%20activation%20and%20migration">pmc.ncbi.nlm.nih.gov</a>). Thus, RASA3 serves as the principal Rap1-GAP in T lymphocytes, preventing premature or excessive integrin engagement. In the absence of RASA3, T cells tend to become over-adhesive and hyperactivated, which paradoxically can lead to functional impairments – for instance, RASA3-deficient T cells mounted poorer antibody responses to immunization, likely because their dysregulated adhesion interfered with normal T cell trafficking and interactions (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10621891/#:~:text=,4">pmc.ncbi.nlm.nih.gov</a>). In a broader sense, <strong>RASA3 helps maintain immune homeostasis by keeping resting T cells in a non-adhesive, quiescent state</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10621891/#:~:text=datasets%20of%20T%20cell%20gene,Of">pmc.ncbi.nlm.nih.gov</a>). Only when proper antigenic and co-stimulatory signals occur (which trigger PLCγ and PI3K pathways, generating IP₃, IP₄, and PIP₃) is RASA3 transiently inhibited so that Rap1 can promote firm adhesion and Ras can drive proliferative signaling. This concept of RASA3 as a checkpoint is supported by <em>in vivo</em> models of autoimmunity and T cell differentiation. For example, emerging evidence suggests RASA3 might influence the balance of T helper cell subsets: one study reported that RASA3 deficiency skews T cells away from pathogenic Th17 cell development toward a Th2-biased program (<a href="https://academic.oup.com/jimmunol/article/202/1_Supplement/128.13/7956849#:~:text=Th17%20cells%20that%20produce%20the,a%20GTPase%20activating%20protein%2C%20was">academic.oup.com</a>), consistent with the idea that altered Ras/Rap signals can change transcriptional outcomes. Moreover, CRISPR-based screens of T cells have repeatedly identified RASA3 as an important regulator: RASA3 knockout was enriched in screens for genes that, when lost, increase T cell adhesion and activation marker expression (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10621891/#:~:text=Rasa3,also%20showed%20increased%20proliferation%20in">pmc.ncbi.nlm.nih.gov</a>). In summary, <strong>RASA3 in the immune system functions to set thresholds for cell activation and adhesion</strong>, particularly by limiting Rap1-driven integrin activation in T cells (and likely in other leukocytes such as B cells or myeloid cells that also utilize Rap1 for adhesion). This gatekeeper role is crucial to prevent inappropriate immune cell activation and to fine-tune immune responses.</p>
+<h2 id="concluding-remarks">Concluding Remarks</h2>
+<p><strong>RASA3 emerges as a multifaceted regulator of intracellular signaling, connecting membrane lipid signals to the control of Ras and Rap1 GTPases.</strong> Its primary biochemical role is to serve as a GTPase-activator protein for Ras and Rap1, thereby <em>negatively regulating</em> pathways like MAPK signaling and integrin-mediated adhesion. The protein’s complex domain structure (two C2 domains, one PH domain, and a GAP domain) enables it to be acutely regulated by second messengers (Ca²⁺, IP₄, PIP₃). This regulation allows RASA3 to act as a switch – <strong>active under resting conditions to keep signaling quiescent, and transiently inactivated when cells need to turn on Ras or Rap1</strong>. RASA3 carries out vital functions in several biological contexts. In hematopoiesis, it has a <strong>critical, non-redundant role in red blood cell and platelet development</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3409772/#:~:text=the%20second%20crisis%20,for%20RASA3%20in%20vertebrate%20hematopoiesis">pmc.ncbi.nlm.nih.gov</a>), ensuring that Ras and Rap1 activation levels are properly balanced during cell maturation. In platelets, RASA3 is the major brake on Rap1, preventing accidental platelet activation and thrombosis. In T cells, it is a key checkpoint maintaining immune tolerance and proper trafficking by restraining integrin activation until it’s needed. These specific roles underscore a common theme: <strong>RASA3 sets thresholds in signaling pathways to prevent overactivation</strong> – a failure of which leads to pathological outcomes (anemia, thrombocytopenia, or immune dysregulation). Experimental evidence from mouse models (e.g. the <em>scat</em> mutant and conditional knockouts) and human genetic studies (RASA3 mutation causing Rasopathy-like disease) provide strong support for RASA3’s importance in normal physiology (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3409772/#:~:text=Ras%20GTPase%20activating%20protein%20,critical%2C%20conserved%2C%20and%20nonredundant%20role">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11288707/#:~:text=had%20low,MAPK%20pathway.%20The">pmc.ncbi.nlm.nih.gov</a>). </p>
+<p>From a clinical and therapeutic perspective, RASA3’s position at the nexus of lipid second messengers and Ras-family GTPases makes it a potential target of interest. For instance, modulating RASA3 activity might be beneficial in certain immune conditions or clotting disorders – e.g. temporarily inhibiting RASA3 could boost T cell adhesion in cancer immunotherapy (similar in concept to RASA3-deficient T cells showing enhanced activation (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10621891/#:~:text=Rasa3,also%20showed%20increased%20proliferation%20in">pmc.ncbi.nlm.nih.gov</a>)), whereas enhancing RASA3 function might restrain unwanted platelet activation in prothrombotic states. Additionally, given its role in restraining Ras, RASA3 could be considered a tumor suppressor candidate; loss of RASA3 might contribute to oncogenic Ras signaling in some contexts (<a href="https://pubmed.ncbi.nlm.nih.gov/25294679/#:~:text=Keywords%3A%20Cancer%3B%20GTPase%20activating%20protein%3B,Megakaryocyte%3B%20Platelet%3B%20RASA3%3B%20Rap%3B%20Ras">pubmed.ncbi.nlm.nih.gov</a>). Current research (as of 2023–2024) continues to explore these angles, with <em>Trends in Immunology</em> highlighting RASA3 as a “gatekeeper” of T cell activation (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10621891/#:~:text=mediating%20T%20cell%20activation%2C%20the,T%20cell%20activation%20and%20migration">pmc.ncbi.nlm.nih.gov</a>) and case studies identifying RASA3 mutations in human disease (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11288707/#:~:text=had%20low,MAPK%20pathway.%20The">pmc.ncbi.nlm.nih.gov</a>). In conclusion, <strong>RASA3 is a vital signaling regulator that links lipid signaling to Ras and Rap1 GTPase activity</strong>, with well-demonstrated roles in blood cell development, hemostasis, and immune cell function. Its precise control over GTPase switches exemplifies how cells maintain signaling balance, and disruptions of RASA3 can have wide-ranging consequences for organismal health. All these insights are backed by accumulating experimental evidence from the past decade, solidifying our current understanding of RASA3’s functional annotation in human biology. </p>
+<p><strong>References:</strong> The above report is based on a synthesis of recent authoritative sources, including primary research articles and reviews. Key sources include: Cullen <em>et al.</em>, 1995 (Nature) – identification of RASA3 as an IP₄-binding RasGAP (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10621891/#:~:text=,Google%20Scholar">pmc.ncbi.nlm.nih.gov</a>); Kupzig <em>et al.</em>, 2006 &amp; 2009 – biochemical characterization of RASA3’s GAP activity on Ras/Rap1 and catalytic mechanism (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10621891/#:~:text=,Google%20Scholar">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10621891/#:~:text=,PMC%20free%20article">pmc.ncbi.nlm.nih.gov</a>); Blanc <em>et al.</em>, 2012 (PNAS) – the scat mouse model demonstrating RASA3’s essential role in erythropoiesis and megakaryopoiesis (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3409772/#:~:text=Ras%20GTPase%20activating%20protein%20,for%20RASA3%20in%20vertebrate%20hematopoiesis">pmc.ncbi.nlm.nih.gov</a>); Molina-Ortiz <em>et al.</em>, 2014 (PLoS Genet) and Stefanini <em>et al.</em>, 2015 (J. Clin. Invest) – RASA3 control of Rap1 in megakaryocytes/platelets (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10621891/#:~:text=%2A%2049.Molina,trisphosphate">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4396462/#:~:text=Abstract">pmc.ncbi.nlm.nih.gov</a>); Battram <em>et al.</em>, 2017 (J. Biol. Chem) – regulation of integrin signaling by RASA3’s PH domain (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10621891/#:~:text=match%20at%20L1143%20,PMC%20free%20article">pmc.ncbi.nlm.nih.gov</a>); and Johansen <em>et al.</em>, 2023 (Trends Immunol) – review of RASA3 as a gatekeeper in T cell activation (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10621891/#:~:text=mediating%20T%20cell%20activation%2C%20the,T%20cell%20activation%20and%20migration">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10621891/#:~:text=datasets%20of%20T%20cell%20gene,Of">pmc.ncbi.nlm.nih.gov</a>). A 2023 clinical report by Ayaz <em>et al.</em> (J Pediatr Genet) provided evidence of a human RASA3 loss-of-function mutation causing Ras/MAPK pathway dysregulation (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11288707/#:~:text=had%20low,MAPK%20pathway.%20The">pmc.ncbi.nlm.nih.gov</a>). All claims and data in this report are supported by these and other cited sources. The citations (in <strong>【】</strong>) refer to specific lines in the source documents for verification of each statement.</p>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>AnnotationURLCitation(end_index=350, start_index=233, title='The Ras/Rap GTPase activating protein RASA3: from gene structure to in vivo functions - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/25294679/#:~:text=RASA3%20,1%2C3%2C4%2C5%29P4%20receptor')</li>
+<li>AnnotationURLCitation(end_index=614, start_index=497, title='The Ras/Rap GTPase activating protein RASA3: from gene structure to in vivo functions - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/25294679/#:~:text=RASA3%20,1%2C3%2C4%2C5%29P4%20receptor')</li>
+<li>AnnotationURLCitation(end_index=953, start_index=840, title='The Ras/Rap GTPase activating protein RASA3: from gene structure to in vivo functions - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/25294679/#:~:text=GAP1,1%2C3%2C4%2C5%29P4%20receptor')</li>
+<li>AnnotationURLCitation(end_index=1542, start_index=1394, title='Mind the GAP: RASA2 and RASA3 GTPase Activating Proteins as gatekeepers of T cell activation and adhesion - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10621891/#:~:text=domain%20structures%2C%20including%20GAP%20domains,binding%20C2')</li>
+<li>AnnotationURLCitation(end_index=1859, start_index=1711, title='Mind the GAP: RASA2 and RASA3 GTPase Activating Proteins as gatekeepers of T cell activation and adhesion - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10621891/#:~:text=domain%20structures%2C%20including%20GAP%20domains,binding%20C2')</li>
+<li>AnnotationURLCitation(end_index=2029, start_index=1860, title='Mind the GAP: RASA2 and RASA3 GTPase Activating Proteins as gatekeepers of T cell activation and adhesion - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10621891/#:~:text=domains%20and%20a%20Pleckstrin%20homology,spectometry%20of%20proteins%20that%20bound')</li>
+<li>AnnotationURLCitation(end_index=2753, start_index=2636, title='The Ras/Rap GTPase activating protein RASA3: from gene structure to in vivo functions - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/25294679/#:~:text=RASA3%20,1%2C3%2C4%2C5%29P4%20receptor')</li>
+<li>AnnotationURLCitation(end_index=2856, start_index=2754, title='Mind the GAP: RASA2 and RASA3 GTPase Activating Proteins as gatekeepers of T cell activation and adhesion - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10621891/#:~:text=,Google%20Scholar')</li>
+<li>AnnotationURLCitation(end_index=3315, start_index=3213, title='Mind the GAP: RASA2 and RASA3 GTPase Activating Proteins as gatekeepers of T cell activation and adhesion - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10621891/#:~:text=,Google%20Scholar')</li>
+<li>AnnotationURLCitation(end_index=3631, start_index=3525, title='Mind the GAP: RASA2 and RASA3 GTPase Activating Proteins as gatekeepers of T cell activation and adhesion - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10621891/#:~:text=,PMC%20free%20article')</li>
+<li>AnnotationURLCitation(end_index=3981, start_index=3875, title='Mind the GAP: RASA2 and RASA3 GTPase Activating Proteins as gatekeepers of T cell activation and adhesion - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10621891/#:~:text=,PMC%20free%20article')</li>
+<li>AnnotationURLCitation(end_index=4667, start_index=4500, title='Mind the GAP: RASA2 and RASA3 GTPase Activating Proteins as gatekeepers of T cell activation and adhesion - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10621891/#:~:text=mediating%20T%20cell%20activation%2C%20the,T%20cell%20activation%20and%20migration')</li>
+<li>AnnotationURLCitation(end_index=5303, start_index=5155, title='Mind the GAP: RASA2 and RASA3 GTPase Activating Proteins as gatekeepers of T cell activation and adhesion - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10621891/#:~:text=domain%20structures%2C%20including%20GAP%20domains,binding%20C2')</li>
+<li>AnnotationURLCitation(end_index=5785, start_index=5624, title='Mind the GAP: RASA2 and RASA3 GTPase Activating Proteins as gatekeepers of T cell activation and adhesion - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10621891/#:~:text=match%20at%20L285%20domains%20and,spectometry%20of%20proteins%20that%20bound')</li>
+<li>AnnotationURLCitation(end_index=6037, start_index=5899, title='Mind the GAP: RASA2 and RASA3 GTPase Activating Proteins as gatekeepers of T cell activation and adhesion - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10621891/#:~:text=match%20at%20L289%20agarose%20beads,2%7D%20%5B31%2C32')</li>
+<li>AnnotationURLCitation(end_index=6259, start_index=6146, title='The Ras/Rap GTPase activating protein RASA3: from gene structure to in vivo functions - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/25294679/#:~:text=GAP1,1%2C3%2C4%2C5%29P4%20receptor')</li>
+<li>AnnotationURLCitation(end_index=7017, start_index=6850, title='Mind the GAP: RASA2 and RASA3 GTPase Activating Proteins as gatekeepers of T cell activation and adhesion - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10621891/#:~:text=Furthermore%2C%20although%20most%20proteins%20with,suggesting%20that%20PI3K%20acts')</li>
+<li>AnnotationURLCitation(end_index=7410, start_index=7243, title='Mind the GAP: RASA2 and RASA3 GTPase Activating Proteins as gatekeepers of T cell activation and adhesion - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10621891/#:~:text=Furthermore%2C%20although%20most%20proteins%20with,suggesting%20that%20PI3K%20acts')</li>
+<li>AnnotationURLCitation(end_index=7867, start_index=7716, title='Mind the GAP: RASA2 and RASA3 GTPase Activating Proteins as gatekeepers of T cell activation and adhesion - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10621891/#:~:text=be%20inactivated%20by%20PI3K%20and,suggesting%20that%20PI3K%20acts')</li>
+<li>AnnotationURLCitation(end_index=8568, start_index=8455, title='The Ras/Rap GTPase activating protein RASA3: from gene structure to in vivo functions - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/25294679/#:~:text=GAP1,1%2C3%2C4%2C5%29P4%20receptor')</li>
+<li>AnnotationURLCitation(end_index=9572, start_index=9401, title='Critical function for the Ras-GTPase activating protein RASA3 in vertebrate erythropoiesis and megakaryopoiesis - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3409772/#:~:text=regulatory%20feedback%20mechanism%20common%20to,is%20also%20defective%20during%20crisis')</li>
+<li>AnnotationURLCitation(end_index=9866, start_index=9704, title='Critical function for the Ras-GTPase activating protein RASA3 in vertebrate erythropoiesis and megakaryopoiesis - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3409772/#:~:text=Ras%20GTPase%20activating%20protein%20,is%20also%20defective%20during%20crisis')</li>
+<li>AnnotationURLCitation(end_index=10150, start_index=9988, title='Critical function for the Ras-GTPase activating protein RASA3 in vertebrate erythropoiesis and megakaryopoiesis - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3409772/#:~:text=Ras%20GTPase%20activating%20protein%20,is%20also%20defective%20during%20crisis')</li>
+<li>AnnotationURLCitation(end_index=11043, start_index=10881, title='Critical function for the Ras-GTPase activating protein RASA3 in vertebrate erythropoiesis and megakaryopoiesis - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3409772/#:~:text=Ras%20GTPase%20activating%20protein%20,is%20also%20defective%20during%20crisis')</li>
+<li>AnnotationURLCitation(end_index=11192, start_index=11044, title='Mind the GAP: RASA2 and RASA3 GTPase Activating Proteins as gatekeepers of T cell activation and adhesion - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10621891/#:~:text=domain%20structures%2C%20including%20GAP%20domains,binding%20C2')</li>
+<li>AnnotationURLCitation(end_index=12250, start_index=12073, title='Critical function for the Ras-GTPase activating protein RASA3 in vertebrate erythropoiesis and megakaryopoiesis - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3409772/#:~:text=Ras%20GTPase%20activating%20protein%20,critical%2C%20conserved%2C%20and%20nonredundant%20role')</li>
+<li>AnnotationURLCitation(end_index=12549, start_index=12388, title='Critical function for the Ras-GTPase activating protein RASA3 in vertebrate erythropoiesis and megakaryopoiesis - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3409772/#:~:text=scat%20red%20cells%20where%20it,for%20RASA3%20in%20vertebrate%20hematopoiesis')</li>
+<li>AnnotationURLCitation(end_index=12838, start_index=12670, title='Critical function for the Ras-GTPase activating protein RASA3 in vertebrate erythropoiesis and megakaryopoiesis - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3409772/#:~:text=The%20recessive%20mutant%20scat%20,catastrophic%20hematopoietic%20failure%20in%20the')</li>
+<li>AnnotationURLCitation(end_index=13223, start_index=13107, title='A Novel Autosomal Recessive Candidate Gene Responsible for RASopathy-Like Phenotype and Bone Marrow Failure: RASA3 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC11288707/#:~:text=had%20low,MAPK%20pathway.%20The')</li>
+<li>AnnotationURLCitation(end_index=13608, start_index=13474, title='A Novel Autosomal Recessive Candidate Gene Responsible for RASopathy-Like Phenotype and Bone Marrow Failure: RASA3 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC11288707/#:~:text=bone%20marrow%20failure%20are%20known,RASopathies')</li>
+<li>AnnotationURLCitation(end_index=13773, start_index=13609, title='A Novel Autosomal Recessive Candidate Gene Responsible for RASopathy-Like Phenotype and Bone Marrow Failure: RASA3 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC11288707/#:~:text=which%20are%20characterized%20by%20many,of%20RASopathy%20genes%20was%20observed')</li>
+<li>AnnotationURLCitation(end_index=14013, start_index=13897, title='A Novel Autosomal Recessive Candidate Gene Responsible for RASopathy-Like Phenotype and Bone Marrow Failure: RASA3 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC11288707/#:~:text=had%20low,MAPK%20pathway.%20The')</li>
+<li>AnnotationURLCitation(end_index=14440, start_index=14263, title='Critical function for the Ras-GTPase activating protein RASA3 in vertebrate erythropoiesis and megakaryopoiesis - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3409772/#:~:text=Ras%20GTPase%20activating%20protein%20,critical%2C%20conserved%2C%20and%20nonredundant%20role')</li>
+<li>AnnotationURLCitation(end_index=14572, start_index=14441, title='A Novel Autosomal Recessive Candidate Gene Responsible for RASopathy-Like Phenotype and Bone Marrow Failure: RASA3 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC11288707/#:~:text=%28Ras,of%20RASopathy%20genes%20was%20observed')</li>
+<li>AnnotationURLCitation(end_index=14874, start_index=14700, title='A Novel Autosomal Recessive Candidate Gene Responsible for RASopathy-Like Phenotype and Bone Marrow Failure: RASA3 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC11288707/#:~:text=which%20are%20characterized%20by%20many,putative%20function%20module%2C%20which%20further')</li>
+<li>AnnotationURLCitation(end_index=15179, start_index=15025, title='Critical function for the Ras-GTPase activating protein RASA3 in vertebrate erythropoiesis and megakaryopoiesis - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3409772/#:~:text=the%20second%20crisis%20,for%20RASA3%20in%20vertebrate%20hematopoiesis')</li>
+<li>AnnotationURLCitation(end_index=15709, start_index=15515, title='The Ras/Rap GTPase activating protein RASA3: from gene structure to in vivo functions - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/25294679/#:~:text=Keywords%3A%20Cancer%3B%20GTPase%20activating%20protein%3B,Megakaryocyte%3B%20Platelet%3B%20RASA3%3B%20Rap%3B%20Ras')</li>
+<li>AnnotationURLCitation(end_index=16745, start_index=16653, title='RASA3 is a critical inhibitor of RAP1-dependent platelet activation - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4396462/#:~:text=Abstract')</li>
+<li>AnnotationURLCitation(end_index=17034, start_index=16942, title='RASA3 is a critical inhibitor of RAP1-dependent platelet activation - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4396462/#:~:text=Abstract')</li>
+<li>AnnotationURLCitation(end_index=17652, start_index=17484, title='Critical function for the Ras-GTPase activating protein RASA3 in vertebrate erythropoiesis and megakaryopoiesis - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3409772/#:~:text=The%20recessive%20mutant%20scat%20,catastrophic%20hematopoietic%20failure%20in%20the')</li>
+<li>AnnotationURLCitation(end_index=17767, start_index=17653, title='Mind the GAP: RASA2 and RASA3 GTPase Activating Proteins as gatekeepers of T cell activation and adhesion - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10621891/#:~:text=%2A%2049.Molina,trisphosphate')</li>
+<li>AnnotationURLCitation(end_index=18060, start_index=17946, title='Mind the GAP: RASA2 and RASA3 GTPase Activating Proteins as gatekeepers of T cell activation and adhesion - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10621891/#:~:text=%2A%2049.Molina,trisphosphate')</li>
+<li>AnnotationURLCitation(end_index=18423, start_index=18331, title='RASA3 is a critical inhibitor of RAP1-dependent platelet activation - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4396462/#:~:text=Abstract')</li>
+<li>AnnotationURLCitation(end_index=18818, start_index=18650, title='Critical function for the Ras-GTPase activating protein RASA3 in vertebrate erythropoiesis and megakaryopoiesis - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3409772/#:~:text=The%20recessive%20mutant%20scat%20,catastrophic%20hematopoietic%20failure%20in%20the')</li>
+<li>AnnotationURLCitation(end_index=19263, start_index=19096, title='Mind the GAP: RASA2 and RASA3 GTPase Activating Proteins as gatekeepers of T cell activation and adhesion - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10621891/#:~:text=Furthermore%2C%20although%20most%20proteins%20with,suggesting%20that%20PI3K%20acts')</li>
+<li>AnnotationURLCitation(end_index=19356, start_index=19264, title='RASA3 is a critical inhibitor of RAP1-dependent platelet activation - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4396462/#:~:text=Abstract')</li>
+<li>AnnotationURLCitation(end_index=19676, start_index=19570, title='Mind the GAP: RASA2 and RASA3 GTPase Activating Proteins as gatekeepers of T cell activation and adhesion - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10621891/#:~:text=,PMC%20free%20article')</li>
+<li>AnnotationURLCitation(end_index=20004, start_index=19898, title='Mind the GAP: RASA2 and RASA3 GTPase Activating Proteins as gatekeepers of T cell activation and adhesion - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10621891/#:~:text=,PMC%20free%20article')</li>
+<li>AnnotationURLCitation(end_index=20528, start_index=20436, title='RASA3 is a critical inhibitor of RAP1-dependent platelet activation - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4396462/#:~:text=Abstract')</li>
+<li>AnnotationURLCitation(end_index=21316, start_index=21149, title='Mind the GAP: RASA2 and RASA3 GTPase Activating Proteins as gatekeepers of T cell activation and adhesion - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10621891/#:~:text=mediating%20T%20cell%20activation%2C%20the,T%20cell%20activation%20and%20migration')</li>
+<li>AnnotationURLCitation(end_index=21700, start_index=21534, title='Mind the GAP: RASA2 and RASA3 GTPase Activating Proteins as gatekeepers of T cell activation and adhesion - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10621891/#:~:text=induce%20MAPK%20pathways%20and%20cellular,T%20cell%20activation%20and%20migration')</li>
+<li>AnnotationURLCitation(end_index=22152, start_index=22045, title='Mind the GAP: RASA2 and RASA3 GTPase Activating Proteins as gatekeepers of T cell activation and adhesion - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10621891/#:~:text=match%20at%20L498%20,4')</li>
+<li>AnnotationURLCitation(end_index=22529, start_index=22410, title='Mind the GAP: RASA2 and RASA3 GTPase Activating Proteins as gatekeepers of T cell activation and adhesion - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10621891/#:~:text=datasets%20of%20T%20cell%20gene,Of')</li>
+<li>AnnotationURLCitation(end_index=22917, start_index=22798, title='Mind the GAP: RASA2 and RASA3 GTPase Activating Proteins as gatekeepers of T cell activation and adhesion - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10621891/#:~:text=datasets%20of%20T%20cell%20gene,Of')</li>
+<li>AnnotationURLCitation(end_index=23224, start_index=23082, title='Mind the GAP: RASA2 and RASA3 GTPase Activating Proteins as gatekeepers of T cell activation and adhesion - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10621891/#:~:text=migration%2C%20and%20localization%20,GAP%20in%20T%20cells')</li>
+<li>AnnotationURLCitation(end_index=23563, start_index=23396, title='Mind the GAP: RASA2 and RASA3 GTPase Activating Proteins as gatekeepers of T cell activation and adhesion - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10621891/#:~:text=mediating%20T%20cell%20activation%2C%20the,T%20cell%20activation%20and%20migration')</li>
+<li>AnnotationURLCitation(end_index=24100, start_index=24013, title='Mind the GAP: RASA2 and RASA3 GTPase Activating Proteins as gatekeepers of T cell activation and adhesion - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10621891/#:~:text=,4')</li>
+<li>AnnotationURLCitation(end_index=24347, start_index=24228, title='Mind the GAP: RASA2 and RASA3 GTPase Activating Proteins as gatekeepers of T cell activation and adhesion - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10621891/#:~:text=datasets%20of%20T%20cell%20gene,Of')</li>
+<li>AnnotationURLCitation(end_index=25115, start_index=24933, title='RAS P21 Protein Activator 3 (RASA3) specifically promotes pathogenic T helper 17 cell generation by repressing T helper 2-biased programs | The Journal of Immunology | Oxford Academic', type='url_citation', url='https://academic.oup.com/jimmunol/article/202/1_Supplement/128.13/7956849#:~:text=Th17%20cells%20that%20produce%20the,a%20GTPase%20activating%20protein%2C%20was')</li>
+<li>AnnotationURLCitation(end_index=25571, start_index=25434, title='Mind the GAP: RASA2 and RASA3 GTPase Activating Proteins as gatekeepers of T cell activation and adhesion - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10621891/#:~:text=Rasa3,also%20showed%20increased%20proliferation%20in')</li>
+<li>AnnotationURLCitation(end_index=26989, start_index=26835, title='Critical function for the Ras-GTPase activating protein RASA3 in vertebrate erythropoiesis and megakaryopoiesis - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3409772/#:~:text=the%20second%20crisis%20,for%20RASA3%20in%20vertebrate%20hematopoiesis')</li>
+<li>AnnotationURLCitation(end_index=27965, start_index=27788, title='Critical function for the Ras-GTPase activating protein RASA3 in vertebrate erythropoiesis and megakaryopoiesis - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3409772/#:~:text=Ras%20GTPase%20activating%20protein%20,critical%2C%20conserved%2C%20and%20nonredundant%20role')</li>
+<li>AnnotationURLCitation(end_index=28082, start_index=27966, title='A Novel Autosomal Recessive Candidate Gene Responsible for RASopathy-Like Phenotype and Bone Marrow Failure: RASA3 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC11288707/#:~:text=had%20low,MAPK%20pathway.%20The')</li>
+<li>AnnotationURLCitation(end_index=28663, start_index=28526, title='Mind the GAP: RASA2 and RASA3 GTPase Activating Proteins as gatekeepers of T cell activation and adhesion - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10621891/#:~:text=Rasa3,also%20showed%20increased%20proliferation%20in')</li>
+<li>AnnotationURLCitation(end_index=29142, start_index=28948, title='The Ras/Rap GTPase activating protein RASA3: from gene structure to in vivo functions - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/25294679/#:~:text=Keywords%3A%20Cancer%3B%20GTPase%20activating%20protein%3B,Megakaryocyte%3B%20Platelet%3B%20RASA3%3B%20Rap%3B%20Ras')</li>
+<li>AnnotationURLCitation(end_index=29467, start_index=29300, title='Mind the GAP: RASA2 and RASA3 GTPase Activating Proteins as gatekeepers of T cell activation and adhesion - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10621891/#:~:text=mediating%20T%20cell%20activation%2C%20the,T%20cell%20activation%20and%20migration')</li>
+<li>AnnotationURLCitation(end_index=29646, start_index=29530, title='A Novel Autosomal Recessive Candidate Gene Responsible for RASopathy-Like Phenotype and Bone Marrow Failure: RASA3 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC11288707/#:~:text=had%20low,MAPK%20pathway.%20The')</li>
+<li>AnnotationURLCitation(end_index=30557, start_index=30455, title='Mind the GAP: RASA2 and RASA3 GTPase Activating Proteins as gatekeepers of T cell activation and adhesion - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10621891/#:~:text=,Google%20Scholar')</li>
+<li>AnnotationURLCitation(end_index=30781, start_index=30679, title='Mind the GAP: RASA2 and RASA3 GTPase Activating Proteins as gatekeepers of T cell activation and adhesion - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10621891/#:~:text=,Google%20Scholar')</li>
+<li>AnnotationURLCitation(end_index=30888, start_index=30782, title='Mind the GAP: RASA2 and RASA3 GTPase Activating Proteins as gatekeepers of T cell activation and adhesion - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10621891/#:~:text=,PMC%20free%20article')</li>
+<li>AnnotationURLCitation(end_index=31185, start_index=31017, title='Critical function for the Ras-GTPase activating protein RASA3 in vertebrate erythropoiesis and megakaryopoiesis - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3409772/#:~:text=Ras%20GTPase%20activating%20protein%20,for%20RASA3%20in%20vertebrate%20hematopoiesis')</li>
+<li>AnnotationURLCitation(end_index=31441, start_index=31327, title='Mind the GAP: RASA2 and RASA3 GTPase Activating Proteins as gatekeepers of T cell activation and adhesion - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10621891/#:~:text=%2A%2049.Molina,trisphosphate')</li>
+<li>AnnotationURLCitation(end_index=31534, start_index=31442, title='RASA3 is a critical inhibitor of RAP1-dependent platelet activation - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4396462/#:~:text=Abstract')</li>
+<li>AnnotationURLCitation(end_index=31758, start_index=31631, title='Mind the GAP: RASA2 and RASA3 GTPase Activating Proteins as gatekeepers of T cell activation and adhesion - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10621891/#:~:text=match%20at%20L1143%20,PMC%20free%20article')</li>
+<li>AnnotationURLCitation(end_index=32027, start_index=31860, title='Mind the GAP: RASA2 and RASA3 GTPase Activating Proteins as gatekeepers of T cell activation and adhesion - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10621891/#:~:text=mediating%20T%20cell%20activation%2C%20the,T%20cell%20activation%20and%20migration')</li>
+<li>AnnotationURLCitation(end_index=32147, start_index=32028, title='Mind the GAP: RASA2 and RASA3 GTPase Activating Proteins as gatekeepers of T cell activation and adhesion - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10621891/#:~:text=datasets%20of%20T%20cell%20gene,Of')</li>
+<li>AnnotationURLCitation(end_index=32423, start_index=32307, title='A Novel Autosomal Recessive Candidate Gene Responsible for RASopathy-Like Phenotype and Bone Marrow Failure: RASA3 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC11288707/#:~:text=had%20low,MAPK%20pathway.%20The')</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q14644
+gene_symbol: RASA3
+product_type: PROTEIN
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &#39;RAS p21 protein activator 3, bifunctional GTPase-activating protein
+  for both RAS and RAP1 small GTPases. Member of GAP1 family characterized by two
+  N-terminal C2 domains (Ca2+ and phospholipid binding), central pleckstrin homology
+  (PH) domain, and C-terminal RasGAP catalytic domain. Originally identified as first
+  known receptor for inositol 1,3,4,5-tetrakisphosphate (IP4). Unique among RasGAPs
+  for dual substrate specificity: stimulates GTP hydrolysis on both Ras family GTPases
+  (H-Ras, N-Ras, K-Ras, R-Ras) and Rap1, using arginine-finger mechanism for both
+  substrates. PH domain binds multiple lipids - high affinity for PIP3, PI(4,5)P2,
+  and soluble IP4. Critically, PIP3 binding INHIBITS RASA3&#39;&#39;s GAP activity, providing
+  negative feedback link between PI3K and Ras/Rap signaling - when PI3K generates
+  PIP3, RASA3 is inactivated, relieving restraint on Ras/Rap1. Cytoplasmic protein
+  with regulated membrane association via C2 and PH domains. Essential non-redundant
+  role in vertebrate hematopoiesis: mouse scat mutant (G125V, disrupts membrane targeting)
+  exhibits severe anemia and thrombocytopenia with ~94% lethality by 30 days due to
+  bone marrow failure from unchecked Ras activity in erythroid cells. In platelets,
+  RASA3 is major Rap1-GAP counterbalancing CalDAG-GEFI activator - loss causes spontaneous
+  platelet activation, aberrant integrin αIIbβ3 activation, and consumptive thrombocytopenia.
+  In T lymphocytes, acts as gatekeeper of activation and adhesion: restrains Rap1-driven
+  LFA-1 integrin activation until proper TCR/costimulation occurs; RASA3-deficient
+  T cells show increased Rap1-GTP, constitutive integrin high-affinity state, impaired
+  egress from lymph nodes, and dysregulated immune responses. Human biallelic RASA3
+  loss-of-function mutations cause Rasopathy-like syndrome with developmental abnormalities
+  and bone marrow failure. Expression in hematopoietic cells, platelets, megakaryocytes,
+  T cells, and various tissues. Critical negative regulator that sets activation thresholds
+  in signaling pathways to prevent overactivation.&#39;
+existing_annotations:
+- term:
+    id: GO:0005096
+    label: GTPase activator activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: GTPase activator activity - RasGAP and Rap1GAP function.
+    action: ACCEPT
+    reason: Core enzymatic function.
+- term:
+    id: GO:1902531
+    label: regulation of intracellular signal transduction
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: Regulation of intracellular signal transduction - regulates Ras/Rap1
+      signaling.
+    action: ACCEPT
+    reason: Core regulatory role.
+- term:
+    id: GO:0005096
+    label: GTPase activator activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: GTPase activator activity - RasGAP and Rap1GAP function.
+    action: ACCEPT
+    reason: Core enzymatic function.
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: Plasma membrane - membrane-associated via C2 and PH domains.
+    action: ACCEPT
+    reason: Core localization for substrate access.
+- term:
+    id: GO:0006950
+    label: response to stress
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  review:
+    summary: Response to stress - may be involved in stress signaling.
+    action: KEEP_AS_NON_CORE
+    reason: Broad process.
+- term:
+    id: GO:0008270
+    label: zinc ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: Zinc ion binding - RasGAP domain requires metal cofactors.
+    action: ACCEPT
+    reason: Enzymatic requirement.
+- term:
+    id: GO:0035556
+    label: intracellular signal transduction
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: Intracellular signal transduction - participates in Ras/Rap1 signaling
+      pathways.
+    action: ACCEPT
+    reason: Signaling role.
+- term:
+    id: GO:0046580
+    label: negative regulation of Ras protein signal transduction
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: Negative regulation of Ras protein signal transduction - core function.
+    action: ACCEPT
+    reason: Core regulatory function.
+- term:
+    id: GO:0046872
+    label: metal ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: Metal ion binding - requires metal cofactors.
+    action: ACCEPT
+    reason: Enzymatic requirement.
+- term:
+    id: GO:0005246
+    label: calcium channel regulator activity
+  evidence_type: IDA
+  original_reference_id: PMID:10828023
+  review:
+    summary: Calcium channel regulator activity - C2 domains bind Ca2+, may regulate
+      Ca2+ signaling in platelets.
+    action: ACCEPT
+    reason: Regulatory function.
+- term:
+    id: GO:0030168
+    label: platelet activation
+  evidence_type: IDA
+  original_reference_id: PMID:10828023
+  review:
+    summary: Platelet activation - critical regulator of Rap1-dependent platelet activation.
+    action: ACCEPT
+    reason: Key physiological role.
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-5658231
+  review:
+    summary: Cytosol - cytosolic protein with regulated membrane association.
+    action: ACCEPT
+    reason: Core localization.
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-5658435
+  review:
+    summary: Cytosol - cytosolic protein with regulated membrane association.
+    action: ACCEPT
+    reason: Core localization.
+- term:
+    id: GO:0009898
+    label: cytoplasmic side of plasma membrane
+  evidence_type: IDA
+  original_reference_id: PMID:10828023
+  review:
+    summary: Cytoplasmic side of plasma membrane - membrane-associated via lipid-binding
+      domains.
+    action: ACCEPT
+    reason: Specific localization for function.
+- term:
+    id: GO:0005096
+    label: GTPase activator activity
+  evidence_type: TAS
+  original_reference_id: PMID:7637787
+  review:
+    summary: GTPase activator activity - RasGAP and Rap1GAP function.
+    action: ACCEPT
+    reason: Core enzymatic function.
+- term:
+    id: GO:0007165
+    label: signal transduction
+  evidence_type: TAS
+  original_reference_id: PMID:7637787
+  review:
+    summary: Signal transduction - participates in Ras/Rap1-mediated signaling.
+    action: ACCEPT
+    reason: Signaling role.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms.
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt.
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods.
+  findings: []
+- id: PMID:10828023
+  title: Distinct localization and function of (1,4,5)IP(3) receptor subtypes and
+    the (1,3,4,5)IP(4) receptor GAP1(IP4BP) in highly purified human platelet membranes.
+  findings: []
+- id: PMID:7637787
+  title: Identification of a specific Ins(1,3,4,5)P4-binding protein as a member of
+    the GAP1 family.
+  findings: []
+- id: Reactome:R-HSA-5658231
+  title: RAS GAPs stimulate RAS GTPase activity
+  findings: []
+- id: Reactome:R-HSA-5658435
+  title: RAS GAPs bind RAS:GTP
+  findings: []
+aliases:
+- RAS p21 protein activator 3
+- GAP1(IP4BP)
+- R-Ras GAP
+- Inositol 1,3,4,5-tetrakisphosphate-binding protein
+core_functions:
+- molecular_function:
+    id: GO:0005096
+    label: GTPase activator activity
+  description: Bifunctional RasGAP that catalyzes GTP hydrolysis on both RAS proteins
+    (H-Ras, N-Ras, K-Ras, R-Ras) and RAP1, converting active GTP-bound forms to inactive
+    GDP-bound states. Major Rap1-GAP in platelets and T cells. PH domain binds IP4,
+    PIP3, and PI(4,5)P2; PIP3 binding inhibits GAP activity (feedback regulation).
+    Essential for hematopoiesis, platelet activation threshold, and T cell adhesion
+    control.
+  locations:
+  - id: GO:0005737
+    label: cytoplasm
+  - id: GO:0005886
+    label: plasma membrane
+  directly_involved_in:
+  - id: GO:0046580
+    label: negative regulation of Ras protein signal transduction
+  - id: GO:0030168
+    label: platelet activation
+  - id: GO:0030098
+    label: lymphocyte differentiation
+  supported_by:
+  - reference_id: UniProt:Q14644
+    supporting_text: RASA3 is bifunctional GAP for Ras and Rap1. PH domain binds IP4
+      and PIP3. Critical for erythropoiesis (scat mutant causes severe anemia), platelet
+      Rap1 regulation, and T cell integrin activation control.
+status: DRAFT
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
