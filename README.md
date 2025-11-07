@@ -155,6 +155,8 @@ For comprehensive feedback, use the evaluation form at [https://go.lbl.gov/gene-
 - **Multiple choice and free-text** questions
 - **Expert-level feedback** for improving AI curation
 
+**📹 Video Tutorial**: Watch a [step-by-step guide on performing evaluations](https://youtu.be/mr8CJBRV4eE) (YouTube)
+
 ### 🎯 Feedback Integration
 
 The feedback system enables:

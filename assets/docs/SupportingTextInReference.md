@@ -6,7 +6,7 @@ A supporting text in a reference.
 URI: [gene_review:SupportingTextInReference](https://w3id.org/ai4curation/gene_review/SupportingTextInReference)
 
 
-[![img](https://yuml.me/diagram/nofunky;dir:TB/class/[Reference]<reference_id%200..1-%20[SupportingTextInReference&#124;supporting_text:string%20%3F;full_text_unavailable:boolean%20%3F;reference_section_type:ManuscriptSection%20%3F],[CoreFunction]++-%20supported_by%200..*>[SupportingTextInReference],[ProposedOntologyTerm]++-%20supported_by%200..*>[SupportingTextInReference],[Review]++-%20supported_by%200..*>[SupportingTextInReference],[Review],[Reference],[ProposedOntologyTerm],[CoreFunction])](https://yuml.me/diagram/nofunky;dir:TB/class/[Reference]<reference_id%200..1-%20[SupportingTextInReference&#124;supporting_text:string%20%3F;full_text_unavailable:boolean%20%3F;reference_section_type:ManuscriptSection%20%3F],[CoreFunction]++-%20supported_by%200..*>[SupportingTextInReference],[ProposedOntologyTerm]++-%20supported_by%200..*>[SupportingTextInReference],[Review]++-%20supported_by%200..*>[SupportingTextInReference],[Review],[Reference],[ProposedOntologyTerm],[CoreFunction])
+[![img](https://yuml.me/diagram/nofunky;dir:TB/class/[Reference]<reference_id%201..1-%20[SupportingTextInReference&#124;supporting_text:string%20%3F;full_text_unavailable:boolean%20%3F;reference_section_type:ManuscriptSection%20%3F],[CoreFunction]++-%20supported_by%200..*>[SupportingTextInReference],[ProposedOntologyTerm]++-%20supported_by%200..*>[SupportingTextInReference],[Review]++-%20supported_by%200..*>[SupportingTextInReference],[Review],[Reference],[ProposedOntologyTerm],[CoreFunction])](https://yuml.me/diagram/nofunky;dir:TB/class/[Reference]<reference_id%201..1-%20[SupportingTextInReference&#124;supporting_text:string%20%3F;full_text_unavailable:boolean%20%3F;reference_section_type:ManuscriptSection%20%3F],[CoreFunction]++-%20supported_by%200..*>[SupportingTextInReference],[ProposedOntologyTerm]++-%20supported_by%200..*>[SupportingTextInReference],[Review]++-%20supported_by%200..*>[SupportingTextInReference],[Review],[Reference],[ProposedOntologyTerm],[CoreFunction])
 
 ## Referenced by Class
 
@@ -19,7 +19,7 @@ URI: [gene_review:SupportingTextInReference](https://w3id.org/ai4curation/gene_r
 
 ### Own
 
- * [reference_id](reference_id.md)  <sub>0..1</sub>
+ * [reference_id](reference_id.md)  <sub>1..1</sub>
      * Range: [Reference](Reference.md)
  * [supporting_text](supporting_text.md)  <sub>0..1</sub>
      * Description: Supporting text from the publication. This should be exact substrings. Different substrings can be broken up by '...'s. These substrings will be checked against the actual text of the paper. If editorialization is necessary, put this in square brackets (this is not checked). For example, you can say '...[CFAP300 shows] transport within cilia is IFT dependent...'

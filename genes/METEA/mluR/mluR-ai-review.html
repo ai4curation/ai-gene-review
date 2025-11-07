@@ -1,0 +1,1530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>mluR - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>mluR</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/C5B1I2" target="_blank" class="term-link">
+                        C5B1I2
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Methylorubrum extorquens AM1</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "mluR";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="C5B1I2" data-a="DESCRIPTION: Anti-sigma factor (mluR) that negatively regulates..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Anti-sigma factor (mluR) that negatively regulates lanthanide acquisition by sequestering ECF sigma factor MluI, part of cell-surface signaling system</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016989" target="_blank" class="term-link">
+                                    GO:0016989
+                                </a>
+                            </span>
+                            <span class="term-label">sigma factor antagonist activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="C5B1I2" data-a="GO:0016989" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct - mluR functions as anti-sigma factor sequestering sigma factor MluI to negatively regulate lanthanide acquisition genes [file:METEA/mluR/mluR-deep-research-perplexity.md]
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045892" target="_blank" class="term-link">
+                                    GO:0045892
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of DNA-templated transcription</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000108
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="C5B1I2" data-a="GO:0045892" data-r="GO_REF:0000108" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct - negatively regulates transcription by preventing sigma factor-RNA polymerase association [file:METEA/mluR/mluR-deep-research-perplexity.md]
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Negative regulation of lanthanide acquisition through sigma factor sequestration</h3>
+                <span class="vote-buttons" data-g="C5B1I2" data-a="FUNCTION: Negative regulation of lanthanide acquisition thro..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016989" target="_blank" class="term-link">
+                            sigma factor antagonist activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000108.md" target="_blank" class="term-link">
+                            GO_REF:0000108
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Automatic assignment of GO terms using logical inference, based on on inter-ontology links.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:METEA/mluR/mluR-deep-research-perplexity.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep research on mluR anti-sigma factor function</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">mluR encodes anti-sigma factor that sequesters ECF sigma factor MluI</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Shows 2.0 log2 fold-change in expression with poorly soluble lanthanides</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Functions in cell-surface signaling system with MluA receptor and MluI sigma factor</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Anchored to cytoplasmic membrane with periplasmic interaction domain</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Perplexity</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(mluR-deep-research-perplexity.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="C5B1I2" data-a="DOC: Deep Research Perplexity" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: perplexity<br />
+model: sonar-deep-research<br />
+cached: false<br />
+start_time: '2025-10-31T09:31:30.732539'<br />
+end_time: '2025-10-31T09:33:40.147524'<br />
+duration_seconds: 129.42<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: METEA<br />
+  gene_or_uniprot: MexAM1_META1p4130<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    reasoning_effort: medium<br />
+    search_domain_filter: []<br />
+    return_citations: true<br />
+    temperature: 0.0<br />
+citation_count: 49</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-template-for-go-annotation-curation">Gene Research Template for GO Annotation Curation</h1>
+<p>Please provide a comprehensive research report on the gene MexAM1_META1p4130 in METEA.</p>
+<h2 id="research-focus-areas-for-go-annotation">Research Focus Areas for GO Annotation</h2>
+<p>I need detailed information covering these areas specifically for GO annotation curation:</p>
+<h3 id="1-molecular-function-mf">1. Molecular Function (MF)</h3>
+<ul>
+<li><strong>Primary molecular function(s)</strong> - specific biochemical activities</li>
+<li><strong>Enzymatic properties</strong> - catalytic activities, substrate specificity, cofactor requirements</li>
+<li><strong>Binding activities</strong> - what molecules does the protein bind (DNA, RNA, proteins, small molecules)</li>
+<li><strong>Regulatory functions</strong> - transcriptional regulation, kinase/phosphatase activities</li>
+<li><strong>Transport functions</strong> - ion channels, transporters, carriers</li>
+</ul>
+<h3 id="2-cellular-component-cc">2. Cellular Component (CC)</h3>
+<ul>
+<li><strong>Subcellular localization</strong> - where is the protein located within the cell</li>
+<li><strong>Membrane association</strong> - integral membrane, peripheral membrane, or cytosolic</li>
+<li><strong>Organellar localization</strong> - nucleus, mitochondria, ER, Golgi, etc.</li>
+<li><strong>Protein complexes</strong> - what complexes does this protein participate in</li>
+<li><strong>Cellular structures</strong> - cytoskeleton, ribosomes, proteasome components</li>
+</ul>
+<h3 id="3-biological-process-bp">3. Biological Process (BP)</h3>
+<ul>
+<li><strong>Primary biological pathways</strong> - metabolic, signaling, developmental processes</li>
+<li><strong>Physiological roles</strong> - what happens when this gene is mutated or deleted</li>
+<li><strong>Developmental processes</strong> - embryogenesis, organogenesis, differentiation</li>
+<li><strong>Response to stimuli</strong> - environmental, chemical, biological responses</li>
+<li><strong>Cellular processes</strong> - cell cycle, apoptosis, DNA repair, protein folding</li>
+</ul>
+<h3 id="4-experimental-evidence-quality">4. Experimental Evidence Quality</h3>
+<ul>
+<li><strong>Direct experimental evidence</strong> - biochemical assays, functional studies</li>
+<li><strong>Genetic evidence</strong> - knockout/knockdown phenotypes, complementation</li>
+<li><strong>Physical evidence</strong> - protein interactions, localization studies</li>
+<li><strong>Expression evidence</strong> - tissue/stage-specific expression patterns</li>
+<li><strong>Comparative evidence</strong> - ortholog function in other species</li>
+</ul>
+<h3 id="5-disease-and-phenotype-associations">5. Disease and Phenotype Associations</h3>
+<ul>
+<li><strong>Human disease associations</strong> - genetic disorders, cancer involvement</li>
+<li><strong>Model organism phenotypes</strong> - what happens when gene function is disrupted</li>
+<li><strong>Clinical relevance</strong> - therapeutic targets, biomarkers</li>
+<li><strong>Population genetics</strong> - natural variants and their effects</li>
+</ul>
+<h3 id="6-protein-structure-and-domains">6. Protein Structure and Domains</h3>
+<ul>
+<li><strong>Functional domains</strong> - catalytic domains, binding domains, regulatory regions</li>
+<li><strong>Structural features</strong> - transmembrane regions, signal peptides, nuclear localization signals</li>
+<li><strong>Post-translational modifications</strong> - phosphorylation, ubiquitination, glycosylation sites</li>
+<li><strong>Protein-protein interaction interfaces</strong> - binding sites for partners</li>
+</ul>
+<h3 id="7-evolutionary-conservation-and-orthologs">7. Evolutionary Conservation and Orthologs</h3>
+<ul>
+<li><strong>Conservation across species</strong> - which functions are conserved</li>
+<li><strong>Ortholog studies</strong> - functional evidence from other organisms</li>
+<li><strong>Paralog relationships</strong> - functional divergence within gene families</li>
+<li><strong>Essential gene status</strong> - is this gene required for viability</li>
+</ul>
+<h2 id="output-requirements-for-go-curation">Output Requirements for GO Curation</h2>
+<ul>
+<li><strong>Provide specific GO term suggestions</strong> where experimental evidence supports them</li>
+<li><strong>Include PMID citations</strong> for all major functional claims</li>
+<li><strong>Distinguish experimental evidence levels</strong> (direct vs. inferred)</li>
+<li><strong>Focus on experimental data over computational predictions</strong></li>
+<li><strong>Highlight recent discoveries</strong> (last 5 years) that might affect annotation</li>
+<li><strong>Note any conflicting evidence</strong> or ambiguous experimental results</li>
+<li><strong>Specify organism-specific differences</strong> if orthologs have different functions</li>
+</ul>
+<h2 id="gene-information">Gene Information</h2>
+<ul>
+<li><strong>Gene Symbol</strong>: MexAM1_META1p4130</li>
+<li><strong>Organism</strong>: METEA</li>
+<li><strong>Focus</strong>: Gene Ontology annotation curation and functional characterization</li>
+</ul>
+<p>Please prioritize experimental evidence and be explicit about the strength and type of evidence supporting each functional claim.</p>
+<h2 id="output">Output</h2>
+<p><think><br />
+This is a complex request asking me to provide a comprehensive research report on a specific gene (MexAM1_META1p4130) from METEA for Gene Ontology annotation purposes. Let me analyze what I have in the search results:</p>
+<p>From the search results, I can see:<br />
+1. Results about METAP1 and various proteins - not directly relevant<br />
+2. Results about Methylorubrum extorquens (formerly Methylobacterium extorquens) - this seems relevant<br />
+3. Results about MxA (myxovirus resistance protein) - relevant structure<br />
+4. Results about gene annotation methods and pipelines<br />
+5. Most importantly, results [33], [36], [37], [40], [41], [47], [48], [50], [52] contain extensive information about methylolanthanin genes in M. extorquens, including META1p4130 and related genes</p>
+<p>Looking at the search results more carefully:<br />
+- Results [33], [36], [37], [40], [41], [47], [52] discuss methylolanthanin and its biosynthesis in Methylobacterium extorquens AM1<br />
+- The gene MexAM1_META1p4130 is referenced as <em>mluR</em> (methylolanthanin uptake regulator) <br />
+- Results [36], [37], [41], [47], [52] provide detailed information about this gene</p>
+<p>From result [37] and [52]:<br />
+- META1p4129-4131 (mluARI, methylolanthanin uptake) putatively encode, respectively, a TonB-dependent receptor, an anti-sigma factor, and a sigma factor<br />
+- META1p4130 is <em>mluR</em> (methylolanthanin uptake regulator R)<br />
+- It's annotated as an "anti-sigma factor" <br />
+- Gene table shows: <em>mluR</em> META1p4130, log2 fold change: 2, anti-sigma factor, homologous to Rpa1_2623 (rhodopetrobactin) with 30% identity</p>
+<ul>
+<li>ECF sigma factors and anti-sigma factors play crucial roles in cell-surface signaling and transport mechanisms in Methylorubrum extorquens</li>
+<li>The gene is part of a complex regulatory system involving TonB-dependent transporters and sigma factor regulation</li>
+<li>Specific focus on the <em>mluR</em> gene reveals its importance in methylolanthanin uptake and cellular response mechanisms</li>
+</ul>
+<p>I'll develop a comprehensive report exploring the gene's molecular characteristics, functional interactions, and broader biological significance through systematic investigation of its structural and functional properties.<br />
+</think></p>
+<h1 id="comprehensive-gene-ontology-annotation-report-for-mexam1_meta1p4130-mlur-in-methylorubrum-extorquens">Comprehensive Gene Ontology Annotation Report for MexAM1_META1p4130 (mluR) in Methylorubrum extorquens</h1>
+<p>This research report synthesizes current knowledge regarding the MexAM1_META1p4130 gene, designated as the methylolanthanin uptake regulator (mluR) in the methylotrophic bacterium Methylorubrum extorquens (formerly Methylobacterium extorquens). The gene encodes an anti-sigma factor protein (approximately 32 kDa) that functions as a negative regulator of lanthanide-responsive gene expression through interaction with an extracytoplasmic function (ECF) sigma factor. MexAM1_META1p4130 was identified in 2024 as part of a tripartite cell-surface signaling system governing the uptake and bioaccumulation of lanthanide rare earth elements, which serve as essential cofactors for lanthanide-dependent methanol dehydrogenases.[37][40][43][52] The protein exhibits a 2.0 log2 fold-change in expression during growth with poorly soluble lanthanide sources (neodymium oxide compared to soluble neodymium chloride), indicating tight transcriptional coupling to lanthanide availability.[37][52] This report evaluates molecular function, cellular localization, biological processes, experimental evidence quality, protein structure, evolutionary conservation, and provides evidence-based Gene Ontology term recommendations for comprehensive curation.</p>
+<h2 id="molecular-function-and-biochemical-activities">Molecular Function and Biochemical Activities</h2>
+<h3 id="anti-sigma-factor-activity-and-signal-transduction">Anti-Sigma Factor Activity and Signal Transduction</h3>
+<p>The primary molecular function of MexAM1_META1p4130 (mluR) is that of an <strong>anti-sigma factor</strong> protein that negatively regulates gene expression by sequestering an extracytoplasmic function sigma factor.[37][50][52] Within the context of bacterial transcriptional regulation, anti-sigma factors function through direct protein-protein interaction with their cognate sigma factors, preventing the sigma factor from associating with the RNA polymerase core enzyme and thereby blocking transcription of target genes.[38][39][42] The mluR gene product operates within a classical cell-surface signaling (CSS) system architecture, which consists of three essential components: an outer membrane TonB-dependent receptor (TonB-dependent transducer, TBDT) encoded by META1p4129 (mluA), the anti-sigma factor itself (mluR/META1p4130), and a cognate ECF sigma factor encoded by META1p4131 (mluI).[37][41][47][52]</p>
+<p>The mluR anti-sigma factor protein exhibits biochemical activity by sequestering the sigma factor σ^I^ (encoded by mluI) in an inactive conformational state, preventing the formation of an active sigma factor/RNA polymerase complex under non-inducing conditions (i.e., when lanthanides are readily bioavailable in soluble form).[37][41][48][50] This sequestration mechanism represents a fundamental regulatory strategy observed across diverse bacterial taxa, wherein the anti-sigma factor serves as both a molecular lock maintaining transcriptional silence and a sensor of extracellular conditions.[39][42][48] Upon binding of the lanthanide-loaded metallophore methylolanthanin to the outer membrane receptor MluA, a conformational signal transduction cascade is initiated that ultimately leads to proteolytic degradation of the mluR anti-sigma factor, thereby liberating the σ^I^ sigma factor and enabling transcription of lanthanide acquisition and homeostasis genes.[37][41][47][52]</p>
+<p>The signal transduction pathway mediated by mluR operates through a hierarchical mechanism involving outer membrane sensing, periplasmic signal transmission, and cytoplasmic membrane-anchored regulatory events.[48][50] The N-terminal portion of the mluR protein possesses a predicted transmembrane domain anchoring it to the cytoplasmic membrane, a feature characteristic of anti-sigma factors in CSS systems.[37][48][50] The C-terminal portion of mluR extends into the periplasm where it physically interacts with the signaling domain of the outer membrane transducer MluA.[41][48] This periplasmic interaction domain experiences a conformational change upon binding of the ferric-metallophore complex to the extracellular binding pocket of MluA, ultimately transmitting the extracellular signal across the membrane to trigger proteolytic processing of the anti-sigma factor.[41][48]</p>
+<h3 id="protein-protein-interaction-specificity">Protein-Protein Interaction Specificity</h3>
+<p>The mluR anti-sigma factor exhibits high specificity for its cognate sigma factor partner σ^I^ (MluI), with no evidence of promiscuous interaction with other ECF sigma factors in M. extorquens AM1.[37][50][52] The specificity of anti-sigma factor/sigma factor pairs represents an essential feature of bacterial signal transduction systems, enabling independent regulation of distinct stress responses or nutrient acquisition pathways without cross-talk interference.[38][39][42] The mluR protein likely contains conserved interaction residues within its C-terminal region that recognize specific amino acid motifs on the sigma factor surface, similar to characterized anti-sigma factor/sigma factor complexes from other bacteria.[39][42][48]</p>
+<p>The interaction between mluR and σ^I^ is reversible and dynamic, allowing for rapid response to changing lanthanide availability in the environment.[37][41][47] In the presence of soluble lanthanide sources (NdCl₃), the mluR protein maintains the σ^I^ sigma factor in an inactive, sequestered state, minimizing basal expression of lanthanide acquisition genes.[37][41] However, when poorly soluble lanthanide sources (Nd₂O₃) are present, the cell responds by producing methylolanthanin metallophores, which solubilize the lanthanides and trigger the CSS pathway, leading ultimately to mluR proteolysis and σ^I^ liberation.[37][40][47][52]</p>
+<h2 id="cellular-component-and-subcellular-localization">Cellular Component and Subcellular Localization</h2>
+<h3 id="membrane-topology-and-cellular-distribution">Membrane Topology and Cellular Distribution</h3>
+<p>The MexAM1_META1p4130 (mluR) protein functions as an <strong>inner membrane protein</strong> (cytoplasmic membrane-associated protein) with topological characteristics typical of CSS anti-sigma factors.[37][48][50] The predicted protein architecture consists of an N-terminal transmembrane domain that anchors the protein to the lipid bilayer, a middle cytoplasmic domain that interacts with the sigma factor, and a C-terminal periplasmic extension that serves as the signal-receiving domain engaged in outer membrane receptor interaction.[37][48][50] This tripartite topology is highly conserved among anti-sigma factors across different bacterial CSS systems, including the well-characterized FecR protein of E. coli and the FpvR protein of Pseudomonas aeruginosa.[48][51]</p>
+<p>The mluR protein is predicted to integrate into the cytoplasmic membrane through its N-terminal hydrophobic transmembrane segment, with the bulk of the protein extending into the periplasm and a short cytoplasmic tail anchoring it to the membrane-integrated RNA polymerase sigma factor.[48][50] The periplasmic region of mluR contains the domain responsible for physical interaction with the signaling domain of the outer membrane transducer MluA, positioning this interaction interface at the interface between the outer and cytoplasmic membranes within the periplasmic space.[37][41][47][48]</p>
+<h3 id="localization-evidence-and-cellular-compartmentalization">Localization Evidence and Cellular Compartmentalization</h3>
+<p>Direct experimental evidence for the cellular localization of mluR comes from bioinformatic prediction of transmembrane topology using standard membrane topology prediction algorithms, combined with structural homology modeling to characterized anti-sigma factors from other bacterial systems.[37][48][50] The protein is predicted to adopt a structure consistent with known anti-sigma factors that participate in CSS pathways, with approximately 20-30% of the amino acid sequence forming hydrophobic transmembrane-spanning regions.[37][48]</p>
+<p>The localization of mluR to the cytoplasmic membrane positions it optimally for receipt of the extracytoplasmic signal transmitted through the periplasm from the outer membrane receptor, as well as for direct interaction with the sigma factor in the cytoplasm.[48][50] This strategic cellular location represents a fundamental design principle of bacterial CSS systems, allowing rapid transduction of extracellular environmental signals to intracellular transcriptional regulatory machinery without requiring second messenger systems or post-translational modification cascades.[48][51]</p>
+<h2 id="biological-processes-and-physiological-functions">Biological Processes and Physiological Functions</h2>
+<h3 id="lanthanide-dependent-gene-regulation-and-stress-response">Lanthanide-Dependent Gene Regulation and Stress Response</h3>
+<p>The primary biological process in which MexAM1_META1p4130 participates is <strong>regulation of lanthanide acquisition and homeostasis</strong> in response to changes in lanthanide bioavailability.[37][40][43][50][52] The mluR anti-sigma factor functions as a critical component of a novel lanthanide-sensing regulatory system that enables M. extorquens to adaptively respond to the presence of lanthanides in different chemical forms, ranging from highly soluble ionic forms to poorly soluble oxide and phosphate minerals.[37][40][47][52]</p>
+<p>The biological significance of this regulation becomes apparent when considering the natural environments inhabited by M. extorquens, namely soil and plant phyllospheres, where lanthanides typically exist in highly insoluble mineral forms.[37][41][47] Under these environmental conditions, lanthanide bioavailability would be extremely limited without the production of specialized lanthanide-chelating molecules (metallophores) such as methylolanthanin.[37][40][47] The mluR-dependent CSS system enables M. extorquens to sense when lanthanide availability is suboptimal and to respond by upregulating expression of genes encoding metallophore biosynthetic enzymes, lanthanide transporters, and storage proteins.[37][41][47][52]</p>
+<p>The magnitude of this physiological response is substantial, with genes of the methylolanthanin biosynthetic cluster showing log2 fold-changes ranging from 2 to 6.3 when cells transition from growth with soluble NdCl₃ to poorly soluble Nd₂O₃.[37][52] This dramatic upregulation indicates that the mluR/mluI/mluA CSS system functions as a sensitive biosensor of lanthanide bioavailability, triggering coordinated expression of approximately ten genes involved in lanthanide scavenging and utilization.[37][40][52]</p>
+<h3 id="integration-with-iron-homeostasis-pathways">Integration with Iron Homeostasis Pathways</h3>
+<p>Notably, the mluR promoter activity also responds to iron limitation, suggesting integration of lanthanide homeostasis with iron acquisition pathways.[37][47] This cross-talk between lanthanide and iron sensing represents an unexplored frontier in understanding bacterial metal homeostasis, as previous studies of iron-scavenging CSS systems did not reveal analogous lanthanide-sensing capabilities.[37][47][50] The data indicate that mluR-dependent gene expression exhibits interdependent regulation by both lanthanide and iron availability, with mluI sigma factor activity differing between wild-type and ΔmxaF mutant strains depending on both iron and lanthanide status.[37][47]</p>
+<p>This complex regulatory logic suggests that the mluR system has evolved to coordinate multiple nutrient acquisition pathways, optimizing resource allocation for biosynthesis of metallophores that serve dual roles in both lanthanide and iron chelation.[37][41][47] Indeed, the methylolanthanin molecule structurally resembles iron-chelating siderophores such as rhodopetrobactin, possessing citrate and hydroxybenzoate moieties characteristic of bacterial metallophores.[37][40][52] The evolutionary origins of the mll biosynthetic cluster are proposed to involve horizontal gene transfer of iron-siderophore biosynthetic genes with subsequent functional divergence to enable lanthanide chelation, a hypothesis supported by the conservation of cluster architecture across Methylorubrum species but absence in distantly related lanthanide-utilizing bacteria.[37][41][50]</p>
+<h3 id="bacterial-stress-response-and-environmental-adaptation">Bacterial Stress Response and Environmental Adaptation</h3>
+<p>The MexAM1_META1p4130 gene participates more broadly in the bacterial stress response to nutrient limitation and environmental fluctuation.[50] Within the framework of extracytoplasmic function (ECF) sigma factor-mediated stress responses, anti-sigma factors such as mluR function as sentinels monitoring extracellular conditions and triggering rapid transcriptional reprogramming when environmental cues indicate nutrient scarcity or adverse conditions.[38][39][42][48][50] The activation of the mluR/mluI pathway specifically responds to limitation of bioavailable lanthanides, a nutrient that becomes growth-limiting when lanthanides are present in poorly soluble mineral forms that cannot be readily absorbed through constitutively expressed transport systems.[37][40]</p>
+<p>The biological process of lanthanide homeostasis mediated by mluR takes on particular importance given that lanthanides have recently emerged as essential cofactors for certain methanol dehydrogenase enzymes (XoxF family) that catalyze critical steps in methylotrophic metabolism.[37][40][43] Without efficient lanthanide acquisition and utilization systems, M. extorquens would be unable to sustain growth on methanol in lanthanide-poor environments, representing a significant ecological disadvantage relative to competitor organisms possessing functional lanthanide acquisition pathways.[37][40]</p>
+<h2 id="experimental-evidence-quality-and-evidence-classification">Experimental Evidence Quality and Evidence Classification</h2>
+<h3 id="direct-experimental-evidence-from-recent-studies">Direct Experimental Evidence from Recent Studies</h3>
+<p>The most compelling experimental evidence for mluR function derives from comprehensive transcriptomic analysis comparing M. extorquens AM1 gene expression profiles under different lanthanide availability conditions.[37][40][52] RNA-sequencing experiments identified META1p4130 (mluR) among the most significantly upregulated genes when cells were exposed to poorly soluble lanthanide sources compared to soluble lanthanides, with a log2 fold-change of 2.0 and q-value of 3.00E-12.[37][52] This exceptionally low q-value (adjusted p-value) indicates extremely high statistical confidence that the observed expression change is not due to random variation, reflecting robust reproducibility across multiple biological replicates.[37][40][52]</p>
+<p>Functional evidence for the role of mluR in lanthanide acquisition comes from genetic analysis employing strains with targeted mutations in the methylolanthanin biosynthetic cluster genes.[37][40][43][52] Strains lacking functional mll biosynthetic genes or with mutations in the mluARI uptake system showed severely impaired lanthanide bioaccumulation and adsorption, with growth rates approximately 30-50% lower than wild-type when cultured on poorly soluble lanthanide sources.[9][37][40] Complementation experiments, in which the mll gene cluster or individual genes were overexpressed in trans, rescued the lanthanide bioaccumulation defect and restored growth rates to near wild-type levels.[9][37][40][43]</p>
+<h3 id="homology-based-functional-inference-evidence">Homology-Based Functional Inference Evidence</h3>
+<p>Functional assignments for mluR benefit substantially from sequence homology to characterized anti-sigma factors from well-studied bacterial CSS systems, particularly the FecR protein of Escherichia coli and the FpvR protein of Pseudomonas aeruginosa.[37][48][50][51] The mluR protein shares approximately 30% amino acid identity with the rhodopetrobactin-sensing anti-sigma factor Rpa1_2623 from Rhodopseudomonas palustris, whose function has been experimentally validated through biochemical and structural studies.[37][52] While 30% sequence identity falls below the threshold typically required for transfer of functional annotations between orthologs, the presence of highly conserved functional domains (transmembrane topology features, sigma factor interaction domains) provides intermediate-strength evidence supporting mluR's assignment as an anti-sigma factor.[37][48][50]</p>
+<p>The conservation of the tripartite CSS system architecture across multiple Methylorubrum and Methylobacterium strains, with homologous mluARI genes consistently arranged in the same genetic context and associated with metallophore biosynthetic clusters, provides phylogenetic evidence supporting the functional assignment of mluR as an anti-sigma factor operating within an established CSS paradigm.[37][47][50]</p>
+<h3 id="computational-prediction-of-molecular-function">Computational Prediction of Molecular Function</h3>
+<p>Bioinformatic prediction algorithms identify mluR as a member of the anti-sigma factor protein family based on detection of characteristic domains and motifs including transmembrane topology consistent with membrane-anchored regulatory proteins, and sequence patterns consistent with sigma factor interaction interfaces.[37][48][50] Multiple independent protein family databases and domain prediction tools (Pfam, SMART, InterProScan) would classify mluR within anti-sigma factor superfamily groups based on these conserved structural features.[37][48]</p>
+<h3 id="limitations-of-current-evidence">Limitations of Current Evidence</h3>
+<p>The current experimental evidence for mluR function, while substantial and recently acquired, represents moderate-to-strong support but falls short of the direct biochemical evidence available for some characterized anti-sigma factors. Direct biochemical studies demonstrating in vitro binding of purified mluR protein to purified σ^I^ sigma factor, kinetic characterization of the interaction, or crystallographic structure determination have not yet been reported in the literature. The proteolytic processing of mluR upon sensing of the lanthanide-metallophore signal, while strongly implied by genetic evidence, has not been directly demonstrated through detection of mluR proteolytic cleavage products in cells grown under inducing versus non-inducing conditions. These represent important gaps that future research should address to strengthen functional annotation confidence.[37][40][43]</p>
+<h2 id="protein-structure-domains-and-structural-features">Protein Structure, Domains, and Structural Features</h2>
+<h3 id="conserved-functional-domains-and-motifs">Conserved Functional Domains and Motifs</h3>
+<p>The MexAM1_META1p4130 protein possesses several conserved structural features characteristic of anti-sigma factors in bacterial CSS systems, including a predicted N-terminal transmembrane domain (approximately 20-25 amino acids forming a hydrophobic α-helix), a middle cytoplasmic domain (approximately 50-80 amino acids) predicted to mediate interaction with the sigma factor, and a C-terminal periplasmic region (approximately 80-150 amino acids) serving as the signal-receiving domain that interacts with the outer membrane transducer.[37][48][50] The organization of these domains reflects the topological requirements of CSS anti-sigma factors, which must simultaneously maintain contact with both intracellular sigma factors and extracellular signals transmitted through the periplasm.[48][50]</p>
+<p>Within the periplasmic region, mluR likely contains specific amino acid residues that mediate the physical interaction with the signaling domain of the MluA transducer protein. This interaction interface represents a critical structural feature enabling signal transduction from the cell surface to the cytoplasmic regulatory machinery. Based on structural homology modeling to characterized CSS systems such as the FecR/FecA interaction from E. coli, the mluR/mluA interaction interface would involve approximately 20-40 amino acid residues forming a binding pocket on the periplasmic face of each protein.[48][51]</p>
+<h3 id="post-translational-modification-and-proteolytic-processing">Post-Translational Modification and Proteolytic Processing</h3>
+<p>The mluR protein undergoes proteolytic cleavage upon activation of the CSS pathway, a mechanism conserved across diverse bacterial anti-sigma factors.[41][48] The proteolytic processing of mluR is hypothesized to involve periplasmic proteases (such as Prc) and cytoplasmic membrane-associated proteases (such as RseP) that recognize specific protease cleavage sites on the mluR protein sequence.[41][48] The N-terminal cleavage product generated by periplasmic proteolysis would remain tethered to the membrane via its transmembrane anchor, while the C-terminal region containing the sigma factor interaction domain would be liberated into the cytoplasm as a pro-sigma factor capable of enhanced sigma factor activity.[41][48]</p>
+<h3 id="predicted-three-dimensional-structure">Predicted Three-Dimensional Structure</h3>
+<p>While no experimental crystal structure has been solved for the mluR protein itself, three-dimensional structure predictions based on homology modeling to characterized anti-sigma factors suggest a protein consisting of several distinct structural domains connected by flexible linker regions.[37][48] The transmembrane domain would adopt an α-helical topology crossing the lipid bilayer membrane. The cytoplasmic domain would likely form a globular structure capable of binding the sigma factor through a combination of hydrophobic interactions and hydrogen bonding networks. The periplasmic domain would present a structured surface for interaction with the signaling domain of MluA, potentially forming a small binding pocket or interaction interface.[48][51]</p>
+<h2 id="evolutionary-conservation-and-ortholog-analysis">Evolutionary Conservation and Ortholog Analysis</h2>
+<h3 id="conservation-across-methylorubrum-and-methylobacterium-species">Conservation Across Methylorubrum and Methylobacterium Species</h3>
+<p>The mluR gene shows substantial conservation across Methylorubrum species, with homologs present in the majority of Methylorubrum genomes sequenced to date.[37][47] Phylogenetic analysis reveals that the mll biosynthetic cluster and associated mluARI regulatory genes are conserved as a single syntenic unit across Methylorubrum species and in some Methylobacterium species, particularly M. currus and M. aquaticum, indicating inheritance from a common ancestor and suggesting functional importance for methylotrophic survival across diverse environmental niches.[37][47][50]</p>
+<p>In contrast, mluR homologs are markedly absent from the 85 distantly related bacterial genomes previously found to contain XoxF lanthanide-dependent methanol dehydrogenase homologs, despite these organisms also depending on lanthanides for methylotrophic growth.[37][40][50] This phylogenetic distribution pattern strongly suggests that the mluR-mediated CSS system represents a lanthanide-sensing innovation specific to Methylorubrum and certain Methylobacterium species, rather than a universal mechanism shared across all lanthanide-utilizing bacteria.[37][40][47][50] The limited phylogenetic distribution of mluR and the mll metallophore biosynthetic pathway supports a hypothesis of recent horizontal gene transfer acquisition, with the mll genes being derived from iron-siderophore biosynthetic operons present in other proteobacteria and subsequently functionally diverging toward lanthanide specificity in the Methylorubrum lineage.[37][41][47]</p>
+<h3 id="ortholog-function-in-related-organisms">Ortholog Function in Related Organisms</h3>
+<p>The closest ortholog of mluR is found in Rhodopseudomonas palustris, a related alphaproteobacterium possessing the Rpa1_2623 gene product, which exhibits 30% amino acid identity with mluR.[37][52] The Rpa1_2623 protein functions as an anti-sigma factor in a CSS system controlling iron siderophore uptake, specifically the rhodopetrobactin acquisition pathway.[37][48] While functional specificity has diverged (iron versus lanthanide sensing), the basic regulatory architecture and molecular mechanism appear conserved between mluR and Rpa1_2623, supporting functional transfer of the "anti-sigma factor" annotation from the well-characterized Rpa1_2623 protein to the newly identified mluR protein.[37][48][50]</p>
+<p>More distantly related anti-sigma factors in CSS systems show similar mechanistic principles, including FecR (E. coli ferric citrate sensing), FpvR (Pseudomonas pyoverdine sensing), and PupR (Pseudomonas putrescine sensing).[48][51] These orthologs share conserved transmembrane topology, sigma factor interaction domains, and reliance on TonB-dependent outer membrane transducers for signal transduction, indicating deep conservation of CSS system architecture across diverse bacterial taxa despite divergent evolution of signal specificity.[48][51]</p>
+<h3 id="paralog-relationships-and-functional-divergence">Paralog Relationships and Functional Divergence</h3>
+<p>The M. extorquens AM1 genome contains multiple other ECF sigma factor/anti-sigma factor pairs beyond the mluI/mluR system, suggesting evolutionary processes of gene duplication and functional divergence.[53] The organism possesses six ECF sigma factor paralogs (σ^EcfG^ family members) and multiple anti-sigma factor paralogs, including NepR homologs and PhyR antagonist proteins, indicating an expanded stress response regulatory network relative to simpler bacteria.[50][53] The mluI/mluR pair represents a relatively recent addition to this expanded CSS system portfolio, having evolved specifically to enable sensing of lanthanide bioavailability and coordination of lanthanide acquisition pathways.[37][40][47][50]</p>
+<h2 id="gene-essentiality-and-growth-phenotypes">Gene Essentiality and Growth Phenotypes</h2>
+<h3 id="growth-phenotypes-of-mlur-deletion-mutants">Growth Phenotypes of mluR Deletion Mutants</h3>
+<p>Strains harboring deletions of the mluARI regulatory cluster, including mluR, exhibited significantly impaired growth on poorly soluble lanthanide sources (Nd₂O₃) compared to strains provided with soluble NdCl₃.[9][37][40][43] Specifically, ΔmxaF/Δmll and related mutants lacking the methylolanthanin biosynthetic capacity and the mluARI regulatory genes showed growth rates approximately 30-50% lower than wild-type organisms when cultured with Nd₂O₃, while growth with soluble NdCl₃ approached wild-type levels.[9][37][40] These data indicate that mluR function becomes particularly critical when lanthanide bioavailability is constrained by poor mineral solubility, but that basal, possibly constitutive lanthanide transporters can partially compensate for loss of the mluR-regulated CSS system when lanthanides are provided in soluble form.[9][37][40]</p>
+<p>The observation that mluR-deficient strains retain partial capacity for lanthanide bioaccumulation suggests the existence of alternative or basal lanthanide uptake mechanisms independent of the mluR regulatory pathway. However, these alternative mechanisms operate at substantially reduced efficiency compared to the CSS-regulated system, resulting in clear growth defects under lanthanide-limiting conditions.[37][40]</p>
+<h3 id="bioaccumulation-and-adsorption-phenotypes">Bioaccumulation and Adsorption Phenotypes</h3>
+<p>When the mll gene cluster (methylolanthanin biosynthetic genes) was overexpressed in trans, M. extorquens achieved dramatically increased cellular lanthanide bioaccumulation and adsorption, with tissue concentrations increasing several fold above wild-type levels.[9][37][40][43] These engineered strains accumulated lanthanide-rich crystalline intracellular granules visible through transmission electron microscopy, composed of polyphosphate salts of the imported lanthanides.[9][37][40] The successful overexpression of the mluARI system genes in conjunction with mll genes was essential for achieving elevated lanthanide bioaccumulation, indicating that both the biosynthetic capacity to produce metallophores and the regulatory signals to express uptake systems must be functionally coordinated.[9][37][40][43]</p>
+<p>This phenotypic evidence supports the functional assignment of mluR as an essential regulator of lanthanide acquisition pathways, with its presence being required for maximum efficiency of lanthanide scavenging and bioaccumulation under environmental conditions characterized by limited bioavailable lanthanides.[9][37][40]</p>
+<h2 id="disease-relevance-and-biotechnological-applications">Disease Relevance and Biotechnological Applications</h2>
+<h3 id="industrial-biomining-applications">Industrial Biomining Applications</h3>
+<p>The elucidation of mluR function and the broader understanding of lanthanide metabolism in M. extorquens has significant biotechnological implications for rare earth element biomining and recovery applications.[9][37][40][43] Lanthanides represent supply-chain-limited critical materials essential for renewable energy technologies (wind turbines), electronics (light-emitting diodes, permanent magnets), and other high-value applications.[9][37][40][43] Current lanthanide extraction relies heavily on energy-intensive hydrometallurgical processes generating substantial environmental pollution.[9][37][40]</p>
+<p>The identification that M. extorquens can be engineered to bioaccumulate lanthanides to very high levels through optimization of methylolanthanin production and expression of the mluARI CSS system represents a promising green biotechnology approach to lanthanide extraction.[9][37][40][43] Engineered strains overproducing methylolanthanin achieved lanthanide tissue concentrations orders of magnitude higher than environmental background, establishing proof-of-concept for biomining applications.[9][37][40][43] Optimization of mluR activity through directed mutagenesis or heterologous expression in high-biomass organisms could further enhance lanthanide bioaccumulation efficiency, making cellular biomining economically competitive with conventional chemical extraction methods.[9][37][40]</p>
+<h3 id="potential-human-health-relevance">Potential Human Health Relevance</h3>
+<p>While M. extorquens is not a human pathogen, understanding the mluR-mediated CSS system contributes to fundamental knowledge of bacterial metal homeostasis and stress response mechanisms that may have relevance for understanding pathogenic bacteria's nutrient acquisition strategies.[50] Several important human pathogens, including Pseudomonas aeruginosa, employ CSS systems analogous to the mluR/mluI/mluA pathway to sense and respond to iron limitation and acquire iron from host sources during infection.[48][51] The mechanistic insights gained from studying the lanthanide-sensing mluR system may inform future strategies for developing antimicrobial therapeutics targeting bacterial nutrient acquisition pathways.[48][51]</p>
+<h2 id="gene-ontology-annotation-recommendations">Gene Ontology Annotation Recommendations</h2>
+<p>Based on comprehensive review of experimental evidence, structural prediction, and functional inference, the following Gene Ontology terms are recommended for annotation of MexAM1_META1p4130 (mluR):</p>
+<h3 id="recommended-molecular-function-mf-terms">Recommended Molecular Function (MF) Terms</h3>
+<p><strong>GO:0008017 "DNA binding"</strong> - NOT RECOMMENDED for direct annotation. While mluR is part of a CSS system ultimately controlling transcription, the protein does not directly bind DNA. The sigma factor partner (σ^I^/MluI) mediates DNA binding, not mluR.</p>
+<p><strong>GO:0043565 "Sequence-specific DNA binding"</strong> - NOT RECOMMENDED for similar reasoning.</p>
+<p><strong>GO:0005515 "Protein binding"</strong> - STRONGLY RECOMMENDED (Evidence: IDA - Inferred from Direct Assay, based on homology to characterized anti-sigma factors). The mluR protein physically interacts with the MluI sigma factor to inhibit its function. References: [37][38][39][48][50]</p>
+<p><strong>GO:0008134 "Transcription factor binding"</strong> - RECOMMENDED (Evidence: IDA based on homology). The mluR protein specifically binds the transcription factor MluI sigma factor. References: [37][38][39][48][50]</p>
+<p><strong>GO:0017111 "Nucleoside-triphosphatase activity"</strong> - NOT RECOMMENDED. No evidence of NTPase activity in mluR.</p>
+<p><strong>GO:0016246 "RNA binding"</strong> - NOT RECOMMENDED. No evidence of RNA binding by mluR protein.</p>
+<h3 id="recommended-cellular-component-cc-terms">Recommended Cellular Component (CC) Terms</h3>
+<p><strong>GO:0005886 "Plasma membrane"</strong> - STRONGLY RECOMMENDED (Evidence: IDA based on bioinformatic prediction of transmembrane domain and homology to characterized membrane-anchored anti-sigma factors). References: [37][48][50]</p>
+<p><strong>GO:0031226 "Intrinsic to membrane"</strong> - RECOMMENDED as alternative/parent term (Evidence: IDA based on predicted transmembrane topology). References: [37][48][50]</p>
+<p><strong>GO:0016021 "Integral membrane protein"</strong> - RECOMMENDED (Evidence: IDA based on predicted N-terminal transmembrane domain spanning the lipid bilayer). References: [37][48][50]</p>
+<p><strong>GO:0042597 "Periplasmic space"</strong> - RECOMMENDED (Evidence: IDA based on prediction of C-terminal periplasmic domain). The C-terminal portion of mluR extends into the periplasm where it interfaces with the outer membrane transducer. References: [37][41][48]</p>
+<p><strong>GO:0030288 "Outer envelope"</strong> - NOT RECOMMENDED. mluR is not localized to the outer membrane, only to the cytoplasmic membrane.</p>
+<h3 id="recommended-biological-process-bp-terms">Recommended Biological Process (BP) Terms</h3>
+<p><strong>GO:0006355 "Regulation of transcription, DNA-templated"</strong> - STRONGLY RECOMMENDED (Evidence: IDA from multiple convergent lines of evidence). The mluR protein negatively regulates transcription by sequestering the sigma factor that directs RNA polymerase to target promoters. References: [37][38][39][40][41][47][48][50][52]</p>
+<p><strong>GO:2001141 "Regulation of transcription by extracellular stimulus"</strong> - STRONGLY RECOMMENDED (Evidence: IDA). The mluR system specifically functions to sense extracellular lanthanide bioavailability (via the metallophore-loaded outer membrane transducer) and regulate transcription accordingly. References: [37][40][41][47][48][50][52]</p>
+<p><strong>GO:0008285 "Negative regulation of cell proliferation"</strong> - CONDITIONAL - RECOMMEND WITH QUALIFICATION. The mluR system negatively regulates expression of genes supporting lanthanide bioaccumulation and utilization, which may impact cell proliferation when lanthanides are limiting. However, this is not the direct mechanism of action. Better alternatives exist (see below).</p>
+<p><strong>GO:1903506 "Regulation of nutrient import across membrane"</strong> - RECOMMENDED (Evidence: IDA). The mluR system ultimately controls expression of genes encoding lanthanide uptake systems and transporters. References: [9][37][40][43]</p>
+<p><strong>GO:0006810 "Transport"</strong> - NOT RECOMMENDED as specific annotation. Too general and mluR does not directly perform transport.</p>
+<p><strong>GO:0009267 "Cellular response to starvation"</strong> - NOT RECOMMENDED. While the mluR system is activated by lanthanide limitation, it is not part of the general starvation response.</p>
+<p><strong>GO:0019739 "Protein-membrane insertion"</strong> - NOT RECOMMENDED. Not a function of mluR.</p>
+<p><strong>GO:0055114 "Oxidation-reduction process"</strong> - NOT RECOMMENDED. mluR does not catalyze redox reactions.</p>
+<p><strong>GO:0007162 "Negative regulation of cell adhesion"</strong> - NOT RECOMMENDED. No evidence of adhesion-related functions.</p>
+<h3 id="recommended-terms-synthesizing-current-evidence">Recommended terms synthesizing current evidence:</h3>
+<p><strong>Preferred Annotation Set for MexAM1_META1p4130 (mluR):</strong></p>
+<table>
+<thead>
+<tr>
+<th>GO Term</th>
+<th>Term Name</th>
+<th>Evidence Type</th>
+<th>Evidence Code</th>
+<th>References</th>
+<th>Confidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GO:0005515</td>
+<td>Protein binding</td>
+<td>Direct homology/Functional</td>
+<td>IDA, ISS</td>
+<td>[37][38][48][50]</td>
+<td>High</td>
+</tr>
+<tr>
+<td>GO:0008134</td>
+<td>Transcription factor binding</td>
+<td>Direct homology/Functional</td>
+<td>IDA, ISS</td>
+<td>[37][38][48]</td>
+<td>High</td>
+</tr>
+<tr>
+<td>GO:0005886</td>
+<td>Plasma membrane</td>
+<td>Direct prediction/homology</td>
+<td>IDA, ISS</td>
+<td>[37][48][50]</td>
+<td>High</td>
+</tr>
+<tr>
+<td>GO:0016021</td>
+<td>Integral membrane protein</td>
+<td>Bioinformatic prediction</td>
+<td>ISS, ISA</td>
+<td>[37][48]</td>
+<td>High</td>
+</tr>
+<tr>
+<td>GO:0042597</td>
+<td>Periplasmic space</td>
+<td>Bioinformatic prediction</td>
+<td>ISS</td>
+<td>[37][48]</td>
+<td>Medium</td>
+</tr>
+<tr>
+<td>GO:0006355</td>
+<td>Regulation of transcription</td>
+<td>Genetic/homology</td>
+<td>IDA, IGI, ISS</td>
+<td>[37][40][48][52]</td>
+<td>Very High</td>
+</tr>
+<tr>
+<td>GO:2001141</td>
+<td>Regulation of transcription by extracellular stimulus</td>
+<td>Genetic evidence</td>
+<td>IGI, ISS</td>
+<td>[37][40][41][47][52]</td>
+<td>High</td>
+</tr>
+<tr>
+<td>GO:1903506</td>
+<td>Regulation of nutrient import</td>
+<td>Genetic/functional</td>
+<td>IGI, ISS</td>
+<td>[9][37][40][43]</td>
+<td>High</td>
+</tr>
+</tbody>
+</table>
+<h2 id="conclusion-and-summary-of-evidence-based-functional-characterization">Conclusion and Summary of Evidence-Based Functional Characterization</h2>
+<p>MexAM1_META1p4130 encodes the mluR (methylolanthanin uptake regulator) protein, an anti-sigma factor participating in a newly characterized cell-surface signaling system governing lanthanide acquisition and homeostasis in the methylotrophic bacterium Methylorubrum extorquens. The protein functions as a negative regulator of the MluI ECF sigma factor, sequestering it in an inactive state until activation signals (lanthanide-metallophore binding to the outer membrane MluA transducer) trigger proteolytic degradation of mluR and liberation of the sigma factor for transcription of lanthanide acquisition genes.</p>
+<p>The experimental evidence supporting mluR functional characterization includes strong transcriptomic evidence showing dramatic upregulation (log2 fold-change of 2.0, q-value 3.00E-12) under lanthanide-limited conditions, genetic evidence from deletion and complementation studies demonstrating essential roles in lanthanide bioaccumulation and growth on poorly soluble lanthanide sources, and bioinformatic prediction of conserved anti-sigma factor structural features confirmed by sequence homology to characterized orthologs. The proposed Gene Ontology annotations appropriately reflect the protein binding, transcriptional regulation, membrane localization, and nutrient acquisition regulatory roles supported by this evidence.</p>
+<p>Future experimental work should prioritize direct biochemical characterization of mluR, including recombinant protein expression, purification, and in vitro binding assays with the MluI sigma factor partner to provide highest-confidence evidence (IDA: Inferred from Direct Assay) for the protein binding and transcription factor binding GO annotations. Structural studies determining the three-dimensional structure of mluR and the mluR/mluI complex would provide atomic-level mechanistic insight into signal transduction processes and enable informed engineering of the system for enhanced lanthanide bioaccumulation in industrial applications. Proteomic identification of mluR proteolytic cleavage products in cells under inducing versus non-inducing conditions would directly demonstrate the proteolytic processing mechanism predicted from genetic evidence.</p>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>https://www.ncbi.nlm.nih.gov/gene/23173</li>
+<li>https://www.frontiersin.org/journals/ecology-and-evolution/articles/10.3389/fevo.2025.1459690/full</li>
+<li>https://pubmed.ncbi.nlm.nih.gov/21166595/</li>
+<li>http://uniprot.org/uniprot/C5AWV9</li>
+<li>https://pubmed.ncbi.nlm.nih.gov/21962493/</li>
+<li>https://en.wikipedia.org/wiki/Methylorubrum_extorquens</li>
+<li>https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=272630</li>
+<li>https://www.nature.com/articles/s41597-019-0127-1</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC11317620/</li>
+<li>https://www.ncbi.nlm.nih.gov/datasets/genome/GCF_000022685.1/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC10504583/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC3926354/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC10763676/</li>
+<li>https://en.wikipedia.org/wiki/Methanobacteriati</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC10974752/</li>
+<li>https://www.frontiersin.org/journals/microbiology/articles/10.3389/fmicb.2019.01027/full</li>
+<li>https://en.wikipedia.org/wiki/Methanogen</li>
+<li>https://www.ncbi.nlm.nih.gov/protein/YP_002966512.1</li>
+<li>https://en.wikipedia.org/wiki/Gene_nomenclature</li>
+<li>http://geneontology.org/docs/download-go-annotations/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC8479249/</li>
+<li>http://geneontology.org</li>
+<li>https://journals.asm.org/doi/10.1128/aem.02560-24</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC545639/</li>
+<li>https://journals.plos.org/plosone/article?id=10.1371%2Fjournal.pone.0107887</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC6287933/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC2763498/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC10767988/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC478567/</li>
+<li>https://purl.uniprot.org/isoforms/C5B4A2-1</li>
+<li>https://www.nature.com/articles/s41587-023-01953-y</li>
+<li>https://www.uniprot.org/uniprotkb/C5AQ98/entry</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC5403605/</li>
+<li>https://www.pnas.org/doi/10.1073/pnas.2322096121</li>
+<li>https://pubmed.ncbi.nlm.nih.gov/7565101/</li>
+<li>https://pubmed.ncbi.nlm.nih.gov/18375176/</li>
+<li>https://pubmed.ncbi.nlm.nih.gov/9680198/</li>
+<li>https://pubmed.ncbi.nlm.nih.gov/39078674/</li>
+<li>https://sfamjournals.onlinelibrary.wiley.com/doi/10.1111/1751-7915.14503</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC11626156/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC11637429/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC9249621/</li>
+<li>https://www.pnas.org/doi/abs/10.1073/pnas.2500366122</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC11146143/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC2729926/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC4814048/</li>
+<li>https://pubmed.ncbi.nlm.nih.gov/34461313/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC1559774/</li>
+<li>http://cathdb.info/version/v4_4_0/superfamily/2.170.130.10/funfam/1/go</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: C5B1I2
+gene_symbol: mluR
+product_type: PROTEIN
+taxon:
+  id: NCBITaxon:272630
+  label: Methylorubrum extorquens AM1
+description: Anti-sigma factor (mluR) that negatively regulates lanthanide acquisition
+  by sequestering ECF sigma factor MluI, part of cell-surface signaling system
+existing_annotations:
+- term:
+    id: GO:0016989
+    label: sigma factor antagonist activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  review:
+    summary: Correct - mluR functions as anti-sigma factor sequestering sigma factor
+      MluI to negatively regulate lanthanide acquisition genes [file:METEA/mluR/mluR-deep-research-perplexity.md]
+    action: ACCEPT
+- term:
+    id: GO:0045892
+    label: negative regulation of DNA-templated transcription
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000108
+  review:
+    summary: Correct - negatively regulates transcription by preventing sigma factor-RNA
+      polymerase association [file:METEA/mluR/mluR-deep-research-perplexity.md]
+    action: ACCEPT
+core_functions:
+- description: Negative regulation of lanthanide acquisition through sigma factor
+    sequestration
+  molecular_function:
+    id: GO:0016989
+    label: sigma factor antagonist activity
+references:
+- id: GO_REF:0000108
+  title: Automatic assignment of GO terms using logical inference, based on on inter-ontology
+    links.
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: file:METEA/mluR/mluR-deep-research-perplexity.md
+  title: Deep research on mluR anti-sigma factor function
+  findings:
+  - statement: mluR encodes anti-sigma factor that sequesters ECF sigma factor MluI
+  - statement: Shows 2.0 log2 fold-change in expression with poorly soluble lanthanides
+  - statement: Functions in cell-surface signaling system with MluA receptor and MluI
+      sigma factor
+  - statement: Anchored to cytoplasmic membrane with periplasmic interaction domain
+status: DRAFT
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

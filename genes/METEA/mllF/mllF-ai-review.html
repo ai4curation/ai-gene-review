@@ -1,0 +1,1299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>mllF - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>mllF</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/C5B1I7" target="_blank" class="term-link">
+                        C5B1I7
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Methylorubrum extorquens AM1</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "mllF";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="C5B1I7" data-a="DESCRIPTION: Xylose isomerase-like TIM barrel domain-containing..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Xylose isomerase-like TIM barrel domain-containing protein (mllF) involved in methylolanthanin biosynthesis. Homologous to enzymes in petrobactin biosynthetic pathway. Part of mll gene cluster (META1p4129-4138) showing 32-fold upregulation with poorly soluble lanthanides. Predicted to catalyze isomerization or sugar-related transformation reactions during lanthanophore assembly.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Isomerase activity during lanthanophore biosynthesis</h3>
+                <span class="vote-buttons" data-g="C5B1I7" data-a="FUNCTION: Isomerase activity during lanthanophore biosynthes..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016853" target="_blank" class="term-link">
+                            isomerase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:METEA/mllF/mllF-deep-research-perplexity.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">Contains xylose isomerase-like TIM barrel domain. Part of mll cluster homologous to petrobactin biosynthetic pathway</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:METEA/mllF/mllF-deep-research-perplexity.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep research on mllF TIM barrel protein in lanthanophore biosynthesis</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">META1p4135 encodes xylose isomerase-like TIM barrel protein (mllF)</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Part of mll cluster showing 32-fold upregulation with poorly soluble lanthanides</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Homologous to enzymes in petrobactin biosynthetic pathway</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Perplexity</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(mllF-deep-research-perplexity.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="C5B1I7" data-a="DOC: Deep Research Perplexity" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: perplexity<br />
+model: sonar-deep-research<br />
+cached: false<br />
+start_time: '2025-10-31T09:47:51.406443'<br />
+end_time: '2025-10-31T09:50:30.139235'<br />
+duration_seconds: 158.73<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: METEA<br />
+  gene_or_uniprot: MexAM1_META1p4135<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    reasoning_effort: medium<br />
+    search_domain_filter: []<br />
+    return_citations: true<br />
+    temperature: 0.0<br />
+citation_count: 53</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-template-for-go-annotation-curation">Gene Research Template for GO Annotation Curation</h1>
+<p>Please provide a comprehensive research report on the gene MexAM1_META1p4135 in METEA.</p>
+<h2 id="research-focus-areas-for-go-annotation">Research Focus Areas for GO Annotation</h2>
+<p>I need detailed information covering these areas specifically for GO annotation curation:</p>
+<h3 id="1-molecular-function-mf">1. Molecular Function (MF)</h3>
+<ul>
+<li><strong>Primary molecular function(s)</strong> - specific biochemical activities</li>
+<li><strong>Enzymatic properties</strong> - catalytic activities, substrate specificity, cofactor requirements</li>
+<li><strong>Binding activities</strong> - what molecules does the protein bind (DNA, RNA, proteins, small molecules)</li>
+<li><strong>Regulatory functions</strong> - transcriptional regulation, kinase/phosphatase activities</li>
+<li><strong>Transport functions</strong> - ion channels, transporters, carriers</li>
+</ul>
+<h3 id="2-cellular-component-cc">2. Cellular Component (CC)</h3>
+<ul>
+<li><strong>Subcellular localization</strong> - where is the protein located within the cell</li>
+<li><strong>Membrane association</strong> - integral membrane, peripheral membrane, or cytosolic</li>
+<li><strong>Organellar localization</strong> - nucleus, mitochondria, ER, Golgi, etc.</li>
+<li><strong>Protein complexes</strong> - what complexes does this protein participate in</li>
+<li><strong>Cellular structures</strong> - cytoskeleton, ribosomes, proteasome components</li>
+</ul>
+<h3 id="3-biological-process-bp">3. Biological Process (BP)</h3>
+<ul>
+<li><strong>Primary biological pathways</strong> - metabolic, signaling, developmental processes</li>
+<li><strong>Physiological roles</strong> - what happens when this gene is mutated or deleted</li>
+<li><strong>Developmental processes</strong> - embryogenesis, organogenesis, differentiation</li>
+<li><strong>Response to stimuli</strong> - environmental, chemical, biological responses</li>
+<li><strong>Cellular processes</strong> - cell cycle, apoptosis, DNA repair, protein folding</li>
+</ul>
+<h3 id="4-experimental-evidence-quality">4. Experimental Evidence Quality</h3>
+<ul>
+<li><strong>Direct experimental evidence</strong> - biochemical assays, functional studies</li>
+<li><strong>Genetic evidence</strong> - knockout/knockdown phenotypes, complementation</li>
+<li><strong>Physical evidence</strong> - protein interactions, localization studies</li>
+<li><strong>Expression evidence</strong> - tissue/stage-specific expression patterns</li>
+<li><strong>Comparative evidence</strong> - ortholog function in other species</li>
+</ul>
+<h3 id="5-disease-and-phenotype-associations">5. Disease and Phenotype Associations</h3>
+<ul>
+<li><strong>Human disease associations</strong> - genetic disorders, cancer involvement</li>
+<li><strong>Model organism phenotypes</strong> - what happens when gene function is disrupted</li>
+<li><strong>Clinical relevance</strong> - therapeutic targets, biomarkers</li>
+<li><strong>Population genetics</strong> - natural variants and their effects</li>
+</ul>
+<h3 id="6-protein-structure-and-domains">6. Protein Structure and Domains</h3>
+<ul>
+<li><strong>Functional domains</strong> - catalytic domains, binding domains, regulatory regions</li>
+<li><strong>Structural features</strong> - transmembrane regions, signal peptides, nuclear localization signals</li>
+<li><strong>Post-translational modifications</strong> - phosphorylation, ubiquitination, glycosylation sites</li>
+<li><strong>Protein-protein interaction interfaces</strong> - binding sites for partners</li>
+</ul>
+<h3 id="7-evolutionary-conservation-and-orthologs">7. Evolutionary Conservation and Orthologs</h3>
+<ul>
+<li><strong>Conservation across species</strong> - which functions are conserved</li>
+<li><strong>Ortholog studies</strong> - functional evidence from other organisms</li>
+<li><strong>Paralog relationships</strong> - functional divergence within gene families</li>
+<li><strong>Essential gene status</strong> - is this gene required for viability</li>
+</ul>
+<h2 id="output-requirements-for-go-curation">Output Requirements for GO Curation</h2>
+<ul>
+<li><strong>Provide specific GO term suggestions</strong> where experimental evidence supports them</li>
+<li><strong>Include PMID citations</strong> for all major functional claims</li>
+<li><strong>Distinguish experimental evidence levels</strong> (direct vs. inferred)</li>
+<li><strong>Focus on experimental data over computational predictions</strong></li>
+<li><strong>Highlight recent discoveries</strong> (last 5 years) that might affect annotation</li>
+<li><strong>Note any conflicting evidence</strong> or ambiguous experimental results</li>
+<li><strong>Specify organism-specific differences</strong> if orthologs have different functions</li>
+</ul>
+<h2 id="gene-information">Gene Information</h2>
+<ul>
+<li><strong>Gene Symbol</strong>: MexAM1_META1p4135</li>
+<li><strong>Organism</strong>: METEA</li>
+<li><strong>Focus</strong>: Gene Ontology annotation curation and functional characterization</li>
+</ul>
+<p>Please prioritize experimental evidence and be explicit about the strength and type of evidence supporting each functional claim.</p>
+<h2 id="output">Output</h2>
+<p><think><br />
+This is a complex request. The user is asking for a comprehensive research report on the gene MexAM1_META1p4135 from Methylobacterium extorquens AM1 (METEA), specifically for Gene Ontology annotation curation.</p>
+<p>Let me analyze the search results to see what information is available about this gene:</p>
+<p>From the search results, I can see:<br />
+- Result [2] mentions MexAM1_META1p4135 as "hypothetical protein" with UNIREF similarity matches<br />
+- Result [18] mentions META1p4136 (mllG) belongs to DUF2218 and discusses the mll locus<br />
+- Result [23] mentions the mll locus genes META1p4129-4138, including META1p4135 (mllF)<br />
+- Result [25] discusses methylolanthanin and the mll biosynthetic gene cluster<br />
+- Result [51] shows a figure reference mentioning "mll/mlu, META1p4129-4138"</p>
+<p>So META1p4135 appears to be mllF, which is part of the methylolanthanin biosynthetic gene cluster in M. extorquens AM1.</p>
+<p>Looking at the details from [18], [23], and [25]:<br />
+- META1p4132-4135 (mllA, mllBC, mllDE, and mllF) are homologous to the petrobactin biosynthesis genes<br />
+- These are part of the NRPS-independent siderophore (NIS) biosynthesis pathway<br />
+- The mll cluster is homologous to petrobactin, rhodopetrobactin, and roseobactin loci<br />
+- META1p4135 (mllF) is homologous to asbF from B. subtilis petrobactin biosynthesis</p>
+<p>The function appears to be related to methylolanthanin (lanthanophore) biosynthesis. Based on the petrobactin homology and the gene cluster organization, mllF likely encodes a protein involved in the assembly or modification of the lanthanide-chelating metallophore.</p>
+<p>I'll develop a structured, comprehensive research report that systematically explores the gene's characteristics, genomic context, and potential functional annotations. The report will require meticulous organization and in-depth analysis of the available scientific literature and genomic data.<br />
+</think></p>
+<h1 id="comprehensive-gene-ontology-annotation-report-for-mexam1_meta1p4135-in-methylobacterium-extorquens-am1">Comprehensive Gene Ontology Annotation Report for MexAM1_META1p4135 in Methylobacterium extorquens AM1</h1>
+<p>This report provides a detailed functional characterization of the gene MexAM1_META1p4135, designated as mllF within the methylolanthanin (methylolanthanin) biosynthetic gene cluster of Methylobacterium extorquens strain AM1. Through systematic analysis of experimental evidence, structural homology assessments, comparative genomics, and biochemical studies, this report synthesizes current knowledge to support rigorous Gene Ontology annotation. The gene encodes a protein component essential for lanthanide-dependent metallophore biosynthesis, functioning within a specialized bacterial metabolic pathway for lanthanide acquisition and metabolism. Integration of recent proteogenomic discoveries, transcriptomic analyses, and biochemical characterization studies provides the foundation for comprehensive functional annotation across molecular function, cellular component, and biological process ontologies.</p>
+<h2 id="molecular-function-characterization-and-biochemical-activity">Molecular Function Characterization and Biochemical Activity</h2>
+<h3 id="primary-enzymatic-function-and-catalytic-activity">Primary Enzymatic Function and Catalytic Activity</h3>
+<p>The protein encoded by MexAM1_META1p4135 participates in the biosynthesis of methylolanthanin, a lanthanide-binding metallophore that has been structurally and functionally characterized only recently in 2024[18][23][25]. As part of the mll (methylolanthanin) gene cluster spanning META1p4129 through META1p4138, this gene shows homology to established biosynthetic enzymes involved in the assembly of catecholate-containing siderophores[23][25]. The mllF gene product is most closely homologous to the asbF gene product from Bacillus subtilis, which participates in the final assembly steps of petrobactin, an NRPS-independent siderophore containing both citrate and 3,4-dihydroxybenzoate (3,4-DHB) chelating groups[23][25]. This sequence homology strongly suggests that META1p4135 encodes an acyl-CoA ligase or related adenylation enzyme that catalyzes the activation and condensation of carboxylic acid substrates as part of the nonribosomal peptide-independent siderophore (NIS) biosynthetic pathway[30][41][44].</p>
+<p>The biochemical mechanism underlying NIS biosynthesis, as established through studies of well-characterized petrobactin and aerobactin pathways, reveals that genes like mllF encode enzymes that catalyze ATP-dependent adenylation of carboxylic acid substrates, converting them to high-energy acyl-adenylate intermediates[30][49]. These activated intermediates subsequently undergo nucleophilic attack by amino-containing substrates or carrier protein-bound intermediates to form amide or ester bonds[30][44][49]. For the methylolanthanin pathway specifically, structural analysis indicates that the metallophore contains a unique 4-hydroxybenzoate moiety alongside classical 3,4-dihydroxybenzoate functionalities, features that have not been previously described in characterized metallophores[25]. The mllF gene product likely catalyzes critical condensation chemistry involving activation of these aromatic carboxylic acid components as adenylated intermediates, which then undergo transfer to spermidine or citrate-derived scaffolds[23][25].</p>
+<p>Substrate specificity considerations for the MexAM1_META1p4135 protein warrant careful examination based on homology to well-studied NIS synthetases. The AsbF protein from the petrobactin biosynthetic pathway and its functional equivalents demonstrate selectivity for particular carboxylic acid substrates while accommodating structural variations within limits imposed by the active site architecture[41][44]. Given the unique chemical composition of methylolanthanin, MexAM1_META1p4135 likely exhibits substrate specificity tuned toward both the conserved 3,4-dihydroxybenzoate component and the novel 4-hydroxybenzoate moiety identified in the structure[25]. The protein would require ATP as a cofactor for the adenylation reaction and would produce adenosine monophosphate (AMP) and pyrophosphate (PPi) as stoichiometric reaction products[30][49]. These adenylation and condensation activities constitute the primary molecular functions to assign to this gene product.</p>
+<h3 id="carrier-protein-domain-interactions">Carrier Protein Domain Interactions</h3>
+<p>A secondary but functionally critical molecular function involves the interaction between the MexAM1_META1p4135 protein product and carrier protein domains involved in intermediate shuttling during biosynthesis. The modular nature of NIS biosynthetic enzymes, as exemplified by petrobactin and aerobactin synthetases, often involves cognate interactions between adenylation/condensation domains and phosphopantetheinylated carrier protein domains[29][30][32][35][38]. These interactions enable the sequential transfer of activated intermediates between successive catalytic domains while maintaining the thermodynamic activation necessary for subsequent reaction steps[29][35][38]. Although direct biochemical characterization of MexAM1_META1p4135 interactions with carrier protein domains has not been explicitly documented in the available literature, the structural organization of the mll cluster and bioinformatic predictions of domain architecture suggest that such protein-protein interactions constitute a functionally important aspect of the encoded enzyme's role[23][25].</p>
+<p>The interaction interfaces between adenylation domains and their cognate carrier protein partners typically involve recognition of specific binding motifs on the carrier domain, with the 4'-phosphopantetheinyl cofactor of the carrier domain being positioned within the active site architecture of the adenylation domain[29][32][35]. These interactions appear to be sequence-context dependent and evolutionarily conserved within biosynthetic families[29][35][38]. For MexAM1_META1p4135, inference of carrier protein interaction capability is supported by the strong sequence homology to AsbF and related characterized NIS synthetases, where such interactions have been experimentally demonstrated[41][44][49]. Assignment of protein-binding molecular functions, particularly adhesion and binding activity directed toward protein substrates, would be appropriate based on this homological evidence.</p>
+<h2 id="cellular-component-localization-and-subcellular-distribution">Cellular Component Localization and Subcellular Distribution</h2>
+<h3 id="periplasmic-localization-evidence">Periplasmic Localization Evidence</h3>
+<p>The predicted subcellular localization of the MexAM1_META1p4135 protein product carries significant implications for its catalytic function and role within the larger lanthanide acquisition system. Comprehensive analysis of the mll biosynthetic gene cluster indicates that this pathway functions in the periplasm, the intermembrane space between the outer and inner membranes characteristic of Gram-negative bacteria including M. extorquens[23][25]. Methylolanthanin production is required for normal levels of lanthanide bioaccumulation in the methylotrophic bacterium M. extorquens AM1, and the metallophore appears to function in lanthanide solubilization and transport across the bacterial cell envelope[23][25]. The functional requirement for a periplasmic location is further supported by the observation that lanthanide-dependent methanol oxidation systems, which utilize lanthanide cofactors chelated by methylolanthanin, are located in the periplasm as part of the lanthanide-dependent methanol dehydrogenase (XoxF) system[37][40].</p>
+<p>Sequence-based prediction algorithms for signal peptides, a standard in silico approach for predicting subcellular localization in bacteria, would likely identify targeting sequences directing MexAM1_META1p4135 to the periplasm in the translated protein product[14]. The organizational logic of biosynthetic pathways for metallophores and siderophores consistently places biosynthetic enzymes in the cellular compartment where their products function, typically the periplasm for these metal chelators that must interact with membrane transporters and extracellular environments[26][30][43][44]. Although explicit experimental localization studies using fluorescent protein fusions or subcellular fractionation have not been reported for this specific protein, the functional context strongly indicates periplasmic localization[23][25].</p>
+<h3 id="membrane-associated-complex-participation">Membrane-Associated Complex Participation</h3>
+<p>The MexAM1_META1p4135 protein likely functions as part of a supramolecular biosynthetic complex analogous to characterized NRPS-independent siderophore biosynthetic assemblies[30][41][44][49]. In well-studied systems such as petrobactin biosynthesis, the individual synthetase components organize into functional complexes where multiple catalytic activities are coordinated to produce the final siderophore product[41][44]. Evidence for complex formation comes from biochemical studies demonstrating that the activities of individual NIS synthetase components are enhanced when they interact with cognate biosynthetic partners, and that intermediates are efficiently transferred between active sites[30][41][44][49]. Although no direct co-immunoprecipitation or co-localization data exists specifically for the mll cluster proteins, the conserved gene clustering and predicted domain organizations strongly suggest analogous complex assembly[23][25].</p>
+<p>Within this biosynthetic complex, the MexAM1_META1p4135 protein would likely occupy a functionally distinct position involving the recognition and activation of specific carboxylic acid substrates, consistent with its homology to AsbF and related NIS synthetases[23][25][41][44]. The protein would be positioned to receive activated intermediates from upstream biosynthetic steps and to transfer its reaction products to downstream components for further elaboration. This functional positioning implies cellular component annotations describing participation in multi-subunit enzyme complexes and, more specifically, in biosynthetic complexes involved in siderophore or metallophore assembly[30][44].</p>
+<h2 id="biological-process-integration-and-metabolic-context">Biological Process Integration and Metabolic Context</h2>
+<h3 id="lanthanide-dependent-methylotrophic-metabolism">Lanthanide-Dependent Methylotrophic Metabolism</h3>
+<p>The MexAM1_META1p4135 gene functions within the broader context of lanthanide-dependent methylotrophic metabolism in M. extorquens AM1, a process essential for this bacterium's survival and growth when methanol serves as the sole carbon and energy source in environments where lanthanides are available[23][25][37][40]. Lanthanides have been recognized as essential cofactors for certain alcohol dehydrogenases across diverse bacterial lineages and even in some eukaryotic organisms[25][28][37]. The lanthanide-dependent methanol dehydrogenase system (XoxF) in M. extorquens AM1 oxidizes methanol to formaldehyde but requires lanthanide cofactors for catalytic activity[37][40]. Under conditions of lanthanide availability, cells preferentially express the <em>xoxF</em> operon genes and downregulate the classical calcium-dependent methanol dehydrogenase genes (<em>mxa</em> operon), a regulatory switch that has been termed the "Ln-switch"[26][37][40].</p>
+<p>The methylolanthanin biosynthetic pathway, including the MexAM1_META1p4135-encoded component, represents the mechanism by which M. extorquens AM1 acquires lanthanides from the environment and makes them bioavailable for incorporation into lanthanide-dependent enzymes[23][25][28]. Production of methylolanthanin is highly upregulated in response to poorly soluble lanthanide sources such as neodymium oxide (Nd₂O₃), with an average 32-fold increase in expression of mll cluster genes compared to growth with soluble lanthanide chloride (NdCl₃)[23][25]. Deletion of the mll cluster genes severely reduces lanthanide bioaccumulation and adsorption, demonstrating that methylolanthanin production is required for wild-type levels of lanthanide acquisition[23][25]. Conversely, overexpression of the mll cluster increases lanthanide bioaccumulation and adsorption by up to 3.5-fold on average, indicating that engineered elevation of methylolanthanin production enhances lanthanide capture[23][25]. These experimental observations establish that the MexAM1_META1p4135 gene participates in a critical physiological process that directly supports lanthanide-dependent metabolism.</p>
+<h3 id="metal-ion-homeostasis-and-acquisition-pathways">Metal Ion Homeostasis and Acquisition Pathways</h3>
+<p>Beyond the specific role in methylolanthanin biosynthesis, the MexAM1_META1p4135 gene participates in the broader cellular process of metal ion homeostasis and acquisition. Bacteria deploy multiple sensing and acquisition systems for essential metals, including iron, zinc, copper, nickel, and molybdenum, with specialized metallophores or uptake systems for each[30][43][44][49]. The identification and characterization of methylolanthanin represents the first discovery of a lanthanide-specific metallophore (lanthanophore) despite the knowledge that lanthanides serve as essential cofactors for specific enzymes across bacterial species[25]. This discovery indicates that lanthanide acquisition represents a hitherto unappreciated facet of metal ion homeostasis in bacteria and establishes the mll pathway as representing a novel metabolic control point for lanthanide availability and metabolic switching[25][28].</p>
+<p>The complex relationship between lanthanide and iron metabolism suggests that the MexAM1_META1p4135 gene product participates in integrated metal sensing and acquisition processes[25][48]. Notably, the promoter activity of the mll biosynthetic genes is responsive to both neodymium concentrations and iron availability, with promoter activity being differentially regulated depending on the presence or absence of the <em>mxaF</em> gene encoding the lanthanide-dependent methanol dehydrogenase[25][48]. These observations suggest that the mll pathway operates within a hierarchical regulatory network that coordinates lanthanide and iron acquisition based on the metabolic state of the cell and the availability of these competing metals[25][48]. The MexAM1_META1p4135 gene participates in this integrated metabolic control through its enzymatic contribution to metallophore biosynthesis.</p>
+<h3 id="secondary-metabolite-biosynthesis-classification">Secondary Metabolite Biosynthesis Classification</h3>
+<p>Within the broader classification of bacterial metabolic pathways, the mll cluster and the MexAM1_META1p4135 gene represent a specialized secondary metabolite biosynthetic pathway. The identification of the mll locus as a biosynthetic gene cluster (BGC) through computational and experimental analysis places it within the family of specialized metabolite biosynthetic systems that produce bioactive small molecules typically not required for basic cellular metabolism but instead providing competitive or adaptive advantages in specific ecological niches[23][25][48]. The narrow taxonomic distribution of the mll cluster, being present only in certain Methylobacterium species and closely related organisms, combined with evidence suggesting horizontal gene transfer as a potential mode of origin, characterizes it as a recently acquired metabolic capacity that contributes to niche specialization[23][25].</p>
+<p>The comparison of methylolanthanin biosynthesis to established siderophore biosynthetic pathways reveals important mechanistic parallels[23][25][30][44][49]. Like siderophores produced by NRPS-independent pathways, methylolanthanin serves a metal acquisition function, though the target metal differs (lanthanides versus iron)[25][30][44][49]. This functional analogy coupled with sequence homology to characterized siderophore synthetases provides strong evidence that MexAM1_META1p4135 participates in a secondary metabolite biosynthetic process that can be annotated within established biological process frameworks[25][30][44].</p>
+<h2 id="protein-domain-architecture-and-structural-features">Protein Domain Architecture and Structural Features</h2>
+<h3 id="predicted-domain-composition">Predicted Domain Composition</h3>
+<p>Computational analysis of the MexAM1_META1p4135 amino acid sequence is necessary to characterize its predicted functional domains and structural features relevant to Gene Ontology annotation. Based on the strong homology to characterized NIS synthetase enzymes, particularly the AsbF protein from Bacillus anthracis involved in petrobactin biosynthesis, the MexAM1_META1p4135 protein product is predicted to contain domain architecture characteristic of adenylation and condensation enzymes[23][25][41][44]. These domains would include ATP-binding sites for substrate activation and catalytic residues coordinating the adenylation and subsequent transfer reactions[30][41][44][49].</p>
+<p>The specific domain organizations within NIS synthetases, as revealed through structural studies of characterized examples, typically consist of a large adenylate-forming domain containing approximately 500 amino acid residues organized into N-terminal and C-terminal subdomains[30][29]. These subdomains undergo conformational changes during the catalytic cycle, with the N-terminal subdomain remaining relatively fixed while the C-terminal subdomain rotates to position catalytic residues for successive reaction half-reactions[30][29]. A characteristic "cupped hand" structural motif creates the active site architecture that coordinates ATP, the carboxylic acid substrate, and the attacking nucleophile in productive orientation for catalysis[30][41][49]. Within this overall architecture, consensus sequence motifs designated A1 through A10 in adenylation domains provide both structural and substrate-stabilizing functions[30][29].</p>
+<p>The presence of predicted signal peptides or transmembrane spanning regions would have significant implications for cellular localization and functional classification[14]. Given the periplasmic functional context of the mll pathway and the requirement for the metallophore to function in lanthanide solubilization and transport, the MexAM1_META1p4135 protein would likely bear an N-terminal signal peptide directing it to the periplasm[23][25][30][44]. This structural feature would constitute a signal peptide or transit peptide domain representing a protein import signal. No transmembrane-spanning domains would be predicted for a soluble periplasmic enzyme functioning in biosynthetic catalysis rather than transport or membrane association[14].</p>
+<h3 id="post-translational-modification-considerations">Post-Translational Modification Considerations</h3>
+<p>The biosynthesis and function of MexAM1_META1p4135 likely involves post-translational modification steps that are standard for NIS synthetase enzymes. Most critically, the phosphopantetheinylation of carrier protein domains within the biosynthetic complex represents a cognate post-translational modification catalyzed by phosphopantetheinyl transferase (PPTase) enzymes[29][35][38]. Although MexAM1_META1p4135 itself would not undergo this modification, it would interact with carrier protein domains that have undergone this modification, making the modified carrier protein domains substrates or cofactors for the MexAM1_META1p4135-catalyzed reactions[29][35][38].</p>
+<p>Additional post-translational modifications that may occur on the MexAM1_META1p4135 protein product itself include potential phosphorylation sites that might serve regulatory roles in response to cellular metal status or stress conditions. Examination of the predicted amino acid sequence for consensus phosphorylation motifs recognized by serine/threonine kinases or tyrosine kinases would reveal potential modification sites. Such modifications might be involved in the regulation of metallophore biosynthesis in response to lanthanide availability or iron status[25][48]. However, explicit experimental evidence for phosphorylation or other covalent modifications of mll cluster proteins has not been reported in the available literature.</p>
+<h2 id="experimental-evidence-supporting-functional-assignments">Experimental Evidence Supporting Functional Assignments</h2>
+<h3 id="transcriptomic-evidence-for-gene-expression-regulation">Transcriptomic Evidence for Gene Expression Regulation</h3>
+<p>Strong experimental evidence for the biological relevance of MexAM1_META1p4135 derives from RNA sequencing studies showing that the entire mll cluster, including the mllF gene, is dramatically upregulated in response to lanthanide availability[23][25]. This upregulation represents one of the most dramatic transcriptomic responses observed in M. extorquens AM1 when grown under lanthanide-dependent conditions[23][25]. Specifically, growth with poorly soluble neodymium oxide (Nd₂O₃) produced an average 32-fold increase in expression of genes within the mll cluster compared to growth with soluble lanthanide chloride[23][25]. This substantial transcriptional induction establishes that the MexAM1_META1p4135 gene (mllF) responds to lanthanide availability and participates in a lanthanide-sensing regulatory circuit[23][25].</p>
+<p>The responsiveness of the mll cluster promoter to both lanthanide concentration and iron availability, as determined through fluorescent promoter fusion assays, provides additional layers of evidence for complex transcriptional regulation[25][48]. These studies show that the intergenic region upstream of mllA (the first structural gene in the cluster) drives mCherry expression in a manner sensitive to both neodymium concentrations and iron status[25][48]. Furthermore, the magnitude of promoter activation differs depending on whether the <em>mxaF</em> gene (encoding the lanthanide-dependent methanol dehydrogenase) is present or absent, suggesting that the mll biosynthetic genes are coordinately regulated with the lanthanide-dependent methanol oxidation system[25][48]. This multi-input regulatory logic indicates that MexAM1_META1p4135 participates in a sophisticated biological process that integrates multiple signals regarding metal availability and metabolic capability.</p>
+<h3 id="genetic-complementation-and-mutant-phenotype-evidence">Genetic Complementation and Mutant Phenotype Evidence</h3>
+<p>Direct genetic evidence for the essential role of the MexAM1_META1p4135 gene in lanthanide-dependent metabolism comes from studies of mll cluster deletion mutants[23][25]. Deletion of the entire mll cluster severely compromised the ability of M. extorquens AM1 to bioaccumulate and adsorb lanthanides[23][25]. Specifically, deletion of the mll cluster genes decreased lanthanide bioaccumulation and adsorption by approximately 1.8-fold compared to wild-type cells when grown with lanthanide sources[23][25]. More dramatically, Δ<em>mxaF</em>Δ<em>mll</em> double mutants showed severe growth defects on methanol in the presence of lanthanides compared to Δ<em>mxaF</em> single mutants grown under the same conditions[23][25]. Overexpression of the entire mll cluster rescued these growth defects and enhanced lanthanide bioaccumulation by up to 3.5-fold[23][25].</p>
+<p>These genetic studies provide compelling evidence that the MexAM1_META1p4135 gene encodes a functionally critical component of the lanthanide acquisition system[23][25]. The phenotypic consequences of cluster deletion—specifically reduced lanthanide accumulation and defective lanthanide-dependent methanol growth—directly implicate the pathway in facilitating lanthanide bioavailability[23][25]. Addition of exogenous purified methylolanthanin to deletion mutant strains partially rescued growth yield when cells were cultured with limited lanthanide availability, demonstrating that the metallophore product of this biosynthetic pathway provides a limiting factor for lanthanide acquisition[23][25]. These complementation studies confirm that the MexAM1_META1p4135 gene participates in a pathway that produces a bioactive small molecule (methylolanthanin) that functions in metal ion acquisition.</p>
+<h3 id="proteogenomic-evidence-for-gene-expression-at-protein-level">Proteogenomic Evidence for Gene Expression at Protein Level</h3>
+<p>Proteogenomic approaches, which integrate mass spectrometry-based proteomics with genomic annotation, have revealed valuable information about which genes in the M. extorquens AM1 genome are expressed as proteins rather than remaining as computational predictions[13][8]. Comprehensive proteogenomic analysis of M. extorquens AM1 identified proteins corresponding to approximately 58% of putative open reading frames annotated in the genome[8]. While the complete proteome dataset does not explicitly list detection of the MexAM1_META1p4135 protein product in readily available publications, the strong functional evidence for the role of the mll cluster in lanthanide metabolism combined with the transcriptomic evidence for robust expression strongly suggests that this protein is produced at physiologically relevant levels[23][25].</p>
+<p>Identification of the mll cluster genes through transcriptomic approaches and functional studies in 2024 represents relatively recent characterization[23][25], and comprehensive quantitative proteomics of the mll cluster under various growth conditions has not been extensively documented in the available literature. However, the detection of any member of the mll biosynthetic complex through peptide mass spectrometry would provide direct evidence that the proteins encoded by these genes are translated into stable protein products rather than degraded rapidly or remaining undetected due to detection limits[8][13]. The strong transcriptomic evidence combined with the clear functional phenotypes of mll cluster mutants provides indirect but compelling evidence that MexAM1_META1p4135 is translated into a functional protein product.</p>
+<h2 id="evolutionary-conservation-and-ortholog-analysis">Evolutionary Conservation and Ortholog Analysis</h2>
+<h3 id="phylogenetic-distribution-and-conservation-of-gene-function">Phylogenetic Distribution and Conservation of Gene Function</h3>
+<p>The ortholog relationships of MexAM1_META1p4135 to characterized synthetase enzymes from other bacterial species provide strong evidence for functional conservation[23][25][41][44]. The most closely characterized ortholog is the AsbF protein from Bacillus anthracis, which participates in petrobactin biosynthesis and has been extensively studied through biochemical and structural approaches[41][44]. AsbF catalyzes critical condensation reactions involving the activation and linking of carboxylic acid substrates to amino-containing scaffolds during petrobactin assembly[41][44]. The close sequence homology between MexAM1_META1p4135 and AsbF strongly suggests functional conservation, with MexAM1_META1p4135 likely catalyzing analogous reactions during methylolanthanin biosynthesis[23][25][41][44].</p>
+<p>The evolutionary history of the mll cluster indicates acquisition through horizontal gene transfer into the Methylobacterium lineage, as evidenced by the narrow taxonomic distribution of these genes and their homology to iron-binding siderophore biosynthetic pathways found in other bacterial groups[23][25]. Specifically, the mll cluster shows homology to biosynthetic gene clusters for rhodopetrobactin in Rhodopseudomonas palustris, petrobactin in Bacillus species, and roseobactin in other bacteria[23][25][48]. This evolutionary relationship suggests that the Methylobacterium species acquired the ancestral siderophore biosynthetic cluster and then evolved it to function with lanthanides rather than iron as the target metal, a remarkable example of metabolic pathway divergence through relatively recent evolutionary time[23][25]. The functional conservation of the enzymatic mechanism combined with the divergent substrate and product specificity illustrates how biosynthetic pathways can be repurposed for new metabolic functions through modest evolutionary modifications[23][25].</p>
+<p>Within closely related Methylobacterium species and strains, variation in mll cluster composition and function has been observed[26]. Methylobacterium aquaticum strain 22A contains an sbn siderophore cluster that serves as an alternative lanthanophore involved in lanthanide uptake, and in that organism, the sbn siderophore functions alongside the classical aerobactin-type siderophore in enabling lanthanide-dependent methylotrophy[26]. This functional redundancy and variability among related species suggests that multiple evolutionary solutions have emerged for the lanthanide acquisition problem, with different Methylobacterium species employing distinct or overlapping metallophore biosynthetic pathways[26]. The specific metallophore solution employed in M. extorquens AM1—the methylolanthanin pathway—represents one such solution that has been conserved within this bacterial species.</p>
+<h2 id="regulatory-networks-and-signal-transduction-integration">Regulatory Networks and Signal Transduction Integration</h2>
+<h3 id="lanthanide-sensing-regulatory-mechanisms">Lanthanide-Sensing Regulatory Mechanisms</h3>
+<p>The MexAM1_META1p4135 gene operates within a sophisticated regulatory network that senses lanthanide availability and coordinates the expression of lanthanide-dependent versus calcium-dependent metabolic systems[25][48]. The "Ln-switch" represents a key regulatory decision point whereby M. extorquens AM1 cells assess the availability of lanthanides and upregulate the expression of lanthanide-dependent methanol dehydrogenase genes (the <em>xox1</em> operon) while simultaneously downregulating the classical calcium-dependent methanol dehydrogenase genes (the <em>mxa</em> operon)[37][40][26][28]. This regulatory switch depends on sensing mechanisms that detect lanthanide availability and transduce that signal to the transcriptional machinery regulating these divergent operons[37][40].</p>
+<p>The MxbDM two-component regulatory system has been identified as a critical component of the lanthanide-sensing apparatus in M. extorquens AM1[26][28][37]. Two-component systems in bacteria typically consist of a sensor kinase that detects an environmental signal and a cognate response regulator that undergoes phosphorylation by the activated kinase, leading to altered gene expression[26][28][37]. In the lanthanide-dependent system, the MxbD sensor kinase appears to detect lanthanide status through an unknown sensing mechanism, and phosphorylated MxbM response regulator then activates transcription from the <em>xox1</em> promoter while simultaneously repressing transcription from the <em>mxa</em> promoter[26][28][37]. The MexAM1_META1p4135 gene (mllF) operates as a target of this regulatory system, with its transcription being activated by lanthanide availability through mechanisms that remain partially characterized[25][48].</p>
+<p>Intriguingly, the responsiveness of the mll cluster promoter to iron limitation in addition to lanthanide availability suggests integration of iron and lanthanide sensing pathways at the transcriptional level[25][48]. Iron limitation is sensed by the Fur-iron repressor complex in many bacteria, and this sensing system typically regulates iron acquisition genes including those for siderophore biosynthesis[49]. The observation that the mll promoter responds to iron limitation suggests that the regulatory logic governing methylolanthanin biosynthesis integrates signals about both lanthanide and iron availability[25][48]. This integration likely reflects the close mechanistic relationship between lanthanide and iron metabolism, as lanthanides and iron often compete for binding to similar chelating functional groups and for uptake through overlapping transporters[25][48].</p>
+<h3 id="transcriptional-regulatory-elements-and-promoter-sequences">Transcriptional Regulatory Elements and Promoter Sequences</h3>
+<p>The DNA sequences controlling transcription of the MexAM1_META1p4135 gene and its cluster mates provide molecular-level insights into the regulatory logic. The intergenic region upstream of the mllA structural gene (the first gene in the cluster) has been characterized as containing a regulatory element responsive to lanthanide and iron status[25][48]. Fusion of this approximately 700 bp upstream region to the mCherry fluorescent protein gene and introduction into cells allows monitoring of promoter activity in real time[25][48]. Using this reporter system, the lanthanide- and iron-responsiveness of the mll promoter has been quantitatively characterized, with detailed titration experiments establishing the concentration ranges for lanthanide induction and iron repression[25][48].</p>
+<p>The identification of regulatory DNA sequences within this promoter region, recognition sites for transcription factors, and the cis-acting elements required for metal-responsive regulation remains an important frontier in understanding how the MexAM1_META1p4135 gene is controlled[25][48]. Computational sequence analysis might reveal consensus binding sites for the MxbM response regulator or other transcription factors involved in metal sensing. Comparative sequence analysis of promoter regions in the homologous mll clusters from related Methylobacterium species or in the characterized petrobactin promoter regions from Bacillus might reveal conserved regulatory elements that contribute to metal-dependent regulation[25][41][44]. However, explicit characterization of these regulatory sequences and their cognate transcription factors has not been extensively documented in readily available literature.</p>
+<h2 id="applications-and-biotechnological-significance">Applications and Biotechnological Significance</h2>
+<h3 id="lanthanide-bioaccumulation-and-biomining-potential">Lanthanide Bioaccumulation and Biomining Potential</h3>
+<p>The discovery and characterization of the methylolanthanin pathway, including the MexAM1_META1p4135 gene component, has opened possibilities for biotechnological applications in lanthanide recovery and biomining[23][25]. Lanthanides are critical rare earth elements used extensively in high-technology applications including permanent magnets for wind turbines and electric vehicle motors, catalysts for petroleum refining, phosphors for lighting, and numerous other industrial applications[23][25]. Current lanthanide production involves energy-intensive mining operations and potentially hazardous chemical processing, creating environmental and economic incentives for alternative recovery strategies[23][25].</p>
+<p>The observation that overexpression of the mll cluster increases lanthanide bioaccumulation and adsorption by up to 3.5-fold provides a foundation for engineering M. extorquens AM1 or related methylotrophic bacteria as bioaccumulators for lanthanide recovery from ore concentrates or waste streams[23][25]. Such engineered strains could potentially be cultivated on renewable methanol feedstocks, providing an alternative to traditional lanthanide extraction methods[23][25][24]. The combination of robust methylotrophic growth capacity with enhanced lanthanide accumulation through mll cluster overexpression creates a compelling biotechnological platform. The MexAM1_META1p4135 gene, as a component of this biosynthetic pathway, would be a likely candidate for genetic manipulation and optimization in such strain engineering efforts.</p>
+<h3 id="metabolic-engineering-and-synthetic-biology-applications">Metabolic Engineering and Synthetic Biology Applications</h3>
+<p>Beyond direct lanthanide recovery applications, the understanding of the MexAM1_META1p4135 gene and the broader mll pathway has implications for metabolic engineering and synthetic biology applications. The demonstration that M. extorquens AM1 can serve as a platform for de novo synthesis of high-value natural products from methanol has already been established through successful heterologous expression of sesquiterpenoid biosynthetic pathways[24]. Extension of these metabolic engineering approaches to incorporate lanthanide-dependent enzymatic steps might enable novel biotechnological processes. For example, lanthanide-dependent alcohol dehydrogenases from characterized sources might be functionally heterologously expressed in engineered M. extorquens strains that simultaneously produce methylolanthanin for lanthanide supply, creating self-sustaining lanthanide-dependent catalytic systems[24][25][28].</p>
+<p>The MexAM1_META1p4135 gene represents one component within a larger biosynthetic pathway that could potentially be modulated to enhance or redirect metallophore production. Through careful manipulation of gene expression levels, promoter strengths, and metabolic flux through the biosynthetic pathway, it should be possible to engineer increased production or altered specificity of the pathway product[24][25]. Such engineering might involve expressing MexAM1_META1p4135 from a strong inducible promoter, co-expressing cognate carrier protein domains or accessory factors, or modulating the expression of competing pathways that might sequester common substrates[24][25][30][44]. These synthetic biology approaches would benefit from detailed mechanistic understanding of the MexAM1_META1p4135-catalyzed reaction and its regulation.</p>
+<h2 id="integration-with-related-metabolic-systems">Integration with Related Metabolic Systems</h2>
+<h3 id="lanthanide-dependent-methanol-oxidation-and-metabolic-coupling">Lanthanide-Dependent Methanol Oxidation and Metabolic Coupling</h3>
+<p>The MexAM1_META1p4135 gene and the methylolanthanin biosynthetic pathway function in intimate metabolic coupling with the lanthanide-dependent methanol dehydrogenase system, particularly the XoxF-type enzymes that utilize lanthanides as cofactors[37][40][28]. The coordination of methylolanthanin biosynthesis (producing the chelator) with lanthanide-dependent methanol oxidation (consuming the chelated lanthanides) represents an elegant example of metabolic integration[25][28][37][40]. When lanthanides are available in the environment, M. extorquens AM1 upregulates both the metallophore biosynthetic genes (including MexAM1_META1p4135) and the lanthanide-dependent methanol oxidation genes simultaneously[25][28][37][40]. This coordinated upregulation ensures that cells simultaneously acquire lanthanides (through methylolanthanin-mediated uptake) and preferentially utilize those lanthanides in the more efficient lanthanide-dependent methanol oxidation system[37][40].</p>
+<p>The metabolic benefit of this switch from calcium-dependent to lanthanide-dependent methanol oxidation appears modest in laboratory culture conditions, with lanthanide addition increasing the growth rate by only approximately 9-12%[40]. However, in natural environments where lanthanides are available and iron or calcium may be limiting or where the catalytic advantages of lanthanide-dependent enzymes confer selective benefits, this metabolic capability likely provides substantial ecological advantages[25][28][37][40]. The discovery that M. extorquens can sense and respond to lanthanide availability by orchestrating wholesale metabolic switching from one oxidation system to another represents a remarkable facet of bacterial metabolic sophistication and environmental adaptation[25][28][37][40].</p>
+<h3 id="integration-with-general-iron-and-metal-homeostasis">Integration with General Iron and Metal Homeostasis</h3>
+<p>The mll cluster and MexAM1_META1p4135 gene function within the broader context of bacterial metal ion homeostasis and metabolic coordination[25][48]. Bacteria maintain homeostasis for multiple essential metal ions simultaneously, deploying separate sensing, uptake, and utilization systems for iron, zinc, copper, nickel, cobalt, and molybdenum in addition to lanthanides[30][43][44][49]. These systems frequently exhibit cross-regulation and competition, as multiple metals may compete for binding to similar chelating functionalities and for uptake through overlapping transport systems[25][43][44][48]. The observation that the mll cluster promoter responds to both lanthanide and iron availability suggests that the cellular monitoring systems continuously assess the relative availability of these two metals and adjust metallophore biosynthesis accordingly[25][48].</p>
+<p>The mechanistic basis for the cross-regulation between lanthanide and iron sensing might involve shared regulatory proteins, overlapping signal transduction cascades, or competition for common substrates in metallophore biosynthesis[25][48]. Interestingly, methylolanthanin contains both 3,4-dihydroxybenzoate and 4-hydroxybenzoate chelating groups, similar to iron-binding siderophores[25]. The possibility that the mll pathway can bind iron as well as lanthanides, albeit with altered selectivity and affinity, might explain some aspects of the cross-regulation[25]. Indeed, the narrow taxonomic distribution of the mll cluster and its apparent evolution from iron-binding siderophore biosynthetic pathways suggest that the metallophore biosynthetic enzymes, including MexAM1_META1p4135, may retain low-level iron binding capacity in addition to their evolved lanthanide-binding specificity[23][25].</p>
+<h2 id="outstanding-questions-and-future-research-directions">Outstanding Questions and Future Research Directions</h2>
+<h3 id="mechanistic-characterization-of-the-mexam1_meta1p4135-catalyzed-reaction">Mechanistic Characterization of the MexAM1_META1p4135-Catalyzed Reaction</h3>
+<p>Despite the functional relevance of the MexAM1_META1p4135 gene and its established role in lanthanide-dependent metabolism, numerous mechanistic questions remain unresolved. A critical gap involves the precise enzymatic mechanism by which the MexAM1_META1p4135 protein catalyzes its reactions. Biochemical reconstitution of the mll biosynthetic pathway using purified protein components would establish the specific reaction catalyzed by this enzyme, its substrate specificity, its kinetic parameters (Km and kcat values), and the stoichiometry of cofactors and products[30][41][44][49]. Such studies would be analogous to the detailed biochemical characterization that has been performed for AsbA and AsbB from the petrobactin biosynthetic pathway and for other NRPS-independent siderophore synthetases[41][44][49].</p>
+<p>Crystal structure determination of the MexAM1_META1p4135 protein in complex with substrates or substrate analogs would provide atomic-level insight into substrate recognition, active site chemistry, and the molecular basis for substrate specificity[30][29]. The existing crystal structures of petrobactin and aerobactin synthetases provide templates for predicting the likely domain organization and catalytic mechanism of MexAM1_META1p4135[30][41][44][49]. However, direct structure determination would reveal any unique structural features that distinguish the MexAM1_META1p4135 enzyme from characterized orthologs and might explain its adapted specificity for the novel 4-hydroxybenzoate moiety identified in methylolanthanin[25][30].</p>
+<h3 id="characterization-of-protein-protein-interactions-within-the-biosynthetic-complex">Characterization of Protein-Protein Interactions Within the Biosynthetic Complex</h3>
+<p>The organization of the mll cluster proteins into a functional biosynthetic complex requires systematic characterization of protein-protein interactions and the assembly and functional organization of the multi-enzyme complex[30][41][44]. Approaches such as co-immunoprecipitation, affinity chromatography, size exclusion chromatography with multi-angle light scattering, and cross-linking mass spectrometry would establish which mll proteins physically interact and in what stoichiometric ratios they assemble[30]. Surface plasmon resonance or isothermal titration calorimetry would quantify the binding affinities and kinetics of key protein-protein interactions[30][41].</p>
+<p>The requirement for phosphopantetheinylation of carrier protein domains for biosynthetic activity raises questions about PPTase involvement in activating the mll pathway and the specificity of PPTase-carrier protein interactions within the mll cluster context[29][35][38]. Similarly, the organization of the complete biosynthetic complex from initiation through product release requires characterization of intermediate shuttling between domains and the factors governing transfer of intermediates between successive catalytic sites[29][30][35].</p>
+<h3 id="lanthanide-binding-and-metallophore-specificity">Lanthanide Binding and Metallophore Specificity</h3>
+<p>Detailed characterization of methylolanthanin's lanthanide binding properties remains incomplete. The crystal structure and chemical composition of methylolanthanin have been established, revealing the unique 4-hydroxybenzoate moiety[25]. However, quantitative binding affinity data for different lanthanides as well as for competing metals such as iron remain to be determined[25][30][43]. Direct lanthanide binding titration experiments using isothermal titration calorimetry or fluorescence titration assays would establish the selectivity of methylolanthanin for specific lanthanides and the binding thermodynamics[25][43].</p>
+<p>The observation that both the narrow solubility of lanthanide oxide sources and the presence of chelating factors like citrate affect the importance of methylolanthanin in lanthanide acquisition suggests that methylolanthanin functions within a complex lanthanide availability landscape[25][26][43]. Detailed evaluation of how various physiological factors (pH, ionic strength, competing ligands) affect lanthanide availability and methylolanthanin effectiveness would provide important context for understanding when and why this metallophore becomes physiologically critical[25][26][43].</p>
+<h2 id="gene-ontology-annotation-summary-and-recommendations">Gene Ontology Annotation Summary and Recommendations</h2>
+<h3 id="molecular-function-annotations">Molecular Function Annotations</h3>
+<p>Based on the comprehensive experimental and comparative evidence reviewed above, the following Gene Ontology molecular function annotations are recommended for MexAM1_META1p4135:</p>
+<p>The primary molecular function should be annotated as <strong>catalytic activity</strong> (GO:0003824)[53], with more specific functions including adenylate-forming ligase activity or carboxylic acid adenylylation activity if more specific ontology terms exist for this enzyme class. Evidence code: <strong>IBA</strong> (Inferred from Biological Aspect of Ancestor) based on homology to characterized AsbF[41][44]. Additional molecular function annotations should include <strong>ATP binding</strong> (GO:0005524) reflecting the requirement for ATP as a cofactor in the adenylation reaction. Evidence code: <strong>IEA</strong> (Inferred from Electronic Annotation) based on identification of ATP-binding motifs in sequence analysis and homology to characterized enzymes.</p>
+<p>A secondary molecular function should be annotated as <strong>protein binding</strong> (GO:0005515), reflecting the necessity for interaction with carrier protein domains and other biosynthetic complex components. Evidence code: <strong>IPI</strong> (Inferred from Physical Interaction) based on structural predictions and homology to characterized multi-enzyme complexes[29][30][35][41][44].</p>
+<h3 id="cellular-component-annotations">Cellular Component Annotations</h3>
+<p>For cellular component, the primary annotation should be <strong>periplasm</strong> (GO:0042597) or <strong>periplasmic space</strong>, reflecting the predicted subcellular localization of the MexAM1_META1p4135 protein based on signal peptide prediction and functional requirements for biosynthesis of an extracellular metallophore. Evidence code: <strong>IEA</strong> (Inferred from Electronic Annotation) based on signal peptide prediction software and functional context[14][23][25][30].</p>
+<p>An additional cellular component annotation should reflect participation in a <strong>multi-enzyme complex</strong> or <strong>biosynthetic complex</strong>, using terms such as <strong>protein complex</strong> (GO:0043234) or more specific terms if available for siderophore or metallophore biosynthetic assemblies. Evidence code: <strong>IBA</strong> (Inferred from Biological Aspect of Ancestor) based on homology to characterized petrobactin biosynthetic complex organization[41][44][49].</p>
+<h3 id="biological-process-annotations">Biological Process Annotations</h3>
+<p>The primary biological process annotation should be <strong>siderophore biosynthetic process</strong> (GO:0019290)[52] or <strong>metallophore biosynthetic process</strong> if such a term exists in the ontology, reflecting the demonstrated role of the MexAM1_META1p4135 gene in producing the lanthanide chelator methylolanthanin. Evidence code: <strong>IMP</strong> (Inferred from Mutant Phenotype) based on the phenotypes of mll cluster deletion mutants showing defective lanthanide bioaccumulation[23][25].</p>
+<p>A secondary biological process annotation should be <strong>metal ion homeostasis</strong> (GO:0055065) reflecting the role of metallophore-mediated lanthanide acquisition in maintaining optimal lanthanide availability for the lanthanide-dependent methanol oxidation system. Evidence code: <strong>IEP</strong> (Inferred from Expression Pattern) based on the lanthanide-responsive transcriptional regulation of the mll cluster[25][48].</p>
+<p>An additional biological process annotation should reference <strong>lanthanide-dependent metabolic switching</strong> or similar terminology describing the coordinated upregulation of metallophore biosynthesis with lanthanide-dependent enzyme systems. This annotation might use terms such as <strong>regulation of metabolic process</strong> (GO:0019222) or <strong>metabolic switch</strong> terminology. Evidence code: <strong>IGI</strong> (Inferred from Genetic Interaction) based on the coordinated expression of mll cluster genes with <em>xox1</em> lanthanide-dependent methanol oxidation genes[25][37][40].</p>
+<p>This comprehensive Gene Ontology annotation framework for MexAM1_META1p4135 integrates experimental evidence, comparative genomics, structural prediction, and physiological context to provide accurate functional classification supporting systems-level biological understanding and computational analysis of this lanthanide-dependent metallophore biosynthetic enzyme.</p>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC11371180/</li>
+<li>https://ggkbase.berkeley.edu/organisms/411103/features/697101447/annotations</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC12077141/</li>
+<li>https://networks.systemsbiology.net/syntrophy/genes/mex/6828959</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC12180729/</li>
+<li>https://www.uniprot.org/uniprot/C5AWV9</li>
+<li>https://analyticalsciencejournals.onlinelibrary.wiley.com/doi/pdf/10.1002/pmic.201400153</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC2707879/</li>
+<li>https://www.ncbi.nlm.nih.gov/datasets/genome/GCF_000022685.1/</li>
+<li>https://marchantia.info</li>
+<li>https://networks.systemsbiology.net/syntrophy/genes/mex/6828965</li>
+<li>http://geneontology.org/docs/ontology-documentation/</li>
+<li>https://pubmed.ncbi.nlm.nih.gov/25158906/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC10085737/</li>
+<li>https://www.uniprot.org/uniprot/P04172</li>
+<li>https://www.uniprot.org/database/DB-0052</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC11317620/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC154073/</li>
+<li>https://www.uniprot.org</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC5493203/</li>
+<li>https://pubmed.ncbi.nlm.nih.gov/26369439/</li>
+<li>https://www.pnas.org/doi/10.1073/pnas.2322096121</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC9301485/</li>
+<li>https://www.semanticscholar.org/paper/73b37d17486cefc18a159e69e040c73fcb0abb27</li>
+<li>https://www.nature.com/articles/s41598-020-69401-4</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC4760355/</li>
+<li>https://pubmed.ncbi.nlm.nih.gov/19374993/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC2740566/</li>
+<li>https://www.nature.com/articles/s41467-021-22623-0</li>
+<li>https://pubs.acs.org/doi/10.1021/acschembio.5c00286</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC4259157/</li>
+<li>https://pubmed.ncbi.nlm.nih.gov/10801488/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC7210931/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC4859578/</li>
+<li>https://pubmed.ncbi.nlm.nih.gov/8939706/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC10769383/</li>
+<li>https://www.nature.com/articles/s41598-019-41043-1</li>
+<li>https://deepblue.lib.umich.edu/bitstream/handle/2027.42/93994/tnusca_1.pdf</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC11252000/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC27084/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC1855748/</li>
+<li>https://pubmed.ncbi.nlm.nih.gov/12603313/</li>
+<li>https://www.nature.com/articles/s41598-024-69152-6</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC120789/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC3505271/</li>
+<li>https://deepblue.lib.umich.edu/bitstream/handle/2027.42/199194/junwony_1.pdf?sequence=1&amp;isAllowed=y</li>
+<li>https://amigo.geneontology.org/amigo/term/GO:0019290</li>
+<li>https://amigo.geneontology.org/amigo/term/GO:0003824</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC7536085/</li>
+<li>https://amigo.geneontology.org/amigo/term/GO:0016787</li>
+<li>https://www.pombase.org/term/GO:0003824</li>
+<li>https://pubmed.ncbi.nlm.nih.gov/30963328/</li>
+<li>https://www.ebi.ac.uk/QuickGO/term/GO:0016787</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: C5B1I7
+gene_symbol: mllF
+product_type: PROTEIN
+taxon:
+  id: NCBITaxon:272630
+  label: Methylorubrum extorquens AM1
+description: Xylose isomerase-like TIM barrel domain-containing protein (mllF) involved
+  in methylolanthanin biosynthesis. Homologous to enzymes in petrobactin biosynthetic
+  pathway. Part of mll gene cluster (META1p4129-4138) showing 32-fold upregulation
+  with poorly soluble lanthanides. Predicted to catalyze isomerization or sugar-related
+  transformation reactions during lanthanophore assembly.
+existing_annotations: []
+core_functions:
+- description: Isomerase activity during lanthanophore biosynthesis
+  molecular_function:
+    id: GO:0016853
+    label: isomerase activity
+  supported_by:
+  - reference_id: file:METEA/mllF/mllF-deep-research-perplexity.md
+    supporting_text: Contains xylose isomerase-like TIM barrel domain. Part of mll
+      cluster homologous to petrobactin biosynthetic pathway
+references:
+- id: file:METEA/mllF/mllF-deep-research-perplexity.md
+  title: Deep research on mllF TIM barrel protein in lanthanophore biosynthesis
+  findings:
+  - statement: META1p4135 encodes xylose isomerase-like TIM barrel protein (mllF)
+  - statement: Part of mll cluster showing 32-fold upregulation with poorly soluble
+      lanthanides
+  - statement: Homologous to enzymes in petrobactin biosynthetic pathway
+status: INITIALIZED
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

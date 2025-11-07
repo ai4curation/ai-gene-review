@@ -6,6 +6,7 @@ window.searchSchema = {
   "searchableFields": [
     "gene_symbol",
     "protein_id",
+    "status",
     "tags",
     "term_label",
     "term_id",
@@ -22,6 +23,12 @@ window.searchSchema = {
       "sortBy": "alphabetical"
     },
     {
+      "field": "status",
+      "label": "Review Status",
+      "type": "string",
+      "sortBy": "alphabetical"
+    },
+    {
       "field": "gene_symbol",
       "label": "Gene Symbol",
       "type": "string",
@@ -30,6 +37,12 @@ window.searchSchema = {
     {
       "field": "taxon_label",
       "label": "Species",
+      "type": "string",
+      "sortBy": "count"
+    },
+    {
+      "field": "product_type",
+      "label": "Gene Product Type",
       "type": "string",
       "sortBy": "count"
     },
@@ -83,12 +96,22 @@ window.searchSchema = {
     },
     {
       "field": "uniprot_link",
-      "label": "Uniprot",
+      "label": "Link",
       "type": "url"
     },
     {
       "field": "protein_id",
-      "label": "Protein",
+      "label": "ID",
+      "type": "string"
+    },
+    {
+      "field": "product_type",
+      "label": "Gene Product Type",
+      "type": "string"
+    },
+    {
+      "field": "status",
+      "label": "Review Status",
       "type": "string"
     },
     {

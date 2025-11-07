@@ -1,0 +1,2804 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P35442 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>P35442</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P35442" target="_blank" class="term-link">
+                        P35442
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-in-progress">
+                    IN PROGRESS
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "P35442";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P35442" data-a="DESCRIPTION: Thrombospondin-2 (THBS2/TSP2, ~145 kDa per monomer..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Thrombospondin-2 (THBS2/TSP2, ~145 kDa per monomer), extracellular matricellular glycoprotein that modulates cell-matrix interactions rather than serving as core structural ECM component. Forms homotrimeric complexes secreted into extracellular matrix. Multi-domain architecture: N-terminal heparin-binding domain, procollagen-like region, three type I thrombospondin repeats (TSRs), three type II EGF-like repeats, seven type III calcium-binding repeats, and C-terminal globular domain containing RGD sequence. Functions as regulator of extracellular matrix organization, angiogenesis, and tissue remodeling. Primary role is modulating matrix structure and turnover - influences collagen fibrillogenesis by binding MMP-2 (matrix metalloproteinase-2) and facilitating its endocytic clearance via LRP1 receptor, preventing excessive collagen degradation. Thbs2-null mice show disorganized collagen fibrils, abnormally high MMP-2 levels, connective tissue defects (skin fragility, lax tendons), and increased tissue vascularization. Potent endogenous angiogenesis inhibitor - type I repeats bind CD36 receptor on endothelial cells triggering apoptosis and capillary regression. TSP2-deficient mice exhibit elevated vascular density and excessive blood vessel networks in healing wounds. Binds integrin αvβ3 via RGD sequence, transmitting signals into cells (activates PI3K/Akt and NF-κB pathways in synovial fibroblasts). Unique among thrombospondins: binds Notch3 receptor and Jagged1 ligand, potentiating Notch3 signal transduction. Dynamically regulated during tissue repair - expression rises in fibroblasts during wound healing, peaks during granulation tissue maturation. Restrains fibrovascular proliferation ensuring proper scar formation. In cartilage, protects from breakdown by suppressing MMP-13 and promoting chondrocyte differentiation. Localizes to interstitial spaces and basement membranes of connective tissues including dermis, cartilage, bone, blood vessel walls. Expression low at baseline but induced during tissue remodeling, injury, inflammation. Implicated in cancer (high TSP2 correlates with suppressed tumor vascularization), fibrotic diseases (modulates TGF-β activation), osteoarthritis (upregulated as compensatory response), connective tissue disorders. Serves as extracellular scaffold that orchestrates cell-matrix communication, tissue architecture, and angiogenic balance.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031012" target="_blank" class="term-link">
+                                    GO:0031012
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular matrix</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P35442" data-a="GO:0031012" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Extracellular matrix - TSP2 is matricellular ECM protein.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core ECM localization.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016525" target="_blank" class="term-link">
+                                    GO:0016525
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of angiogenesis</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P35442" data-a="GO:0016525" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Negative regulation of angiogenesis - potent endogenous angiogenesis inhibitor via CD36-mediated endothelial apoptosis.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core anti-angiogenic function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005509" target="_blank" class="term-link">
+                                    GO:0005509
+                                </a>
+                            </span>
+                            <span class="term-label">calcium ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P35442" data-a="GO:0005509" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Calcium ion binding - type III calcium-binding repeats in TSP2 structure.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Structural domain feature.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P35442" data-a="GO:0005576" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Extracellular region - secreted matricellular protein.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core localization.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007155" target="_blank" class="term-link">
+                                    GO:0007155
+                                </a>
+                            </span>
+                            <span class="term-label">cell adhesion</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P35442" data-a="GO:0007155" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cell adhesion - matricellular function bridging cells with ECM via integrin binding.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Cell-matrix interactions.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008201" target="_blank" class="term-link">
+                                    GO:0008201
+                                </a>
+                            </span>
+                            <span class="term-label">heparin binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P35442" data-a="GO:0008201" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Heparin binding - N-terminal heparin-binding domain binds heparan sulfate proteoglycans.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Structural domain.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031091" target="_blank" class="term-link">
+                                    GO:0031091
+                                </a>
+                            </span>
+                            <span class="term-label">platelet alpha granule</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P35442" data-a="GO:0031091" data-r="GO_REF:0000117" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Platelet alpha granule - TSP1 stored in platelets, TSP2 produced by stromal cells but present in ECM.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Minor localization.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19818485" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19818485
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Gabapentin receptor alpha2delta-1 is a neuronal thrombospond...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P35442" data-a="GO:0005515" data-r="PMID:19818485" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Protein binding - binds integrins, CD36, MMPs, Notch3, collagen, proteoglycans.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Multiple protein interactions.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005604" target="_blank" class="term-link">
+                                    GO:0005604
+                                </a>
+                            </span>
+                            <span class="term-label">basement membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000107
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P35442" data-a="GO:0005604" data-r="GO_REF:0000107" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Basement membrane - localizes to basement membranes of blood vessels and connective tissues.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> ECM compartment.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016525" target="_blank" class="term-link">
+                                    GO:0016525
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of angiogenesis</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P35442" data-a="GO:0016525" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Negative regulation of angiogenesis - potent angiogenesis inhibitor.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core anti-angiogenic role.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031012" target="_blank" class="term-link">
+                                    GO:0031012
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular matrix</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000107
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P35442" data-a="GO:0031012" data-r="GO_REF:0000107" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051965" target="_blank" class="term-link">
+                                    GO:0051965
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of synapse assembly</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000107
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="P35442" data-a="GO:0051965" data-r="GO_REF:0000107" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Positive regulation of synapse assembly - no evidence for TSP2 in synapse assembly (TSP1 has this role).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Wrong thrombospondin.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005201" target="_blank" class="term-link">
+                                    GO:0005201
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular matrix structural constituent</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">RCA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28327460" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28327460
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Comprehensive proteomic characterization of stem cell-derive...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P35442" data-a="GO:0005201" data-r="PMID:28327460" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Extracellular matrix structural constituent - while not core structural ECM like collagen, TSP2 modulates matrix organization.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> ECM modulator role.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031012" target="_blank" class="term-link">
+                                    GO:0031012
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular matrix</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28327460" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28327460
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Comprehensive proteomic characterization of stem cell-derive...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P35442" data-a="GO:0031012" data-r="PMID:28327460" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005201" target="_blank" class="term-link">
+                                    GO:0005201
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular matrix structural constituent</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">RCA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28675934" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28675934
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Characterization of the Extracellular Matrix of Normal and D...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P35442" data-a="GO:0005201" data-r="PMID:28675934" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031012" target="_blank" class="term-link">
+                                    GO:0031012
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular matrix</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28675934" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28675934
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Characterization of the Extracellular Matrix of Normal and D...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P35442" data-a="GO:0031012" data-r="PMID:28675934" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27068509" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27068509
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Extracellular matrix remodelling in response to venous hyper...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P35442" data-a="GO:0005576" data-r="PMID:27068509" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031091" target="_blank" class="term-link">
+                                    GO:0031091
+                                </a>
+                            </span>
+                            <span class="term-label">platelet alpha granule</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/1737102" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:1737102
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Localization of platelet osteonectin at the internal face of...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P35442" data-a="GO:0031091" data-r="PMID:1737102" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            Reactome:R-HSA-382054
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P35442" data-a="GO:0005576" data-r="Reactome:R-HSA-382054" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016525" target="_blank" class="term-link">
+                                    GO:0016525
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of angiogenesis</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20714802" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20714802
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    CD36-mediated activation of endothelial cell apoptosis by an...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P35442" data-a="GO:0016525" data-r="PMID:20714802" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Negative regulation of angiogenesis - potent angiogenesis inhibitor.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core anti-angiogenic role.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008201" target="_blank" class="term-link">
+                                    GO:0008201
+                                </a>
+                            </span>
+                            <span class="term-label">heparin binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/1459996" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:1459996
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Thrombospondin 1 and thrombospondin 2 are expressed as both ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P35442" data-a="GO:0008201" data-r="PMID:1459996" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Matricellular protein that modulates extracellular matrix organization and angiogenesis. Regulates collagen fibrillogenesis by binding MMP-2 and facilitating its LRP1-mediated clearance, preventing excessive matrix degradation. Potent angiogenesis inhibitor via CD36-mediated endothelial apoptosis. Binds integrin αvβ3 and Notch3 to influence cell signaling. Essential for proper wound healing and tissue remodeling.</h3>
+                <span class="vote-buttons" data-g="P35442" data-a="FUNCTION: Matricellular protein that modulates extracellular..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005201" target="_blank" class="term-link">
+                            extracellular matrix structural constituent
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030198" target="_blank" class="term-link">
+                                extracellular matrix organization
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016525" target="_blank" class="term-link">
+                                negative regulation of angiogenesis
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                extracellular region
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031012" target="_blank" class="term-link">
+                                extracellular matrix
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            UniProt:P35442
+                            
+                        </span>
+                        
+                        <div class="finding-text">Matricellular protein that modulates extracellular matrix organization and angiogenesis. Regulates collagen fibrillogenesis by binding MMP-2 and facilitating its LRP1-mediated clearance, preventing ex...</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000107.md" target="_blank" class="term-link">
+                            GO_REF:0000107
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Automatic transfer of experimentally verified manual GO annotation data to orthologs using Ensembl Compara.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/1459996" target="_blank" class="term-link">
+                            PMID:1459996
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Thrombospondin 1 and thrombospondin 2 are expressed as both homo- and heterotrimers.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/1737102" target="_blank" class="term-link">
+                            PMID:1737102
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Localization of platelet osteonectin at the internal face of the alpha-granule membranes in platelets and megakaryocytes.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19818485" target="_blank" class="term-link">
+                            PMID:19818485
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gabapentin receptor alpha2delta-1 is a neuronal thrombospondin receptor responsible for excitatory CNS synaptogenesis.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20714802" target="_blank" class="term-link">
+                            PMID:20714802
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">CD36-mediated activation of endothelial cell apoptosis by an N-terminal recombinant fragment of thrombospondin-2 inhibits breast cancer growth and metastasis in vivo.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/27068509" target="_blank" class="term-link">
+                            PMID:27068509
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Extracellular matrix remodelling in response to venous hypertension: proteomics of human varicose veins.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28327460" target="_blank" class="term-link">
+                            PMID:28327460
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Comprehensive proteomic characterization of stem cell-derived extracellular matrices.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28675934" target="_blank" class="term-link">
+                            PMID:28675934
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Characterization of the Extracellular Matrix of Normal and Diseased Tissues Using Proteomics.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        Reactome:R-HSA-382054
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">PDGF binds to extracellular matrix proteins</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Openai</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(THBS2-deep-research-openai.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P35442" data-a="DOC: Deep Research Openai" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: openai<br />
+model: o3-deep-research-2025-06-26<br />
+cached: true<br />
+start_time: '2025-11-04T00:41:29.659652'<br />
+end_time: '2025-11-04T00:41:29.660788'<br />
+duration_seconds: 0.0<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: human<br />
+  gene_id: P35442<br />
+  gene_symbol: THBS2<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    temperature: 0.1<br />
+    top_p: 1.0<br />
+citation_count: 102</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<p>Please provide a comprehensive research report on the gene THBS2 (P35442) in human.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function. </p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<h1 id="thrombospondin-2-thbs2-function-processes-and-localization">Thrombospondin-2 (THBS2) – Function, Processes, and Localization</h1>
+<p><strong>Gene and Protein Overview:</strong> The human <strong>THBS2 gene</strong> encodes <strong>thrombospondin-2 (TSP2)</strong>, an extracellular glycoprotein belonging to the thrombospondin family. Thrombospondin-2 is a large <strong>matricellular protein</strong> – a class of non-structural extracellular matrix (ECM) proteins that modulate cell–matrix interactions rather than serving as core structural components (<a href="https://pubmed.ncbi.nlm.nih.gov/11147677/#:~:text=gene%2C%20display%20a%20complex%20phenotype,production%20by%20these%20cells">pubmed.ncbi.nlm.nih.gov</a>). TSP2 monomers (~145 kDa each) assemble into a homotrimeric complex (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC199563/#:~:text=increasing%20scrutiny%20in%20recent%20years,This%20Perspective">pmc.ncbi.nlm.nih.gov</a>). Each TSP2 subunit has a multi-domain architecture, including an N-terminal heparin-binding domain, a procollagen-like region, three type I thrombospondin repeats, three type II EGF-like repeats, seven type III calcium-binding repeats, and a C-terminal globular domain (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10145989/#:~:text=3T3%2C%20and%20it%20was%20later,matrix%20metalloproteinases%29%20and%20calcium">pmc.ncbi.nlm.nih.gov</a>). These domains confer the ability to bind various molecules and ions (e.g. heparan sulfate, integrins, matrix components, and Ca²⁺) and underlie TSP2’s diverse interactions (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10145989/#:~:text=and%20a%20C,expression%20and%20the%20regulation%20of">pmc.ncbi.nlm.nih.gov</a>).</p>
+<p><strong>Localization and Expression:</strong> Thrombospondin-2 is a <strong>secreted protein</strong> that localizes to the extracellular space and ECM of connective tissues. In adults, THBS2 expression is relatively low under basal conditions, but it is present in <strong>dermis, cartilage, bone, and blood vessel walls</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10145989/#:~:text=TSP,2%20leads%20to%20skin">pmc.ncbi.nlm.nih.gov</a>). TSP2 expression is developmentally regulated – it is synthesized mainly in connective tissues during embryonic development and is induced in adults during tissue remodeling or injury (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10145989/#:~:text=MMP,deficiency%20significantly%20enhanced%20the%20inflammatory">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC199563/#:~:text=of%20the%20two%20proteins%20,source%20of%20TSP2%20after%20wounding">pmc.ncbi.nlm.nih.gov</a>). Unlike its homolog thrombospondin-1 (TSP1), which is stored in platelets, TSP2 is not normally abundant in platelets; instead, it is produced by stromal cells (e.g. fibroblasts) and deposited into the ECM (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC199563/#:~:text=Paradoxically%2C%20although%20TSP1%20is%20present,and%20is%20taken%20up%20by">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC199563/#:~:text=subendothelium%20of%20the%20common%20carotid,of%20the%20abnormal%20collagen%20fibrillogenesis">pmc.ncbi.nlm.nih.gov</a>). Upon tissue injury or inflammation, local fibroblasts and other cells upregulate TSP2, enriching the wound ECM with this protein (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC199563/#:~:text=of%20the%20two%20proteins%20,source%20of%20TSP2%20after%20wounding">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC199563/#:~:text=contrast%2C%20TSP2%20protein%20levels%20are,source%20of%20TSP2%20after%20wounding">pmc.ncbi.nlm.nih.gov</a>). This spatiotemporal expression pattern allows TSP2 to carry out its functions in <strong>interstitial spaces</strong> and <strong>basement membranes</strong> of tissues undergoing repair, remodeling, or development.</p>
+<p><strong>ECM Remodeling and Collagen Organization:</strong> A primary role of thrombospondin-2 is to <strong>modulate the structure and turnover of the extracellular matrix</strong>. TSP2 does not itself form fibrils, but influences how other matrix components assemble and degrade (<a href="https://pubmed.ncbi.nlm.nih.gov/11147677/#:~:text=gene%2C%20display%20a%20complex%20phenotype,production%20by%20these%20cells">pubmed.ncbi.nlm.nih.gov</a>). <strong>Collagen fibrillogenesis</strong> is notably affected by TSP2. Mice lacking TSP2 (Thbs2-null) exhibit <strong>abnormal collagen fiber morphology</strong> and connective tissue defects (<a href="https://pubmed.ncbi.nlm.nih.gov/11147677/#:~:text=Thrombospondin%202%20%28TSP2%29,turn%2C%20result%20from%20increased%20matrix">pubmed.ncbi.nlm.nih.gov</a>). For example, TSP2-null skin has disorganized or thickened collagen fibrils and manifests as skin fragility and lax tendons/ligaments (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10145989/#:~:text=MMP,deficiency%20significantly%20enhanced%20the%20inflammatory">pmc.ncbi.nlm.nih.gov</a>). Mechanistically, TSP2 regulates collagen architecture by controlling matrix metalloproteinase activity in the pericellular environment. <strong>Thbs2-knockout fibroblasts</strong> show abnormally high levels of matrix metalloproteinase-2 (MMP-2) in their culture media (about twice that of normal cells) despite unchanged MMP-2 mRNA, indicating a post-transcriptional regulatory effect (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC199563/#:~:text=indicated%20that%20TSP1%20and%20TSP2,twice%20as%20high%20in%20the">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC199563/#:~:text=match%20at%20L140%20conditioned%20media,a%20neutralizing%20antibody%20to%20MMP2">pmc.ncbi.nlm.nih.gov</a>). This excess MMP-2 leads to excessive collagen proteolysis and poor cell–matrix adhesion, as evidenced by the rescued adhesion after adding MMP inhibitors (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC199563/#:~:text=conditioned%20media%20of%20TSP2,a%20neutralizing%20antibody%20to%20MMP2">pmc.ncbi.nlm.nih.gov</a>). Thrombospondin-2 directly <strong>binds MMP-2</strong> and forms a complex (potentially including TIMP-2) that is recognized by the <em>low-density lipoprotein receptor-related protein</em> (LRP) on the cell surface (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC199563/#:~:text=match%20at%20L153%20environment%20might,Figure%201">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC199563/#:~:text=environment%20might%20be%20impaired,Figure%201">pmc.ncbi.nlm.nih.gov</a>). Through this interaction, TSP2 facilitates the <strong>endocytic clearance of MMP-2</strong>, targeting the protease for lysosomal degradation (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC199563/#:~:text=environment%20might%20be%20impaired,Figure%201">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC199563/#:~:text=match%20at%20L168%20and%20proteoglycans%2C,Since">pmc.ncbi.nlm.nih.gov</a>). By sequestering and removing MMP-2 (and possibly other proteases), TSP2 helps maintain matrix integrity – preventing excessive collagen degradation and allowing proper fibril formation (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC199563/#:~:text=environment%20might%20be%20impaired,Figure%201">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC199563/#:~:text=match%20at%20L168%20and%20proteoglycans%2C,Since">pmc.ncbi.nlm.nih.gov</a>). Consistently, re-introduction of TSP2 into TSP2-null fibroblasts normalizes MMP-2 levels and restores healthy cell–matrix adhesion (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC199563/#:~:text=be%20responsible%20for%20the%20attachment,a%20neutralizing%20antibody%20to%20MMP2">pmc.ncbi.nlm.nih.gov</a>). In addition to MMP-2, TSP2 has been reported to downregulate other matrix-degrading enzymes. For instance, in cancer cell models TSP2 reduces <strong>MMP-9</strong> and <strong>urokinase-type plasminogen activator (uPA)</strong> expression, limiting cell invasion and metastasis (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10145989/#:~:text=correlated%20with%20cancer%20cell%20proliferation,In%20addition%2C%20the%20effect">pmc.ncbi.nlm.nih.gov</a>). In cartilage tissue, TSP2 helps preserve the extracellular matrix by suppressing <strong>MMP-13</strong>, the enzyme that degrades type II collagen; as a result, TSP2 protects cartilage from breakdown in osteoarthritic conditions (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10145989/#:~:text=MMP,the%20cartilage%20matrix%20from%20degradation">pmc.ncbi.nlm.nih.gov</a>). These findings underscore TSP2’s role as an ECM guardian – it modulates collagen fibrillogenesis and matrix composition by binding structural proteins and regulating protease activity.</p>
+<p><strong>Cell Adhesion and Matricellular Interactions:</strong> As a matricellular protein, thrombospondin-2 interacts with cells to influence <strong>adhesion, migration, and signaling</strong>. TSP2 contains an <strong>RGD (Arg-Gly-Asp)</strong> sequence in its C-terminal region that enables direct binding to certain integrins on cell surfaces (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8600055/#:~:text=match%20at%20L349%20functions%2C%20including,density%20lipoprotein%20receptor">pmc.ncbi.nlm.nih.gov</a>). In particular, TSP2 can engage <strong>integrin α<sub>v</sub>β<sub>3</sub></strong>, a receptor on fibroblasts, endothelial cells and chondrocytes (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8600055/#:~:text=functions%2C%20including%20integrin%20%CE%B1_%7Bv%7D%CE%B2_%7B3%7D%2C,density%20lipoprotein%20receptor">pmc.ncbi.nlm.nih.gov</a>). Through integrin α<sub>v</sub>β<sub>3&gt; binding, TSP2 can transmit signals into cells: for example, in synovial fibroblasts TSP2 binding to α<sub>v</sub>β<sub>3</sub> activates the PI3K/Akt and NF-κB pathways, leading to induction of interleukin-6 (IL-6) expression (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8600055/#:~:text=OASFs%2C%20we%20found%20evidence%20for,cartilage%20destruction%20during%20OA%20progression">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8600055/#:~:text=was%20proved%20to%20exert%20its,3%7D%20were">pmc.ncbi.nlm.nih.gov</a>). (Blocking α<sub>v</sub>β<sub>3</sub> or its downstream kinases abolishes TSP2-induced NF-κB activation and IL-6 production (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8600055/#:~:text=Pretreatment%20with%20integrin%20%CE%B1_,We%20also%20found">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8600055/#:~:text=abolished%20when%20the%20OASFs%20were,%CE%BAB%20pathway%20activation">pmc.ncbi.nlm.nih.gov</a>).) TSP2 can also bind other integrins (e.g. α<sub>4</sub>β<sub>1</sub> and β<sub>1</sub>-containing integrins) and heparan sulfate proteoglycans, reflecting its multiple interactive motifs (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8600055/#:~:text=match%20at%20L349%20functions%2C%20including,density%20lipoprotein%20receptor">pmc.ncbi.nlm.nih.gov</a>). These adhesive interactions allow TSP2 to <strong>bridge cells with the ECM</strong>, influencing cell attachment and spreading. Notably, TSP2’s effects on cell adhesion are context-dependent: while exogenous TSP2 can promote cell spreading and chemotaxis in some assays similar to TSP1 (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC199563/#:~:text=assays,of%20expression%20of%20the%20two">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC199563/#:~:text=indicated%20that%20TSP1%20and%20TSP2,twice%20as%20high%20in%20the">pmc.ncbi.nlm.nih.gov</a>), the absence of TSP2 in vivo leads to cell-matrix attachment defects due to dysregulated proteolysis (as discussed above). Thus, TSP2 helps <em>tune</em> the adhesive microenvironment by binding to cell-surface receptors and matrix ligands, ensuring proper cell anchorage and communication with the ECM.</p>
+<p><strong>Regulation of Angiogenesis:</strong> One of the defining functions of thrombospondin-2 is its role as a <strong>potent inhibitor of angiogenesis</strong> (new blood vessel formation). Like TSP1, thrombospondin-2 is classified as an endogenous angiogenesis inhibitor (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10145989/#:~:text=play%20an%20important%20role%20in,2">pmc.ncbi.nlm.nih.gov</a>). However, some evidence suggests TSP2 may exert even stronger anti-angiogenic and anti-tumor effects than TSP1 in certain contexts (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10145989/#:~:text=play%20an%20important%20role%20in,2">pmc.ncbi.nlm.nih.gov</a>). <strong>TSP2-deficient mice</strong> show increased vascular density in their tissues, underscoring the protein’s normal role in restraining vessel growth (<a href="https://pubmed.ncbi.nlm.nih.gov/11147677/#:~:text=Thrombospondin%202%20%28TSP2%29,turn%2C%20result%20from%20increased%20matrix">pubmed.ncbi.nlm.nih.gov</a>). For example, Thbs2-null mice have an abnormally high density of microvessels in the skin and subcutaneous tissue (<a href="https://pubmed.ncbi.nlm.nih.gov/11147677/#:~:text=Thrombospondin%202%20%28TSP2%29,turn%2C%20result%20from%20increased%20matrix">pubmed.ncbi.nlm.nih.gov</a>), and healing wounds in these mice maintain excessive blood vessel networks in the granulation tissue (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC199563/#:~:text=Excisional%20wounds%20in%20TSP2,angiogenesis%20in%20the%20healing%20wound">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC199563/#:~:text=%2827%20%29,unit%20area%2C%20the%20average%20vessel">pmc.ncbi.nlm.nih.gov</a>). In contrast, overexpression of thrombospondins leads to suppressed angiogenesis and smaller vessel size in wound sites (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC199563/#:~:text=fibronectin%20and%20an%20abnormal%20organization,Although%20the%20two%20proteins%20are">pmc.ncbi.nlm.nih.gov</a>). The anti-angiogenic activity of TSP2 is at least partly mediated through <strong>inducing apoptosis in endothelial cells</strong>. TSP2’s type I repeats can bind the CD36 receptor on microvascular endothelial cells (similar to TSP1’s mechanism), triggering a cascade that leads to endothelial cell apoptosis and capillary regression (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10145989/#:~:text=signaling%20pathways,2%20using">pmc.ncbi.nlm.nih.gov</a>). In vitro, an N-terminal fragment of TSP2 that includes the proper domains was shown to activate CD36 and <strong>initiate endothelial apoptosis, inhibiting tumor vascularization and growth</strong> in a breast cancer model (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10145989/#:~:text=,PMC%20free%20article">pmc.ncbi.nlm.nih.gov</a>). Thus, TSP2 directly counteracts pro-angiogenic signals, helping to <strong>limit neovascularization</strong> during wound healing and in tumors. Moreover, by regulating proteases and ECM composition, TSP2 creates an environment less favorable to new vessel sprouting (for instance, high TSP2 levels correlate with reduced MMP-9 and VEGF availability in some tumor microenvironments) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10145989/#:~:text=researchers%20have%20reported%20that%20TSP,2%20may%20be%20a%20potent">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10145989/#:~:text=correlated%20with%20cancer%20cell%20proliferation,In%20addition%2C%20the%20effect">pmc.ncbi.nlm.nih.gov</a>). The ability of TSP2 to “turn off” angiogenesis is important in physiological contexts (to terminate angiogenesis after tissue repair) and has drawn interest in pathological contexts where excessive angiogenesis is a factor (e.g. cancer, ocular neovascular disorders).</p>
+<p><strong>Signaling Pathways and Receptor Interactions:</strong> Beyond integrins and CD36, thrombospondin-2 interacts with various signaling molecules. A striking finding is TSP2’s interaction with the <strong>Notch signaling pathway</strong>, which is critical for cell fate and vascular development. TSP2 (but notably <em>not</em> TSP1) binds directly to <strong>Notch3</strong> (a Notch receptor) and its ligand <strong>Jagged1</strong>, and it <em>enhances</em> their ability to engage (<a href="https://pubmed.ncbi.nlm.nih.gov/19147503/#:~:text=injury,ligand%20interactions">pubmed.ncbi.nlm.nih.gov</a>). By acting as a scaffold that brings Notch3 and Jagged1 together, TSP2 <strong>potentiates Notch3 signal transduction</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/19147503/#:~:text=injury,ligand%20interactions">pubmed.ncbi.nlm.nih.gov</a>). In fact, the presence of TSP2 augments Notch3-dependent gene activation, whereas TSP2-knockout mice show reduced expression of Notch target genes (<a href="https://pubmed.ncbi.nlm.nih.gov/19147503/#:~:text=injury,ligand%20interactions">pubmed.ncbi.nlm.nih.gov</a>). Functionally, this Notch-modulating activity of TSP2 has been linked to reduced cancer cell proliferation in a Notch-dependent manner, suggesting TSP2 can influence differentiation or quiescence signals via Notch in certain contexts (<a href="https://pubmed.ncbi.nlm.nih.gov/19147503/#:~:text=injury,ligand%20interactions">pubmed.ncbi.nlm.nih.gov</a>). Thrombospondin-2 also binds growth factors and cytokines indirectly; for example, TSP2 can sequester TGF-β and other cytokines in the matrix, although this role is more established for TSP1. In injury models, overexpression of TSP2 was found to <strong>limit active TGF-β levels and inflammation</strong>, implying a possible role in controlling growth factor activation (<a href="https://pubmed.ncbi.nlm.nih.gov/24376766/#:~:text=inflammation%20and%20angiogenesis%20in%20chronic,2%20null">pubmed.ncbi.nlm.nih.gov</a>) (<a href="https://pubmed.ncbi.nlm.nih.gov/19726547/#:~:text=Thrombospondin,deficient">pubmed.ncbi.nlm.nih.gov</a>). Furthermore, as mentioned, TSP2 interacts with the endocytic <strong>LRP1 receptor</strong> to clear MMPs (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC199563/#:~:text=environment%20might%20be%20impaired,Figure%201">pmc.ncbi.nlm.nih.gov</a>), and it can bind <strong>heparan sulfate proteoglycans</strong> which concentrate chemokines and growth factors in the ECM (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8600055/#:~:text=match%20at%20L349%20functions%2C%20including,density%20lipoprotein%20receptor">pmc.ncbi.nlm.nih.gov</a>). Through these diverse interactions, TSP2 serves as a regulatory node in <strong>cell signaling networks at the extracellular interface</strong> – influencing pathways like <strong>MAPK/JNK</strong> (via CD36 activation in endothelial cells) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10145989/#:~:text=signaling%20pathways,2%20using">pmc.ncbi.nlm.nih.gov</a>), <strong>PI3K/Akt/NF-κB</strong> (via integrins in fibroblasts) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8600055/#:~:text=OASFs%2C%20we%20found%20evidence%20for,cartilage%20destruction%20during%20OA%20progression">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8600055/#:~:text=was%20proved%20to%20exert%20its,3%7D%20were">pmc.ncbi.nlm.nih.gov</a>), and <strong>Notch</strong> (via direct ligand–receptor bridging) (<a href="https://pubmed.ncbi.nlm.nih.gov/19147503/#:~:text=injury,ligand%20interactions">pubmed.ncbi.nlm.nih.gov</a>). These signaling effects are context-dependent but collectively contribute to TSP2’s role in coordinating tissue remodeling and cellular responses to the environment.</p>
+<p><strong>Role in Development and Tissue Repair:</strong> Thrombospondin-2 is crucial for proper tissue development, repair, and homeostasis due to its ECM and signaling functions. During <strong>embryonic development</strong>, TSP2 is highly expressed in connective tissues and contributes to the organization of dermis, cartilage, and tendon matrices (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10145989/#:~:text=MMP,deficiency%20significantly%20enhanced%20the%20inflammatory">pmc.ncbi.nlm.nih.gov</a>). Mice lacking TSP2 display developmental phenotypes such as loose skin and hyperextensible joints (reflecting collagen fibril aberrations) and an enhanced vascularization in tissues like skin and adipose (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10145989/#:~:text=MMP,deficiency%20significantly%20enhanced%20the%20inflammatory">pmc.ncbi.nlm.nih.gov</a>). In <strong>wound healing</strong>, TSP2 is dynamically regulated: its expression in fibroblasts rises a few days after injury and peaks during the formation and maturation of granulation tissue (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC199563/#:~:text=of%20the%20two%20proteins%20,source%20of%20TSP2%20after%20wounding">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC199563/#:~:text=contrast%2C%20TSP2%20protein%20levels%20are,source%20of%20TSP2%20after%20wounding">pmc.ncbi.nlm.nih.gov</a>). Functionally, <strong>TSP2 acts to restrain the wound healing process</strong> to ensure proper tissue repair. Thbs2-null wounds in mice close faster with quicker scab loss, but they exhibit <strong>excessive granulation tissue, persistently elevated blood vessel density, and disorganized collagen deposition</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC199563/#:~:text=Excisional%20wounds%20in%20TSP2,angiogenesis%20in%20the%20healing%20wound">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC199563/#:~:text=%2827%20%29,unit%20area%2C%20the%20average%20vessel">pmc.ncbi.nlm.nih.gov</a>). This suggests that in normal wounds, TSP2 helps tone down fibrovascular proliferation and encourages matrix organization as healing progresses. Conversely, when TSP2 is overexpressed (or when the related TSP1 is transgenically increased), wound closure is delayed and angiogenesis is dampened, reinforcing the idea that thrombospondins serve to <strong>limit overzealous repair responses</strong> for optimal scar formation (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC199563/#:~:text=fibronectin%20and%20an%20abnormal%20organization,Although%20the%20two%20proteins%20are">pmc.ncbi.nlm.nih.gov</a>). In the context of <strong>cartilage and bone</strong>, TSP2 has emerged as an important factor as well. It is strongly expressed in developing cartilage and upregulated in osteoarthritic cartilage, implying a role in cartilage maintenance or repair (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10145989/#:~:text=Osteoprogenitor%20cells%20%20%7C%20TSP,16%5D%7D%20%282013">pmc.ncbi.nlm.nih.gov</a>). Studies show that TSP2 can promote chondrocyte differentiation from mesenchymal stem cells and protect cartilage from inflammatory damage (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10145989/#:~:text=differentiation%20in%20stem%20cells,cartilage%20repair%20in%20clinical%20settings">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10145989/#:~:text=MMP,the%20cartilage%20matrix%20from%20degradation">pmc.ncbi.nlm.nih.gov</a>). By binding to specific receptors on chondrocytes and modulating signaling (such as TGF-β/Smad and integrin pathways), TSP2 supports cartilage matrix production and stability (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10145989/#:~:text=differentiation%20in%20stem%20cells,cartilage%20repair%20in%20clinical%20settings">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10145989/#:~:text=MMP,the%20cartilage%20matrix%20from%20degradation">pmc.ncbi.nlm.nih.gov</a>). In line with this, TSP2-neutralizing antibodies worsened cartilage degeneration in an osteoarthritis model, while adding exogenous TSP2 improved cartilage repair indices (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10145989/#:~:text=collagen%29%2C%20while%20TSP,2">pmc.ncbi.nlm.nih.gov</a>). These observations identify TSP2 as a critical regulator in <strong>tissue remodeling</strong>, balancing matrix synthesis and degradation, vascular growth, and cellular differentiation during both development and healing.</p>
+<p><strong>Pathophysiological and Clinical Notes:</strong> Given its roles, THBS2 has been implicated in various diseases, especially those involving aberrant ECM remodeling or angiogenesis. <strong>Cancer:</strong> Many tumors alter stromal TSP2 levels; high TSP2 generally correlates with suppressed tumor vascularization and slower tumor progression, whereas loss of TSP2 can facilitate invasive growth (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10145989/#:~:text=play%20an%20important%20role%20in,2">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10145989/#:~:text=researchers%20have%20reported%20that%20TSP,2%20may%20be%20a%20potent">pmc.ncbi.nlm.nih.gov</a>). For example, clinical studies in lung, pancreatic, and other cancers found that <strong>TSP2 is a negative regulator of tumor aggressiveness</strong>, often associated with lower MMP-9 levels and reduced cancer cell proliferation (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10145989/#:~:text=researchers%20have%20reported%20that%20TSP,2%20may%20be%20a%20potent">pmc.ncbi.nlm.nih.gov</a>). Experimentally, restoring TSP2 in aggressive cancer models has inhibited angiogenesis and metastasis, highlighting its potential as an anti-angiogenic therapeutic target (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10145989/#:~:text=,PMC%20free%20article">pmc.ncbi.nlm.nih.gov</a>). <strong>Fibrotic and vascular diseases:</strong> Because TSP2 modulates TGF-β activation and matrix deposition, it may influence fibrosis. In a chronic nephropathy model, TSP2 gene therapy reduced TGF-β activation, inflammation, and angiogenesis, ameliorating kidney fibrosis (<a href="https://pubmed.ncbi.nlm.nih.gov/24376766/#:~:text=Long,2%20null">pubmed.ncbi.nlm.nih.gov</a>) (<a href="https://pubmed.ncbi.nlm.nih.gov/19726547/#:~:text=Thrombospondin,deficient">pubmed.ncbi.nlm.nih.gov</a>). <strong>Orthopedic and connective tissue disorders:</strong> Mutations in THBS2 or dysregulation of its expression have been linked to connective tissue abnormalities. Notably, rare human THBS2 mutations were recently associated with a form of Ehlers–Danlos syndrome involving tendon and ligament laxity, consistent with the phenotypes of Tsp2-null mice (though such mutations are uncommon) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10145989/#:~:text=MMP,deficiency%20significantly%20enhanced%20the%20inflammatory">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10145989/#:~:text=synthesized%20mainly%20in%20connective%20tissues,angiogenesis%2C%20edema%20formation%2C%20and%20increased">pmc.ncbi.nlm.nih.gov</a>). In osteoarthritis, elevated TSP2 in joint tissues appears to be a compensatory response attempting to limit cartilage breakdown (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10145989/#:~:text=Osteoprogenitor%20cells%20%20%7C%20TSP,16%5D%7D%20%282013">pmc.ncbi.nlm.nih.gov</a>). Finally, <strong>mechanobiology studies</strong> suggest TSP2 is part of the tissue’s response to mechanical stress – for instance, altered TSP2 signaling (through integrin–cytoskeleton pathways) can affect cell stiffness and cytoskeletal organization under diabetic or high stress conditions (<a href="https://biosignaling.biomedcentral.com/articles/10.1186/s12964-025-02365-y#:~:text=Murrell%20MP%2C%20Kyriakides%20TR,2022%3B12%281%29%3A22474">biosignaling.biomedcentral.com</a>). These diverse findings illustrate how TSP2’s core biochemical functions – binding matrix components, receptors, and proteases – manifest in a wide array of biological processes.</p>
+<p><strong>Conclusion:</strong> Thrombospondin-2 is a multifunctional extracellular protein that <strong>orchestrates cell-matrix communication, tissue architecture, and angiogenic balance</strong>. Its primary function is to act as a context-dependent adapter in the ECM: it binds structural molecules (like collagens and proteoglycans), cell receptors (such as integrins, CD36, and Notch3), and proteases (MMPs), thereby regulating the extracellular environment and cellular behavior. TSP2’s action is crucial for proper collagen fibril formation, controlled proteolysis, and tempered angiogenesis in tissues. It localizes outside the cell in connective tissues, where it fine-tunes processes like wound healing, vascular growth, and cartilage maintenance. Comprehensive experimental evidence – from <strong>knockout mouse models</strong> (revealing connective tissue abnormalities and excess angiogenesis) (<a href="https://pubmed.ncbi.nlm.nih.gov/11147677/#:~:text=Thrombospondin%202%20%28TSP2%29,turn%2C%20result%20from%20increased%20matrix">pubmed.ncbi.nlm.nih.gov</a>), to <strong>cell culture studies</strong> (showing TSP2-mediated endothelial apoptosis and matrix protease clearance) (<a href="https://pubmed.ncbi.nlm.nih.gov/11147677/#:~:text=cell,null%20mice%20can%20be">pubmed.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC199563/#:~:text=match%20at%20L153%20environment%20might,Figure%201">pmc.ncbi.nlm.nih.gov</a>), and <strong>clinical correlations</strong> (linking THBS2 to reduced tumor invasiveness and fibrosis) – all reinforce the concept of TSP2 as a key <strong>extracellular regulator of tissue remodeling</strong>. In sum, THBS2 encodes a protein that serves as a molecular bridge and brake in the extracellular space, ensuring that cells interact with their matrix in an orderly way and that tissue structural integrity and homeostasis are maintained.</p>
+<p><strong>References:</strong> </p>
+<ol>
+<li>
+<p>Bornstein, P. (2001). <em>Thrombospondins as matricellular modulators of cell function</em>. J. Clin. Invest. <strong>107</strong>(8):929-934. PMID: 11306606 (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC199563/#:~:text=to%20contribute%20directly%20to%20the,the%20term%20%E2%80%9Cmatricellular%E2%80%9D%20to%20this">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC199563/#:~:text=some%20type%20IV%20collagen%20chains,context%20of%20the%20matricellular%20concept">pmc.ncbi.nlm.nih.gov</a>)</p>
+</li>
+<li>
+<p>Bornstein, P. et al. (2000). <em>Thrombospondin 2 modulates collagen fibrillogenesis and angiogenesis</em>. J. Cell Biol. <strong>140</strong>(3):419-430. PMID: 9456316 (<a href="https://pubmed.ncbi.nlm.nih.gov/11147677/#:~:text=Thrombospondin%202%20%28TSP2%29,turn%2C%20result%20from%20increased%20matrix">pubmed.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC199563/#:~:text=indicated%20that%20TSP1%20and%20TSP2,twice%20as%20high%20in%20the">pmc.ncbi.nlm.nih.gov</a>)</p>
+</li>
+<li>
+<p>Niu, J. et al. (2023). <em>Thrombospondin-2 acts as a critical regulator of cartilage regeneration: A review</em>. Medicine (Baltimore) <strong>102</strong>(17):e33651 (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10145989/#:~:text=As%20an%20important%20member%20of,matrix%20metalloproteinases%29%20and%20calcium">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10145989/#:~:text=TSP,2%20leads%20to%20skin">pmc.ncbi.nlm.nih.gov</a>)</p>
+</li>
+<li>
+<p>Koch, M. et al. (2011). <em>CD36-mediated activation of endothelial cell apoptosis by an N-terminal fragment of thrombospondin-2 inhibits breast cancer growth and metastasis in vivo</em>. <strong>128</strong>:337–346 (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10145989/#:~:text=signaling%20pathways,2%20using">pmc.ncbi.nlm.nih.gov</a>)</p>
+</li>
+<li>
+<p>Rodriguez-Manzaneque, J.C. et al. (2001). <em>Binding of thrombospondin-2 to metalloproteinase-2</em> triggers its clearance through the LRP1 receptor. EMBO J. <strong>20</strong>(22):7031-7042 (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC199563/#:~:text=match%20at%20L153%20environment%20might,Figure%201">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC199563/#:~:text=environment%20might%20be%20impaired,Figure%201">pmc.ncbi.nlm.nih.gov</a>)</p>
+</li>
+<li>
+<p>Lange-Asschenfeldt, B. et al. (2011). <em>Thrombospondin-2 in skin: a crucial modulator of wound healing and inflammation</em>. J. Invest. Dermatol. <strong>131</strong>(2): 660-672 (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10145989/#:~:text=MMP,deficiency%20significantly%20enhanced%20the%20inflammatory">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10145989/#:~:text=fragility%2C%20tendon%20and%20ligament%20laxity%2C,2%20does%20not">pmc.ncbi.nlm.nih.gov</a>)</p>
+</li>
+<li>
+<p>Yee, K.O. et al. (2009). <em>Thrombospondin-2 regulates Nocth3 signaling in the vascular niche</em>. <strong>29</strong>(xx):xxx-xxx. (Notch interaction study) (<a href="https://pubmed.ncbi.nlm.nih.gov/19147503/#:~:text=injury,ligand%20interactions">pubmed.ncbi.nlm.nih.gov</a>)</p>
+</li>
+<li>
+<p>Hou, C.H. et al. (2021). <em>Thrombospondin-2 increases interleukin-6 production in osteoarthritis synovial fibroblasts via integrin αvβ3/PI3K/Akt/NF-κB signaling</em>. Cell Commun. Signal. <strong>19</strong>(1):144 (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8600055/#:~:text=match%20at%20L349%20functions%2C%20including,density%20lipoprotein%20receptor">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8600055/#:~:text=was%20proved%20to%20exert%20its,3%7D%20were">pmc.ncbi.nlm.nih.gov</a>)</p>
+</li>
+<li>
+<p>Liao, X. et al. (2022). <em>Thrombospondin-2 acts as a bridge between tumor extracellular matrix and immune infiltration in pancreatic and stomach cancers</em>. Cancer Cell Int <strong>22</strong>:213 (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10145989/#:~:text=play%20an%20important%20role%20in,2">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10145989/#:~:text=correlated%20with%20cancer%20cell%20proliferation,In%20addition%2C%20the%20effect">pmc.ncbi.nlm.nih.gov</a>)</p>
+</li>
+<li>
+<p>Krady, M.M. et al. (2008). <em>Thrombospondin-2 modulates extracellular matrix remodeling during physiological angiogenesis</em>. Am. J. Pathol. <strong>173</strong>(3):879–891 (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC199563/#:~:text=Excisional%20wounds%20in%20TSP2,angiogenesis%20in%20the%20healing%20wound">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC199563/#:~:text=%2827%20%29,unit%20area%2C%20the%20average%20vessel">pmc.ncbi.nlm.nih.gov</a>)</p>
+</li>
+</ol>
+<p>(Note: Publication details and URLs are provided where available. All claims are supported by the cited literature.)</p>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>AnnotationURLCitation(end_index=592, start_index=438, title='Thrombospondin 2 modulates collagen fibrillogenesis and angiogenesis - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/11147677/#:~:text=gene%2C%20display%20a%20complex%20phenotype,production%20by%20these%20cells')</li>
+<li>AnnotationURLCitation(end_index=806, start_index=661, title='Thrombospondins as matricellular modulators of cell function - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC199563/#:~:text=increasing%20scrutiny%20in%20recent%20years,This%20Perspective')</li>
+<li>AnnotationURLCitation(end_index=1239, start_index=1076, title='Thrombospondin-2 acts as a critical regulator of cartilage regeneration: A review - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10145989/#:~:text=3T3%2C%20and%20it%20was%20later,matrix%20metalloproteinases%29%20and%20calcium')</li>
+<li>AnnotationURLCitation(end_index=1550, start_index=1413, title='Thrombospondin-2 acts as a critical regulator of cartilage regeneration: A review - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10145989/#:~:text=and%20a%20C,expression%20and%20the%20regulation%20of')</li>
+<li>AnnotationURLCitation(end_index=1955, start_index=1845, title='Thrombospondin-2 acts as a critical regulator of cartilage regeneration: A review - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10145989/#:~:text=TSP,2%20leads%20to%20skin')</li>
+<li>AnnotationURLCitation(end_index=2287, start_index=2140, title='Thrombospondin-2 acts as a critical regulator of cartilage regeneration: A review - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10145989/#:~:text=MMP,deficiency%20significantly%20enhanced%20the%20inflammatory')</li>
+<li>AnnotationURLCitation(end_index=2437, start_index=2288, title='Thrombospondins as matricellular modulators of cell function - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC199563/#:~:text=of%20the%20two%20proteins%20,source%20of%20TSP2%20after%20wounding')</li>
+<li>AnnotationURLCitation(end_index=2803, start_index=2644, title='Thrombospondins as matricellular modulators of cell function - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC199563/#:~:text=Paradoxically%2C%20although%20TSP1%20is%20present,and%20is%20taken%20up%20by')</li>
+<li>AnnotationURLCitation(end_index=2980, start_index=2804, title='Thrombospondins as matricellular modulators of cell function - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC199563/#:~:text=subendothelium%20of%20the%20common%20carotid,of%20the%20abnormal%20collagen%20fibrillogenesis')</li>
+<li>AnnotationURLCitation(end_index=3260, start_index=3111, title='Thrombospondins as matricellular modulators of cell function - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC199563/#:~:text=of%20the%20two%20proteins%20,source%20of%20TSP2%20after%20wounding')</li>
+<li>AnnotationURLCitation(end_index=3425, start_index=3261, title='Thrombospondins as matricellular modulators of cell function - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC199563/#:~:text=contrast%2C%20TSP2%20protein%20levels%20are,source%20of%20TSP2%20after%20wounding')</li>
+<li>AnnotationURLCitation(end_index=4027, start_index=3873, title='Thrombospondin 2 modulates collagen fibrillogenesis and angiogenesis - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/11147677/#:~:text=gene%2C%20display%20a%20complex%20phenotype,production%20by%20these%20cells')</li>
+<li>AnnotationURLCitation(end_index=4350, start_index=4195, title='Thrombospondin 2 modulates collagen fibrillogenesis and angiogenesis - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/11147677/#:~:text=Thrombospondin%202%20%28TSP2%29,turn%2C%20result%20from%20increased%20matrix')</li>
+<li>AnnotationURLCitation(end_index=4632, start_index=4485, title='Thrombospondin-2 acts as a critical regulator of cartilage regeneration: A review - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10145989/#:~:text=MMP,deficiency%20significantly%20enhanced%20the%20inflammatory')</li>
+<li>AnnotationURLCitation(end_index=5155, start_index=5007, title='Thrombospondins as matricellular modulators of cell function - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC199563/#:~:text=indicated%20that%20TSP1%20and%20TSP2,twice%20as%20high%20in%20the')</li>
+<li>AnnotationURLCitation(end_index=5318, start_index=5156, title='Thrombospondins as matricellular modulators of cell function - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC199563/#:~:text=match%20at%20L140%20conditioned%20media,a%20neutralizing%20antibody%20to%20MMP2')</li>
+<li>AnnotationURLCitation(end_index=5628, start_index=5474, title='Thrombospondins as matricellular modulators of cell function - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC199563/#:~:text=conditioned%20media%20of%20TSP2,a%20neutralizing%20antibody%20to%20MMP2')</li>
+<li>AnnotationURLCitation(end_index=5959, start_index=5826, title='Thrombospondins as matricellular modulators of cell function - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC199563/#:~:text=match%20at%20L153%20environment%20might,Figure%201')</li>
+<li>AnnotationURLCitation(end_index=6089, start_index=5960, title='Thrombospondins as matricellular modulators of cell function - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC199563/#:~:text=environment%20might%20be%20impaired,Figure%201')</li>
+<li>AnnotationURLCitation(end_index=6350, start_index=6221, title='Thrombospondins as matricellular modulators of cell function - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC199563/#:~:text=environment%20might%20be%20impaired,Figure%201')</li>
+<li>AnnotationURLCitation(end_index=6482, start_index=6351, title='Thrombospondins as matricellular modulators of cell function - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC199563/#:~:text=match%20at%20L168%20and%20proteoglycans%2C,Since')</li>
+<li>AnnotationURLCitation(end_index=6798, start_index=6669, title='Thrombospondins as matricellular modulators of cell function - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC199563/#:~:text=environment%20might%20be%20impaired,Figure%201')</li>
+<li>AnnotationURLCitation(end_index=6930, start_index=6799, title='Thrombospondins as matricellular modulators of cell function - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC199563/#:~:text=match%20at%20L168%20and%20proteoglycans%2C,Since')</li>
+<li>AnnotationURLCitation(end_index=7227, start_index=7063, title='Thrombospondins as matricellular modulators of cell function - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC199563/#:~:text=be%20responsible%20for%20the%20attachment,a%20neutralizing%20antibody%20to%20MMP2')</li>
+<li>AnnotationURLCitation(end_index=7648, start_index=7482, title='Thrombospondin-2 acts as a critical regulator of cartilage regeneration: A review - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10145989/#:~:text=correlated%20with%20cancer%20cell%20proliferation,In%20addition%2C%20the%20effect')</li>
+<li>AnnotationURLCitation(end_index=8001, start_index=7867, title='Thrombospondin-2 acts as a critical regulator of cartilage regeneration: A review - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10145989/#:~:text=MMP,the%20cartilage%20matrix%20from%20degradation')</li>
+<li>AnnotationURLCitation(end_index=8658, start_index=8497, title='Thrombospondin 2 Promotes IL-6 Production in Osteoarthritis Synovial Fibroblasts via the PI3K/AKT/NF-κB Pathway - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8600055/#:~:text=match%20at%20L349%20functions%2C%20including,density%20lipoprotein%20receptor')</li>
+<li>AnnotationURLCitation(end_index=8980, start_index=8794, title='Thrombospondin 2 Promotes IL-6 Production in Osteoarthritis Synovial Fibroblasts via the PI3K/AKT/NF-κB Pathway - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8600055/#:~:text=functions%2C%20including%20integrin%20%CE%B1_%7Bv%7D%CE%B2_%7B3%7D%2C,density%20lipoprotein%20receptor')</li>
+<li>AnnotationURLCitation(end_index=9421, start_index=9247, title='Thrombospondin 2 Promotes IL-6 Production in Osteoarthritis Synovial Fibroblasts via the PI3K/AKT/NF-κB Pathway - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8600055/#:~:text=OASFs%2C%20we%20found%20evidence%20for,cartilage%20destruction%20during%20OA%20progression')</li>
+<li>AnnotationURLCitation(end_index=9549, start_index=9422, title='Thrombospondin 2 Promotes IL-6 Production in Osteoarthritis Synovial Fibroblasts via the PI3K/AKT/NF-κB Pathway - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8600055/#:~:text=was%20proved%20to%20exert%20its,3%7D%20were')</li>
+<li>AnnotationURLCitation(end_index=9816, start_index=9674, title='Thrombospondin 2 Promotes IL-6 Production in Osteoarthritis Synovial Fibroblasts via the PI3K/AKT/NF-κB Pathway - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8600055/#:~:text=Pretreatment%20with%20integrin%20%CE%B1_,We%20also%20found')</li>
+<li>AnnotationURLCitation(end_index=9969, start_index=9817, title='Thrombospondin 2 Promotes IL-6 Production in Osteoarthritis Synovial Fibroblasts via the PI3K/AKT/NF-κB Pathway - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8600055/#:~:text=abolished%20when%20the%20OASFs%20were,%CE%BAB%20pathway%20activation')</li>
+<li>AnnotationURLCitation(end_index=10319, start_index=10158, title='Thrombospondin 2 Promotes IL-6 Production in Osteoarthritis Synovial Fibroblasts via the PI3K/AKT/NF-κB Pathway - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8600055/#:~:text=match%20at%20L349%20functions%2C%20including,density%20lipoprotein%20receptor')</li>
+<li>AnnotationURLCitation(end_index=10717, start_index=10595, title='Thrombospondins as matricellular modulators of cell function - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC199563/#:~:text=assays,of%20expression%20of%20the%20two')</li>
+<li>AnnotationURLCitation(end_index=10866, start_index=10718, title='Thrombospondins as matricellular modulators of cell function - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC199563/#:~:text=indicated%20that%20TSP1%20and%20TSP2,twice%20as%20high%20in%20the')</li>
+<li>AnnotationURLCitation(end_index=11533, start_index=11413, title='Thrombospondin-2 acts as a critical regulator of cartilage regeneration: A review - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10145989/#:~:text=play%20an%20important%20role%20in,2')</li>
+<li>AnnotationURLCitation(end_index=11785, start_index=11665, title='Thrombospondin-2 acts as a critical regulator of cartilage regeneration: A review - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10145989/#:~:text=play%20an%20important%20role%20in,2')</li>
+<li>AnnotationURLCitation(end_index=12084, start_index=11929, title='Thrombospondin 2 modulates collagen fibrillogenesis and angiogenesis - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/11147677/#:~:text=Thrombospondin%202%20%28TSP2%29,turn%2C%20result%20from%20increased%20matrix')</li>
+<li>AnnotationURLCitation(end_index=12354, start_index=12199, title='Thrombospondin 2 modulates collagen fibrillogenesis and angiogenesis - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/11147677/#:~:text=Thrombospondin%202%20%28TSP2%29,turn%2C%20result%20from%20increased%20matrix')</li>
+<li>AnnotationURLCitation(end_index=12612, start_index=12456, title='Thrombospondins as matricellular modulators of cell function - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC199563/#:~:text=Excisional%20wounds%20in%20TSP2,angiogenesis%20in%20the%20healing%20wound')</li>
+<li>AnnotationURLCitation(end_index=12747, start_index=12613, title='Thrombospondins as matricellular modulators of cell function - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC199563/#:~:text=%2827%20%29,unit%20area%2C%20the%20average%20vessel')</li>
+<li>AnnotationURLCitation(end_index=13037, start_index=12868, title='Thrombospondins as matricellular modulators of cell function - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC199563/#:~:text=fibronectin%20and%20an%20abnormal%20organization,Although%20the%20two%20proteins%20are')</li>
+<li>AnnotationURLCitation(end_index=13474, start_index=13359, title='Thrombospondin-2 acts as a critical regulator of cartilage regeneration: A review - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10145989/#:~:text=signaling%20pathways,2%20using')</li>
+<li>AnnotationURLCitation(end_index=13792, start_index=13686, title='Thrombospondin-2 acts as a critical regulator of cartilage regeneration: A review - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10145989/#:~:text=,PMC%20free%20article')</li>
+<li>AnnotationURLCitation(end_index=14317, start_index=14164, title='Thrombospondin-2 acts as a critical regulator of cartilage regeneration: A review - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10145989/#:~:text=researchers%20have%20reported%20that%20TSP,2%20may%20be%20a%20potent')</li>
+<li>AnnotationURLCitation(end_index=14484, start_index=14318, title='Thrombospondin-2 acts as a critical regulator of cartilage regeneration: A review - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10145989/#:~:text=correlated%20with%20cancer%20cell%20proliferation,In%20addition%2C%20the%20effect')</li>
+<li>AnnotationURLCitation(end_index=15285, start_index=15178, title='Thrombospondin 2 potentiates notch3/jagged1 signaling - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/19147503/#:~:text=injury,ligand%20interactions')</li>
+<li>AnnotationURLCitation(end_index=15507, start_index=15400, title='Thrombospondin 2 potentiates notch3/jagged1 signaling - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/19147503/#:~:text=injury,ligand%20interactions')</li>
+<li>AnnotationURLCitation(end_index=15762, start_index=15655, title='Thrombospondin 2 potentiates notch3/jagged1 signaling - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/19147503/#:~:text=injury,ligand%20interactions')</li>
+<li>AnnotationURLCitation(end_index=16104, start_index=15997, title='Thrombospondin 2 potentiates notch3/jagged1 signaling - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/19147503/#:~:text=injury,ligand%20interactions')</li>
+<li>AnnotationURLCitation(end_index=16600, start_index=16464, title='Long-term gene therapy with thrombospondin 2 inhibits TGF-β activation, inflammation and angiogenesis in chronic allograft nephropathy - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/24376766/#:~:text=inflammation%20and%20angiogenesis%20in%20chronic,2%20null')</li>
+<li>AnnotationURLCitation(end_index=16704, start_index=16601, title='Thrombospondin-2 therapy ameliorates experimental glomerulonephritis via inhibition of cell proliferation, inflammation, and TGF-beta activation - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/19726547/#:~:text=Thrombospondin,deficient')</li>
+<li>AnnotationURLCitation(end_index=16928, start_index=16799, title='Thrombospondins as matricellular modulators of cell function - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC199563/#:~:text=environment%20might%20be%20impaired,Figure%201')</li>
+<li>AnnotationURLCitation(end_index=17200, start_index=17039, title='Thrombospondin 2 Promotes IL-6 Production in Osteoarthritis Synovial Fibroblasts via the PI3K/AKT/NF-κB Pathway - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8600055/#:~:text=match%20at%20L349%20functions%2C%20including,density%20lipoprotein%20receptor')</li>
+<li>AnnotationURLCitation(end_index=17532, start_index=17417, title='Thrombospondin-2 acts as a critical regulator of cartilage regeneration: A review - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10145989/#:~:text=signaling%20pathways,2%20using')</li>
+<li>AnnotationURLCitation(end_index=17758, start_index=17584, title='Thrombospondin 2 Promotes IL-6 Production in Osteoarthritis Synovial Fibroblasts via the PI3K/AKT/NF-κB Pathway - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8600055/#:~:text=OASFs%2C%20we%20found%20evidence%20for,cartilage%20destruction%20during%20OA%20progression')</li>
+<li>AnnotationURLCitation(end_index=17886, start_index=17759, title='Thrombospondin 2 Promotes IL-6 Production in Osteoarthritis Synovial Fibroblasts via the PI3K/AKT/NF-κB Pathway - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8600055/#:~:text=was%20proved%20to%20exert%20its,3%7D%20were')</li>
+<li>AnnotationURLCitation(end_index=18047, start_index=17940, title='Thrombospondin 2 potentiates notch3/jagged1 signaling - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/19147503/#:~:text=injury,ligand%20interactions')</li>
+<li>AnnotationURLCitation(end_index=18688, start_index=18541, title='Thrombospondin-2 acts as a critical regulator of cartilage regeneration: A review - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10145989/#:~:text=MMP,deficiency%20significantly%20enhanced%20the%20inflammatory')</li>
+<li>AnnotationURLCitation(end_index=19040, start_index=18893, title='Thrombospondin-2 acts as a critical regulator of cartilage regeneration: A review - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10145989/#:~:text=MMP,deficiency%20significantly%20enhanced%20the%20inflammatory')</li>
+<li>AnnotationURLCitation(end_index=19372, start_index=19223, title='Thrombospondins as matricellular modulators of cell function - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC199563/#:~:text=of%20the%20two%20proteins%20,source%20of%20TSP2%20after%20wounding')</li>
+<li>AnnotationURLCitation(end_index=19537, start_index=19373, title='Thrombospondins as matricellular modulators of cell function - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC199563/#:~:text=contrast%2C%20TSP2%20protein%20levels%20are,source%20of%20TSP2%20after%20wounding')</li>
+<li>AnnotationURLCitation(end_index=19988, start_index=19832, title='Thrombospondins as matricellular modulators of cell function - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC199563/#:~:text=Excisional%20wounds%20in%20TSP2,angiogenesis%20in%20the%20healing%20wound')</li>
+<li>AnnotationURLCitation(end_index=20123, start_index=19989, title='Thrombospondins as matricellular modulators of cell function - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC199563/#:~:text=%2827%20%29,unit%20area%2C%20the%20average%20vessel')</li>
+<li>AnnotationURLCitation(end_index=20705, start_index=20536, title='Thrombospondins as matricellular modulators of cell function - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC199563/#:~:text=fibronectin%20and%20an%20abnormal%20organization,Although%20the%20two%20proteins%20are')</li>
+<li>AnnotationURLCitation(end_index=21085, start_index=20943, title='Thrombospondin-2 acts as a critical regulator of cartilage regeneration: A review - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10145989/#:~:text=Osteoprogenitor%20cells%20%20%7C%20TSP,16%5D%7D%20%282013')</li>
+<li>AnnotationURLCitation(end_index=21391, start_index=21225, title='Thrombospondin-2 acts as a critical regulator of cartilage regeneration: A review - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10145989/#:~:text=differentiation%20in%20stem%20cells,cartilage%20repair%20in%20clinical%20settings')</li>
+<li>AnnotationURLCitation(end_index=21526, start_index=21392, title='Thrombospondin-2 acts as a critical regulator of cartilage regeneration: A review - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10145989/#:~:text=MMP,the%20cartilage%20matrix%20from%20degradation')</li>
+<li>AnnotationURLCitation(end_index=21868, start_index=21702, title='Thrombospondin-2 acts as a critical regulator of cartilage regeneration: A review - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10145989/#:~:text=differentiation%20in%20stem%20cells,cartilage%20repair%20in%20clinical%20settings')</li>
+<li>AnnotationURLCitation(end_index=22003, start_index=21869, title='Thrombospondin-2 acts as a critical regulator of cartilage regeneration: A review - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10145989/#:~:text=MMP,the%20cartilage%20matrix%20from%20degradation')</li>
+<li>AnnotationURLCitation(end_index=22290, start_index=22175, title='Thrombospondin-2 acts as a critical regulator of cartilage regeneration: A review - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10145989/#:~:text=collagen%29%2C%20while%20TSP,2')</li>
+<li>AnnotationURLCitation(end_index=23000, start_index=22880, title='Thrombospondin-2 acts as a critical regulator of cartilage regeneration: A review - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10145989/#:~:text=play%20an%20important%20role%20in,2')</li>
+<li>AnnotationURLCitation(end_index=23154, start_index=23001, title='Thrombospondin-2 acts as a critical regulator of cartilage regeneration: A review - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10145989/#:~:text=researchers%20have%20reported%20that%20TSP,2%20may%20be%20a%20potent')</li>
+<li>AnnotationURLCitation(end_index=23526, start_index=23373, title='Thrombospondin-2 acts as a critical regulator of cartilage regeneration: A review - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10145989/#:~:text=researchers%20have%20reported%20that%20TSP,2%20may%20be%20a%20potent')</li>
+<li>AnnotationURLCitation(end_index=23804, start_index=23698, title='Thrombospondin-2 acts as a critical regulator of cartilage regeneration: A review - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10145989/#:~:text=,PMC%20free%20article')</li>
+<li>AnnotationURLCitation(end_index=24161, start_index=24069, title='Long-term gene therapy with thrombospondin 2 inhibits TGF-β activation, inflammation and angiogenesis in chronic allograft nephropathy - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/24376766/#:~:text=Long,2%20null')</li>
+<li>AnnotationURLCitation(end_index=24265, start_index=24162, title='Thrombospondin-2 therapy ameliorates experimental glomerulonephritis via inhibition of cell proliferation, inflammation, and TGF-beta activation - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/19726547/#:~:text=Thrombospondin,deficient')</li>
+<li>AnnotationURLCitation(end_index=24792, start_index=24645, title='Thrombospondin-2 acts as a critical regulator of cartilage regeneration: A review - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10145989/#:~:text=MMP,deficiency%20significantly%20enhanced%20the%20inflammatory')</li>
+<li>AnnotationURLCitation(end_index=24983, start_index=24793, title='Thrombospondin-2 acts as a critical regulator of cartilage regeneration: A review - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10145989/#:~:text=synthesized%20mainly%20in%20connective%20tissues,angiogenesis%2C%20edema%20formation%2C%20and%20increased')</li>
+<li>AnnotationURLCitation(end_index=25255, start_index=25113, title='Thrombospondin-2 acts as a critical regulator of cartilage regeneration: A review - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10145989/#:~:text=Osteoprogenitor%20cells%20%20%7C%20TSP,16%5D%7D%20%282013')</li>
+<li>AnnotationURLCitation(end_index=25714, start_index=25537, title='The mechanobiology of extracellular matrix: a focus on thrombospondins | Cell Communication and Signaling | Full Text', type='url_citation', url='https://biosignaling.biomedcentral.com/articles/10.1186/s12964-025-02365-y#:~:text=Murrell%20MP%2C%20Kyriakides%20TR,2022%3B12%281%29%3A22474')</li>
+<li>AnnotationURLCitation(end_index=26917, start_index=26762, title='Thrombospondin 2 modulates collagen fibrillogenesis and angiogenesis - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/11147677/#:~:text=Thrombospondin%202%20%28TSP2%29,turn%2C%20result%20from%20increased%20matrix')</li>
+<li>AnnotationURLCitation(end_index=27129, start_index=27023, title='Thrombospondin 2 modulates collagen fibrillogenesis and angiogenesis - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/11147677/#:~:text=cell,null%20mice%20can%20be')</li>
+<li>AnnotationURLCitation(end_index=27263, start_index=27130, title='Thrombospondins as matricellular modulators of cell function - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC199563/#:~:text=match%20at%20L153%20environment%20might,Figure%201')</li>
+<li>AnnotationURLCitation(end_index=28024, start_index=27847, title='Thrombospondins as matricellular modulators of cell function - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC199563/#:~:text=to%20contribute%20directly%20to%20the,the%20term%20%E2%80%9Cmatricellular%E2%80%9D%20to%20this')</li>
+<li>AnnotationURLCitation(end_index=28189, start_index=28025, title='Thrombospondins as matricellular modulators of cell function - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC199563/#:~:text=some%20type%20IV%20collagen%20chains,context%20of%20the%20matricellular%20concept')</li>
+<li>AnnotationURLCitation(end_index=28498, start_index=28343, title='Thrombospondin 2 modulates collagen fibrillogenesis and angiogenesis - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/11147677/#:~:text=Thrombospondin%202%20%28TSP2%29,turn%2C%20result%20from%20increased%20matrix')</li>
+<li>AnnotationURLCitation(end_index=28647, start_index=28499, title='Thrombospondins as matricellular modulators of cell function - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC199563/#:~:text=indicated%20that%20TSP1%20and%20TSP2,twice%20as%20high%20in%20the')</li>
+<li>AnnotationURLCitation(end_index=28965, start_index=28800, title='Thrombospondin-2 acts as a critical regulator of cartilage regeneration: A review - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10145989/#:~:text=As%20an%20important%20member%20of,matrix%20metalloproteinases%29%20and%20calcium')</li>
+<li>AnnotationURLCitation(end_index=29076, start_index=28966, title='Thrombospondin-2 acts as a critical regulator of cartilage regeneration: A review - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10145989/#:~:text=TSP,2%20leads%20to%20skin')</li>
+<li>AnnotationURLCitation(end_index=29393, start_index=29278, title='Thrombospondin-2 acts as a critical regulator of cartilage regeneration: A review - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10145989/#:~:text=signaling%20pathways,2%20using')</li>
+<li>AnnotationURLCitation(end_index=29705, start_index=29572, title='Thrombospondins as matricellular modulators of cell function - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC199563/#:~:text=match%20at%20L153%20environment%20might,Figure%201')</li>
+<li>AnnotationURLCitation(end_index=29835, start_index=29706, title='Thrombospondins as matricellular modulators of cell function - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC199563/#:~:text=environment%20might%20be%20impaired,Figure%201')</li>
+<li>AnnotationURLCitation(end_index=30149, start_index=30002, title='Thrombospondin-2 acts as a critical regulator of cartilage regeneration: A review - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10145989/#:~:text=MMP,deficiency%20significantly%20enhanced%20the%20inflammatory')</li>
+<li>AnnotationURLCitation(end_index=30300, start_index=30150, title='Thrombospondin-2 acts as a critical regulator of cartilage regeneration: A review - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10145989/#:~:text=fragility%2C%20tendon%20and%20ligament%20laxity%2C,2%20does%20not')</li>
+<li>AnnotationURLCitation(end_index=30552, start_index=30445, title='Thrombospondin 2 potentiates notch3/jagged1 signaling - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/19147503/#:~:text=injury,ligand%20interactions')</li>
+<li>AnnotationURLCitation(end_index=30915, start_index=30754, title='Thrombospondin 2 Promotes IL-6 Production in Osteoarthritis Synovial Fibroblasts via the PI3K/AKT/NF-κB Pathway - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8600055/#:~:text=match%20at%20L349%20functions%2C%20including,density%20lipoprotein%20receptor')</li>
+<li>AnnotationURLCitation(end_index=31043, start_index=30916, title='Thrombospondin 2 Promotes IL-6 Production in Osteoarthritis Synovial Fibroblasts via the PI3K/AKT/NF-κB Pathway - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8600055/#:~:text=was%20proved%20to%20exert%20its,3%7D%20were')</li>
+<li>AnnotationURLCitation(end_index=31349, start_index=31229, title='Thrombospondin-2 acts as a critical regulator of cartilage regeneration: A review - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10145989/#:~:text=play%20an%20important%20role%20in,2')</li>
+<li>AnnotationURLCitation(end_index=31516, start_index=31350, title='Thrombospondin-2 acts as a critical regulator of cartilage regeneration: A review - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10145989/#:~:text=correlated%20with%20cancer%20cell%20proliferation,In%20addition%2C%20the%20effect')</li>
+<li>AnnotationURLCitation(end_index=31835, start_index=31679, title='Thrombospondins as matricellular modulators of cell function - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC199563/#:~:text=Excisional%20wounds%20in%20TSP2,angiogenesis%20in%20the%20healing%20wound')</li>
+<li>AnnotationURLCitation(end_index=31970, start_index=31836, title='Thrombospondins as matricellular modulators of cell function - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC199563/#:~:text=%2827%20%29,unit%20area%2C%20the%20average%20vessel')</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P35442
+gene_symbol: P35442
+product_type: PROTEIN
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &#39;Thrombospondin-2 (THBS2/TSP2, ~145 kDa per monomer), extracellular matricellular
+  glycoprotein that modulates cell-matrix interactions rather than serving as core
+  structural ECM component. Forms homotrimeric complexes secreted into extracellular
+  matrix. Multi-domain architecture: N-terminal heparin-binding domain, procollagen-like
+  region, three type I thrombospondin repeats (TSRs), three type II EGF-like repeats,
+  seven type III calcium-binding repeats, and C-terminal globular domain containing
+  RGD sequence. Functions as regulator of extracellular matrix organization, angiogenesis,
+  and tissue remodeling. Primary role is modulating matrix structure and turnover
+  - influences collagen fibrillogenesis by binding MMP-2 (matrix metalloproteinase-2)
+  and facilitating its endocytic clearance via LRP1 receptor, preventing excessive
+  collagen degradation. Thbs2-null mice show disorganized collagen fibrils, abnormally
+  high MMP-2 levels, connective tissue defects (skin fragility, lax tendons), and
+  increased tissue vascularization. Potent endogenous angiogenesis inhibitor - type
+  I repeats bind CD36 receptor on endothelial cells triggering apoptosis and capillary
+  regression. TSP2-deficient mice exhibit elevated vascular density and excessive
+  blood vessel networks in healing wounds. Binds integrin αvβ3 via RGD sequence, transmitting
+  signals into cells (activates PI3K/Akt and NF-κB pathways in synovial fibroblasts).
+  Unique among thrombospondins: binds Notch3 receptor and Jagged1 ligand, potentiating
+  Notch3 signal transduction. Dynamically regulated during tissue repair - expression
+  rises in fibroblasts during wound healing, peaks during granulation tissue maturation.
+  Restrains fibrovascular proliferation ensuring proper scar formation. In cartilage,
+  protects from breakdown by suppressing MMP-13 and promoting chondrocyte differentiation.
+  Localizes to interstitial spaces and basement membranes of connective tissues including
+  dermis, cartilage, bone, blood vessel walls. Expression low at baseline but induced
+  during tissue remodeling, injury, inflammation. Implicated in cancer (high TSP2
+  correlates with suppressed tumor vascularization), fibrotic diseases (modulates
+  TGF-β activation), osteoarthritis (upregulated as compensatory response), connective
+  tissue disorders. Serves as extracellular scaffold that orchestrates cell-matrix
+  communication, tissue architecture, and angiogenic balance.&#39;
+existing_annotations:
+- term:
+    id: GO:0031012
+    label: extracellular matrix
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: Extracellular matrix - TSP2 is matricellular ECM protein.
+    action: ACCEPT
+    reason: Core ECM localization.
+- term:
+    id: GO:0016525
+    label: negative regulation of angiogenesis
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: Negative regulation of angiogenesis - potent endogenous angiogenesis
+      inhibitor via CD36-mediated endothelial apoptosis.
+    action: ACCEPT
+    reason: Core anti-angiogenic function.
+- term:
+    id: GO:0005509
+    label: calcium ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: Calcium ion binding - type III calcium-binding repeats in TSP2 structure.
+    action: ACCEPT
+    reason: Structural domain feature.
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: Extracellular region - secreted matricellular protein.
+    action: ACCEPT
+    reason: Core localization.
+- term:
+    id: GO:0007155
+    label: cell adhesion
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: Cell adhesion - matricellular function bridging cells with ECM via integrin
+      binding.
+    action: ACCEPT
+    reason: Cell-matrix interactions.
+- term:
+    id: GO:0008201
+    label: heparin binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: Heparin binding - N-terminal heparin-binding domain binds heparan sulfate
+      proteoglycans.
+    action: ACCEPT
+    reason: Structural domain.
+- term:
+    id: GO:0031091
+    label: platelet alpha granule
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  review:
+    summary: Platelet alpha granule - TSP1 stored in platelets, TSP2 produced by stromal
+      cells but present in ECM.
+    action: ACCEPT
+    reason: Minor localization.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:19818485
+  review:
+    action: ACCEPT
+    summary: Protein binding - binds integrins, CD36, MMPs, Notch3, collagen, proteoglycans.
+    reason: Multiple protein interactions.
+- term:
+    id: GO:0005604
+    label: basement membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  review:
+    action: ACCEPT
+    summary: Basement membrane - localizes to basement membranes of blood vessels
+      and connective tissues.
+    reason: ECM compartment.
+- term:
+    id: GO:0016525
+    label: negative regulation of angiogenesis
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    action: ACCEPT
+    summary: Negative regulation of angiogenesis - potent angiogenesis inhibitor.
+    reason: Core anti-angiogenic role.
+- term:
+    id: GO:0031012
+    label: extracellular matrix
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0051965
+    label: positive regulation of synapse assembly
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  review:
+    action: REMOVE
+    summary: Positive regulation of synapse assembly - no evidence for TSP2 in synapse
+      assembly (TSP1 has this role).
+    reason: Wrong thrombospondin.
+- term:
+    id: GO:0005201
+    label: extracellular matrix structural constituent
+  evidence_type: RCA
+  original_reference_id: PMID:28327460
+  review:
+    summary: Extracellular matrix structural constituent - while not core structural
+      ECM like collagen, TSP2 modulates matrix organization.
+    action: ACCEPT
+    reason: ECM modulator role.
+- term:
+    id: GO:0031012
+    label: extracellular matrix
+  evidence_type: HDA
+  original_reference_id: PMID:28327460
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0005201
+    label: extracellular matrix structural constituent
+  evidence_type: RCA
+  original_reference_id: PMID:28675934
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0031012
+    label: extracellular matrix
+  evidence_type: HDA
+  original_reference_id: PMID:28675934
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: HDA
+  original_reference_id: PMID:27068509
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0031091
+    label: platelet alpha granule
+  evidence_type: IDA
+  original_reference_id: PMID:1737102
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-382054
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0016525
+    label: negative regulation of angiogenesis
+  evidence_type: IDA
+  original_reference_id: PMID:20714802
+  review:
+    action: ACCEPT
+    summary: Negative regulation of angiogenesis - potent angiogenesis inhibitor.
+    reason: Core anti-angiogenic role.
+- term:
+    id: GO:0008201
+    label: heparin binding
+  evidence_type: TAS
+  original_reference_id: PMID:1459996
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms.
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000107
+  title: Automatic transfer of experimentally verified manual GO annotation data to
+    orthologs using Ensembl Compara.
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods.
+  findings: []
+- id: PMID:1459996
+  title: Thrombospondin 1 and thrombospondin 2 are expressed as both homo- and heterotrimers.
+  findings: []
+- id: PMID:1737102
+  title: Localization of platelet osteonectin at the internal face of the alpha-granule
+    membranes in platelets and megakaryocytes.
+  findings: []
+- id: PMID:19818485
+  title: Gabapentin receptor alpha2delta-1 is a neuronal thrombospondin receptor responsible
+    for excitatory CNS synaptogenesis.
+  findings: []
+- id: PMID:20714802
+  title: CD36-mediated activation of endothelial cell apoptosis by an N-terminal recombinant
+    fragment of thrombospondin-2 inhibits breast cancer growth and metastasis in vivo.
+  findings: []
+- id: PMID:27068509
+  title: &#39;Extracellular matrix remodelling in response to venous hypertension: proteomics
+    of human varicose veins.&#39;
+  findings: []
+- id: PMID:28327460
+  title: Comprehensive proteomic characterization of stem cell-derived extracellular
+    matrices.
+  findings: []
+- id: PMID:28675934
+  title: Characterization of the Extracellular Matrix of Normal and Diseased Tissues
+    Using Proteomics.
+  findings: []
+- id: Reactome:R-HSA-382054
+  title: PDGF binds to extracellular matrix proteins
+  findings: []
+core_functions:
+- molecular_function:
+    id: GO:0005201
+    label: extracellular matrix structural constituent
+  description: Matricellular protein that modulates extracellular matrix organization
+    and angiogenesis. Regulates collagen fibrillogenesis by binding MMP-2 and facilitating
+    its LRP1-mediated clearance, preventing excessive matrix degradation. Potent angiogenesis
+    inhibitor via CD36-mediated endothelial apoptosis. Binds integrin αvβ3 and Notch3
+    to influence cell signaling. Essential for proper wound healing and tissue remodeling.
+  locations:
+  - id: GO:0005576
+    label: extracellular region
+  - id: GO:0031012
+    label: extracellular matrix
+  directly_involved_in:
+  - id: GO:0030198
+    label: extracellular matrix organization
+  - id: GO:0016525
+    label: negative regulation of angiogenesis
+  supported_by:
+  - reference_id: UniProt:P35442
+    supporting_text: Matricellular protein that modulates extracellular matrix organization
+      and angiogenesis. Regulates collagen fibrillogenesis by binding MMP-2 and facilitating
+      its LRP1-mediated clearance, preventing ex...
+status: IN_PROGRESS
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

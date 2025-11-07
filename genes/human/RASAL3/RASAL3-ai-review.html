@@ -1,0 +1,2478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RASAL3 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>RASAL3</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q86YV0" target="_blank" class="term-link">
+                        Q86YV0
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Aliases:</span>
+                <div class="aliases">
+                    
+                    <span class="badge">RAS protein activator like 3</span>
+                    
+                    <span class="badge">RasGAP-activating-like protein 3</span>
+                    
+                </div>
+            </div>
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "RASAL3";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q86YV0" data-a="DESCRIPTION: RAS protein activator like 3, GTPase-activating pr..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>RAS protein activator like 3, GTPase-activating protein for RAS family small GTPases. Member of RasGAP family that catalyzes GTP hydrolysis on RAS, converting active RAS-GTP to inactive RAS-GDP, thereby negatively regulating RAS-MAPK signaling pathways. Contains RasGAP catalytic domain. Cytoplasmic and cytoplasmic side of membrane localization. Hematopoietic expression with specific importance in NKT (natural killer T) cell regulation. RASAL3 regulates NKT cell number and function by controlling Ras activity - loss of RASAL3 leads to increased NKT cell proliferation due to elevated Ras signaling. Functions in immune regulation, particularly in innate-like T cell compartments. Negative regulator of Ras-dependent proliferation and activation in immune cells. May also localize to cell cortex for regulation of membrane-proximal Ras signaling.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005096" target="_blank" class="term-link">
+                                    GO:0005096
+                                </a>
+                            </span>
+                            <span class="term-label">GTPase activator activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q86YV0" data-a="GO:0005096" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> GTPase activator activity - RasGAP function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core enzymatic function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1902531" target="_blank" class="term-link">
+                                    GO:1902531
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of intracellular signal transduction</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q86YV0" data-a="GO:1902531" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Regulation of intracellular signal transduction - regulates Ras signaling.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core regulatory role.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005096" target="_blank" class="term-link">
+                                    GO:0005096
+                                </a>
+                            </span>
+                            <span class="term-label">GTPase activator activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q86YV0" data-a="GO:0005096" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> GTPase activator activity - RasGAP function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core enzymatic function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q86YV0" data-a="GO:0005737" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytoplasm - cytoplasmic protein.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core localization.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005938" target="_blank" class="term-link">
+                                    GO:0005938
+                                </a>
+                            </span>
+                            <span class="term-label">cell cortex</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q86YV0" data-a="GO:0005938" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cell cortex - may localize to cortical regions near membrane.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Specific localization for membrane-proximal signaling.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q86YV0" data-a="GO:0005515" data-r="PMID:32296183" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Protein binding - binds RAS and regulatory partners.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core interaction function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042802" target="_blank" class="term-link">
+                                    GO:0042802
+                                </a>
+                            </span>
+                            <span class="term-label">identical protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q86YV0" data-a="GO:0042802" data-r="PMID:32296183" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Identical protein binding - may form dimers or oligomers.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Protein-protein interaction.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000052
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q86YV0" data-a="GO:0005886" data-r="GO_REF:0000052" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Plasma membrane - membrane-associated for RAS access.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core localization for substrate access.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0098562" target="_blank" class="term-link">
+                                    GO:0098562
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasmic side of membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25652366" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25652366
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    RASAL3, a novel hematopoietic RasGAP protein, regulates the ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q86YV0" data-a="GO:0098562" data-r="PMID:25652366" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytoplasmic side of membrane - inner membrane surface localization.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Specific localization for RAS regulation.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25652366" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25652366
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    RASAL3, a novel hematopoietic RasGAP protein, regulates the ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q86YV0" data-a="GO:0005737" data-r="PMID:25652366" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytoplasm - cytoplasmic protein.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core localization.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046580" target="_blank" class="term-link">
+                                    GO:0046580
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of Ras protein signal transduction</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25652366" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25652366
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    RASAL3, a novel hematopoietic RasGAP protein, regulates the ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q86YV0" data-a="GO:0046580" data-r="PMID:25652366" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Negative regulation of Ras protein signal transduction - core function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core regulatory function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051142" target="_blank" class="term-link">
+                                    GO:0051142
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of NK T cell proliferation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25652366" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25652366
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    RASAL3, a novel hematopoietic RasGAP protein, regulates the ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q86YV0" data-a="GO:0051142" data-r="PMID:25652366" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Positive regulation of NK T cell proliferation - loss increases NKT proliferation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Specific immune function (negative regulator, so loss is positive).
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            Reactome:R-HSA-5658231
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q86YV0" data-a="GO:0005829" data-r="Reactome:R-HSA-5658231" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytosol - cytosolic protein.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core localization.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            Reactome:R-HSA-5658435
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q86YV0" data-a="GO:0005829" data-r="Reactome:R-HSA-5658435" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytosol - cytosolic protein.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core localization.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19946888" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19946888
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Defining the membrane proteome of NK cells.
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q86YV0" data-a="GO:0016020" data-r="PMID:19946888" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Membrane - membrane-associated.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> General membrane localization.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070062" target="_blank" class="term-link">
+                                    GO:0070062
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular exosome</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20458337" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20458337
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    MHC class II-associated proteins in B-cell exosomes and pote...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q86YV0" data-a="GO:0070062" data-r="PMID:20458337" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Extracellular exosome - high-throughput data, not core function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Likely contamination or non-specific.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>RasGAP that catalyzes GTP hydrolysis on RAS proteins, converting active RAS-GTP to inactive RAS-GDP. Negatively regulates RAS-MAPK signaling in hematopoietic cells. Critical regulator of NKT cell number and function - restrains Ras-driven proliferation in innate-like T cell compartments.</h3>
+                <span class="vote-buttons" data-g="Q86YV0" data-a="FUNCTION: RasGAP that catalyzes GTP hydrolysis on RAS protei..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005096" target="_blank" class="term-link">
+                            GTPase activator activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046580" target="_blank" class="term-link">
+                                negative regulation of Ras protein signal transduction
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0002376" target="_blank" class="term-link">
+                                immune system process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                plasma membrane
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            UniProt:Q86YV0
+                            
+                        </span>
+                        
+                        <div class="finding-text">RASAL3 is hematopoietic RasGAP that regulates NKT cell number and function by controlling Ras activity.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000052.md" target="_blank" class="term-link">
+                            GO_REF:0000052
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on curation of immunofluorescence data</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19946888" target="_blank" class="term-link">
+                            PMID:19946888
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Defining the membrane proteome of NK cells.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20458337" target="_blank" class="term-link">
+                            PMID:20458337
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">MHC class II-associated proteins in B-cell exosomes and potential functional implications for exosome biogenesis.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25652366" target="_blank" class="term-link">
+                            PMID:25652366
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">RASAL3, a novel hematopoietic RasGAP protein, regulates the number and functions of NKT cells.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                            PMID:32296183
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A reference map of the human binary protein interactome.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        Reactome:R-HSA-5658231
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">RAS GAPs stimulate RAS GTPase activity</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        Reactome:R-HSA-5658435
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">RAS GAPs bind RAS:GTP</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Openai</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(RASAL3-deep-research-openai.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q86YV0" data-a="DOC: Deep Research Openai" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: openai<br />
+model: o3-deep-research-2025-06-26<br />
+cached: true<br />
+start_time: '2025-11-04T00:09:22.262417'<br />
+end_time: '2025-11-04T00:09:22.276819'<br />
+duration_seconds: 0.01<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: human<br />
+  gene_id: Q86YV0<br />
+  gene_symbol: RASAL3<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    temperature: 0.1<br />
+    top_p: 1.0<br />
+citation_count: 110</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<p>Please provide a comprehensive research report on the gene RASAL3 (Q86YV0) in human.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function. </p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<h1 id="rasal3-q86yv0-structure-function-and-biological-role">RASAL3 (Q86YV0) – Structure, Function, and Biological Role</h1>
+<h2 id="overview-and-family-background">Overview and Family Background</h2>
+<p><strong>RASAL3</strong> (Ras protein activator-like 3) is a member of the Ras GTPase-activating protein (RasGAP) family, proteins that function as key negative regulators of Ras signaling (<a href="https://www.ncbi.nlm.nih.gov/gene/64926#:~:text=This%20gene%20belongs%20to%20the,results%20in%20multiple%20transcript%20variants">www.ncbi.nlm.nih.gov</a>). RasGAPs turn off Ras by accelerating the hydrolysis of Ras-bound GTP to GDP, thus terminating Ras signal transduction (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12071082/#:~:text=specific%20cytosolic%20proteins%2C%20leading%20to,their%20importance%20in%20cellular%20homeostasis">pmc.ncbi.nlm.nih.gov</a>). Human RASAL3 was identified in the mid-2010s as a <strong>novel RasGAP</strong> predominantly expressed in hematopoietic (blood/immune) cells (<a href="https://pubmed.ncbi.nlm.nih.gov/25652366/#:~:text=development%20of%20various%20types%20of,GalCer%20in">pubmed.ncbi.nlm.nih.gov</a>). It is one of 14 known RasGAPs, which include RasGAP1 (p120 RasGAP/RASA1), neurofibromin (NF1), and other <em>RASAL</em> and <em>RASA</em> family members (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12071082/#:~:text=Since%20the%20identification%20of%20the,Additional%20domains%20mediate%20protein%E2%80%93protein">pmc.ncbi.nlm.nih.gov</a>). Like other RasGAPs, RASAL3 is thought to act as a tumor suppressor in the Ras pathway by keeping Ras activity in check (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12071082/#:~:text=specific%20cytosolic%20proteins%2C%20leading%20to,their%20importance%20in%20cellular%20homeostasis">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12071082/#:~:text=RASAL3%20%20,and%20glutamine%20secretion">pmc.ncbi.nlm.nih.gov</a>). (The official human RASAL3 gene ID is <strong>64926</strong>, and the UniProt accession is <strong>Q86YV0</strong> (<a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=RASAL3#:~:text=,Prot%3A%20Q86YV0">www.genecards.org</a>).) </p>
+<h2 id="protein-structure-and-localization">Protein Structure and Localization</h2>
+<p>RASAL3 encodes a cytosolic protein of ~748 amino acids that contains several important domains: an N-terminal <strong>pleckstrin homology (PH) domain</strong>, a <strong>C2 domain</strong>, and a C-terminal <strong>RasGAP domain</strong> (<a href="https://www.ncbi.nlm.nih.gov/gene/64926#:~:text=This%20gene%20belongs%20to%20the,results%20in%20multiple%20transcript%20variants">www.ncbi.nlm.nih.gov</a>). This multi-domain architecture is characteristic of the synaptic RasGAP (SynGAP) subfamily to which RASAL3 belongs (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6158391/#:~:text=neurofibromatosis%20type%201%20was%20identified,expressed%20in%20hematopoietic%20cells%2C%20including">pmc.ncbi.nlm.nih.gov</a>). The PH domain typically binds phosphoinositides (lipids like PIP<sub>2</sub>/PIP<sub>3</sub>) in the plasma membrane, and the C2 domain often mediates calcium-dependent membrane association (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4368693/#:~:text=Calcium,not%20observe%20translocation%20of%20Rasal3">pmc.ncbi.nlm.nih.gov</a>). Indeed, sequence analysis suggested RASAL3 might translocate to the plasma membrane upon T-cell receptor (TCR) stimulation as a result of calcium influx and phosphatidylinositol (3,4,5)-trisphosphate generation (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4368693/#:~:text=Calcium,not%20observe%20translocation%20of%20Rasal3">pmc.ncbi.nlm.nih.gov</a>). In practice, RASAL3 has been observed to localize <strong>near or at the inner plasma membrane</strong> when overexpressed in cells (<a href="https://www.ncbi.nlm.nih.gov/gene/64926#:~:text=This%20gene%20belongs%20to%20the,results%20in%20multiple%20transcript%20variants">www.ncbi.nlm.nih.gov</a>). However, one experimental study did <em>not</em> detect a rapid translocation of endogenous RASAL3 from cytosol to membrane after TCR signaling, implying that its membrane recruitment may be constitutive or require specific conditions not captured in that assay (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4368693/#:~:text=Calcium,not%20observe%20translocation%20of%20Rasal3">pmc.ncbi.nlm.nih.gov</a>). Overall, RASAL3 is a <strong>predicted intracellular protein</strong> (no signal peptide or transmembrane regions) and is thought to carry out its function at the cytoplasmic face of the plasma membrane, where it can interact with membrane-bound Ras GTPases (<a href="https://www.ncbi.nlm.nih.gov/gene/64926#:~:text=This%20gene%20belongs%20to%20the,results%20in%20multiple%20transcript%20variants">www.ncbi.nlm.nih.gov</a>). Consistently, reducing RASAL3 levels causes accumulation of Ras in its active (GTP-bound) form, indicating RASAL3 normally functions at the membrane to inactivate Ras (<a href="https://www.ncbi.nlm.nih.gov/gene/64926#:~:text=This%20gene%20belongs%20to%20the,results%20in%20multiple%20transcript%20variants">www.ncbi.nlm.nih.gov</a>). </p>
+<h2 id="rasgap-enzymatic-activity-and-specificity">RasGAP Enzymatic Activity and Specificity</h2>
+<p>The primary biochemical function of RASAL3 is to act as a <strong>Ras GTPase-activating protein</strong>, accelerating the conversion of Ras-GTP to Ras-GDP and thereby turning off Ras signaling (<a href="https://www.ncbi.nlm.nih.gov/gene/64926#:~:text=This%20gene%20belongs%20to%20the,results%20in%20multiple%20transcript%20variants">www.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12071082/#:~:text=specific%20cytosolic%20proteins%2C%20leading%20to,their%20importance%20in%20cellular%20homeostasis">pmc.ncbi.nlm.nih.gov</a>). In vitro enzymatic assays and cell-based studies confirm that RASAL3 possesses GAP activity toward Ras family GTPases (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4368693/#:~:text=physiological%20roles%20of%20Rasal3,dependent%20survival%20of">pmc.ncbi.nlm.nih.gov</a>). For example, a 2015 study demonstrated that RASAL3 overexpression in T cells significantly enhanced the GTPase activity of Ras, leading to reduced phosphorylation of the downstream ERK kinase upon stimulation (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4368693/#:~:text=physiological%20roles%20of%20Rasal3,dependent%20survival%20of">pmc.ncbi.nlm.nih.gov</a>). Notably, RASAL3 showed specificity for Ras and did <strong>not</strong> appreciably act on Rap1, a related small GTPase, indicating that its GAP activity is selective for Ras over certain other GTPases (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4368693/#:~:text=physiological%20roles%20of%20Rasal3,dependent%20survival%20of">pmc.ncbi.nlm.nih.gov</a>). This substrate preference aligns with RASAL3’s role in modulating the Ras-MAPK pathway rather than the Rap1 pathway in T cells (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4368693/#:~:text=physiological%20roles%20of%20Rasal3,dependent%20survival%20of">pmc.ncbi.nlm.nih.gov</a>). </p>
+<p>Interestingly, <strong>emerging evidence suggests RASAL3 may also target Rac2</strong>, a small GTPase of the Rho family predominantly found in hematopoietic cells. In a 2018 biochemical study, Shin <em>et al.</em> found that the isolated GAP domain of RASAL3 could stimulate GTP hydrolysis by Rac2 in vitro, with little effect on Rac1 (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6158391/#:~:text=Although%20RASAL3%20has%20been%20identified,Rac2%20was%20detected">pmc.ncbi.nlm.nih.gov</a>). Rac2 is an important regulator of actin dynamics and reactive oxygen species in immune cells (especially neutrophils), and both Rac2 and RASAL3 are mainly expressed in hematopoietic lineages (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6158391/#:~:text=Members%20of%20the%20Ras%20superfamily,RASAL3%29%20is%20the%20recently">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6158391/#:~:text=identified%20Ras%20GTPase%20activating%20protein,Here%20in%20the%20present%20study">pmc.ncbi.nlm.nih.gov</a>). This finding raises the possibility that RASAL3 might have a dual specificity or a context-dependent GAP activity, functioning as a <strong>Rac2-selective GAP</strong> under certain conditions (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6158391/#:~:text=Although%20RASAL3%20has%20been%20identified,Rac2%20was%20detected">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6158391/#:~:text=demonstrates%20that%20the%20catalytic%20domain,Collectively%2C%20the">pmc.ncbi.nlm.nih.gov</a>). However, Ras remains the principal substrate of RASAL3 in most studied contexts, and further research is needed to clarify how RASAL3’s interaction with Rac2 operates in cells. The prevailing view is that RASAL3 serves as a <strong>negative regulator of Ras</strong> signaling, given that reducing RASAL3 expression leads to elevated Ras-GTP levels and enhanced Ras pathway output (<a href="https://www.ncbi.nlm.nih.gov/gene/64926#:~:text=This%20gene%20belongs%20to%20the,results%20in%20multiple%20transcript%20variants">www.ncbi.nlm.nih.gov</a>). </p>
+<h2 id="role-in-raserk-and-related-signaling-pathways">Role in Ras/ERK and Related Signaling Pathways</h2>
+<p><strong>Ras signaling</strong> is a central pathway controlling cell proliferation, differentiation, and survival. When Ras is GTP-bound (active), it triggers multiple downstream cascades – most notably the RAF–MEK–ERK <strong>MAP kinase pathway</strong> – and can also engage PI3K–AKT and Rho family signaling branches (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8579101/#:~:text=Ras%20signaling%20is%20an%20indispensable,Ras">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8579101/#:~:text=NF,KO%20neutrophils%20%28Figures%C2%A02D%E2%80%93F">pmc.ncbi.nlm.nih.gov</a>). RASAL3, by turning Ras “off,” is a critical modulator of these pathways in cells where it is expressed. For instance, in T lymphocytes, RASAL3 acts to <strong>repress TCR-induced ERK phosphorylation</strong>, thereby fine-tuning the intensity of the MAPK signal following antigen recognition (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4368693/#:~:text=physiological%20roles%20of%20Rasal3,dependent%20survival%20of">pmc.ncbi.nlm.nih.gov</a>). In the absence of RASAL3, TCR stimulation leads to abnormally prolonged or elevated ERK activation (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4368693/#:~:text=physiological%20roles%20of%20Rasal3,dependent%20survival%20of">pmc.ncbi.nlm.nih.gov</a>), underscoring that RASAL3 sets a threshold for Ras-MAPK signaling in T cells. </p>
+<p>Likewise, in innate immune cells such as neutrophils, RASAL3 restrains the Ras pathway to prevent excessive activation of downstream effectors like NF-κB, p38 MAPK, and AKT. A recent (2021) <strong>Frontiers in Immunology</strong> study showed that RASAL3-deficient neutrophils have higher levels of Ras-GTP and consequently <strong>hyper-activate</strong> multiple pathways: NF-κB p65, p38, and AKT were all significantly more upregulated in RASAL3-knockout neutrophils upon stimulation, compared to wild-type cells (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8579101/#:~:text=NF,KO%20neutrophils%20%28Figures%C2%A02D%E2%80%93F">pmc.ncbi.nlm.nih.gov</a>). These signaling changes led to heightened production of pro-inflammatory cytokines and reactive oxygen species when RASAL3 was absent (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8579101/#:~:text=NF,KO%20neutrophils%20%28Figures%C2%A02D%E2%80%93F">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8579101/#:~:text=upregulated%20in%20RASAL3,KO">pmc.ncbi.nlm.nih.gov</a>). Thus, through its GAP activity, RASAL3 enforces negative feedback on Ras-dependent signaling axes (ERK/MAPK, PI3K/AKT, etc.), maintaining cellular responses within a proper range. When RASAL3 is lost, <strong>Ras signaling goes unchecked</strong>, resulting in amplified downstream responses (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8579101/#:~:text=understood,mortality%20were%20recapitulated%20in%20a">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8579101/#:~:text=NF,KO%20neutrophils%20%28Figures%C2%A02D%E2%80%93F">pmc.ncbi.nlm.nih.gov</a>). This broad impact on Ras pathways explains many of the physiological consequences observed in RASAL3 loss-of-function models (from lymphocyte survival defects to inflammatory injury, detailed below). </p>
+<h2 id="expression-profile-and-cellular-localization">Expression Profile and Cellular Localization</h2>
+<p>RASAL3 expression is highly <strong>tissue-specific</strong>, with strongest expression in the immune system. Transcript profiling indicates <strong>enriched expression in lymphoid organs</strong> (e.g. spleen, lymph nodes) and blood cell lineages (<a href="https://www.ncbi.nlm.nih.gov/gene/64926#:~:text=Expression%20Broad%20expression%20in%20lymph,Try%20the%20new%20%2015">www.ncbi.nlm.nih.gov</a>). RASAL3 is predominantly expressed by <strong>hematopoietic cells</strong>, including T cells, natural killer T (NKT) cells, B cells, and neutrophils (<a href="https://pubmed.ncbi.nlm.nih.gov/25652366/#:~:text=development%20of%20various%20types%20of,GalCer%20in">pubmed.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8579101/#:~:text=understood,mortality%20were%20recapitulated%20in%20a">pmc.ncbi.nlm.nih.gov</a>). In fact, among blood cell types, neutrophils appear to express RASAL3 at particularly high levels (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8579101/#:~:text=understood,mortality%20were%20recapitulated%20in%20a">pmc.ncbi.nlm.nih.gov</a>), and T cells (especially naïve T cells) also show high RASAL3 expression (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4368693/#:~:text=remains%20to%20be%20fully%20understood,of%20naive%2C%20but%20not%20effector">pmc.ncbi.nlm.nih.gov</a>). The protein has <strong>multiple isoforms</strong> due to alternative splicing (<a href="https://www.ncbi.nlm.nih.gov/gene/64926#:~:text=membrane%20when%20expressed%20exogenously,results%20in%20multiple%20transcript%20variants">www.ncbi.nlm.nih.gov</a>), but all isoforms share the key functional domains described above. No signal peptide or extracellular domain is present, so RASAL3 resides inside the cell. It is generally classified as an <strong>intracellular, cytosolic protein</strong> that can associate with the inner leaflet of the plasma membrane (via PH/C2 domain interactions) where its substrate Ras is located (<a href="https://www.ncbi.nlm.nih.gov/gene/64926#:~:text=This%20gene%20belongs%20to%20the,results%20in%20multiple%20transcript%20variants">www.ncbi.nlm.nih.gov</a>). Experimental overexpression of RASAL3 leads to a plasma membrane-localized pattern (<a href="https://www.ncbi.nlm.nih.gov/gene/64926#:~:text=This%20gene%20belongs%20to%20the,results%20in%20multiple%20transcript%20variants">www.ncbi.nlm.nih.gov</a>), though endogenous RASAL3 may shuttle or partition between cytosol and membrane depending on cell state. Overall, RASAL3 carries out its function at the <strong>cytoplasmic face of the plasma membrane</strong>, interacting with membrane-anchored Ras GTPases and possibly other signaling proteins in that vicinity. </p>
+<h2 id="biological-functions-in-immune-cells">Biological Functions in Immune Cells</h2>
+<p>RASAL3 plays critical regulatory roles in various immune cell types by modulating Ras signaling thresholds. Research in mouse models has illuminated several key functions:</p>
+<ul>
+<li>
+<p><strong>T Cells (Naïve T Lymphocytes):</strong> RASAL3 is <strong>required for the survival of naïve T cells</strong> in the peripheral immune system. In a 2015 study, Muro <em>et al.</em> generated systemic Rasal3-knockout mice and found that while T cell development in the thymus was essentially normal, the peripheral pool of naïve T cells was markedly diminished (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4368693/#:~:text=phosphorylation%20in%20a%20T%20cell,contributing%20to%20the%20maintenance%20of">pmc.ncbi.nlm.nih.gov</a>). Rasal3-deficient mice showed significantly reduced numbers of CD4⁺ and CD8⁺ naive T cells (with a corresponding <em>increase</em> in apoptosis of these cells), even though their effector/memory T cell counts were unaffected (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4368693/#:~:text=phosphorylation%20in%20a%20T%20cell,contributing%20to%20the%20maintenance%20of">pmc.ncbi.nlm.nih.gov</a>). Adoptive transfer experiments confirmed that <strong>in vivo</strong> survival of Rasal3-deficient naive T cells was impaired, whereas their survival <em>in vitro</em> with IL-7 (a key T-cell survival cytokine) was normal (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4368693/#:~:text=%CE%B2,of%20optimal%20T%20cell%20numbers">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4368693/#:~:text=adoptive%20transfer%20was%20significantly%20impaired%2C,of%20optimal%20T%20cell%20numbers">pmc.ncbi.nlm.nih.gov</a>). These results suggest that RASAL3 helps naive T cells interpret homeostatic signals (likely weak TCR-self peptide interactions or cytokine cues) such that Ras/ERK activation is kept below a pro-apoptotic threshold (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4368693/#:~:text=physiological%20roles%20of%20Rasal3,dependent%20survival%20of">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4368693/#:~:text=phosphorylation%20in%20a%20T%20cell,contributing%20to%20the%20maintenance%20of">pmc.ncbi.nlm.nih.gov</a>). Without RASAL3’s braking effect on Ras, naive T cells may receive <em>too much</em> basal Ras signaling, leading to activation-induced cell death or failure to compete for survival niches (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4368693/#:~:text=phosphorylation%20in%20a%20T%20cell,contributing%20to%20the%20maintenance%20of">pmc.ncbi.nlm.nih.gov</a>). Collectively, RASAL3 ensures optimal T cell numbers in the periphery by preventing unwarranted Ras-driven signals that would otherwise cull the naive T cell population (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4368693/#:~:text=%CE%B2,of%20optimal%20T%20cell%20numbers">pmc.ncbi.nlm.nih.gov</a>).</p>
+</li>
+<li>
+<p><strong>Natural Killer T (NKT) Cells:</strong> NKT cells are innate-like lymphocytes, and RASAL3 has an important role in their homeostasis and function. A 2015 immunology study identified RASAL3 as a <strong>hematopoietic-specific RasGAP</strong> and showed it is highly expressed in NKT cells (<a href="https://pubmed.ncbi.nlm.nih.gov/25652366/#:~:text=development%20of%20various%20types%20of,GalCer%20in">pubmed.ncbi.nlm.nih.gov</a>). Mice lacking RASAL3 had a <strong>severe reduction of NKT cells</strong> in the liver (a key site for NKT cell residence) by 8 weeks of age (<a href="https://pubmed.ncbi.nlm.nih.gov/25652366/#:~:text=cells%20of%20hematopoietic%20lineages%2C%20including,deficient%20mice.%20Taken">pubmed.ncbi.nlm.nih.gov</a>). Moreover, when RASAL3-deficient mice were given <strong>α-Galactosylceramide (α-GalCer)</strong> – a glycolipid that specifically activates NKT cells – they exhibited attenuated liver injury compared to wild-type mice (<a href="https://pubmed.ncbi.nlm.nih.gov/25652366/#:~:text=systemic%20RASAL3,an%20important%20role%20in%20the">pubmed.ncbi.nlm.nih.gov</a>). This reduced tissue damage was linked to the fact that RASAL3-KO mice had far fewer NKT cells and that those NKT cells produced significantly lower levels of cytokines like IL-4 and IFN-γ upon activation (<a href="https://pubmed.ncbi.nlm.nih.gov/25652366/#:~:text=systemic%20RASAL3,an%20important%20role%20in%20the">pubmed.ncbi.nlm.nih.gov</a>). Mechanistically, NKT cells <strong>without RASAL3 showed hyper-activated ERK phosphorylation</strong> when stimulated (<a href="https://pubmed.ncbi.nlm.nih.gov/25652366/#:~:text=with%20%CE%B1,associated">pubmed.ncbi.nlm.nih.gov</a>), consistent with loss of a Ras pathway “off-switch.” The overall conclusion was that RASAL3 promotes the proper <em>expansion</em> and effector functions of NKT cells by <strong>negatively regulating Ras/ERK signaling</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/25652366/#:~:text=vitro%20presented%20augmented%20Erk%20phosphorylation%2C,associated%20diseases">pubmed.ncbi.nlm.nih.gov</a>). In other words, NKT cells require RASAL3-mediated Ras restraint to expand to normal numbers; excessive Ras activity (in the KO) seemingly impaired their proliferation or survival, leading to fewer NKT cells and dampened responses (<a href="https://pubmed.ncbi.nlm.nih.gov/25652366/#:~:text=vitro%20presented%20augmented%20Erk%20phosphorylation%2C,associated%20diseases">pubmed.ncbi.nlm.nih.gov</a>). This finding positions RASAL3 as a potential immune regulatory target, since modulating its activity could influence NKT cell–mediated immunity (for example, in NKT-driven diseases) (<a href="https://pubmed.ncbi.nlm.nih.gov/25652366/#:~:text=vitro%20presented%20augmented%20Erk%20phosphorylation%2C,associated%20diseases">pubmed.ncbi.nlm.nih.gov</a>).</p>
+</li>
+<li>
+<p><strong>B Cells:</strong> RASAL3 is expressed in B lymphocytes as well (<a href="https://pubmed.ncbi.nlm.nih.gov/25652366/#:~:text=development%20of%20various%20types%20of,GalCer%20in">pubmed.ncbi.nlm.nih.gov</a>), although detailed functional studies in B cells are not as well documented as for T and NKT cells. Given that Ras signaling also plays a role in B cell activation and development, it is likely that RASAL3 contributes to setting thresholds for B-cell receptor (BCR) signaling, perhaps analogous to its role in T cells. High RASAL3 expression in spleen and lymph nodes (which are rich in B cells) supports a role in the B lineage (<a href="https://www.ncbi.nlm.nih.gov/gene/64926#:~:text=Expression%20Broad%20expression%20in%20lymph,Try%20the%20new%20%2015">www.ncbi.nlm.nih.gov</a>). Some RasGAP family members (e.g. RASA1/p120 RasGAP) are known to regulate B cell development, but specific effects of RASAL3 in B cells remain to be fully elucidated. No major B-cell developmental defect was noted in the Rasal3 knockout mice reported by Muro <em>et al.</em>, but further research is needed to clarify RASAL3’s influence on antibody-producing cells.</p>
+</li>
+<li>
+<p><strong>Neutrophils and Inflammatory Response:</strong> Recent work has highlighted a crucial role for RASAL3 in <strong>neutrophils</strong>, the frontline innate immune cells. Saito <em>et al.</em> (2021) showed that RASAL3 is one of the most highly expressed Ras regulators in neutrophils and acts as an essential brake on neutrophil activation (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8579101/#:~:text=understood,mortality%20were%20recapitulated%20in%20a">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8579101/#:~:text=Here%2C%20we%20show%20that%20RASAL3%2C,functions%20as%20a%20RasGAP%20that">pmc.ncbi.nlm.nih.gov</a>). They observed that <strong>inflammatory stimuli</strong> (e.g. bacterial lipopolysaccharide, LPS) further <em>upregulate</em> RASAL3 expression in neutrophils, suggesting RASAL3 is induced as part of a feedback mechanism to prevent over-activation (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8579101/#:~:text=understood,mortality%20were%20recapitulated%20in%20a">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8579101/#:~:text=RASAL3%20is%20dominantly%20expressed%20in,expression%20level%20of%20RASAL3%20mRNA">pmc.ncbi.nlm.nih.gov</a>). In RASAL3 knockout mice, neutrophils responded to inflammatory triggers with <strong>exaggerated activation</strong> – producing more inflammatory cytokines (such as TNF-α) and more reactive oxygen species than normal (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8579101/#:~:text=NF,KO%20neutrophils%20%28Figures%C2%A02D%E2%80%93F">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8579101/#:~:text=upregulated%20in%20RASAL3,KO">pmc.ncbi.nlm.nih.gov</a>). This hyper-responsiveness had severe consequences: RASAL3-deficient mice succumbed to endotoxic <em>septic shock</em> much faster and at higher rates than wild-type mice (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8579101/#:~:text=Here%2C%20we%20show%20that%20RASAL3%2C,functions%20as%20a%20RasGAP%20that">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8579101/#:~:text=were%20followed%20for%2072%20h%2C,RASAL3%20is%20associated%20with%20unregulated">pmc.ncbi.nlm.nih.gov</a>). In an LPS-induced sepsis model, <strong>100% of Rasal3–KO mice died within 48 hours</strong>, whereas ~40% of wild-type mice were still alive at that time point (and ~20% of WT survived the full 72-hour observation period) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8579101/#:~:text=were%20followed%20for%2072%20h%2C,RASAL3%20is%20associated%20with%20unregulated">pmc.ncbi.nlm.nih.gov</a>). The RASAL3-KO animals showed signs of uncontrolled “cytokine storm” and tissue damage in organs, consistent with neutrophil-driven hyperinflammation (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8579101/#:~:text=Here%2C%20we%20show%20that%20RASAL3%2C,functions%20as%20a%20RasGAP%20that">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8579101/#:~:text=%28RASAL3,to%20have%20low%20neutrophil%20RASAL3">pmc.ncbi.nlm.nih.gov</a>). Notably, a similar exacerbation of inflammation was seen in a sickle cell disease model, where neutrophils with low RASAL3 expression caused heightened inflammatory damage (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8579101/#:~:text=deficiency%20triggers%20augmented%20neutrophil%20responses,RASAL3%20could%20serve%20as%20a">pmc.ncbi.nlm.nih.gov</a>). These results demonstrate that <strong>RASAL3 functions as a critical modulator of neutrophil activation</strong>, preventing excessive Ras-driven signaling that would otherwise lead to collateral tissue injury in inflammatory conditions (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8579101/#:~:text=Here%2C%20we%20show%20that%20RASAL3%2C,functions%20as%20a%20RasGAP%20that">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8579101/#:~:text=%28RASAL3,and%20many%20inflammatory%20disease%20states">pmc.ncbi.nlm.nih.gov</a>). From a mechanistic perspective, Ras hyperactivity in RASAL3-null neutrophils led to stronger activation of downstream pathways (ERK, NF-κB, p38, Akt), fueling the overproduction of inflammatory mediators (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8579101/#:~:text=NF,KO%20neutrophils%20%28Figures%C2%A02D%E2%80%93F">pmc.ncbi.nlm.nih.gov</a>). Thus, RASAL3 helps maintain immune homeostasis: it allows neutrophils to respond to infections effectively while curbing the potential for destructive inflammation. </p>
+</li>
+</ul>
+<p>In summary, across multiple immune cell types, RASAL3 acts as a <strong>checkpoint that restrains Ras-dependent signaling</strong>. This moderation is essential for normal immune cell development (ensuring cells like NKT and naïve T cells are neither over-stimulated nor eliminated) and for preventing immunopathology (avoiding excessive neutrophil activation and tissue damage). Its roles in T, NKT, and neutrophils highlight RASAL3’s broader function in fine-tuning immune responses via the Ras/MAPK pathway.</p>
+<h2 id="pathways-and-interactions">Pathways and Interactions</h2>
+<p>Beyond the Ras/ERK cascade, RASAL3’s activity can influence other signaling branches that intersect with Ras. For example, Ras activation can lead to <strong>PI3K–Akt</strong> signaling, and indeed in RASAL3-deficient neutrophils Akt phosphorylation was found to be elevated alongside ERK (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8579101/#:~:text=NF,KO%20neutrophils%20%28Figures%C2%A02D%E2%80%93F">pmc.ncbi.nlm.nih.gov</a>). There is also crosstalk between Ras and Rho family GTPases in cytoskeletal dynamics; by potentially targeting Rac2 in hematopoietic cells, RASAL3 might link Ras and Rac pathways in certain contexts (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6158391/#:~:text=Although%20RASAL3%20has%20been%20identified,Rac2%20was%20detected">pmc.ncbi.nlm.nih.gov</a>). Moreover, RASAL3 might participate in multi-protein signaling complexes. A recent proteomics study in multiple myeloma cells discovered that <strong>RASAL3 physically interacts with the cell-surface receptor CD229</strong> (Ly9, a SLAM family receptor) (<a href="https://www.aging-us.com/article/204405/text#:~:text=CD229%20interacts%20with%20RASAL3%20protein,the%20RAS%2FERK%20pathway%20in%20MM">www.aging-us.com</a>) (<a href="https://www.aging-us.com/article/204405/text#:~:text=match%20at%20L245%20cells%20confirmed,the%20RAS%2FERK%20signaling%20pathway%20by">www.aging-us.com</a>). Intriguingly, CD229 binding to RASAL3 was associated with <em>enhanced</em> Ras/ERK activation and increased myeloma cell proliferation (<a href="https://www.aging-us.com/article/204405/text#:~:text=signaling%20pathway%20via%20interacting%20with,therapeutic%20target%20for%20MM%20treatment">www.aging-us.com</a>) (<a href="https://www.aging-us.com/article/204405/text#:~:text=match%20at%20L360%20between%20CD229,currently%20a%20clinical%20agent%20for">www.aging-us.com</a>). One interpretation is that upon CD229 activation (via its ITSM motifs being phosphorylated), the receptor sequesters or inactivates RASAL3, thereby <strong>relieving Ras from negative regulation and boosting ERK signaling</strong> (<a href="https://www.aging-us.com/article/204405/text#:~:text=match%20at%20L360%20between%20CD229,currently%20a%20clinical%20agent%20for">www.aging-us.com</a>) (<a href="https://www.aging-us.com/article/204405/text#:~:text=between%20CD229%20and%20RASAL3,currently%20a%20clinical%20agent%20for">www.aging-us.com</a>). This example illustrates how RASAL3 might be integrated into signaling networks: it can be a node where extracellular receptor signals modulate the Ras pathway by regulating GAP activity. While the CD229–RASAL3 interaction requires further mechanistic study, it underscores that RASAL3’s role is not isolated – it can be influenced by and contribute to larger signaling modules (in this case, influencing oncogenic signaling in a B-cell malignancy). </p>
+<h2 id="clinical-and-therapeutic-relevance">Clinical and Therapeutic Relevance</h2>
+<p>Given its role as a Ras pathway suppressor in immune cells and other contexts, RASAL3 has attracted interest for its potential involvement in diseases: </p>
+<ul>
+<li>
+<p><strong>Autoimmunity and Inflammation:</strong> By dampening neutrophil activation, RASAL3 could be a protective factor against hyperinflammatory conditions such as sepsis. The 2021 study suggested that boosting RASAL3 function might be a strategy to mitigate septic shock or severe inflammatory responses (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8579101/#:~:text=%28RASAL3,and%20many%20inflammatory%20disease%20states">pmc.ncbi.nlm.nih.gov</a>). Conversely, individuals with low RASAL3 activity might be prone to exaggerated inflammation. While there are no known human mutations in <em>RASAL3</em> linked to immunological disorders yet, its role in animal models positions RASAL3 as a possible <strong>therapeutic target for inflammatory diseases</strong> – for example, drugs that enhance RASAL3 activity in neutrophils could help turn down excessive inflammation (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8579101/#:~:text=%28RASAL3,and%20many%20inflammatory%20disease%20states">pmc.ncbi.nlm.nih.gov</a>). </p>
+</li>
+<li>
+<p><strong>Cancer:</strong> Dysregulation of RASAL3 can influence cancer-related processes, especially in contexts where the tumor microenvironment or immune cells are involved. RASAL3 itself is not a commonly mutated gene in cancers, but its expression can be altered epigenetically. A notable example comes from <strong>prostate cancer stroma</strong>: In aggressive prostate tumors, carcinoma-associated fibroblasts (CAFs) were found to epigenetically silence the <em>RASAL3</em> gene as an adaptive response to therapy. This loss of RASAL3 in the stroma leads to hyperactive Ras signaling in CAFs, which in turn drives <strong>macropinocytosis and glutamine synthesis</strong> to feed the tumor cells (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12071082/#:~:text=cell%20cycle%20arrest%20through%20the,ADT%20further">pmc.ncbi.nlm.nih.gov</a>). In a 2018 study (J. Clin. Invest.), Mishra <em>et al.</em> showed that androgen-deprivation therapy (ADT) in prostate cancer can trigger EZH2-mediated epigenetic silencing of RASAL3 in stromal fibroblasts (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12071082/#:~:text=match%20at%20L289%20induces%20epigenetic,56">pmc.ncbi.nlm.nih.gov</a>). The reduced RASAL3 levels allow sustained Ras activity in those fibroblasts, thereby increasing the secretion of glutamine and other nutrients that help prostate cancer cells survive and develop therapy resistance (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12071082/#:~:text=cell%20cycle%20arrest%20through%20the,ADT%20further">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12071082/#:~:text=induces%20epigenetic%20silencing%20of%20RASAL3%2C,56">pmc.ncbi.nlm.nih.gov</a>). In other words, <strong>loss of RASAL3 in the tumor microenvironment “fuels” cancer growth</strong> under treatment stress. This finding identifies RASAL3 as a stromal tumor suppressor: keeping RASAL3 active in CAFs constrains tumor-supportive metabolic reprogramming, whereas losing it promotes tumor progression (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12071082/#:~:text=RASAL3%20%20,and%20glutamine%20secretion">pmc.ncbi.nlm.nih.gov</a>). There are even suggestions of targeting this mechanism – e.g. using <strong>EZH2 inhibitors to prevent RASAL3 silencing</strong> – as a therapeutic angle to counteract resistance in prostate cancer (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12071082/#:~:text=match%20at%20L747%20tumor%20heterogeneity,using%20EZH2%20inhibitors%20to%20reactivate">pmc.ncbi.nlm.nih.gov</a>). </p>
+</li>
+<li>
+<p><strong>Hematological malignancies:</strong> As mentioned, RASAL3 might have a role in diseases like multiple myeloma, where it interacts with signaling receptors (CD229) on malignant plasma cells (<a href="https://www.aging-us.com/article/204405/text#:~:text=CD229%20interacts%20with%20RASAL3%20protein,the%20RAS%2FERK%20pathway%20in%20MM">www.aging-us.com</a>) (<a href="https://www.aging-us.com/article/204405/text#:~:text=match%20at%20L360%20between%20CD229,currently%20a%20clinical%20agent%20for">www.aging-us.com</a>). The exact outcome of RASAL3’s function in that context appears to paradoxically assist Ras/ERK activation (potentially by a sequestration mechanism), thus contributing to myeloma cell proliferation (<a href="https://www.aging-us.com/article/204405/text#:~:text=match%20at%20L350%20activates%20RAS%2FERK,pathway%20by%20interacting%20with%20RASAL3">www.aging-us.com</a>). It points to a complex role where cancer cells might hijack a RasGAP to fine-tune signaling to their advantage. Further research is needed, but RASAL3 or its interactors could become targets in certain leukemias or lymphomas, especially if those cancers rely on Ras signaling moderated by immune cell interactions.</p>
+</li>
+</ul>
+<p>Overall, RASAL3’s significance is twofold: <strong>biologically</strong>, it is a crucial negative regulator of Ras signals in immune cells, ensuring balanced cell survival and activation; <strong>clinically</strong>, its dysregulation can contribute to pathological states (ranging from uncontrolled inflammation to tumor progression), making it a potential biomarker or target. Experts in immunology and oncology view RASAL3 as part of the wider network of Ras regulators that maintain cellular homeostasis (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12071082/#:~:text=Furthermore%2C%20research%20has%20also%20revealed,independent%20pathways%20%5B7">pmc.ncbi.nlm.nih.gov</a>). Its discovery as “the most recently identified RasGAP” (<a href="https://www.aging-us.com/article/204405/text#:~:text=regulatory%20role%20in%20cellular%20proliferation,GDP%2C%20thereby%20functioning%20as">www.aging-us.com</a>) has filled a gap in our understanding of how immune cells keep Ras in check. In the words of one review, RasGAPs like RASAL3 act as <strong>“off switches”</strong> for Ras, and losing these switches leads to aberrant Ras activity driving disease (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12071082/#:~:text=The%20RAS%20signaling%20pathway%2C%20a,overactive%2C%20fueling%20cancer%20growth%20and">pmc.ncbi.nlm.nih.gov</a>). With continued research, there is optimism that manipulating RASAL3 or its pathway could provide new strategies to modulate immune responses or combat Ras-driven aspects of diseases. </p>
+<p><strong>References:</strong> RASAL3 functional insights have been drawn from curated database annotations (<a href="https://www.ncbi.nlm.nih.gov/gene/64926#:~:text=This%20gene%20belongs%20to%20the,results%20in%20multiple%20transcript%20variants">www.ncbi.nlm.nih.gov</a>) and <em>in vitro</em> as well as <em>in vivo</em> studies. Key experimental evidence includes Muro <em>et al.</em> 2015 (PLOS ONE) for T cell function (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4368693/#:~:text=physiological%20roles%20of%20Rasal3,dependent%20survival%20of">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4368693/#:~:text=phosphorylation%20in%20a%20T%20cell,contributing%20to%20the%20maintenance%20of">pmc.ncbi.nlm.nih.gov</a>), Sakamoto <em>et al.</em> 2015 (Eur. J. Immunol.) for NKT cells (<a href="https://pubmed.ncbi.nlm.nih.gov/25652366/#:~:text=with%20%CE%B1,associated">pubmed.ncbi.nlm.nih.gov</a>) (<a href="https://pubmed.ncbi.nlm.nih.gov/25652366/#:~:text=vitro%20presented%20augmented%20Erk%20phosphorylation%2C,associated%20diseases">pubmed.ncbi.nlm.nih.gov</a>), Shin <em>et al.</em> 2018 (Biomed. Reports) for Rac2 GAP activity (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6158391/#:~:text=Although%20RASAL3%20has%20been%20identified,Rac2%20was%20detected">pmc.ncbi.nlm.nih.gov</a>), and Saito <em>et al.</em> 2021 (Front. Immunol.) for neutrophil inflammation and sepsis models (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8579101/#:~:text=Here%2C%20we%20show%20that%20RASAL3%2C,functions%20as%20a%20RasGAP%20that">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8579101/#:~:text=were%20followed%20for%2072%20h%2C,RASAL3%20is%20associated%20with%20unregulated">pmc.ncbi.nlm.nih.gov</a>). Additionally, the role of RASAL3 in prostate cancer stroma was described by Mishra <em>et al.</em> 2018 (JCI) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12071082/#:~:text=cell%20cycle%20arrest%20through%20the,ADT%20further">pmc.ncbi.nlm.nih.gov</a>), and the CD229-RASAL3 interaction in myeloma by Lin <em>et al.</em> 2022 (Aging) (<a href="https://www.aging-us.com/article/204405/text#:~:text=CD229%20interacts%20with%20RASAL3%20protein,the%20RAS%2FERK%20pathway%20in%20MM">www.aging-us.com</a>) (<a href="https://www.aging-us.com/article/204405/text#:~:text=match%20at%20L360%20between%20CD229,currently%20a%20clinical%20agent%20for">www.aging-us.com</a>). These studies collectively establish our current understanding of RASAL3’s function, localization, and importance in cellular signaling. Each new finding underscores the theme that <strong>RASAL3 serves as a critical attenuator of Ras signaling</strong>, with diverse consequences for cell physiology and disease when that attenuation is lost. </p>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>AnnotationURLCitation(end_index=427, start_index=273, title='RASAL3 RAS protein activator like 3 [Homo sapiens (human)] - Gene - NCBI', type='url_citation', url='https://www.ncbi.nlm.nih.gov/gene/64926#:~:text=This%20gene%20belongs%20to%20the,results%20in%20multiple%20transcript%20variants')</li>
+<li>AnnotationURLCitation(end_index=730, start_index=547, title='A Systematic Analysis of Expression and Function of RAS GTPase-Activating Proteins (RASGAPs) in Urological Cancers: A Mini-Review - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC12071082/#:~:text=specific%20cytosolic%20proteins%2C%20leading%20to,their%20importance%20in%20cellular%20homeostasis')</li>
+<li>AnnotationURLCitation(end_index=991, start_index=861, title='RASAL3, a novel hematopoietic RasGAP protein, regulates the number and functions of NKT cells - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/25652366/#:~:text=development%20of%20various%20types%20of,GalCer%20in')</li>
+<li>AnnotationURLCitation(end_index=1313, start_index=1132, title='A Systematic Analysis of Expression and Function of RAS GTPase-Activating Proteins (RASGAPs) in Urological Cancers: A Mini-Review - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC12071082/#:~:text=Since%20the%20identification%20of%20the,Additional%20domains%20mediate%20protein%E2%80%93protein')</li>
+<li>AnnotationURLCitation(end_index=1617, start_index=1434, title='A Systematic Analysis of Expression and Function of RAS GTPase-Activating Proteins (RASGAPs) in Urological Cancers: A Mini-Review - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC12071082/#:~:text=specific%20cytosolic%20proteins%2C%20leading%20to,their%20importance%20in%20cellular%20homeostasis')</li>
+<li>AnnotationURLCitation(end_index=1743, start_index=1618, title='A Systematic Analysis of Expression and Function of RAS GTPase-Activating Proteins (RASGAPs) in Urological Cancers: A Mini-Review - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC12071082/#:~:text=RASAL3%20%20,and%20glutamine%20secretion')</li>
+<li>AnnotationURLCitation(end_index=1940, start_index=1834, title='RASAL3 Gene - GeneCards | RASL3 Protein | RASL3 Antibody', type='url_citation', url='https://www.genecards.org/cgi-bin/carddisp.pl?gene=RASAL3#:~:text=,Prot%3A%20Q86YV0')</li>
+<li>AnnotationURLCitation(end_index=2338, start_index=2184, title='RASAL3 RAS protein activator like 3 [Homo sapiens (human)] - Gene - NCBI', type='url_citation', url='https://www.ncbi.nlm.nih.gov/gene/64926#:~:text=This%20gene%20belongs%20to%20the,results%20in%20multiple%20transcript%20variants')</li>
+<li>AnnotationURLCitation(end_index=2640, start_index=2455, title='RASAL3 preferentially stimulates GTP hydrolysis of the Rho family small GTPase Rac2 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC6158391/#:~:text=neurofibromatosis%20type%201%20was%20identified,expressed%20in%20hematopoietic%20cells%2C%20including')</li>
+<li>AnnotationURLCitation(end_index=2967, start_index=2832, title='The Ras GTPase-Activating Protein Rasal3 Supports Survival of Naive T Cells - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4368693/#:~:text=Calcium,not%20observe%20translocation%20of%20Rasal3')</li>
+<li>AnnotationURLCitation(end_index=3315, start_index=3180, title='The Ras GTPase-Activating Protein Rasal3 Supports Survival of Naive T Cells - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4368693/#:~:text=Calcium,not%20observe%20translocation%20of%20Rasal3')</li>
+<li>AnnotationURLCitation(end_index=3590, start_index=3436, title='RASAL3 RAS protein activator like 3 [Homo sapiens (human)] - Gene - NCBI', type='url_citation', url='https://www.ncbi.nlm.nih.gov/gene/64926#:~:text=This%20gene%20belongs%20to%20the,results%20in%20multiple%20transcript%20variants')</li>
+<li>AnnotationURLCitation(end_index=3982, start_index=3847, title='The Ras GTPase-Activating Protein Rasal3 Supports Survival of Naive T Cells - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4368693/#:~:text=Calcium,not%20observe%20translocation%20of%20Rasal3')</li>
+<li>AnnotationURLCitation(end_index=4383, start_index=4229, title='RASAL3 RAS protein activator like 3 [Homo sapiens (human)] - Gene - NCBI', type='url_citation', url='https://www.ncbi.nlm.nih.gov/gene/64926#:~:text=This%20gene%20belongs%20to%20the,results%20in%20multiple%20transcript%20variants')</li>
+<li>AnnotationURLCitation(end_index=4706, start_index=4552, title='RASAL3 RAS protein activator like 3 [Homo sapiens (human)] - Gene - NCBI', type='url_citation', url='https://www.ncbi.nlm.nih.gov/gene/64926#:~:text=This%20gene%20belongs%20to%20the,results%20in%20multiple%20transcript%20variants')</li>
+<li>AnnotationURLCitation(end_index=5092, start_index=4938, title='RASAL3 RAS protein activator like 3 [Homo sapiens (human)] - Gene - NCBI', type='url_citation', url='https://www.ncbi.nlm.nih.gov/gene/64926#:~:text=This%20gene%20belongs%20to%20the,results%20in%20multiple%20transcript%20variants')</li>
+<li>AnnotationURLCitation(end_index=5276, start_index=5093, title='A Systematic Analysis of Expression and Function of RAS GTPase-Activating Proteins (RASGAPs) in Urological Cancers: A Mini-Review - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC12071082/#:~:text=specific%20cytosolic%20proteins%2C%20leading%20to,their%20importance%20in%20cellular%20homeostasis')</li>
+<li>AnnotationURLCitation(end_index=5541, start_index=5396, title='The Ras GTPase-Activating Protein Rasal3 Supports Survival of Naive T Cells - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4368693/#:~:text=physiological%20roles%20of%20Rasal3,dependent%20survival%20of')</li>
+<li>AnnotationURLCitation(end_index=5897, start_index=5752, title='The Ras GTPase-Activating Protein Rasal3 Supports Survival of Naive T Cells - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4368693/#:~:text=physiological%20roles%20of%20Rasal3,dependent%20survival%20of')</li>
+<li>AnnotationURLCitation(end_index=6233, start_index=6088, title='The Ras GTPase-Activating Protein Rasal3 Supports Survival of Naive T Cells - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4368693/#:~:text=physiological%20roles%20of%20Rasal3,dependent%20survival%20of')</li>
+<li>AnnotationURLCitation(end_index=6507, start_index=6362, title='The Ras GTPase-Activating Protein Rasal3 Supports Survival of Naive T Cells - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4368693/#:~:text=physiological%20roles%20of%20Rasal3,dependent%20survival%20of')</li>
+<li>AnnotationURLCitation(end_index=6976, start_index=6827, title='RASAL3 preferentially stimulates GTP hydrolysis of the Rho family small GTPase Rac2 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC6158391/#:~:text=Although%20RASAL3%20has%20been%20identified,Rac2%20was%20detected')</li>
+<li>AnnotationURLCitation(end_index=7323, start_index=7169, title='RASAL3 preferentially stimulates GTP hydrolysis of the Rho family small GTPase Rac2 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC6158391/#:~:text=Members%20of%20the%20Ras%20superfamily,RASAL3%29%20is%20the%20recently')</li>
+<li>AnnotationURLCitation(end_index=7490, start_index=7324, title='RASAL3 preferentially stimulates GTP hydrolysis of the Rho family small GTPase Rac2 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC6158391/#:~:text=identified%20Ras%20GTPase%20activating%20protein,Here%20in%20the%20present%20study')</li>
+<li>AnnotationURLCitation(end_index=7821, start_index=7672, title='RASAL3 preferentially stimulates GTP hydrolysis of the Rho family small GTPase Rac2 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC6158391/#:~:text=Although%20RASAL3%20has%20been%20identified,Rac2%20was%20detected')</li>
+<li>AnnotationURLCitation(end_index=7974, start_index=7822, title='RASAL3 preferentially stimulates GTP hydrolysis of the Rho family small GTPase Rac2 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC6158391/#:~:text=demonstrates%20that%20the%20catalytic%20domain,Collectively%2C%20the')</li>
+<li>AnnotationURLCitation(end_index=8498, start_index=8344, title='RASAL3 RAS protein activator like 3 [Homo sapiens (human)] - Gene - NCBI', type='url_citation', url='https://www.ncbi.nlm.nih.gov/gene/64926#:~:text=This%20gene%20belongs%20to%20the,results%20in%20multiple%20transcript%20variants')</li>
+<li>AnnotationURLCitation(end_index=8977, start_index=8848, title='RASAL3 Is a Putative RasGAP Modulating Inflammatory Response by Neutrophils - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8579101/#:~:text=Ras%20signaling%20is%20an%20indispensable,Ras')</li>
+<li>AnnotationURLCitation(end_index=9112, start_index=8978, title='RASAL3 Is a Putative RasGAP Modulating Inflammatory Response by Neutrophils - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8579101/#:~:text=NF,KO%20neutrophils%20%28Figures%C2%A02D%E2%80%93F')</li>
+<li>AnnotationURLCitation(end_index=9538, start_index=9393, title='The Ras GTPase-Activating Protein Rasal3 Supports Survival of Naive T Cells - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4368693/#:~:text=physiological%20roles%20of%20Rasal3,dependent%20survival%20of')</li>
+<li>AnnotationURLCitation(end_index=9784, start_index=9639, title='The Ras GTPase-Activating Protein Rasal3 Supports Survival of Naive T Cells - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4368693/#:~:text=physiological%20roles%20of%20Rasal3,dependent%20survival%20of')</li>
+<li>AnnotationURLCitation(end_index=10490, start_index=10356, title='RASAL3 Is a Putative RasGAP Modulating Inflammatory Response by Neutrophils - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8579101/#:~:text=NF,KO%20neutrophils%20%28Figures%C2%A02D%E2%80%93F')</li>
+<li>AnnotationURLCitation(end_index=10760, start_index=10626, title='RASAL3 Is a Putative RasGAP Modulating Inflammatory Response by Neutrophils - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8579101/#:~:text=NF,KO%20neutrophils%20%28Figures%C2%A02D%E2%80%93F')</li>
+<li>AnnotationURLCitation(end_index=10873, start_index=10761, title='RASAL3 Is a Putative RasGAP Modulating Inflammatory Response by Neutrophils - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8579101/#:~:text=upregulated%20in%20RASAL3,KO')</li>
+<li>AnnotationURLCitation(end_index=11290, start_index=11154, title='RASAL3 Is a Putative RasGAP Modulating Inflammatory Response by Neutrophils - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8579101/#:~:text=understood,mortality%20were%20recapitulated%20in%20a')</li>
+<li>AnnotationURLCitation(end_index=11425, start_index=11291, title='RASAL3 Is a Putative RasGAP Modulating Inflammatory Response by Neutrophils - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8579101/#:~:text=NF,KO%20neutrophils%20%28Figures%C2%A02D%E2%80%93F')</li>
+<li>AnnotationURLCitation(end_index=12043, start_index=11901, title='RASAL3 RAS protein activator like 3 [Homo sapiens (human)] - Gene - NCBI', type='url_citation', url='https://www.ncbi.nlm.nih.gov/gene/64926#:~:text=Expression%20Broad%20expression%20in%20lymph,Try%20the%20new%20%2015')</li>
+<li>AnnotationURLCitation(end_index=12311, start_index=12181, title='RASAL3, a novel hematopoietic RasGAP protein, regulates the number and functions of NKT cells - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/25652366/#:~:text=development%20of%20various%20types%20of,GalCer%20in')</li>
+<li>AnnotationURLCitation(end_index=12448, start_index=12312, title='RASAL3 Is a Putative RasGAP Modulating Inflammatory Response by Neutrophils - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8579101/#:~:text=understood,mortality%20were%20recapitulated%20in%20a')</li>
+<li>AnnotationURLCitation(end_index=12684, start_index=12548, title='RASAL3 Is a Putative RasGAP Modulating Inflammatory Response by Neutrophils - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8579101/#:~:text=understood,mortality%20were%20recapitulated%20in%20a')</li>
+<li>AnnotationURLCitation(end_index=12917, start_index=12758, title='The Ras GTPase-Activating Protein Rasal3 Supports Survival of Naive T Cells - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4368693/#:~:text=remains%20to%20be%20fully%20understood,of%20naive%2C%20but%20not%20effector')</li>
+<li>AnnotationURLCitation(end_index=13148, start_index=12985, title='RASAL3 RAS protein activator like 3 [Homo sapiens (human)] - Gene - NCBI', type='url_citation', url='https://www.ncbi.nlm.nih.gov/gene/64926#:~:text=membrane%20when%20expressed%20exogenously,results%20in%20multiple%20transcript%20variants')</li>
+<li>AnnotationURLCitation(end_index=13662, start_index=13508, title='RASAL3 RAS protein activator like 3 [Homo sapiens (human)] - Gene - NCBI', type='url_citation', url='https://www.ncbi.nlm.nih.gov/gene/64926#:~:text=This%20gene%20belongs%20to%20the,results%20in%20multiple%20transcript%20variants')</li>
+<li>AnnotationURLCitation(end_index=13901, start_index=13747, title='RASAL3 RAS protein activator like 3 [Homo sapiens (human)] - Gene - NCBI', type='url_citation', url='https://www.ncbi.nlm.nih.gov/gene/64926#:~:text=This%20gene%20belongs%20to%20the,results%20in%20multiple%20transcript%20variants')</li>
+<li>AnnotationURLCitation(end_index=14919, start_index=14757, title='The Ras GTPase-Activating Protein Rasal3 Supports Survival of Naive T Cells - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4368693/#:~:text=phosphorylation%20in%20a%20T%20cell,contributing%20to%20the%20maintenance%20of')</li>
+<li>AnnotationURLCitation(end_index=15300, start_index=15138, title='The Ras GTPase-Activating Protein Rasal3 Supports Survival of Naive T Cells - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4368693/#:~:text=phosphorylation%20in%20a%20T%20cell,contributing%20to%20the%20maintenance%20of')</li>
+<li>AnnotationURLCitation(end_index=15628, start_index=15504, title='The Ras GTPase-Activating Protein Rasal3 Supports Survival of Naive T Cells - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4368693/#:~:text=%CE%B2,of%20optimal%20T%20cell%20numbers')</li>
+<li>AnnotationURLCitation(end_index=15802, start_index=15629, title='The Ras GTPase-Activating Protein Rasal3 Supports Survival of Naive T Cells - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4368693/#:~:text=adoptive%20transfer%20was%20significantly%20impaired%2C,of%20optimal%20T%20cell%20numbers')</li>
+<li>AnnotationURLCitation(end_index=16163, start_index=16018, title='The Ras GTPase-Activating Protein Rasal3 Supports Survival of Naive T Cells - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4368693/#:~:text=physiological%20roles%20of%20Rasal3,dependent%20survival%20of')</li>
+<li>AnnotationURLCitation(end_index=16326, start_index=16164, title='The Ras GTPase-Activating Protein Rasal3 Supports Survival of Naive T Cells - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4368693/#:~:text=phosphorylation%20in%20a%20T%20cell,contributing%20to%20the%20maintenance%20of')</li>
+<li>AnnotationURLCitation(end_index=16671, start_index=16509, title='The Ras GTPase-Activating Protein Rasal3 Supports Survival of Naive T Cells - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4368693/#:~:text=phosphorylation%20in%20a%20T%20cell,contributing%20to%20the%20maintenance%20of')</li>
+<li>AnnotationURLCitation(end_index=16965, start_index=16841, title='The Ras GTPase-Activating Protein Rasal3 Supports Survival of Naive T Cells - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4368693/#:~:text=%CE%B2,of%20optimal%20T%20cell%20numbers')</li>
+<li>AnnotationURLCitation(end_index=17369, start_index=17239, title='RASAL3, a novel hematopoietic RasGAP protein, regulates the number and functions of NKT cells - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/25652366/#:~:text=development%20of%20various%20types%20of,GalCer%20in')</li>
+<li>AnnotationURLCitation(end_index=17655, start_index=17498, title='RASAL3, a novel hematopoietic RasGAP protein, regulates the number and functions of NKT cells - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/25652366/#:~:text=cells%20of%20hematopoietic%20lineages%2C%20including,deficient%20mice.%20Taken')</li>
+<li>AnnotationURLCitation(end_index=17991, start_index=17862, title='RASAL3, a novel hematopoietic RasGAP protein, regulates the number and functions of NKT cells - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/25652366/#:~:text=systemic%20RASAL3,an%20important%20role%20in%20the')</li>
+<li>AnnotationURLCitation(end_index=18326, start_index=18197, title='RASAL3, a novel hematopoietic RasGAP protein, regulates the number and functions of NKT cells - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/25652366/#:~:text=systemic%20RASAL3,an%20important%20role%20in%20the')</li>
+<li>AnnotationURLCitation(end_index=18536, start_index=18433, title='RASAL3, a novel hematopoietic RasGAP protein, regulates the number and functions of NKT cells - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/25652366/#:~:text=with%20%CE%B1,associated')</li>
+<li>AnnotationURLCitation(end_index=18901, start_index=18744, title='RASAL3, a novel hematopoietic RasGAP protein, regulates the number and functions of NKT cells - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/25652366/#:~:text=vitro%20presented%20augmented%20Erk%20phosphorylation%2C,associated%20diseases')</li>
+<li>AnnotationURLCitation(end_index=19290, start_index=19133, title='RASAL3, a novel hematopoietic RasGAP protein, regulates the number and functions of NKT cells - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/25652366/#:~:text=vitro%20presented%20augmented%20Erk%20phosphorylation%2C,associated%20diseases')</li>
+<li>AnnotationURLCitation(end_index=19631, start_index=19474, title='RASAL3, a novel hematopoietic RasGAP protein, regulates the number and functions of NKT cells - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/25652366/#:~:text=vitro%20presented%20augmented%20Erk%20phosphorylation%2C,associated%20diseases')</li>
+<li>AnnotationURLCitation(end_index=19824, start_index=19694, title='RASAL3, a novel hematopoietic RasGAP protein, regulates the number and functions of NKT cells - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/25652366/#:~:text=development%20of%20various%20types%20of,GalCer%20in')</li>
+<li>AnnotationURLCitation(end_index=20396, start_index=20254, title='RASAL3 RAS protein activator like 3 [Homo sapiens (human)] - Gene - NCBI', type='url_citation', url='https://www.ncbi.nlm.nih.gov/gene/64926#:~:text=Expression%20Broad%20expression%20in%20lymph,Try%20the%20new%20%2015')</li>
+<li>AnnotationURLCitation(end_index=21211, start_index=21075, title='RASAL3 Is a Putative RasGAP Modulating Inflammatory Response by Neutrophils - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8579101/#:~:text=understood,mortality%20were%20recapitulated%20in%20a')</li>
+<li>AnnotationURLCitation(end_index=21369, start_index=21212, title='RASAL3 Is a Putative RasGAP Modulating Inflammatory Response by Neutrophils - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8579101/#:~:text=Here%2C%20we%20show%20that%20RASAL3%2C,functions%20as%20a%20RasGAP%20that')</li>
+<li>AnnotationURLCitation(end_index=21735, start_index=21599, title='RASAL3 Is a Putative RasGAP Modulating Inflammatory Response by Neutrophils - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8579101/#:~:text=understood,mortality%20were%20recapitulated%20in%20a')</li>
+<li>AnnotationURLCitation(end_index=21901, start_index=21736, title='RASAL3 Is a Putative RasGAP Modulating Inflammatory Response by Neutrophils - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8579101/#:~:text=RASAL3%20is%20dominantly%20expressed%20in,expression%20level%20of%20RASAL3%20mRNA')</li>
+<li>AnnotationURLCitation(end_index=22242, start_index=22108, title='RASAL3 Is a Putative RasGAP Modulating Inflammatory Response by Neutrophils - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8579101/#:~:text=NF,KO%20neutrophils%20%28Figures%C2%A02D%E2%80%93F')</li>
+<li>AnnotationURLCitation(end_index=22355, start_index=22243, title='RASAL3 Is a Putative RasGAP Modulating Inflammatory Response by Neutrophils - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8579101/#:~:text=upregulated%20in%20RASAL3,KO')</li>
+<li>AnnotationURLCitation(end_index=22677, start_index=22520, title='RASAL3 Is a Putative RasGAP Modulating Inflammatory Response by Neutrophils - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8579101/#:~:text=Here%2C%20we%20show%20that%20RASAL3%2C,functions%20as%20a%20RasGAP%20that')</li>
+<li>AnnotationURLCitation(end_index=22841, start_index=22678, title='RASAL3 Is a Putative RasGAP Modulating Inflammatory Response by Neutrophils - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8579101/#:~:text=were%20followed%20for%2072%20h%2C,RASAL3%20is%20associated%20with%20unregulated')</li>
+<li>AnnotationURLCitation(end_index=23216, start_index=23053, title='RASAL3 Is a Putative RasGAP Modulating Inflammatory Response by Neutrophils - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8579101/#:~:text=were%20followed%20for%2072%20h%2C,RASAL3%20is%20associated%20with%20unregulated')</li>
+<li>AnnotationURLCitation(end_index=23524, start_index=23367, title='RASAL3 Is a Putative RasGAP Modulating Inflammatory Response by Neutrophils - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8579101/#:~:text=Here%2C%20we%20show%20that%20RASAL3%2C,functions%20as%20a%20RasGAP%20that')</li>
+<li>AnnotationURLCitation(end_index=23656, start_index=23525, title='RASAL3 Is a Putative RasGAP Modulating Inflammatory Response by Neutrophils - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8579101/#:~:text=%28RASAL3,to%20have%20low%20neutrophil%20RASAL3')</li>
+<li>AnnotationURLCitation(end_index=24004, start_index=23830, title='RASAL3 Is a Putative RasGAP Modulating Inflammatory Response by Neutrophils - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8579101/#:~:text=deficiency%20triggers%20augmented%20neutrophil%20responses,RASAL3%20could%20serve%20as%20a')</li>
+<li>AnnotationURLCitation(end_index=24388, start_index=24231, title='RASAL3 Is a Putative RasGAP Modulating Inflammatory Response by Neutrophils - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8579101/#:~:text=Here%2C%20we%20show%20that%20RASAL3%2C,functions%20as%20a%20RasGAP%20that')</li>
+<li>AnnotationURLCitation(end_index=24527, start_index=24389, title='RASAL3 Is a Putative RasGAP Modulating Inflammatory Response by Neutrophils - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8579101/#:~:text=%28RASAL3,and%20many%20inflammatory%20disease%20states')</li>
+<li>AnnotationURLCitation(end_index=24867, start_index=24733, title='RASAL3 Is a Putative RasGAP Modulating Inflammatory Response by Neutrophils - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8579101/#:~:text=NF,KO%20neutrophils%20%28Figures%C2%A02D%E2%80%93F')</li>
+<li>AnnotationURLCitation(end_index=25976, start_index=25842, title='RASAL3 Is a Putative RasGAP Modulating Inflammatory Response by Neutrophils - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8579101/#:~:text=NF,KO%20neutrophils%20%28Figures%C2%A02D%E2%80%93F')</li>
+<li>AnnotationURLCitation(end_index=26325, start_index=26176, title='RASAL3 preferentially stimulates GTP hydrolysis of the Rho family small GTPase Rac2 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC6158391/#:~:text=Although%20RASAL3%20has%20been%20identified,Rac2%20was%20detected')</li>
+<li>AnnotationURLCitation(end_index=26721, start_index=26567, title='CD229 interacts with RASAL3 to activate RAS/ERK pathway in multiple myeloma proliferation | Aging', type='url_citation', url='https://www.aging-us.com/article/204405/text#:~:text=CD229%20interacts%20with%20RASAL3%20protein,the%20RAS%2FERK%20pathway%20in%20MM')</li>
+<li>AnnotationURLCitation(end_index=26877, start_index=26722, title='CD229 interacts with RASAL3 to activate RAS/ERK pathway in multiple myeloma proliferation | Aging', type='url_citation', url='https://www.aging-us.com/article/204405/text#:~:text=match%20at%20L245%20cells%20confirmed,the%20RAS%2FERK%20signaling%20pathway%20by')</li>
+<li>AnnotationURLCitation(end_index=27173, start_index=27008, title='CD229 interacts with RASAL3 to activate RAS/ERK pathway in multiple myeloma proliferation | Aging', type='url_citation', url='https://www.aging-us.com/article/204405/text#:~:text=signaling%20pathway%20via%20interacting%20with,therapeutic%20target%20for%20MM%20treatment')</li>
+<li>AnnotationURLCitation(end_index=27323, start_index=27174, title='CD229 interacts with RASAL3 to activate RAS/ERK pathway in multiple myeloma proliferation | Aging', type='url_citation', url='https://www.aging-us.com/article/204405/text#:~:text=match%20at%20L360%20between%20CD229,currently%20a%20clinical%20agent%20for')</li>
+<li>AnnotationURLCitation(end_index=27692, start_index=27543, title='CD229 interacts with RASAL3 to activate RAS/ERK pathway in multiple myeloma proliferation | Aging', type='url_citation', url='https://www.aging-us.com/article/204405/text#:~:text=match%20at%20L360%20between%20CD229,currently%20a%20clinical%20agent%20for')</li>
+<li>AnnotationURLCitation(end_index=27837, start_index=27693, title='CD229 interacts with RASAL3 to activate RAS/ERK pathway in multiple myeloma proliferation | Aging', type='url_citation', url='https://www.aging-us.com/article/204405/text#:~:text=between%20CD229%20and%20RASAL3,currently%20a%20clinical%20agent%20for')</li>
+<li>AnnotationURLCitation(end_index=28918, start_index=28780, title='RASAL3 Is a Putative RasGAP Modulating Inflammatory Response by Neutrophils - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8579101/#:~:text=%28RASAL3,and%20many%20inflammatory%20disease%20states')</li>
+<li>AnnotationURLCitation(end_index=29458, start_index=29320, title='RASAL3 Is a Putative RasGAP Modulating Inflammatory Response by Neutrophils - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8579101/#:~:text=%28RASAL3,and%20many%20inflammatory%20disease%20states')</li>
+<li>AnnotationURLCitation(end_index=30256, start_index=30120, title='A Systematic Analysis of Expression and Function of RAS GTPase-Activating Proteins (RASGAPs) in Urological Cancers: A Mini-Review - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC12071082/#:~:text=cell%20cycle%20arrest%20through%20the,ADT%20further')</li>
+<li>AnnotationURLCitation(end_index=30584, start_index=30456, title='A Systematic Analysis of Expression and Function of RAS GTPase-Activating Proteins (RASGAPs) in Urological Cancers: A Mini-Review - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC12071082/#:~:text=match%20at%20L289%20induces%20epigenetic,56')</li>
+<li>AnnotationURLCitation(end_index=30936, start_index=30800, title='A Systematic Analysis of Expression and Function of RAS GTPase-Activating Proteins (RASGAPs) in Urological Cancers: A Mini-Review - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC12071082/#:~:text=cell%20cycle%20arrest%20through%20the,ADT%20further')</li>
+<li>AnnotationURLCitation(end_index=31074, start_index=30937, title='A Systematic Analysis of Expression and Function of RAS GTPase-Activating Proteins (RASGAPs) in Urological Cancers: A Mini-Review - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC12071082/#:~:text=induces%20epigenetic%20silencing%20of%20RASAL3%2C,56')</li>
+<li>AnnotationURLCitation(end_index=31502, start_index=31377, title='A Systematic Analysis of Expression and Function of RAS GTPase-Activating Proteins (RASGAPs) in Urological Cancers: A Mini-Review - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC12071082/#:~:text=RASAL3%20%20,and%20glutamine%20secretion')</li>
+<li>AnnotationURLCitation(end_index=31859, start_index=31689, title='A Systematic Analysis of Expression and Function of RAS GTPase-Activating Proteins (RASGAPs) in Urological Cancers: A Mini-Review - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC12071082/#:~:text=match%20at%20L747%20tumor%20heterogeneity,using%20EZH2%20inhibitors%20to%20reactivate')</li>
+<li>AnnotationURLCitation(end_index=32203, start_index=32049, title='CD229 interacts with RASAL3 to activate RAS/ERK pathway in multiple myeloma proliferation | Aging', type='url_citation', url='https://www.aging-us.com/article/204405/text#:~:text=CD229%20interacts%20with%20RASAL3%20protein,the%20RAS%2FERK%20pathway%20in%20MM')</li>
+<li>AnnotationURLCitation(end_index=32353, start_index=32204, title='CD229 interacts with RASAL3 to activate RAS/ERK pathway in multiple myeloma proliferation | Aging', type='url_citation', url='https://www.aging-us.com/article/204405/text#:~:text=match%20at%20L360%20between%20CD229,currently%20a%20clinical%20agent%20for')</li>
+<li>AnnotationURLCitation(end_index=32712, start_index=32553, title='CD229 interacts with RASAL3 to activate RAS/ERK pathway in multiple myeloma proliferation | Aging', type='url_citation', url='https://www.aging-us.com/article/204405/text#:~:text=match%20at%20L350%20activates%20RAS%2FERK,pathway%20by%20interacting%20with%20RASAL3')</li>
+<li>AnnotationURLCitation(end_index=33677, start_index=33513, title='A Systematic Analysis of Expression and Function of RAS GTPase-Activating Proteins (RASGAPs) in Urological Cancers: A Mini-Review - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC12071082/#:~:text=Furthermore%2C%20research%20has%20also%20revealed,independent%20pathways%20%5B7')</li>
+<li>AnnotationURLCitation(end_index=33894, start_index=33734, title='CD229 interacts with RASAL3 to activate RAS/ERK pathway in multiple myeloma proliferation | Aging', type='url_citation', url='https://www.aging-us.com/article/204405/text#:~:text=regulatory%20role%20in%20cellular%20proliferation,GDP%2C%20thereby%20functioning%20as')</li>
+<li>AnnotationURLCitation(end_index=34299, start_index=34128, title='A Systematic Analysis of Expression and Function of RAS GTPase-Activating Proteins (RASGAPs) in Urological Cancers: A Mini-Review - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC12071082/#:~:text=The%20RAS%20signaling%20pathway%2C%20a,overactive%2C%20fueling%20cancer%20growth%20and')</li>
+<li>AnnotationURLCitation(end_index=34733, start_index=34579, title='RASAL3 RAS protein activator like 3 [Homo sapiens (human)] - Gene - NCBI', type='url_citation', url='https://www.ncbi.nlm.nih.gov/gene/64926#:~:text=This%20gene%20belongs%20to%20the,results%20in%20multiple%20transcript%20variants')</li>
+<li>AnnotationURLCitation(end_index=35009, start_index=34864, title='The Ras GTPase-Activating Protein Rasal3 Supports Survival of Naive T Cells - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4368693/#:~:text=physiological%20roles%20of%20Rasal3,dependent%20survival%20of')</li>
+<li>AnnotationURLCitation(end_index=35172, start_index=35010, title='The Ras GTPase-Activating Protein Rasal3 Supports Survival of Naive T Cells - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4368693/#:~:text=phosphorylation%20in%20a%20T%20cell,contributing%20to%20the%20maintenance%20of')</li>
+<li>AnnotationURLCitation(end_index=35333, start_index=35230, title='RASAL3, a novel hematopoietic RasGAP protein, regulates the number and functions of NKT cells - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/25652366/#:~:text=with%20%CE%B1,associated')</li>
+<li>AnnotationURLCitation(end_index=35491, start_index=35334, title='RASAL3, a novel hematopoietic RasGAP protein, regulates the number and functions of NKT cells - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/25652366/#:~:text=vitro%20presented%20augmented%20Erk%20phosphorylation%2C,associated%20diseases')</li>
+<li>AnnotationURLCitation(end_index=35701, start_index=35552, title='RASAL3 preferentially stimulates GTP hydrolysis of the Rho family small GTPase Rac2 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC6158391/#:~:text=Although%20RASAL3%20has%20been%20identified,Rac2%20was%20detected')</li>
+<li>AnnotationURLCitation(end_index=35948, start_index=35791, title='RASAL3 Is a Putative RasGAP Modulating Inflammatory Response by Neutrophils - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8579101/#:~:text=Here%2C%20we%20show%20that%20RASAL3%2C,functions%20as%20a%20RasGAP%20that')</li>
+<li>AnnotationURLCitation(end_index=36112, start_index=35949, title='RASAL3 Is a Putative RasGAP Modulating Inflammatory Response by Neutrophils - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8579101/#:~:text=were%20followed%20for%2072%20h%2C,RASAL3%20is%20associated%20with%20unregulated')</li>
+<li>AnnotationURLCitation(end_index=36353, start_index=36217, title='A Systematic Analysis of Expression and Function of RAS GTPase-Activating Proteins (RASGAPs) in Urological Cancers: A Mini-Review - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC12071082/#:~:text=cell%20cycle%20arrest%20through%20the,ADT%20further')</li>
+<li>AnnotationURLCitation(end_index=36582, start_index=36428, title='CD229 interacts with RASAL3 to activate RAS/ERK pathway in multiple myeloma proliferation | Aging', type='url_citation', url='https://www.aging-us.com/article/204405/text#:~:text=CD229%20interacts%20with%20RASAL3%20protein,the%20RAS%2FERK%20pathway%20in%20MM')</li>
+<li>AnnotationURLCitation(end_index=36732, start_index=36583, title='CD229 interacts with RASAL3 to activate RAS/ERK pathway in multiple myeloma proliferation | Aging', type='url_citation', url='https://www.aging-us.com/article/204405/text#:~:text=match%20at%20L360%20between%20CD229,currently%20a%20clinical%20agent%20for')</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q86YV0
+gene_symbol: RASAL3
+product_type: PROTEIN
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: RAS protein activator like 3, GTPase-activating protein for RAS family
+  small GTPases. Member of RasGAP family that catalyzes GTP hydrolysis on RAS, converting
+  active RAS-GTP to inactive RAS-GDP, thereby negatively regulating RAS-MAPK signaling
+  pathways. Contains RasGAP catalytic domain. Cytoplasmic and cytoplasmic side of
+  membrane localization. Hematopoietic expression with specific importance in NKT
+  (natural killer T) cell regulation. RASAL3 regulates NKT cell number and function
+  by controlling Ras activity - loss of RASAL3 leads to increased NKT cell proliferation
+  due to elevated Ras signaling. Functions in immune regulation, particularly in innate-like
+  T cell compartments. Negative regulator of Ras-dependent proliferation and activation
+  in immune cells. May also localize to cell cortex for regulation of membrane-proximal
+  Ras signaling.
+existing_annotations:
+- term:
+    id: GO:0005096
+    label: GTPase activator activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: GTPase activator activity - RasGAP function.
+    action: ACCEPT
+    reason: Core enzymatic function.
+- term:
+    id: GO:1902531
+    label: regulation of intracellular signal transduction
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: Regulation of intracellular signal transduction - regulates Ras signaling.
+    action: ACCEPT
+    reason: Core regulatory role.
+- term:
+    id: GO:0005096
+    label: GTPase activator activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: GTPase activator activity - RasGAP function.
+    action: ACCEPT
+    reason: Core enzymatic function.
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: Cytoplasm - cytoplasmic protein.
+    action: ACCEPT
+    reason: Core localization.
+- term:
+    id: GO:0005938
+    label: cell cortex
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: Cell cortex - may localize to cortical regions near membrane.
+    action: ACCEPT
+    reason: Specific localization for membrane-proximal signaling.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  review:
+    summary: Protein binding - binds RAS and regulatory partners.
+    action: ACCEPT
+    reason: Core interaction function.
+- term:
+    id: GO:0042802
+    label: identical protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  review:
+    summary: Identical protein binding - may form dimers or oligomers.
+    action: ACCEPT
+    reason: Protein-protein interaction.
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000052
+  review:
+    summary: Plasma membrane - membrane-associated for RAS access.
+    action: ACCEPT
+    reason: Core localization for substrate access.
+- term:
+    id: GO:0098562
+    label: cytoplasmic side of membrane
+  evidence_type: IDA
+  original_reference_id: PMID:25652366
+  review:
+    summary: Cytoplasmic side of membrane - inner membrane surface localization.
+    action: ACCEPT
+    reason: Specific localization for RAS regulation.
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IDA
+  original_reference_id: PMID:25652366
+  review:
+    summary: Cytoplasm - cytoplasmic protein.
+    action: ACCEPT
+    reason: Core localization.
+- term:
+    id: GO:0046580
+    label: negative regulation of Ras protein signal transduction
+  evidence_type: IMP
+  original_reference_id: PMID:25652366
+  review:
+    summary: Negative regulation of Ras protein signal transduction - core function.
+    action: ACCEPT
+    reason: Core regulatory function.
+- term:
+    id: GO:0051142
+    label: positive regulation of NK T cell proliferation
+  evidence_type: IMP
+  original_reference_id: PMID:25652366
+  review:
+    summary: Positive regulation of NK T cell proliferation - loss increases NKT proliferation.
+    action: ACCEPT
+    reason: Specific immune function (negative regulator, so loss is positive).
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-5658231
+  review:
+    summary: Cytosol - cytosolic protein.
+    action: ACCEPT
+    reason: Core localization.
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-5658435
+  review:
+    summary: Cytosol - cytosolic protein.
+    action: ACCEPT
+    reason: Core localization.
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: HDA
+  original_reference_id: PMID:19946888
+  review:
+    summary: Membrane - membrane-associated.
+    action: ACCEPT
+    reason: General membrane localization.
+- term:
+    id: GO:0070062
+    label: extracellular exosome
+  evidence_type: HDA
+  original_reference_id: PMID:20458337
+  review:
+    summary: Extracellular exosome - high-throughput data, not core function.
+    action: REMOVE
+    reason: Likely contamination or non-specific.
+references:
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt.
+  findings: []
+- id: GO_REF:0000052
+  title: Gene Ontology annotation based on curation of immunofluorescence data
+  findings: []
+- id: PMID:19946888
+  title: Defining the membrane proteome of NK cells.
+  findings: []
+- id: PMID:20458337
+  title: MHC class II-associated proteins in B-cell exosomes and potential functional
+    implications for exosome biogenesis.
+  findings: []
+- id: PMID:25652366
+  title: RASAL3, a novel hematopoietic RasGAP protein, regulates the number and functions
+    of NKT cells.
+  findings: []
+- id: PMID:32296183
+  title: A reference map of the human binary protein interactome.
+  findings: []
+- id: Reactome:R-HSA-5658231
+  title: RAS GAPs stimulate RAS GTPase activity
+  findings: []
+- id: Reactome:R-HSA-5658435
+  title: RAS GAPs bind RAS:GTP
+  findings: []
+aliases:
+- RAS protein activator like 3
+- RasGAP-activating-like protein 3
+core_functions:
+- molecular_function:
+    id: GO:0005096
+    label: GTPase activator activity
+  description: RasGAP that catalyzes GTP hydrolysis on RAS proteins, converting active
+    RAS-GTP to inactive RAS-GDP. Negatively regulates RAS-MAPK signaling in hematopoietic
+    cells. Critical regulator of NKT cell number and function - restrains Ras-driven
+    proliferation in innate-like T cell compartments.
+  locations:
+  - id: GO:0005737
+    label: cytoplasm
+  - id: GO:0005886
+    label: plasma membrane
+  directly_involved_in:
+  - id: GO:0046580
+    label: negative regulation of Ras protein signal transduction
+  - id: GO:0002376
+    label: immune system process
+  supported_by:
+  - reference_id: UniProt:Q86YV0
+    supporting_text: RASAL3 is hematopoietic RasGAP that regulates NKT cell number
+      and function by controlling Ras activity.
+status: DRAFT
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

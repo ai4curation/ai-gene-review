@@ -335,6 +335,28 @@ class ProductTypeEnum(str, Enum):
     """
 
 
+class GeneReviewStatusEnum(str, Enum):
+    """
+    Status of the gene review process
+    """
+    INITIALIZED = "INITIALIZED"
+    """
+    All annotations have action PENDING - review has been initialized but not started
+    """
+    IN_PROGRESS = "IN_PROGRESS"
+    """
+    At least one annotation is PENDING and at least one annotation is not PENDING - review is underway
+    """
+    DRAFT = "DRAFT"
+    """
+    No PENDING annotations, but may have validation warnings - review is complete but needs refinement
+    """
+    COMPLETE = "COMPLETE"
+    """
+    No PENDING annotations and no validation warnings - review is fully complete and validated
+    """
+
+
 class ManuscriptSection(str, Enum):
     """
     Sections of a scientific manuscript or publication
@@ -408,16 +430,22 @@ class GeneReview(ConfiguredBaseModel):
          'domain_of': ['GeneReview']} })
     aliases: Optional[list[str]] = Field(default=None, json_schema_extra = { "linkml_meta": {'alias': 'aliases', 'domain_of': ['GeneReview']} })
     tags: Optional[list[str]] = Field(default=None, description="""Tags associated with the gene for categorization and organization""", json_schema_extra = { "linkml_meta": {'alias': 'tags', 'domain_of': ['GeneReview']} })
+    status: Optional[GeneReviewStatusEnum] = Field(default=None, description="""Overall status of the gene review""", json_schema_extra = { "linkml_meta": {'alias': 'status', 'domain_of': ['GeneReview'], 'recommended': True} })
     description: Optional[str] = Field(default=None, description="""Description of the entity""", json_schema_extra = { "linkml_meta": {'alias': 'description',
          'domain_of': ['GeneReview', 'Term', 'CoreFunction', 'Experiment'],
+         'recommended': True,
          'slot_uri': 'dcterms:description'} })
-    taxon: Optional[Term] = Field(default=None, json_schema_extra = { "linkml_meta": {'alias': 'taxon', 'domain_of': ['GeneReview']} })
+    taxon: Term = Field(default=..., json_schema_extra = { "linkml_meta": {'alias': 'taxon', 'domain_of': ['GeneReview']} })
     references: Optional[list[Reference]] = Field(default=None, json_schema_extra = { "linkml_meta": {'alias': 'references', 'domain_of': ['GeneReview']} })
     existing_annotations: Optional[list[ExistingAnnotation]] = Field(default=None, json_schema_extra = { "linkml_meta": {'alias': 'existing_annotations', 'domain_of': ['GeneReview']} })
     core_functions: Optional[list[CoreFunction]] = Field(default=None, json_schema_extra = { "linkml_meta": {'alias': 'core_functions', 'domain_of': ['GeneReview']} })
     proposed_new_terms: Optional[list[ProposedOntologyTerm]] = Field(default=None, description="""Proposed new ontology terms that should exist but don't""", json_schema_extra = { "linkml_meta": {'alias': 'proposed_new_terms', 'domain_of': ['GeneReview']} })
-    suggested_questions: Optional[list[Question]] = Field(default=None, description="""Suggested questions to ask experts about the gene. Only include if not obvious from the literature.""", json_schema_extra = { "linkml_meta": {'alias': 'suggested_questions', 'domain_of': ['GeneReview']} })
-    suggested_experiments: Optional[list[Experiment]] = Field(default=None, json_schema_extra = { "linkml_meta": {'alias': 'suggested_experiments', 'domain_of': ['GeneReview']} })
+    suggested_questions: Optional[list[Question]] = Field(default=None, description="""Suggested questions to ask experts about the gene. Only include if not obvious from the literature.""", json_schema_extra = { "linkml_meta": {'alias': 'suggested_questions',
+         'domain_of': ['GeneReview'],
+         'recommended': True} })
+    suggested_experiments: Optional[list[Experiment]] = Field(default=None, json_schema_extra = { "linkml_meta": {'alias': 'suggested_experiments',
+         'domain_of': ['GeneReview'],
+         'recommended': True} })
 
 
 class Term(ConfiguredBaseModel):
@@ -428,12 +456,15 @@ class Term(ConfiguredBaseModel):
          'slot_usage': {'id': {'description': 'An OBO CURIE for a term in GO, CL, '
                                               'CHEBI, etc.',
                                'name': 'id'},
-                        'label': {'description': 'the term name', 'name': 'label'}}})
+                        'label': {'description': 'the term name',
+                                  'name': 'label',
+                                  'required': True}}})
 
     id: str = Field(default=..., description="""An OBO CURIE for a term in GO, CL, CHEBI, etc.""", json_schema_extra = { "linkml_meta": {'alias': 'id', 'domain_of': ['GeneReview', 'Term', 'Reference']} })
     label: str = Field(default=..., description="""the term name""", json_schema_extra = { "linkml_meta": {'alias': 'label', 'domain_of': ['Term'], 'slot_uri': 'rdfs:label'} })
     description: Optional[str] = Field(default=None, description="""Description of the entity""", json_schema_extra = { "linkml_meta": {'alias': 'description',
          'domain_of': ['GeneReview', 'Term', 'CoreFunction', 'Experiment'],
+         'recommended': True,
          'slot_uri': 'dcterms:description'} })
     ontology: Optional[str] = Field(default=None, description="""Ontology of the term. E.g `go`, `cl`, `hp`""", json_schema_extra = { "linkml_meta": {'alias': 'ontology', 'domain_of': ['Term']} })
 
@@ -446,7 +477,7 @@ class Reference(ConfiguredBaseModel):
 
     id: str = Field(default=..., json_schema_extra = { "linkml_meta": {'alias': 'id', 'domain_of': ['GeneReview', 'Term', 'Reference']} })
     title: str = Field(default=..., description="""Title of the entity""", json_schema_extra = { "linkml_meta": {'alias': 'title', 'domain_of': ['Reference'], 'slot_uri': 'dcterms:title'} })
-    findings: Optional[list[Finding]] = Field(default=None, json_schema_extra = { "linkml_meta": {'alias': 'findings', 'domain_of': ['Reference']} })
+    findings: Optional[list[Finding]] = Field(default=None, json_schema_extra = { "linkml_meta": {'alias': 'findings', 'domain_of': ['Reference'], 'recommended': True} })
     is_invalid: Optional[bool] = Field(default=None, description="""Whether the reference is invalid (e.g., retracted or replaced)""", json_schema_extra = { "linkml_meta": {'alias': 'is_invalid', 'domain_of': ['Reference']} })
     full_text_unavailable: Optional[bool] = Field(default=None, description="""Whether the full text is unavailable""", json_schema_extra = { "linkml_meta": {'alias': 'full_text_unavailable',
          'domain_of': ['Reference', 'Finding', 'SupportingTextInReference']} })
@@ -458,13 +489,15 @@ class Finding(ConfiguredBaseModel):
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://ai4curation.io/ai-gene-review'})
 
-    statement: Optional[str] = Field(default=None, description="""Concise statement describing an aspect of the gene""", json_schema_extra = { "linkml_meta": {'alias': 'statement', 'domain_of': ['Finding']} })
+    statement: Optional[str] = Field(default=None, description="""Concise statement describing an aspect of the gene""", json_schema_extra = { "linkml_meta": {'alias': 'statement', 'domain_of': ['Finding'], 'recommended': True} })
     supporting_text: Optional[str] = Field(default=None, description="""Supporting text from the publication. This should be exact substrings. Different substrings can be broken up by '...'s. These substrings will be checked against the actual text of the paper. If editorialization is necessary, put this in square brackets (this is not checked). For example, you can say '...[CFAP300 shows] transport within cilia is IFT dependent...'""", json_schema_extra = { "linkml_meta": {'alias': 'supporting_text',
-         'domain_of': ['Finding', 'SupportingTextInReference']} })
+         'domain_of': ['Finding', 'SupportingTextInReference'],
+         'recommended': True} })
     full_text_unavailable: Optional[bool] = Field(default=None, description="""Whether the full text is unavailable""", json_schema_extra = { "linkml_meta": {'alias': 'full_text_unavailable',
          'domain_of': ['Reference', 'Finding', 'SupportingTextInReference']} })
     reference_section_type: Optional[ManuscriptSection] = Field(default=None, description="""Type of section in the reference (e.g., 'ABSTRACT', 'METHODS', 'RESULTS', 'DISCUSSION')""", json_schema_extra = { "linkml_meta": {'alias': 'reference_section_type',
-         'domain_of': ['Finding', 'SupportingTextInReference']} })
+         'domain_of': ['Finding', 'SupportingTextInReference'],
+         'recommended': True} })
 
 
 class SupportingTextInReference(ConfiguredBaseModel):
@@ -473,13 +506,15 @@ class SupportingTextInReference(ConfiguredBaseModel):
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://ai4curation.io/ai-gene-review'})
 
-    reference_id: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'alias': 'reference_id', 'domain_of': ['SupportingTextInReference']} })
+    reference_id: str = Field(default=..., json_schema_extra = { "linkml_meta": {'alias': 'reference_id', 'domain_of': ['SupportingTextInReference']} })
     supporting_text: Optional[str] = Field(default=None, description="""Supporting text from the publication. This should be exact substrings. Different substrings can be broken up by '...'s. These substrings will be checked against the actual text of the paper. If editorialization is necessary, put this in square brackets (this is not checked). For example, you can say '...[CFAP300 shows] transport within cilia is IFT dependent...'""", json_schema_extra = { "linkml_meta": {'alias': 'supporting_text',
-         'domain_of': ['Finding', 'SupportingTextInReference']} })
+         'domain_of': ['Finding', 'SupportingTextInReference'],
+         'recommended': True} })
     full_text_unavailable: Optional[bool] = Field(default=None, description="""Whether the full text is unavailable""", json_schema_extra = { "linkml_meta": {'alias': 'full_text_unavailable',
          'domain_of': ['Reference', 'Finding', 'SupportingTextInReference']} })
     reference_section_type: Optional[ManuscriptSection] = Field(default=None, description="""Type of section in the reference (e.g., 'ABSTRACT', 'METHODS', 'RESULTS', 'DISCUSSION')""", json_schema_extra = { "linkml_meta": {'alias': 'reference_section_type',
-         'domain_of': ['Finding', 'SupportingTextInReference']} })
+         'domain_of': ['Finding', 'SupportingTextInReference'],
+         'recommended': True} })
 
 
 class ExistingAnnotation(ConfiguredBaseModel):
@@ -499,7 +534,7 @@ class ExistingAnnotation(ConfiguredBaseModel):
          'domain_of': ['ExistingAnnotation', 'AnnotationExtension']} })
     extensions: Optional[list[AnnotationExtension]] = Field(default=None, json_schema_extra = { "linkml_meta": {'alias': 'extensions', 'domain_of': ['ExistingAnnotation']} })
     negated: Optional[bool] = Field(default=None, description="""Whether the term is negated""", json_schema_extra = { "linkml_meta": {'alias': 'negated', 'domain_of': ['ExistingAnnotation']} })
-    evidence_type: Optional[EvidenceType] = Field(default=None, description="""Evidence code (e.g., IDA, IBA, ISS, TAS)""", json_schema_extra = { "linkml_meta": {'alias': 'evidence_type', 'domain_of': ['ExistingAnnotation']} })
+    evidence_type: EvidenceType = Field(default=..., description="""Evidence code (e.g., IDA, IBA, ISS, TAS)""", json_schema_extra = { "linkml_meta": {'alias': 'evidence_type', 'domain_of': ['ExistingAnnotation']} })
     original_reference_id: Optional[str] = Field(default=None, description="""ID of the original reference""", json_schema_extra = { "linkml_meta": {'alias': 'original_reference_id', 'domain_of': ['ExistingAnnotation']} })
     retired: Optional[bool] = Field(default=None, description="""Whether the annotation is retired or replaced""", json_schema_extra = { "linkml_meta": {'alias': 'retired', 'domain_of': ['ExistingAnnotation']} })
     supporting_entities: Optional[list[str]] = Field(default=None, description="""IDs of the supporting entities""", json_schema_extra = { "linkml_meta": {'alias': 'supporting_entities', 'domain_of': ['ExistingAnnotation']} })
@@ -516,13 +551,17 @@ class Review(ConfiguredBaseModel):
                     'preconditions': {'slot_conditions': {'action': {'equals_string': 'MODIFY',
                                                                      'name': 'action'}}}}]})
 
-    summary: Optional[str] = Field(default=None, description="""Summary of the review""", json_schema_extra = { "linkml_meta": {'alias': 'summary', 'domain_of': ['Review']} })
-    action: Optional[ActionEnum] = Field(default=None, description="""Action to be taken""", json_schema_extra = { "linkml_meta": {'alias': 'action', 'domain_of': ['Review']} })
-    reason: Optional[str] = Field(default=None, description="""Reason for the action""", json_schema_extra = { "linkml_meta": {'alias': 'reason', 'domain_of': ['Review']} })
-    proposed_replacement_terms: Optional[list[Term]] = Field(default=None, description="""Proposed replacement terms""", json_schema_extra = { "linkml_meta": {'alias': 'proposed_replacement_terms', 'domain_of': ['Review']} })
+    summary: Optional[str] = Field(default=None, description="""Summary of the review""", json_schema_extra = { "linkml_meta": {'alias': 'summary', 'domain_of': ['Review'], 'recommended': True} })
+    action: ActionEnum = Field(default=..., description="""Action to be taken""", json_schema_extra = { "linkml_meta": {'alias': 'action', 'domain_of': ['Review']} })
+    reason: Optional[str] = Field(default=None, description="""Reason for the action""", json_schema_extra = { "linkml_meta": {'alias': 'reason', 'domain_of': ['Review'], 'recommended': True} })
+    proposed_replacement_terms: Optional[list[Term]] = Field(default=None, description="""If the action is MODIFY, then this is a list of proposed replacement terms""", json_schema_extra = { "linkml_meta": {'alias': 'proposed_replacement_terms',
+         'comments': ['note there is a separate rule that this is required IF the '
+                      'action is MODIFY'],
+         'domain_of': ['Review']} })
     additional_reference_ids: Optional[list[str]] = Field(default=None, description="""IDs of the references""", json_schema_extra = { "linkml_meta": {'alias': 'additional_reference_ids', 'domain_of': ['Review']} })
     supported_by: Optional[list[SupportingTextInReference]] = Field(default=None, json_schema_extra = { "linkml_meta": {'alias': 'supported_by',
-         'domain_of': ['Review', 'CoreFunction', 'ProposedOntologyTerm']} })
+         'domain_of': ['Review', 'CoreFunction', 'ProposedOntologyTerm'],
+         'recommended': True} })
 
 
 class CoreFunction(ConfiguredBaseModel):
@@ -562,7 +601,7 @@ class AnnotationExtension(ConfiguredBaseModel):
                                                     'range': 'ROTermEnum'}],
                                       'name': 'predicate'}}})
 
-    predicate: Optional[str] = Field(default=None, description="""Predicate of the extension""", json_schema_extra = { "linkml_meta": {'alias': 'predicate',
+    predicate: str = Field(default=..., description="""Predicate of the extension""", json_schema_extra = { "linkml_meta": {'alias': 'predicate',
          'bindings': [{'binds_value_of': 'id',
                        'obligation_level': 'REQUIRED',
                        'range': 'ROTermEnum'}],

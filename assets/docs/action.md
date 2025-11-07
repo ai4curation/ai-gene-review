@@ -8,7 +8,7 @@ URI: [gene_review:action](https://w3id.org/ai4curation/gene_review/action)
 
 ## Domain and Range
 
-None &#8594;  <sub>0..1</sub> [ActionEnum](ActionEnum.md)
+None &#8594;  <sub>1..1</sub> [ActionEnum](ActionEnum.md)
 
 ## Parents
 

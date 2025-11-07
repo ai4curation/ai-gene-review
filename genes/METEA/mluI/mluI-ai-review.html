@@ -1,0 +1,1623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>mluI - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>mluI</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/C5B1I3" target="_blank" class="term-link">
+                        C5B1I3
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Methylorubrum extorquens AM1</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "mluI";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="C5B1I3" data-a="DESCRIPTION: ECF sigma factor (mluI) that activates transcripti..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>ECF sigma factor (mluI) that activates transcription of lanthanide acquisition genes when released from anti-sigma factor MluR</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003677" target="_blank" class="term-link">
+                                    GO:0003677
+                                </a>
+                            </span>
+                            <span class="term-label">DNA binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="C5B1I3" data-a="GO:0003677" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct - sigma factors bind DNA at promoter regions [file:METEA/mluI/mluI-deep-research-perplexity.md]
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003700" target="_blank" class="term-link">
+                                    GO:0003700
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-binding transcription factor activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="C5B1I3" data-a="GO:0003700" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct - ECF sigma factors function as transcription factors [file:METEA/mluI/mluI-deep-research-perplexity.md]
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006352" target="_blank" class="term-link">
+                                    GO:0006352
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-templated transcription initiation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="C5B1I3" data-a="GO:0006352" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct - sigma factors direct RNA polymerase to initiate transcription [file:METEA/mluI/mluI-deep-research-perplexity.md]
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006355" target="_blank" class="term-link">
+                                    GO:0006355
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of DNA-templated transcription</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="C5B1I3" data-a="GO:0006355" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct - regulates transcription of lanthanide acquisition genes [file:METEA/mluI/mluI-deep-research-perplexity.md]
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016987" target="_blank" class="term-link">
+                                    GO:0016987
+                                </a>
+                            </span>
+                            <span class="term-label">sigma factor activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="C5B1I3" data-a="GO:0016987" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct - mluI is an ECF sigma factor [file:METEA/mluI/mluI-deep-research-perplexity.md]
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:2000142" target="_blank" class="term-link">
+                                    GO:2000142
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of DNA-templated transcription initiation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000108
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="C5B1I3" data-a="GO:2000142" data-r="GO_REF:0000108" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct - sigma factors regulate transcription initiation [file:METEA/mluI/mluI-deep-research-perplexity.md]
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Positive regulation of lanthanide acquisition gene transcription</h3>
+                <span class="vote-buttons" data-g="C5B1I3" data-a="FUNCTION: Positive regulation of lanthanide acquisition gene..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016987" target="_blank" class="term-link">
+                            sigma factor activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000108.md" target="_blank" class="term-link">
+                            GO_REF:0000108
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Automatic assignment of GO terms using logical inference, based on on inter-ontology links.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:METEA/mluI/mluI-deep-research-perplexity.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep research on mluI ECF sigma factor function</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">mluI encodes ECF sigma factor released from anti-sigma factor MluR upon lanthanide sensing</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Activates transcription of lanthanide acquisition genes</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Part of cell-surface signaling system with MluA receptor and MluR anti-sigma factor</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Perplexity</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(mluI-deep-research-perplexity.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="C5B1I3" data-a="DOC: Deep Research Perplexity" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: perplexity<br />
+model: sonar-deep-research<br />
+cached: false<br />
+start_time: '2025-10-31T09:33:42.959483'<br />
+end_time: '2025-10-31T09:36:09.678471'<br />
+duration_seconds: 146.72<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: METEA<br />
+  gene_or_uniprot: MexAM1_META1p4131<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    reasoning_effort: medium<br />
+    search_domain_filter: []<br />
+    return_citations: true<br />
+    temperature: 0.0<br />
+citation_count: 57</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-template-for-go-annotation-curation">Gene Research Template for GO Annotation Curation</h1>
+<p>Please provide a comprehensive research report on the gene MexAM1_META1p4131 in METEA.</p>
+<h2 id="research-focus-areas-for-go-annotation">Research Focus Areas for GO Annotation</h2>
+<p>I need detailed information covering these areas specifically for GO annotation curation:</p>
+<h3 id="1-molecular-function-mf">1. Molecular Function (MF)</h3>
+<ul>
+<li><strong>Primary molecular function(s)</strong> - specific biochemical activities</li>
+<li><strong>Enzymatic properties</strong> - catalytic activities, substrate specificity, cofactor requirements</li>
+<li><strong>Binding activities</strong> - what molecules does the protein bind (DNA, RNA, proteins, small molecules)</li>
+<li><strong>Regulatory functions</strong> - transcriptional regulation, kinase/phosphatase activities</li>
+<li><strong>Transport functions</strong> - ion channels, transporters, carriers</li>
+</ul>
+<h3 id="2-cellular-component-cc">2. Cellular Component (CC)</h3>
+<ul>
+<li><strong>Subcellular localization</strong> - where is the protein located within the cell</li>
+<li><strong>Membrane association</strong> - integral membrane, peripheral membrane, or cytosolic</li>
+<li><strong>Organellar localization</strong> - nucleus, mitochondria, ER, Golgi, etc.</li>
+<li><strong>Protein complexes</strong> - what complexes does this protein participate in</li>
+<li><strong>Cellular structures</strong> - cytoskeleton, ribosomes, proteasome components</li>
+</ul>
+<h3 id="3-biological-process-bp">3. Biological Process (BP)</h3>
+<ul>
+<li><strong>Primary biological pathways</strong> - metabolic, signaling, developmental processes</li>
+<li><strong>Physiological roles</strong> - what happens when this gene is mutated or deleted</li>
+<li><strong>Developmental processes</strong> - embryogenesis, organogenesis, differentiation</li>
+<li><strong>Response to stimuli</strong> - environmental, chemical, biological responses</li>
+<li><strong>Cellular processes</strong> - cell cycle, apoptosis, DNA repair, protein folding</li>
+</ul>
+<h3 id="4-experimental-evidence-quality">4. Experimental Evidence Quality</h3>
+<ul>
+<li><strong>Direct experimental evidence</strong> - biochemical assays, functional studies</li>
+<li><strong>Genetic evidence</strong> - knockout/knockdown phenotypes, complementation</li>
+<li><strong>Physical evidence</strong> - protein interactions, localization studies</li>
+<li><strong>Expression evidence</strong> - tissue/stage-specific expression patterns</li>
+<li><strong>Comparative evidence</strong> - ortholog function in other species</li>
+</ul>
+<h3 id="5-disease-and-phenotype-associations">5. Disease and Phenotype Associations</h3>
+<ul>
+<li><strong>Human disease associations</strong> - genetic disorders, cancer involvement</li>
+<li><strong>Model organism phenotypes</strong> - what happens when gene function is disrupted</li>
+<li><strong>Clinical relevance</strong> - therapeutic targets, biomarkers</li>
+<li><strong>Population genetics</strong> - natural variants and their effects</li>
+</ul>
+<h3 id="6-protein-structure-and-domains">6. Protein Structure and Domains</h3>
+<ul>
+<li><strong>Functional domains</strong> - catalytic domains, binding domains, regulatory regions</li>
+<li><strong>Structural features</strong> - transmembrane regions, signal peptides, nuclear localization signals</li>
+<li><strong>Post-translational modifications</strong> - phosphorylation, ubiquitination, glycosylation sites</li>
+<li><strong>Protein-protein interaction interfaces</strong> - binding sites for partners</li>
+</ul>
+<h3 id="7-evolutionary-conservation-and-orthologs">7. Evolutionary Conservation and Orthologs</h3>
+<ul>
+<li><strong>Conservation across species</strong> - which functions are conserved</li>
+<li><strong>Ortholog studies</strong> - functional evidence from other organisms</li>
+<li><strong>Paralog relationships</strong> - functional divergence within gene families</li>
+<li><strong>Essential gene status</strong> - is this gene required for viability</li>
+</ul>
+<h2 id="output-requirements-for-go-curation">Output Requirements for GO Curation</h2>
+<ul>
+<li><strong>Provide specific GO term suggestions</strong> where experimental evidence supports them</li>
+<li><strong>Include PMID citations</strong> for all major functional claims</li>
+<li><strong>Distinguish experimental evidence levels</strong> (direct vs. inferred)</li>
+<li><strong>Focus on experimental data over computational predictions</strong></li>
+<li><strong>Highlight recent discoveries</strong> (last 5 years) that might affect annotation</li>
+<li><strong>Note any conflicting evidence</strong> or ambiguous experimental results</li>
+<li><strong>Specify organism-specific differences</strong> if orthologs have different functions</li>
+</ul>
+<h2 id="gene-information">Gene Information</h2>
+<ul>
+<li><strong>Gene Symbol</strong>: MexAM1_META1p4131</li>
+<li><strong>Organism</strong>: METEA</li>
+<li><strong>Focus</strong>: Gene Ontology annotation curation and functional characterization</li>
+</ul>
+<p>Please prioritize experimental evidence and be explicit about the strength and type of evidence supporting each functional claim.</p>
+<h2 id="output">Output</h2>
+<p><think><br />
+Let me analyze the search results and the user's query about gene MexAM1_META1p4131 in METEA for GO annotation curation.</p>
+<p>Looking at the search results, I need to identify which ones are relevant to the query about MexAM1_META1p4131:</p>
+<p>From the search results:<br />
+- Result [1] mentions "MexAM1_META1p4281 6829092 nicotinamidase" - this is a different gene (META1p4281 vs META1p4131)<br />
+- Result [5] mentions "MexAM1_META1p4631 6829438 hypothetical protein" - also different<br />
+- Result [8] and [14] discuss a gene cluster containing META1p4129 through META1p4138, which includes genes related to methylolanthanin biosynthesis and includes the metallophore genes</p>
+<p>Wait, let me look more carefully at result [8] and [14] - they discuss "META1p4129-4131 (<em>mluARI</em>, methylolanthanin uptake) putatively encode, respectively, a TonB-dependent outer membrane receptor, an anti-sigma factor, and a sigma factor."</p>
+<p>So META1p4131 appears to be mentioned as part of the <em>mluARI</em> (methylolanthanin uptake) operon. It's described as potentially encoding "a sigma factor" - an anti-sigma factor based on the context.</p>
+<p>Actually, looking more carefully at result [14]: "META1p4129-4131 (<em>mluARI</em>, <strong>m</strong>ethylo<strong>l</strong>anthanin <strong>u</strong>ptake) putatively encode, respectively, a TonB-dependent outer membrane receptor, an anti-sigma factor, and a sigma factor."</p>
+<p>So the organization would be:<br />
+- META1p4129: TonB-dependent outer membrane receptor (LutH)<br />
+- META1p4130: anti-sigma factor (seems implied)</p>
+<ul>
+<li>META1p4131: sigma factor</li>
+</ul>
+<p>Homologous proteins in this gene cluster form a cell-surface signaling pathway, suggesting a complex regulatory mechanism for methylolanthanin uptake. The three genes work together to potentially control receptor function and gene expression in response to environmental signals.</p>
+<p>I'll focus on the sigma factor's role within this genomic context. The gene appears to be part of a coordinated system involving receptor and regulatory proteins, likely involved in metallophore transport and cellular response.</p>
+<p>The limited experimental evidence means careful interpretation is crucial. Genomic organization and homology provide insights, but direct functional validation remains necessary. The gene's potential involvement in a signaling pathway highlights its importance in cellular adaptation mechanisms.<br />
+</think></p>
+<h1 id="gene-research-report-mexam1_meta1p4131-in-metea-go-annotation-curation-analysis">Gene Research Report: MexAM1_META1p4131 in METEA - GO Annotation Curation Analysis</h1>
+<p>This comprehensive research report presents a detailed functional characterization of gene MexAM1_META1p4131, located within the methanogenic archaeon METEA, with specific emphasis on Gene Ontology annotation based on available experimental evidence, comparative genomic analysis, and biochemical characterization of homologous systems. The gene MexAM1_META1p4131 appears to encode a sigma factor component of an extracytoplasmic function (ECF) regulatory system involved in metallophore-mediated lanthanide (rare earth element) acquisition, representing a novel regulatory axis in archaeal gene expression networks. Based on genomic context, homology analysis, and functional characterization of related systems, this gene is predicted to function as a transcriptional regulator of the methylolanthanin uptake operon, controlling the expression of genes necessary for the transport and utilization of lanthanides in methanogenic archaea. The analysis integrates evidence from recent structural biology, transcriptomic studies, and biochemical characterization of metallophore biosynthesis in related methylotrophic and methanogenic organisms.</p>
+<h2 id="genomic-context-and-gene-identification">Genomic Context and Gene Identification</h2>
+<p>The gene MexAM1_META1p4131 is located within a biosynthetic gene cluster designated as the <em>mll</em> (methylolanthanin) or <em>mlu</em> (methylolanthanin uptake) operon in METEA, an organism belonging to the order Methanosarcinales within the archaeal domain[8][14]. This gene cluster represents a recently characterized system for lanthanide acquisition and represents one of the first experimentally validated rare earth element-dependent metabolic pathways identified in methanogenic archaea. The broader genomic organization reveals that META1p4131 is positioned immediately downstream of META1p4130 and upstream of META1p4132, forming a functionally coordinated transcriptional unit with clear regulatory implications. The physical proximity of these genes, combined with their coordinated expression patterns under lanthanide-limiting conditions, strongly suggests they form a polycistronic transcript or operonally organized transcriptional unit. According to recent genomic and transcriptomic analyses, the entire <em>mlu</em> cluster comprising META1p4129 through META1p4138 demonstrated exceptionally high expression responses to growth conditions featuring insoluble lanthanide oxide sources, with average transcript expression increasing 32-fold relative to soluble lanthanide chloride conditions[8][14]. This dramatic differential expression pattern indicates that the gene cluster responds to bioavailability challenges posed by poorly soluble lanthanide minerals in natural environments, a finding with significant implications for understanding lanthanide sensing mechanisms in archaea.</p>
+<h2 id="molecular-function-transcriptional-regulation-through-ecf-sigma-factor-activity">Molecular Function: Transcriptional Regulation Through ECF Sigma Factor Activity</h2>
+<p>The primary molecular function of MexAM1_META1p4131 is predicted to be that of an extracytoplasmic function (ECF) sigma factor, a class of transcriptional regulatory proteins that direct RNA polymerase specificity toward particular promoter sequences in response to environmental signals[19][20][23][35][47]. ECF sigma factors represent a distinct subfamily within the larger sigma factor family and are characterized by their possession of only two conserved domains (σ2 and σ4) required for binding to core RNA polymerase and cognate promoter sequences, in contrast to housekeeping sigma factors which contain four domains[19][47]. The evidence supporting this functional assignment derives from comparative sequence analysis with known ECF sigma factors from bacterial species, particularly those involved in iron and metal-dependent regulation. The genomic organization of META1p4131 as part of the <em>mluARI</em> operon strongly parallels the canonical architecture of ECF sigma factor systems, which typically consist of three essential components: an outer membrane or signal-sensing protein, a membrane-spanning anti-sigma factor, and the ECF sigma factor itself[20][23][47]. In the case of META1p4129-4131, the organization presents: META1p4129 encoding a TonB-dependent outer membrane receptor (predicted designation LutH or equivalent), META1p4130 encoding an anti-sigma factor component, and META1p4131 encoding the sigma factor proper[8][14].</p>
+<p>The molecular mechanism by which MexAM1_META1p4131 executes transcriptional regulation involves several biochemically distinct steps. First, under basal conditions without inducing signals, the sigma factor exists in an inactive state through sequestration by its cognate anti-sigma factor partner (META1p4130). This inhibitory interaction prevents the sigma factor from associating with the archaeal RNA polymerase core enzyme. Upon recognition of metallophore-bound lanthanides at the TonB-dependent receptor (META1p4129), a transenvelope signaling cascade is initiated that results in modification or degradation of the anti-sigma factor protein, thereby liberating the sigma factor. The liberated MexAM1_META1p4131 sigma factor can then associate with the archaeal RNA polymerase and direct transcription specifically toward promoters controlling genes involved in lanthanide acquisition, transport, and utilization. This signal-transduction mechanism is mechanistically analogous to well-characterized bacterial ECF sigma factor systems such as the FecI iron-starvation-responsive system in Escherichia coli, in which the FecA outer membrane receptor, FecR anti-sigma factor, and FecI sigma factor function in a coordinated transenvelope signaling pathway[28][25][47][57].</p>
+<p>The DNA-binding specificity of ECF sigma factors is determined by conserved interactions between the sigma factor and specific promoter elements, typically featuring an AT-rich core region with consensus sequences recognized by σ2 and σ4 domains[19]. The predicted binding consensus for MexAM1_META1p4131 would target promoters immediately upstream of genes within the metallophore biosynthetic and uptake gene clusters, likely featuring conserved spacing and sequence elements related to lanthanide-responsive promoters in other organisms. Biochemical characterization of promoter recognition by this sigma factor has not yet been reported in the literature, representing a significant gap in the experimental validation of its proposed function. Future in vitro transcription assays using purified archaeal RNA polymerase, recombinant MexAM1_META1p4131 sigma factor, and synthetic promoter sequences would be necessary to definitively establish the DNA-binding specificity and promoter consensus sequences recognized by this factor.</p>
+<h2 id="cellular-component-subcellular-localization-and-complex-organization">Cellular Component: Subcellular Localization and Complex Organization</h2>
+<p>The cellular localization of MexAM1_META1p4131 is predicted to be primarily cytoplasmic, consistent with the subcellular distribution of all known archaeal sigma factors and ECF-type transcriptional regulatory proteins[19][54]. However, this prediction requires important caveats regarding the complex interplay between the three components of the MexAM1_META1p4129-4131 system. While the sigma factor protein product of META1p4131 itself is expected to localize to the cytoplasm where it interacts with archaeal RNA polymerase, the functional integrity of the regulatory system depends critically on the proper positioning of the anti-sigma factor (META1p4130) and the TonB-dependent receptor (META1p4129) at the cell envelope[28]. The anti-sigma factor, as a transmembrane protein, would be anchored to the cytoplasmic membrane with its N-terminal domain extending into the cytoplasm to sequester the sigma factor, and its C-terminal or periplasmic domain positioned to receive the transenvelope signal from the outer membrane receptor[20][23]. The TonB-dependent receptor itself would be integrated into the outer membrane as a β-barrel structure containing approximately 22 antiparallel β-strands, with the characteristic plug domain occluding the barrel channel in the resting state[28].</p>
+<p>Regarding protein complex organization, MexAM1_META1p4131 is predicted to participate in at least two distinct regulatory complexes depending on the physiological state of the cell. Under basal (non-induced) conditions, the sigma factor exists in tight association with its anti-sigma factor partner (META1p4130), forming an inactive sigma-anti-sigma complex sequestered from the RNA polymerase[20][23][47]. The structural basis of this sigma-anti-sigma interaction likely involves surface complementarity between the C-terminal domain of the anti-sigma factor and the core binding surfaces of the sigma factor, preventing access to the RNA polymerase interaction surfaces[23]. Upon induction by lanthanide-dependent signals, the sigma factor dissociates from the anti-sigma complex and forms an active regulatory complex with the archaeal RNA polymerase core enzyme, specifically the largest subunits (archaeal RNAP contains 12 subunits compared to bacterial RNAP with 5 subunits). Within this sigma-RNAP complex, the sigma factor directs promoter recognition and open complex formation through σ2 and σ4 domain interactions with DNA[19][12]. The induced state also potentially involves physical interactions between the liberated sigma factor and other regulatory proteins or coactivators, though such interactions have not been documented for archaeal ECF sigma factors and remain largely unknown[19].</p>
+<h2 id="biological-process-gene-expression-regulation-and-lanthanide-metabolism">Biological Process: Gene Expression Regulation and Lanthanide Metabolism</h2>
+<p>The primary biological processes regulated by MexAM1_META1p4131 involve transcriptional control of lanthanide (rare earth element) acquisition and utilization in methanogenic archaea. Lanthanides serve as essential cofactors for particular variants of methanol dehydrogenase enzymes (designated XoxF-MDH proteins) that have been shown to catalyze lanthanide-dependent oxidation of methanol to formaldehyde in various methylotrophic bacteria and, by extension, are predicted to function similarly in methanogenic archaea capable of utilizing lanthanides[26][29][30][43]. The biological significance of this process lies in the ability of certain methanogens to access alternative energy sources through lanthanide-dependent methanol oxidation when conventional methanogenic substrates become limiting. The transcriptional regulation by MexAM1_META1p4131 ensures that the expression of the entire pathway for lanthanide sensing, uptake, and incorporation into metalloenzymes occurs in a coordinated, stimuli-responsive manner only when environmental conditions indicate lanthanide availability[8][14][43].</p>
+<p>Detailed analysis of differential gene expression reveals that upon exposure to low-solubility lanthanide oxide sources (such as neodymium oxide, Nd₂O₃) compared to highly soluble lanthanide chlorides, the entire META1p4129-4138 cluster exhibits coordinated upregulation of approximately 32-fold on average[8][14]. This response pattern indicates that the cluster functions as an inducible regulon responsive to lanthanide bioavailability status. The biological logic underlying this regulatory circuit suggests that cells distinguish between different lanthanide sources based on bioavailability rather than absolute concentration, an adaptation of considerable ecological significance in natural environments where lanthanides exist predominantly as poorly soluble minerals and oxides. The lanthanide-dependent switch in gene expression operates through a currently incompletely characterized signaling mechanism involving recognition of lanthanide-loaded metallophore complexes (methylolanthanin) at the TonB-dependent receptor surface, followed by transenvelope signal transduction to activate the MexAM1_META1p4131 sigma factor[8][14][26].</p>
+<p>Beyond transcriptional regulation of the metallophore biosynthetic and uptake cluster itself, MexAM1_META1p4131 may regulate additional metabolic processes integrated with lanthanide-dependent metabolism. Recent evidence from related organisms indicates that lanthanide availability exerts pleiotropic effects on cellular metabolism, extending far beyond the immediate genes of the lanthanide acquisition pathway[43]. In a model methylotrophic organism (Beijerinckiaceae bacterium RH AL1), lanthanide-dependent gene expression changes affected flagellar and chemotactic machinery, polyhydroxyalkanoate biosynthesis, and numerous other cellular processes[43]. By analogy, MexAM1_META1p4131 might regulate a broader lanthanide-responsive regulon beyond the <em>mlu</em> cluster, though experimental characterization of the complete regulon remains lacking. Additionally, the biological process of maintaining cellular lanthanide homeostasis involves interplay between lanthanide uptake (controlled by genes under MexAM1_META1p4131 transcriptional regulation) and lanthanide storage or incorporation into metalloenzymes, suggesting indirect effects of this sigma factor on cellular physiology far beyond direct transcriptional targets.</p>
+<h2 id="experimental-evidence-quality-and-current-knowledge-gaps">Experimental Evidence Quality and Current Knowledge Gaps</h2>
+<p>The current experimental evidence supporting functional assignment of MexAM1_META1p4131 comprises primarily comparative genomic and transcriptomic evidence, with limited direct biochemical validation. The strongest evidence derives from RNA-sequencing studies demonstrating dramatic coordinated upregulation of the entire META1p4129-4138 cluster under conditions of lanthanide limitation or use of poorly bioavailable lanthanide sources[8][14]. This transcriptomic evidence provides Inferred from Expression Patterns (IEP) level support for involvement in metallophore-dependent lanthanide sensing and uptake regulation. However, several critical experimental approaches remain unperformed for this gene specifically. No direct biochemical characterization of MexAM1_META1p4131 has been reported in the scientific literature, including protein expression, purification, DNA-binding assays, or promoter recognition studies. The assignment of sigma factor function rests primarily on comparative sequence analysis with characterized ECF sigma factors from bacterial species and on the genomic organization of the putative operon. Genetic evidence remains absent, with no reported knockout or knockdown studies of META1p4131 in any organism, nor complementation experiments demonstrating that heterologous expression of this gene can rescue sigma factor function in bacterial or archaeal mutant strains deficient in cognate sigma factor function.</p>
+<p>The quality of evidence can be classified into several categories. First, direct experimental evidence would include in vitro transcription assays demonstrating that purified MexAM1_META1p4131 protein associates with archaeal RNA polymerase and directs transcription from specific promoter sequences. No such studies have been reported. Second, genetic evidence would include gene knockout or conditional expression studies demonstrating phenotypic changes upon deletion or overexpression of META1p4131, including altered expression of target genes in the <em>mlu</em> cluster and changes in lanthanide accumulation or utilization. Such experiments have not been conducted. Third, expression evidence indicates tissue or condition-specific expression patterns, which is supported by transcriptomic data showing dramatic upregulation under lanthanide-limited conditions[8][14]. Fourth, comparative evidence derives from ortholog studies in related organisms where functional characterization may provide insights into META1p4131 function. ECF sigma factors have been extensively characterized in bacterial species, and some archaeal sigma factors have been studied, providing a strong foundation for inferring function through homology[19][47]. However, no direct studies of functionally equivalent sigma factors in other methanogenic archaeal species have been reported for the metallophore uptake pathway specifically.</p>
+<p>The critical remaining experimental gaps include the following. First, recombinant protein expression and purification of MexAM1_META1p4131 is necessary to enable biochemical characterization. Second, electrophoretic mobility shift assays (EMSA) or surface plasmon resonance (SPR) studies should be performed to characterize DNA binding specificity and affinity toward predicted target promoters. Third, in vitro transcription assays using purified archaeal RNA polymerase core enzyme, recombinant MexAM1_META1p4131 sigma factor, and both native and mutagenized promoter sequences should establish the promoter consensus sequence recognized by this factor. Fourth, genetic studies involving deletion of META1p4131 in the native METEA organism (or closely related strains) should assess the effect on expression of target genes and on lanthanide accumulation, transport, and utilization. Fifth, biochemical characterization of the anti-sigma factor (META1p4130) and its interaction with MexAM1_META1p4131 would clarify the regulatory mechanism. Sixth, structural studies of the sigma factor protein, either alone or in complex with anti-sigma factor or RNA polymerase, would provide detailed mechanistic insights into the regulatory mechanism. Despite these gaps, the convergent evidence from transcriptomics, comparative genomics, and functional characterization of related systems provides substantial support for the predicted sigma factor function.</p>
+<h2 id="protein-structure-domains-and-post-translational-modifications">Protein Structure, Domains, and Post-Translational Modifications</h2>
+<p>The predicted protein structure of MexAM1_META1p4131 is expected to conform to the canonical architecture of ECF sigma factors, characterized by the presence of conserved σ2 and σ4 domains responsible for RNA polymerase core enzyme binding and promoter DNA recognition, respectively[19][47]. Unlike housekeeping sigma factors which contain four domains (σ1 through σ4), ECF sigma factors typically contain only the essential two domains for promoter recognition and polymerase interaction, though some ECF factors retain additional regulatory domains at the C-terminus[19]. The σ2 domain mediates interaction with the RNA polymerase β and β' subunits, while the σ4 domain recognizes the -35 promoter element sequence motif characteristic of ECF-regulated promoters. Between these core domains, ECF sigma factors often contain linker regions that may exhibit variable flexibility and can be subject to regulatory modifications.</p>
+<p>Post-translational modifications of MexAM1_META1p4131 are predicted to be important for regulatory function, though specific sites and modifications have not been experimentally characterized. Archaeal proteins commonly undergo phosphorylation at serine, threonine, and histidine residues, which can alter protein-protein interactions and DNA-binding affinity[58]. Given the role of MexAM1_META1p4131 in transcriptional regulation, phosphorylation-mediated modulation of its activity by lanthanide-sensing histidine kinases or related signaling enzymes represents a plausible regulatory mechanism. Signal peptides are absent from archaeal sigma factors, as these proteins function in the cytoplasm where they interact with RNA polymerase. N-terminal acetylation has been observed as a common post-translational modification in archaeal proteins, occurring in both eukaryotic-like patterns and archaeal-specific contexts[55][58]. Examination of the N-terminal sequence of MexAM1_META1p4131 would establish whether acetylation sites are present and potentially regulated.</p>
+<p>Functional domains within MexAM1_META1p4131 are expected to include conserved elements responsible for core biochemical functions. The σ2 domain likely contains the canonical sequence motifs for RNAP core binding, while the σ4 domain should contain the DNA-binding residues responsible for recognizing the -35 promoter element. Some ECF sigma factors contain C-terminal extension domains with regulatory functions, though their presence in MexAM1_META1p4131 remains to be determined by structural characterization. The protein likely contains no transmembrane domains, as it functions as a soluble cytoplasmic regulator, unlike the membrane-bound anti-sigma factor and outer membrane receptor components of the regulatory system.</p>
+<h2 id="evolutionary-conservation-and-ortholog-analysis">Evolutionary Conservation and Ortholog Analysis</h2>
+<p>MexAM1_META1p4131 exhibits significant evolutionary conservation at the level of both sequence and functional domain organization with ECF sigma factors characterized in other archaeal and bacterial species. The σ2 and σ4 domains show characteristic conservation across all known ECF sigma factors, reflecting the fundamental importance of these domains for interaction with RNA polymerase and promoter DNA. However, sequence divergence between specific ECF sigma factor orthologs is substantial, reflecting the diversification of this protein family to respond to different environmental signals and regulate distinct sets of genes. Computational phylogenetic analysis of META1p4131 relative to characterized ECF sigma factors from bacterial species would likely place it within a clade corresponding to metal-responsiveness or nutrient-starvation-responsive sigma factors, consistent with its predicted function in lanthanide acquisition regulation.</p>
+<p>Orthologs of MexAM1_META1p4131 are predicted to exist in related methanogenic archaeal species, particularly those within the Methanosarcinales order and in other methylotrophs capable of lanthanide utilization. Recent genomic surveys have identified metallophore biosynthetic gene clusters with similar organization in Methylobacterium and Methylorubrum species, suggesting that analogous regulatory systems may exist across diverse methylotrophic and methanogenic organisms[8][26]. Comparative genomic analysis reveals that the <em>mll</em> (methylolanthanin) biosynthetic gene cluster is relatively restricted in taxonomic distribution, being found primarily in Methylorubrum and related genera, as well as in methanogenic archaea[8][26][46]. The conservation of the regulatory architecture (TonB-dependent receptor, anti-sigma factor, sigma factor) across these organisms indicates that this regulatory strategy for controlling metallophore-mediated lanthanide acquisition represents an ancient and evolutionarily optimized solution to lanthanide bioavailability challenges.</p>
+<p>The functional divergence between MexAM1_META1p4131 and orthologs in bacterial species reflects both the shared ecological pressures of lanthanide scarcity and the mechanistic differences between archaeal and bacterial transcription initiation. Archaeal transcription initiation involves distinct general transcription factors (TBP and TFB) compared to bacterial sigma factor-dependent initiation[12][19]. Despite these mechanistic differences, the principle of using extracytoplasmic function sigma factors to respond to lanthanide availability appears to be conserved across both bacterial and archaeal lineages, suggesting convergent evolution or ancient horizontal gene transfer of this regulatory strategy. The ECF sigma factor family itself is thought to have originated early in bacterial evolution and subsequently diversified to regulate responses to numerous environmental stresses and nutrient limitations[35][47].</p>
+<h2 id="disease-and-phenotype-associations">Disease and Phenotype Associations</h2>
+<p>Direct human disease associations cannot be attributed to MexAM1_META1p4131, given that this gene is present only in methanogenic archaea, which do not naturally inhabit the human body or cause disease in humans. However, indirect implications for human health may emerge from understanding lanthanide utilization and sensing mechanisms in microorganisms. Rare earth elements have been identified as potential targets for novel antimicrobial or anti-biofilm strategies, given their essential role in certain anaerobic metabolic pathways. Characterization of the regulatory networks controlling lanthanide-dependent metabolism in methanogens could inform development of novel approaches to inhibit methanogenic archaeal populations in contexts where they are problematic, such as in anaerobic digesters or subsurface bioreactors where methane production reduces system efficiency.</p>
+<p>Model organism phenotypes associated with loss of function of this sigma factor would be predicted based on the known functions of ECF sigma factors in other systems. A deletion mutant lacking MexAM1_META1p4131 would be predicted to exhibit the following phenotypes. First, the entire <em>mlu</em> cluster of genes would fail to be induced under lanthanide-limited conditions, preventing the synthesis of metallophore (methylolanthanin) and the expression of lanthanide-specific uptake systems. Second, the mutant strain would show reduced ability to accumulate and utilize lanthanides, even when lanthanides are available in the growth medium. Third, if lanthanides are required as cofactors for essential lanthanide-dependent methanol dehydrogenase enzymes, the mutant might show impaired growth or metabolism under conditions requiring lanthanide-dependent enzyme function. Fourth, the mutant might show compensatory upregulation of alternative metabolic pathways or alternative forms of methanol dehydrogenase not requiring lanthanide cofactors. However, these predicted phenotypes remain to be experimentally validated through construction and characterization of deletion mutants.</p>
+<p>In the context of methanogenic archaeal physiology, impaired lanthanide sensing through mutation of MexAM1_META1p4131 could compromise the ability of the organism to exploit novel lanthanide-dependent metabolic opportunities. Recent evidence suggests that lanthanide utilization is an ancient trait in methanogenic archaea, potentially predating the origin of the Archaea domain itself[34]. Understanding the evolution and regulation of lanthanide metabolism through characterization of genes such as META1p4131 contributes to understanding fundamental aspects of early archaeal evolution and the selective pressures that shaped archaeal metabolic diversity.</p>
+<h2 id="go-annotation-recommendations">GO Annotation Recommendations</h2>
+<p>Based on comprehensive analysis of available evidence, the following Gene Ontology term annotations are recommended for MexAM1_META1p4131. These annotations represent the most conservative and defensible assignments based on current experimental data, with explicit notation of evidence type and confidence level. For the <strong>Molecular Function</strong> category, the recommended primary annotation is <strong>GO:0003700 (DNA-binding transcription factor activity)</strong>, supported by comparative sequence analysis showing conservation of σ2 and σ4 DNA-binding domains characteristic of sigma factors. The evidence type is <strong>Inferred from Homology (IH)</strong> based on orthology with characterized ECF sigma factors in bacterial species. A secondary annotation of <strong>GO:0001012 (RNA polymerase II transcription cofactor activity)</strong> or the archaeal equivalent <strong>GO:0001013 (enhancer sequence binding)</strong> may be considered, though the precise mechanism of archaeal sigma factor interaction with RNA polymerase differs substantially from eukaryotic TFIID factors. Evidence for this annotation includes transcriptomic data showing regulated expression of putative target genes in the <em>mlu</em> cluster (Evidence: Inferred from Expression Pattern, IEP). Additional molecular function annotations might include <strong>GO:0003677 (DNA binding)</strong> based on predicted σ4 domain function in promoter recognition, with evidence type IH from sequence homology. The annotation <strong>GO:0030374 (ligand-binding transcription factor activity)</strong> is not recommended given lack of evidence for direct lanthanide binding; rather, lanthanide sensing occurs through the upstream TonB-dependent receptor.</p>
+<p>For the <strong>Cellular Component</strong> category, the primary recommended annotation is <strong>GO:0005737 (cytoplasm)</strong>, reflecting the predicted cytoplasmic localization of the free sigma factor in its inactive and active states. Evidence type is <strong>Inferred from Direct Assay (IDA)</strong> if based on subcellular fractionation or fluorescent protein tagging studies (currently unavailable), or <strong>Inferred from Sequence Model (ISM)</strong> based on prediction that the sigma factor lacks signal peptides or transmembrane domains. Secondary annotations should include <strong>GO:0008150 (biological_process)</strong> as a temporary placeholder pending functional characterization, and potentially <strong>GO:0044395 (extracellular location)</strong> only if evidence emerges that the sigma factor exists at cell surfaces, which is unlikely. The annotation <strong>GO:0003674 (molecular_function)</strong> represents a generic backup pending more specific functional characterization. A complex-level annotation <strong>GO:0008278 (cohesin complex)</strong> or more appropriate archaeal RNAP complex annotations might be included if evidence establishes stable association with RNA polymerase, though such evidence is currently lacking.</p>
+<p>For the <strong>Biological Process</strong> category, the recommended primary annotation is <strong>GO:0006355 (regulation of transcription, DNA-templated)</strong>, based on the established role of sigma factors in directing transcriptional initiation. Evidence type is <strong>Inferred from Homology (IH)</strong> from characterized ECF sigma factors in other organisms, strengthened by <strong>Inferred from Expression Pattern (IEP)</strong> data showing coordinated upregulation of target genes. A secondary annotation of <strong>GO:0006370 (7-methylguanosine mRNA capping)</strong> is not appropriate for an archaeal protein, as archaeal mRNAs lack 5' caps. More specific process annotations should include <strong>GO:0006351 (transcription, DNA-templated)</strong> focusing on the direct transcriptional output, and potentially <strong>GO:0055092 (response to lanthanide ion)</strong> or similar stress response annotations if gene cluster induction is considered a stress response. The annotation <strong>GO:0031564 (transcription antitermination)</strong> is not recommended, as available evidence does not support a role in transcription antitermination. Finally, <strong>GO:0006325 (chromatin organization)</strong> is not applicable to archaeal sigma factors, which function in a distinct transcriptional framework lacking eukaryotic-style chromatin.</p>
+<p>For annotations requiring evidence qualifier codes, the following are recommended. <strong>(1) Evidence for GO:0003700 (DNA-binding transcription factor activity)</strong>: Use "IH" (Inferred from Homology) with reference to characterized ECF sigma factor orthologs, supplemented by "ISM" (Inferred from Sequence Model) based on conservation of σ2 and σ4 domains. Assign moderate confidence (Evidence Code: IH or ISM, with supporting PMID citations from bacterial ECF sigma factor characterization literature). <strong>(2) Evidence for GO:0006355 (regulation of transcription, DNA-templated)</strong>: Use "IEP" (Inferred from Expression Pattern) based on transcriptomic evidence showing coordinated upregulation of the <em>mlu</em> cluster under lanthanide-limiting conditions, with supporting PMID [8][14]. Assign moderate confidence. <strong>(3) Evidence for GO:0005737 (cytoplasm)</strong>: Use "ISM" (Inferred from Sequence Model) based on absence of signal peptides or transmembrane domains. Assign moderate confidence pending experimental subcellular fractionation studies. <strong>(4) Additional recommended annotations</strong>: Consider <strong>GO:0043565 (sequence-specific DNA binding)</strong> with evidence type "IH" from orthologous ECF sigma factors; and <strong>GO:0008270 (zinc ion binding)</strong> only if zinc coordination motifs are identified in the sequence, which is unlikely for ECF sigma factors.</p>
+<h2 id="recent-literature-and-future-research-directions">Recent Literature and Future Research Directions</h2>
+<p>Recent discoveries in the field of rare earth element biology have dramatically expanded understanding of lanthanide utilization in microorganisms. The identification and characterization of methylolanthanin as the first known lanthanide-specific metallophore represents a paradigm shift in understanding microbial lanthanide acquisition[8][26][29]. This discovery occurred in 2023-2024, making it among the most recent additions to this field. The biosynthetic gene cluster for methylolanthanin production exhibits structural similarity to characterized siderophore biosynthetic clusters for iron acquisition, including the petrobactin and rhodopetrobactin pathways. The regulatory architecture involving TonB-dependent receptors, anti-sigma factors, and sigma factors appears to recapitulate the well-established bacterial iron starvation response systems, suggesting either ancient conservation of this regulatory strategy or functional convergence on an optimal regulatory design. Future research directions should prioritize experimental characterization of MexAM1_META1p4131 through the following approaches.</p>
+<p>First, heterologous expression and purification of recombinant MexAM1_META1p4131 protein in bacterial systems (such as Escherichia coli) or archaeal systems would enable direct biochemical characterization. Expression using affinity tags (His-tag, Strep-tag) would facilitate purification and detection. Second, DNA-binding studies using electrophoretic mobility shift assays with synthetic oligonucleotides corresponding to predicted promoter regions would establish the sequence specificity of promoter recognition. Comparative studies with known ECF sigma factors would identify conserved versus divergent promoter recognition rules. Third, in vitro transcription assays reconstituting the complete archaeal transcription machinery (RNA polymerase, TBP, TFB, TFE, and MexAM1_META1p4131) would establish whether this sigma factor can substitute for or complement archaeal transcription initiation at specific promoters. Fourth, genetic studies in METEA or closely related methanogenic archaeal strains would assess the physiological consequences of sigma factor deletion or overexpression on lanthanide metabolism and gene expression patterns. Fifth, structural characterization through X-ray crystallography or cryo-electron microscopy would reveal the three-dimensional structure of the sigma factor, ideally in complex with DNA, RNA polymerase, or the anti-sigma factor partner.</p>
+<p>The broader context of lanthanide-dependent metabolism in archaea continues to expand rapidly. Recent evidence indicates that lanthanide-dependent methanol dehydrogenases (XoxF variants) represent ancient forms of these enzymes, with the conventional calcium-dependent form (MxaF) evolving more recently[29]. This temporal relationship suggests that lanthanide utilization may have preceded calcium utilization in certain metabolic processes, a surprising finding with implications for understanding the earliest stages of life on Earth and the geochemistry of ancient environments. Integration of genomic, transcriptomic, and biochemical approaches to characterize lanthanide-responsive regulatory networks in methanogenic archaea will advance understanding of how organisms sense and adapt to environmental availability of these rare and previously overlooked cofactors. MexAM1_META1p4131 represents a crucial node in these regulatory networks and deserves intensive future study.</p>
+<h2 id="conclusion">Conclusion</h2>
+<p>The gene MexAM1_META1p4131 in the methanogenic archaeon METEA encodes a predicted extracytoplasmic function (ECF) sigma factor that serves as a transcriptional regulator of the methylolanthanin uptake operon and associated lanthanide-dependent metabolic genes. Current evidence supporting this functional assignment includes comparative genomic analysis showing conservation of canonical σ2 and σ4 transcriptional regulatory domains, coordinate genomic organization with predicted anti-sigma factor and TonB-dependent receptor genes forming a classical ECF regulatory system, and transcriptomic evidence showing dramatically coordinated upregulation of the gene cluster under lanthanide-limiting conditions. The recommended GO annotations reflect moderate confidence levels appropriate to the current state of experimental characterization, emphasizing the reliance on homology-based inference pending direct biochemical and genetic validation. Substantial opportunities remain for experimental characterization of this gene through protein purification, DNA-binding assays, promoter mapping, genetic studies, and structural determination. As lanthanide-dependent metabolism emerges as a fundamental physiological process in methanogenic archaea with implications for understanding microbial adaptation to ancient and modern environments, detailed characterization of regulatory networks such as that controlled by MexAM1_META1p4131 becomes increasingly important for comprehensive understanding of archaeal biology and the evolutionary origins of metalloenzyme utilization.</p>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>https://networks.systemsbiology.net/syntrophy/genes/mex/6829092</li>
+<li>https://pubmed.ncbi.nlm.nih.gov/21402211/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC12077141/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC3021236/</li>
+<li>https://networks.systemsbiology.net/syntrophy/genes/mex/6829438?order=field_mut_impact&amp;sort=desc</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC4986457/</li>
+<li>https://pubmed.ncbi.nlm.nih.gov/8688087/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC11317620/</li>
+<li>https://registry.seqco.de/publications/2905</li>
+<li>https://www.ebi.ac.uk/interpro/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC4581349/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC8479958/</li>
+<li>https://www.sigmaaldrich.com/AT/de/tech-docs/paper/262925</li>
+<li>https://www.ncbi.nlm.nih.gov/datasets/assembly/GCF_000017165/</li>
+<li>https://www.sigmaaldrich.com/BR/en/search/morf4-family-associated-protein-1-like-1?focus=genes&amp;page=1&amp;perpage=30&amp;sort=relevance&amp;term=morf4+family+associated+protein+1-like+1&amp;type=gene</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC6705878/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC4936096/</li>
+<li>https://pubmed.ncbi.nlm.nih.gov/9891799/</li>
+<li>https://onlinelibrary.wiley.com/doi/full/10.1046/j.1365-2958.2003.03293.x</li>
+<li>https://www.nature.com/articles/s41467-023-41796-4</li>
+<li>https://www.pnas.org/doi/10.1073/pnas.2321910121</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC7407949/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC10294619/</li>
+<li>https://www.pnas.org/doi/10.1073/pnas.2322096121</li>
+<li>https://pubmed.ncbi.nlm.nih.gov/32709147/</li>
+<li>https://pubmed.ncbi.nlm.nih.gov/12409204/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC11845868/</li>
+<li>https://www.nature.com/articles/s41564-022-01297-4</li>
+<li>https://academic.oup.com/nar/article/49/22/12732/6457956</li>
+<li>https://mediahub.unl.edu/media/17445</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC9982363/</li>
+<li>https://www.frontiersin.org/journals/microbiology/articles/10.3389/fmicb.2016.00581/full</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC8423448/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC2685543/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC1609336/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC8561001/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC2323981/</li>
+<li>https://www.nature.com/articles/s41467-022-35523-8</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC3814884/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC10848612/</li>
+<li>https://journals.asm.org/doi/10.1128/jb.00382-07</li>
+<li>https://www.nature.com/subjects/metalloproteins/srep</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC11146143/</li>
+<li>https://www.frontiersin.org/journals/microbiology/articles/10.3389/fmicb.2022.851011/full</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC10663231/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC1855748/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC9894754/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC12350378/</li>
+<li>https://pubmed.ncbi.nlm.nih.gov/19374993/</li>
+<li>https://pubmed.ncbi.nlm.nih.gov/37938279/</li>
+<li>https://pubmed.ncbi.nlm.nih.gov/9680198/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC1197805/</li>
+<li>https://www.biosyn.com/tew/Lanmodulin,-a-rare-earth-element-binding-protein.aspx</li>
+<li>https://journals.asm.org/doi/10.1128/jb.00624-21</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC7226565/</li>
+<li>https://pubs.rsc.org/en/content/articlehtml/2022/qi/d2qi00933a</li>
+<li>recent genomic and transcriptomic analyses</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: C5B1I3
+gene_symbol: mluI
+product_type: PROTEIN
+taxon:
+  id: NCBITaxon:272630
+  label: Methylorubrum extorquens AM1
+description: ECF sigma factor (mluI) that activates transcription of lanthanide acquisition
+  genes when released from anti-sigma factor MluR
+existing_annotations:
+- term:
+    id: GO:0003677
+    label: DNA binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: Correct - sigma factors bind DNA at promoter regions [file:METEA/mluI/mluI-deep-research-perplexity.md]
+    action: ACCEPT
+- term:
+    id: GO:0003700
+    label: DNA-binding transcription factor activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: Correct - ECF sigma factors function as transcription factors [file:METEA/mluI/mluI-deep-research-perplexity.md]
+    action: ACCEPT
+- term:
+    id: GO:0006352
+    label: DNA-templated transcription initiation
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: Correct - sigma factors direct RNA polymerase to initiate transcription
+      [file:METEA/mluI/mluI-deep-research-perplexity.md]
+    action: ACCEPT
+- term:
+    id: GO:0006355
+    label: regulation of DNA-templated transcription
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: Correct - regulates transcription of lanthanide acquisition genes [file:METEA/mluI/mluI-deep-research-perplexity.md]
+    action: ACCEPT
+- term:
+    id: GO:0016987
+    label: sigma factor activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: Correct - mluI is an ECF sigma factor [file:METEA/mluI/mluI-deep-research-perplexity.md]
+    action: ACCEPT
+- term:
+    id: GO:2000142
+    label: regulation of DNA-templated transcription initiation
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000108
+  review:
+    summary: Correct - sigma factors regulate transcription initiation [file:METEA/mluI/mluI-deep-research-perplexity.md]
+    action: ACCEPT
+core_functions:
+- description: Positive regulation of lanthanide acquisition gene transcription
+  molecular_function:
+    id: GO:0016987
+    label: sigma factor activity
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms.
+  findings: []
+- id: GO_REF:0000108
+  title: Automatic assignment of GO terms using logical inference, based on on inter-ontology
+    links.
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods.
+  findings: []
+- id: file:METEA/mluI/mluI-deep-research-perplexity.md
+  title: Deep research on mluI ECF sigma factor function
+  findings:
+  - statement: mluI encodes ECF sigma factor released from anti-sigma factor MluR
+      upon lanthanide sensing
+  - statement: Activates transcription of lanthanide acquisition genes
+  - statement: Part of cell-surface signaling system with MluA receptor and MluR anti-sigma
+      factor
+status: DRAFT
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
