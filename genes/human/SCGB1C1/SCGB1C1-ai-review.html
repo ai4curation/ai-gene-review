@@ -1,0 +1,1581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SCGB1C1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>SCGB1C1</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q8TD33" target="_blank" class="term-link">
+                        Q8TD33
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Aliases:</span>
+                <div class="aliases">
+                    
+                    <span class="badge">Secretoglobin family 1C member 1</span>
+                    
+                    <span class="badge">Lipophilin C</span>
+                    
+                </div>
+            </div>
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "SCGB1C1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q8TD33" data-a="DESCRIPTION: Secretoglobin family 1C member 1, small secreted p..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Secretoglobin family 1C member 1, small secreted protein (~10 kDa) belonging to secretoglobin superfamily characterized by four-helix bundle structure. Secretoglobins are secreted homodimeric proteins with conserved disulfide bonds and hydrophobic cavity capable of binding small lipophilic ligands (steroids, pheromones, lipids). SCGB1C1 likely functions as lipid-binding protein with anti-inflammatory or immunomodulatory roles, consistent with other secretoglobin family members. Expression enriched in specific epithelia. Secreted into extracellular space or body fluids where it may sequester hydrophobic molecules or modulate immune responses. Specific ligands and detailed biological function remain incompletely characterized. May play protective role in mucosal tissues.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8TD33" data-a="GO:0005576" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Extracellular region - secretoglobins are secreted proteins.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core localization for secreted protein function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Likely binds small hydrophobic ligands (lipids, steroids) via secretoglobin four-helix bundle with hydrophobic cavity. May sequester or transport lipophilic molecules in extracellular space.</h3>
+                <span class="vote-buttons" data-g="Q8TD33" data-a="FUNCTION: Likely binds small hydrophobic ligands (lipids, st..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005549" target="_blank" class="term-link">
+                            odorant binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                extracellular region
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            UniProt:Q8TD33
+                            
+                        </span>
+                        
+                        <div class="finding-text">SCGB1C1 is secretoglobin family member with characteristic four-helix bundle structure for binding hydrophobic ligands.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt.</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Openai</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(SCGB1C1-deep-research-openai.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q8TD33" data-a="DOC: Deep Research Openai" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: openai<br />
+model: o3-deep-research-2025-06-26<br />
+cached: true<br />
+start_time: '2025-11-03T22:24:45.701380'<br />
+end_time: '2025-11-03T22:24:45.703012'<br />
+duration_seconds: 0.0<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: human<br />
+  gene_id: Q8TD33<br />
+  gene_symbol: SCGB1C1<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    temperature: 0.1<br />
+    top_p: 1.0<br />
+citation_count: 45</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<p>Please provide a comprehensive research report on the gene SCGB1C1 (Q8TD33) in human.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function. </p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<h1 id="scgb1c1-q8td33-secretoglobin-family-1c-member-1-in-humans">SCGB1C1 (Q8TD33) – Secretoglobin Family 1C Member 1 in Humans</h1>
+<h2 id="gene-and-protein-overview">Gene and Protein Overview</h2>
+<p><strong>SCGB1C1</strong> (secretoglobin family 1C member 1), also known by the alias <strong>RYD5</strong>, encodes a small secreted protein in the secretoglobin superfamily (<a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=SCGB1C1#:~:text=Aliases%20for%20SCGB1C1%20Gene">www.genecards.org</a>). Secretoglobins are a family of low-molecular-weight secreted proteins (~10 kDa) often forming dimers, known for binding small hydrophobic ligands and modulating inflammation (<a href="https://pubmed.ncbi.nlm.nih.gov/30768367/#:~:text=Secretoglobins%20%28SCGBs%29%20are%20cytokine,relationships%20among%20the%20SCGBs%2C%20their">pubmed.ncbi.nlm.nih.gov</a>). SCGB1C1 was first identified in the early 1990s as a <em>ligand-binding protein</em> expressed in the olfactory mucosa (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC452990/#:~:text=predicted%20proteins%20for%20three%20of,bind%20separate%20classes%20of%20odorants">pmc.ncbi.nlm.nih.gov</a>). It shares the characteristic “uteroglobin fold” structure of secretoglobins, which creates a hydrophobic cavity for ligand binding (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC452990/#:~:text=predicted%20proteins%20for%20three%20of,bind%20separate%20classes%20of%20odorants">pmc.ncbi.nlm.nih.gov</a>). While genome annotations predict only a generic function, recent research has begun to elucidate SCGB1C1’s specific roles in <em>olfaction</em> and <em>immune regulation</em>.  </p>
+<p><strong>Synonyms and homologs:</strong> In older literature SCGB1C1 is referred to as <strong>“ligand binding protein RYD5”</strong>, reflecting its discovery as a putative binding protein (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC452990/#:~:text=predicted%20proteins%20for%20three%20of,bind%20separate%20classes%20of%20odorants">pmc.ncbi.nlm.nih.gov</a>). It is distinct from the similarly named <strong>SCGB1A1</strong> (uteroglobin/Clara cell protein), though both are secretoglobins. The mouse <strong>Scgb1c1</strong> gene encodes the orthologous protein (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3251818/#:~:text=This%20gene%20encodes%20mouse%20UGB,is%20orthologous%20to%20human%20SCGB1A1">pmc.ncbi.nlm.nih.gov</a>), suggesting conserved function across species. Notably, rodents have a large expansion of secretoglobin genes (e.g., dozens of androgen-binding proteins in saliva for pheromonal communication) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3251818/#:~:text=Scgb1b%20and%20Scgb2b%3A%20The%20androgen,ABP%29%20family">pmc.ncbi.nlm.nih.gov</a>), whereas humans possess only a few; SCGB1C1 may represent a vestigial component of human chemosensory and immune systems.  </p>
+<h2 id="expression-and-localization">Expression and Localization</h2>
+<p><strong>Tissue distribution:</strong> SCGB1C1 expression is relatively tissue-restricted. It is <em>predominantly expressed in the nasal olfactory region</em>, specifically in <strong>Bowman’s glands</strong> of the olfactory mucosa (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3251818/#:~:text=SCGB1C1%20has%20been%20shown%20to,25">pmc.ncbi.nlm.nih.gov</a>). These glands secrete onto the olfactory epithelium, consistent with SCGB1C1’s role in nasal mucus. Transcriptomic atlases (e.g. Human Protein Atlas) indicate <strong>enhanced mRNA expression</strong> in a few tissues such as the <strong>salivary gland, pancreas,</strong> and <strong>retina</strong> (<a href="https://www.proteinatlas.org/ENSG00000188076-SCGB1C1#:~:text=TISSUE%20RNA%20EXPRESSION%20Tissue%20specificity,Low%20human%20brain%20regional%20specificity">www.proteinatlas.org</a>), although protein-level evidence in those sites is limited. Low expression is observed in most other tissues (<a href="https://www.ncbi.nlm.nih.gov/gene?Cmd=DetailsSearch&amp;Db=gene&amp;Term=147199#:~:text=Expression%20Low%20expression%20observed%20in,See%20more%20Orthologs%20mouse%20all">www.ncbi.nlm.nih.gov</a>), and it is not abundant in blood. Interestingly, single-cell RNA data suggest SCGB1C1 transcripts may be present in some immune cells (e.g. neutrophils, basophils) (<a href="https://www.proteinatlas.org/ENSG00000188076-SCGB1C1#:~:text=expression%20cluster%5E%7Bi%7D%20Platelets%20,basophil%2C%20neutrophil%29%20Immune%20cell">www.proteinatlas.org</a>), but this requires further validation. Overall, SCGB1C1 appears to be produced mainly by specialized exocrine glands and perhaps certain immune or epithelial cells in mucosal sites.</p>
+<p><strong>Subcellular localization:</strong> The SCGB1C1 protein is <strong>secreted to the extracellular space</strong>. It possesses a signal peptide for secretion and lacks transmembrane regions (<a href="https://www.proteinatlas.org/ENSG00000188076-SCGB1C1#:~:text=PROTEIN%20EXPRESSION%20AND%20LOCALIZATION%20Tissue,i%7D%20Secreted">www.proteinatlas.org</a>). Empirical evidence places it in secretory glandular fluids – for example, in the olfactory mucus covering sensory neurons (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3251818/#:~:text=SCGB1C1%20has%20been%20shown%20to,25">pmc.ncbi.nlm.nih.gov</a>). There, SCGB1C1 would carry out its function outside the cell, interacting with external ligands (odorants or signaling molecules) and cell surface receptors. No internal (cytosolic or organelle) localization has been reported, which aligns with its secretory role.  </p>
+<h2 id="biological-function-and-roles">Biological Function and Roles</h2>
+<h3 id="odorant-binding-in-the-olfactory-system">Odorant Binding in the Olfactory System</h3>
+<p>The <strong>primary function of SCGB1C1</strong> is believed to be as an <strong>odorant-binding protein (OBP)</strong> in the nasal olfactory mucosa. A 2011 genomics review noted that human SCGB1C1 is localized to Bowman’s glands, where it “acts as an odorant-binding protein” (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3251818/#:~:text=SCGB1C1%20has%20been%20shown%20to,25">pmc.ncbi.nlm.nih.gov</a>). Its inferred ligands are <em>small hydrophobic molecules</em> – essentially, volatile odorants or other hydrophobic chemicals in inhaled air (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3251818/#:~:text=SCGB1C1%20has%20been%20shown%20to,25">pmc.ncbi.nlm.nih.gov</a>). By binding odorant molecules in the mucus, SCGB1C1 may serve at least two purposes: (1) <strong>Transport/Presentation of odorants</strong> – ferrying hydrophobic odor molecules through the aqueous mucus to olfactory receptors, thereby facilitating smell perception; and (2) <strong>Buffering or inactivation</strong> of odorants – sequestering odor molecules to modulate sensitivity or to clear excess stimulants after receptor activation (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC452990/#:~:text=bind%20to%20either%20lipopolysaccharides%20,bind%20separate%20classes%20of%20odorants">pmc.ncbi.nlm.nih.gov</a>). This concept is analogous to odorant-binding proteins in other species (often lipocalins), which prolong or dampen odorant signals. In fact, the initial discovery of RYD5 (SCGB1C1) in rodents suggested it is part of a diverse set of OBPs in the olfactory epithelium that bind distinct classes of odorants (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC452990/#:~:text=bind%20to%20either%20lipopolysaccharides%20,bind%20separate%20classes%20of%20odorants">pmc.ncbi.nlm.nih.gov</a>). The SCGB1C1 protein’s hydrophobic binding pocket (characteristic of the uteroglobin fold) is well-suited to encapsulate lipophilic odorant compounds such as aromatic hydrocarbons or pheromone-like molecules (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC452990/#:~:text=predicted%20proteins%20for%20three%20of,bind%20separate%20classes%20of%20odorants">pmc.ncbi.nlm.nih.gov</a>). </p>
+<p><strong>Evidence for odorant binding:</strong> While direct binding assays in humans are not extensively documented, early studies provide clues. The rat homolog of SCGB1C1 (clone RYD5) showed sequence similarity to proteins known to bind polychlorinated biphenyls (highly hydrophobic compounds), hinting at a capacity to bind environmental chemicals (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC452990/#:~:text=predicted%20proteins%20for%20three%20of,bind%20separate%20classes%20of%20odorants">pmc.ncbi.nlm.nih.gov</a>). Additionally, SCGB1C1’s specific expression in olfactory <strong>Bowman’s gland cells</strong>, rather than general circulation, strongly supports a role in local odorant handling (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3251818/#:~:text=SCGB1C1%20has%20been%20shown%20to,25">pmc.ncbi.nlm.nih.gov</a>). Taken together, the data suggest SCGB1C1 acts as a soluble <em>odorant carrier</em> in the perireceptor environment of the nose. This function is analogous to how other secretoglobins (e.g. SCGB1A1/Clara cell protein) bind small lipophilic molecules like steroids or irritants (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC452990/#:~:text=predicted%20proteins%20for%20three%20of,bind%20separate%20classes%20of%20odorants">pmc.ncbi.nlm.nih.gov</a>), reflecting a common theme of the secretoglobin family in chemical binding and detoxification.  </p>
+<h3 id="immune-regulation-and-pathway-involvement">Immune Regulation and Pathway Involvement</h3>
+<p>Beyond chemosensory function, emerging research indicates that SCGB1C1 has an important role in <strong>immunoregulation at mucosal surfaces</strong>. Secretoglobins are often described as “cytokine-like” due to their ability to modulate inflammation (<a href="https://pubmed.ncbi.nlm.nih.gov/30768367/#:~:text=Secretoglobins%20%28SCGBs%29%20are%20cytokine,relationships%20among%20the%20SCGBs%2C%20their">pubmed.ncbi.nlm.nih.gov</a>), and recent studies suggest SCGB1C1 fits this paradigm. Notably, <strong>SCGB1C1 is implicated in controlling airway inflammation and allergic responses</strong>. In 2024, Kim <em>et al.</em> demonstrated that administering recombinant SCGB1C1 in a mouse model of allergic asthma caused a significant suppression of Th2-driven inflammation (<a href="https://pubmed.ncbi.nlm.nih.gov/38892470/#:~:text=administration%20of%20SCGB1C1%20significantly%20inhibited,of%20lung%20function%20through%20the">pubmed.ncbi.nlm.nih.gov</a>). Treated mice showed reduced airway hyper-responsiveness and eosinophilic infiltration, along with decreased <em>IL-4</em> and <em>IL-5</em> (key Th2 cytokines) in lung tissues (<a href="https://pubmed.ncbi.nlm.nih.gov/38892470/#:~:text=administration%20of%20SCGB1C1%20significantly%20inhibited,of%20lung%20function%20through%20the">pubmed.ncbi.nlm.nih.gov</a>). Strikingly, SCGB1C1 treatment boosted anti-inflammatory mediators <em>IL-10</em> and <em>TGF-β</em> in bronchoalveolar fluid and expanded the population of <strong>Foxp3<sup>+</sup> regulatory T-cells (Tregs)</strong> in lymphoid tissues (<a href="https://pubmed.ncbi.nlm.nih.gov/38892470/#:~:text=administration%20of%20SCGB1C1%20significantly%20inhibited,of%20lung%20function%20through%20the">pubmed.ncbi.nlm.nih.gov</a>). This shift toward a Treg/IL-10 dominant environment led to lower IgE levels and overall amelioration of allergic airway inflammation (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11173076/#:~:text=administration%20of%20SCGB1C1%20significantly%20inhibited,4%20in%20the%20LLN">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11173076/#:~:text=lung%2C%20and%20serum%20total%20and,4%20in%20the%20LLN">pmc.ncbi.nlm.nih.gov</a>). The authors concluded that SCGB1C1 may be a <strong>major endogenous regulator</strong> that helps <em>suppress excessive immune responses</em> in the airways (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11173076/#:~:text=match%20at%20L49%20induction%20of,for%20suppressing%20allergic%20airway%20inflammation">pmc.ncbi.nlm.nih.gov</a>). In practical terms, SCGB1C1 appears to promote tolerance and resolution of inflammation – a role reminiscent of SCGB1A1 (Clara cell protein), which is known to dampen lung inflammation. However, SCGB1C1’s mechanism is not fully defined; it may interact with specific receptors on immune cells or bind pro-inflammatory ligands (e.g. allergens or lipids) to neutralize them. Further research is ongoing to identify the molecular targets of SCGB1C1 in immune pathways.</p>
+<p><strong>Pathway context:</strong> While SCGB1C1 is not a classic enzyme or receptor in a defined signaling cascade, its activity influences key <strong>cytokine signaling pathways</strong> in mucosal immunity. By increasing IL-10 and TGF-β, SCGB1C1 skews the immune response towards a regulatory (anti-inflammatory) pathway, engaging the <strong>IL-10/TGF-β axis</strong> which is crucial for Treg function and immune tolerance (<a href="https://pubmed.ncbi.nlm.nih.gov/38892470/#:~:text=administration%20of%20SCGB1C1%20significantly%20inhibited,of%20lung%20function%20through%20the">pubmed.ncbi.nlm.nih.gov</a>). Concurrently, the protein’s suppression of IL-4/IL-5 indicates that it down-regulates the <strong>Th2 (IgE-mediated allergy) pathway</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/38892470/#:~:text=administration%20of%20SCGB1C1%20significantly%20inhibited,of%20lung%20function%20through%20the">pubmed.ncbi.nlm.nih.gov</a>). These effects position SCGB1C1 as a modulator in the network of cytokines: it indirectly enhances signaling that curbs inflammation (via TGF-β and IL-10 receptors on immune cells) and inhibits signaling that leads to eosinophilia and IgE production (via IL-4/IL-5 pathways). In summary, SCGB1C1 can be seen as a <em>soluble immune-modulatory factor</em> integrating into immune signaling circuits to maintain mucosal homeostasis.</p>
+<p><strong>Clinical and experimental evidence:</strong> Observational studies support SCGB1C1’s importance in human inflammatory conditions. For instance, <strong>nasal polyposis</strong>, a chronic inflammatory disease of the sinonasal cavity, has been linked to SCGB1C1 dysregulation. A 2018 study found that <em>SCGB1C1 mRNA levels are significantly elevated in nasal polyp tissues</em> compared to normal nasal mucosa (p = 0.003) (<a href="https://cellmolbiol.org/index.php/CMB/article/view/1686#:~:text=polymorphisms%20and%20the%20gene%20expression%2C,found%20between%20a%20high%20level">cellmolbiol.org</a>). The same study identified <strong>promoter polymorphisms</strong> in the SCGB1C1 gene (notably rs113795008 and rs2280540) that were more frequent in patients with nasal polyps (p = 0.005 and 0.045) (<a href="https://cellmolbiol.org/index.php/CMB/article/view/1686#:~:text=expression%20of%20Secretoglobin%201C1%20in,of%20developing%20NP%20in%20the">cellmolbiol.org</a>). The presence of a certain variant genotype was associated with higher SCGB1C1 expression in the polyp tissue (<a href="https://cellmolbiol.org/index.php/CMB/article/view/1686#:~:text=increased%20in%20NP%20%28P%3D%200,the%20gene%20expression%20biology%20in">cellmolbiol.org</a>). These findings suggest that genetic changes affecting SCGB1C1 expression may contribute to susceptibility to chronic sinonasal inflammation (<a href="https://cellmolbiol.org/index.php/CMB/article/view/1686#:~:text=Secretoglobin%201C1%20in%20NP%20,the%20gene%20expression%20biology%20in">cellmolbiol.org</a>). It is intriguing to speculate that SCGB1C1 upregulation in polyps might be a compensatory, anti-inflammatory response (given its known <strong>anti-inflammatory action</strong>), or conversely that dysregulated SCGB1C1 might alter mucosal immunity in a way that predisposes to polyp formation. Additional studies (e.g. on SCGB1C1 levels in airway infections or autoimmune conditions) would further clarify its role, but current evidence consistently points to SCGB1C1 as a <strong>protective immunomodulator</strong> in the respiratory tract.</p>
+<h2 id="conclusions-and-current-understanding">Conclusions and Current Understanding</h2>
+<p><strong>SCGB1C1</strong> is a specialized secreted protein with dual roles in chemical sensing and immune homeostasis. <strong>Functionally</strong>, it serves as an odorant-binding protein in the <strong>extracellular nasal mucus</strong>, binding hydrophobic odor molecules to facilitate olfaction (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3251818/#:~:text=SCGB1C1%20has%20been%20shown%20to,25">pmc.ncbi.nlm.nih.gov</a>). At the same time, it has emerged as an <strong>anti-inflammatory mediator</strong> in the airway, capable of dampening allergic immune responses by shifting cytokine profiles and expanding regulatory T-cells (<a href="https://pubmed.ncbi.nlm.nih.gov/38892470/#:~:text=administration%20of%20SCGB1C1%20significantly%20inhibited,of%20lung%20function%20through%20the">pubmed.ncbi.nlm.nih.gov</a>). These activities suggest SCGB1C1 is part of the body’s frontline defense in the nose and lungs – it can bind inhaled organic molecules (potentially odorants or even pollutants) and influence immune reactions to those stimuli. The protein localizes outside the cell (secreted into glandular fluids), where it can interact with both chemical ligands and cell-surface receptors. </p>
+<p>In terms of <strong>biochemical pathways</strong>, SCGB1C1 is not an enzyme or receptor but functions in a <em>carrier and signaling capacity</em>. It likely carries its odorant ligands through mucus to olfactory receptors (contributing to the sensory transduction pathway of smell), and it partakes in <strong>immune signaling pathways</strong> by modulating cytokine levels (thereby integrating into the network that controls inflammation). The precise molecular partners of SCGB1C1 remain to be defined – ongoing research is investigating whether SCGB1C1 binds to specific cell-surface receptors on immune cells or scavenges pro-inflammatory molecules to exert its effects. </p>
+<p><strong>Expert perspective:</strong> Reviews of the secretoglobin family highlight that many of these proteins (including SCGB1C1) have <strong>“largely unknown” functions and were historically understudied (<a href="https://pubmed.ncbi.nlm.nih.gov/30768367/#:~:text=Secretoglobins%20%28SCGBs%29%20are%20cytokine,relationships%20among%20the%20SCGBs%2C%20their">pubmed.ncbi.nlm.nih.gov</a>)</strong>, yet they often exhibit significant immunomodulatory and ligand-binding properties. The latest findings (2023–2024) mark a step change in our understanding by assigning a clear immunological function to SCGB1C1 (<a href="https://pubmed.ncbi.nlm.nih.gov/38892470/#:~:text=administration%20of%20SCGB1C1%20significantly%20inhibited,of%20lung%20function%20through%20the">pubmed.ncbi.nlm.nih.gov</a>). Researchers are now considering SCGB1C1 as a potential therapeutic target or biomarker in respiratory diseases. For example, its ability to induce Tregs and suppress Th2 cytokines opens the possibility of using SCGB1C1 or its analogs to treat asthma and allergic rhinitis (<a href="https://pubmed.ncbi.nlm.nih.gov/38892470/#:~:text=administration%20of%20SCGB1C1%20significantly%20inhibited,of%20lung%20function%20through%20the">pubmed.ncbi.nlm.nih.gov</a>). Likewise, genetic studies in chronic rhinosinusitis hint that variations in the SCGB1C1 gene could influence disease risk (<a href="https://cellmolbiol.org/index.php/CMB/article/view/1686#:~:text=increased%20in%20NP%20%28P%3D%200,the%20gene%20expression%20biology%20in">cellmolbiol.org</a>), making it of interest in precision medicine approaches for sinonasal disorders. </p>
+<p>In summary, <strong>SCGB1C1 (Q8TD33)</strong> encodes a secreted protein that <strong>binds hydrophobic small molecules</strong> in the nasal mucosa and <strong>regulates mucosal immunity</strong>. It performs its function in the <strong>extracellular space</strong> (secretions of olfactory and other glands), where it contributes to <strong>olfactory processes</strong> and helps maintain <strong>immune balance</strong> in the airway. Ongoing research and recent experimental evidence are shedding light on this protein’s precise biochemical role and its significance in human health. The convergence of data from molecular, genetic, and functional studies now solidifies SCGB1C1’s identity as both an odorant transporter and an inflammation modulator – a dual functionality that underscores the complex, context-dependent roles of secretoglobin family proteins in biology. </p>
+<p><strong>References (with publication dates):</strong> </p>
+<ul>
+<li>Dear <em>et al.</em>, EMBO J. 1991 – <em>Initial identification of RYD5 in olfactory mucosa</em> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC452990/#:~:text=predicted%20proteins%20for%20three%20of,bind%20separate%20classes%20of%20odorants">pmc.ncbi.nlm.nih.gov</a>).  </li>
+<li>Hollenberg <em>et al.</em>, Hum Genomics 2011 – <em>Secretoglobin family update; SCGB1C1 in Bowman’s glands binding small hydrophobic ligands</em> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3251818/#:~:text=SCGB1C1%20has%20been%20shown%20to,25">pmc.ncbi.nlm.nih.gov</a>).  </li>
+<li>Özdaş <em>et al.</em>, Cell Mol Biol 2018 – <em>SCGB1C1 expression up-regulated in nasal polyps; promoter SNPs associated with disease</em> (<a href="https://cellmolbiol.org/index.php/CMB/article/view/1686#:~:text=expression%20of%20Secretoglobin%201C1%20in,of%20developing%20NP%20in%20the">cellmolbiol.org</a>).  </li>
+<li>Kim <em>et al.</em>, Int J Mol Sci 2024 – <em>Functional study showing SCGB1C1 suppresses allergic airway inflammation (reduces IL-4/IL-5, increases IL-10/TGF-β, expands Tregs)</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/38892470/#:~:text=administration%20of%20SCGB1C1%20significantly%20inhibited,of%20lung%20function%20through%20the">pubmed.ncbi.nlm.nih.gov</a>).  </li>
+<li>(Additional general context) Xu <em>et al.</em>, J. Histochem. Cytochem. 2019 – <em>Described secretoglobins as cytokine-like secreted proteins</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/30768367/#:~:text=Secretoglobins%20%28SCGBs%29%20are%20cytokine,relationships%20among%20the%20SCGBs%2C%20their">pubmed.ncbi.nlm.nih.gov</a>).  </li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>AnnotationURLCitation(end_index=364, start_index=244, title='SCGB1C1 Gene - GeneCards | SG1C1 Protein | SG1C1 Antibody', type='url_citation', url='https://www.genecards.org/cgi-bin/carddisp.pl?gene=SCGB1C1#:~:text=Aliases%20for%20SCGB1C1%20Gene')</li>
+<li>AnnotationURLCitation(end_index=711, start_index=540, title='Spatiotemporal Expression of Three Secretoglobin Proteins, SCGB1A1, SCGB3A1, and SCGB3A2, in Mouse Airway Epithelia - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/30768367/#:~:text=Secretoglobins%20%28SCGBs%29%20are%20cytokine,relationships%20among%20the%20SCGBs%2C%20their')</li>
+<li>AnnotationURLCitation(end_index=989, start_index=825, title='Novel genes for potential ligand-binding proteins in subregions of the olfactory mucosa - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC452990/#:~:text=predicted%20proteins%20for%20three%20of,bind%20separate%20classes%20of%20odorants')</li>
+<li>AnnotationURLCitation(end_index=1286, start_index=1122, title='Novel genes for potential ligand-binding proteins in subregions of the olfactory mucosa - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC452990/#:~:text=predicted%20proteins%20for%20three%20of,bind%20separate%20classes%20of%20odorants')</li>
+<li>AnnotationURLCitation(end_index=1780, start_index=1616, title='Novel genes for potential ligand-binding proteins in subregions of the olfactory mucosa - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC452990/#:~:text=predicted%20proteins%20for%20three%20of,bind%20separate%20classes%20of%20odorants')</li>
+<li>AnnotationURLCitation(end_index=2118, start_index=1959, title="Update of the human secretoglobin (SCGB) gene superfamily and an example of 'evolutionary bloom' of androgen-binding protein genes within the mouse Scgb gene superfamily - PMC", type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3251818/#:~:text=This%20gene%20encodes%20mouse%20UGB,is%20orthologous%20to%20human%20SCGB1A1')</li>
+<li>AnnotationURLCitation(end_index=2453, start_index=2312, title="Update of the human secretoglobin (SCGB) gene superfamily and an example of 'evolutionary bloom' of androgen-binding protein genes within the mouse Scgb gene superfamily - PMC", type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3251818/#:~:text=Scgb1b%20and%20Scgb2b%3A%20The%20androgen,ABP%29%20family')</li>
+<li>AnnotationURLCitation(end_index=2932, start_index=2812, title="Update of the human secretoglobin (SCGB) gene superfamily and an example of 'evolutionary bloom' of androgen-binding protein genes within the mouse Scgb gene superfamily - PMC", type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3251818/#:~:text=SCGB1C1%20has%20been%20shown%20to,25')</li>
+<li>AnnotationURLCitation(end_index=3375, start_index=3195, title='SCGB1C1 protein expression summary - The Human Protein Atlas', type='url_citation', url='https://www.proteinatlas.org/ENSG00000188076-SCGB1C1#:~:text=TISSUE%20RNA%20EXPRESSION%20Tissue%20specificity,Low%20human%20brain%20regional%20specificity')</li>
+<li>AnnotationURLCitation(end_index=3673, start_index=3485, title='SCGB1C1 secretoglobin family 1C member 1 [Homo sapiens (human)] - Gene - NCBI', type='url_citation', url='https://www.ncbi.nlm.nih.gov/gene?Cmd=DetailsSearch&amp;Db=gene&amp;Term=147199#:~:text=Expression%20Low%20expression%20observed%20in,See%20more%20Orthologs%20mouse%20all')</li>
+<li>AnnotationURLCitation(end_index=4014, start_index=3838, title='SCGB1C1 protein expression summary - The Human Protein Atlas', type='url_citation', url='https://www.proteinatlas.org/ENSG00000188076-SCGB1C1#:~:text=expression%20cluster%5E%7Bi%7D%20Platelets%20,basophil%2C%20neutrophil%29%20Immune%20cell')</li>
+<li>AnnotationURLCitation(end_index=4521, start_index=4368, title='SCGB1C1 protein expression summary - The Human Protein Atlas', type='url_citation', url='https://www.proteinatlas.org/ENSG00000188076-SCGB1C1#:~:text=PROTEIN%20EXPRESSION%20AND%20LOCALIZATION%20Tissue,i%7D%20Secreted')</li>
+<li>AnnotationURLCitation(end_index=4765, start_index=4645, title="Update of the human secretoglobin (SCGB) gene superfamily and an example of 'evolutionary bloom' of androgen-binding protein genes within the mouse Scgb gene superfamily - PMC", type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3251818/#:~:text=SCGB1C1%20has%20been%20shown%20to,25')</li>
+<li>AnnotationURLCitation(end_index=5489, start_index=5369, title="Update of the human secretoglobin (SCGB) gene superfamily and an example of 'evolutionary bloom' of androgen-binding protein genes within the mouse Scgb gene superfamily - PMC", type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3251818/#:~:text=SCGB1C1%20has%20been%20shown%20to,25')</li>
+<li>AnnotationURLCitation(end_index=5745, start_index=5625, title="Update of the human secretoglobin (SCGB) gene superfamily and an example of 'evolutionary bloom' of androgen-binding protein genes within the mouse Scgb gene superfamily - PMC", type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3251818/#:~:text=SCGB1C1%20has%20been%20shown%20to,25')</li>
+<li>AnnotationURLCitation(end_index=6329, start_index=6161, title='Novel genes for potential ligand-binding proteins in subregions of the olfactory mucosa - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC452990/#:~:text=bind%20to%20either%20lipopolysaccharides%20,bind%20separate%20classes%20of%20odorants')</li>
+<li>AnnotationURLCitation(end_index=6804, start_index=6636, title='Novel genes for potential ligand-binding proteins in subregions of the olfactory mucosa - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC452990/#:~:text=bind%20to%20either%20lipopolysaccharides%20,bind%20separate%20classes%20of%20odorants')</li>
+<li>AnnotationURLCitation(end_index=7177, start_index=7013, title='Novel genes for potential ligand-binding proteins in subregions of the olfactory mucosa - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC452990/#:~:text=predicted%20proteins%20for%20three%20of,bind%20separate%20classes%20of%20odorants')</li>
+<li>AnnotationURLCitation(end_index=7683, start_index=7519, title='Novel genes for potential ligand-binding proteins in subregions of the olfactory mucosa - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC452990/#:~:text=predicted%20proteins%20for%20three%20of,bind%20separate%20classes%20of%20odorants')</li>
+<li>AnnotationURLCitation(end_index=7972, start_index=7852, title="Update of the human secretoglobin (SCGB) gene superfamily and an example of 'evolutionary bloom' of androgen-binding protein genes within the mouse Scgb gene superfamily - PMC", type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3251818/#:~:text=SCGB1C1%20has%20been%20shown%20to,25')</li>
+<li>AnnotationURLCitation(end_index=8408, start_index=8244, title='Novel genes for potential ligand-binding proteins in subregions of the olfactory mucosa - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC452990/#:~:text=predicted%20proteins%20for%20three%20of,bind%20separate%20classes%20of%20odorants')</li>
+<li>AnnotationURLCitation(end_index=8964, start_index=8793, title='Spatiotemporal Expression of Three Secretoglobin Proteins, SCGB1A1, SCGB3A1, and SCGB3A2, in Mouse Airway Epithelia - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/30768367/#:~:text=Secretoglobins%20%28SCGBs%29%20are%20cytokine,relationships%20among%20the%20SCGBs%2C%20their')</li>
+<li>AnnotationURLCitation(end_index=9458, start_index=9285, title='SCGB1C1 Plays a Critical Role in Suppression of Allergic Airway Inflammation through the Induction of Regulatory T Cell Expansion - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/38892470/#:~:text=administration%20of%20SCGB1C1%20significantly%20inhibited,of%20lung%20function%20through%20the')</li>
+<li>AnnotationURLCitation(end_index=9795, start_index=9622, title='SCGB1C1 Plays a Critical Role in Suppression of Allergic Airway Inflammation through the Induction of Regulatory T Cell Expansion - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/38892470/#:~:text=administration%20of%20SCGB1C1%20significantly%20inhibited,of%20lung%20function%20through%20the')</li>
+<li>AnnotationURLCitation(end_index=10181, start_index=10008, title='SCGB1C1 Plays a Critical Role in Suppression of Allergic Airway Inflammation through the Induction of Regulatory T Cell Expansion - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/38892470/#:~:text=administration%20of%20SCGB1C1%20significantly%20inhibited,of%20lung%20function%20through%20the')</li>
+<li>AnnotationURLCitation(end_index=10477, start_index=10316, title='SCGB1C1 Plays a Critical Role in Suppression of Allergic Airway Inflammation through the Induction of Regulatory T Cell Expansion - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC11173076/#:~:text=administration%20of%20SCGB1C1%20significantly%20inhibited,4%20in%20the%20LLN')</li>
+<li>AnnotationURLCitation(end_index=10617, start_index=10478, title='SCGB1C1 Plays a Critical Role in Suppression of Allergic Airway Inflammation through the Induction of Regulatory T Cell Expansion - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC11173076/#:~:text=lung%2C%20and%20serum%20total%20and,4%20in%20the%20LLN')</li>
+<li>AnnotationURLCitation(end_index=10929, start_index=10758, title='SCGB1C1 Plays a Critical Role in Suppression of Allergic Airway Inflammation through the Induction of Regulatory T Cell Expansion - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC11173076/#:~:text=match%20at%20L49%20induction%20of,for%20suppressing%20allergic%20airway%20inflammation')</li>
+<li>AnnotationURLCitation(end_index=11960, start_index=11787, title='SCGB1C1 Plays a Critical Role in Suppression of Allergic Airway Inflammation through the Induction of Regulatory T Cell Expansion - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/38892470/#:~:text=administration%20of%20SCGB1C1%20significantly%20inhibited,of%20lung%20function%20through%20the')</li>
+<li>AnnotationURLCitation(end_index=12264, start_index=12091, title='SCGB1C1 Plays a Critical Role in Suppression of Allergic Airway Inflammation through the Induction of Regulatory T Cell Expansion - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/38892470/#:~:text=administration%20of%20SCGB1C1%20significantly%20inhibited,of%20lung%20function%20through%20the')</li>
+<li>AnnotationURLCitation(end_index=13256, start_index=13088, title='Differentially expressed Secretoglobin 1C1 gene in nasal polyposis | Cellular and Molecular Biology', type='url_citation', url='https://cellmolbiol.org/index.php/CMB/article/view/1686#:~:text=polymorphisms%20and%20the%20gene%20expression%2C,found%20between%20a%20high%20level')</li>
+<li>AnnotationURLCitation(end_index=13602, start_index=13443, title='Differentially expressed Secretoglobin 1C1 gene in nasal polyposis | Cellular and Molecular Biology', type='url_citation', url='https://cellmolbiol.org/index.php/CMB/article/view/1686#:~:text=expression%20of%20Secretoglobin%201C1%20in,of%20developing%20NP%20in%20the')</li>
+<li>AnnotationURLCitation(end_index=13870, start_index=13713, title='Differentially expressed Secretoglobin 1C1 gene in nasal polyposis | Cellular and Molecular Biology', type='url_citation', url='https://cellmolbiol.org/index.php/CMB/article/view/1686#:~:text=increased%20in%20NP%20%28P%3D%200,the%20gene%20expression%20biology%20in')</li>
+<li>AnnotationURLCitation(end_index=14168, start_index=14012, title='Differentially expressed Secretoglobin 1C1 gene in nasal polyposis | Cellular and Molecular Biology', type='url_citation', url='https://cellmolbiol.org/index.php/CMB/article/view/1686#:~:text=Secretoglobin%201C1%20in%20NP%20,the%20gene%20expression%20biology%20in')</li>
+<li>AnnotationURLCitation(end_index=15112, start_index=14992, title="Update of the human secretoglobin (SCGB) gene superfamily and an example of 'evolutionary bloom' of androgen-binding protein genes within the mouse Scgb gene superfamily - PMC", type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3251818/#:~:text=SCGB1C1%20has%20been%20shown%20to,25')</li>
+<li>AnnotationURLCitation(end_index=15482, start_index=15309, title='SCGB1C1 Plays a Critical Role in Suppression of Allergic Airway Inflammation through the Induction of Regulatory T Cell Expansion - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/38892470/#:~:text=administration%20of%20SCGB1C1%20significantly%20inhibited,of%20lung%20function%20through%20the')</li>
+<li>AnnotationURLCitation(end_index=16867, start_index=16696, title='Spatiotemporal Expression of Three Secretoglobin Proteins, SCGB1A1, SCGB3A1, and SCGB3A2, in Mouse Airway Epithelia - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/30768367/#:~:text=Secretoglobins%20%28SCGBs%29%20are%20cytokine,relationships%20among%20the%20SCGBs%2C%20their')</li>
+<li>AnnotationURLCitation(end_index=17254, start_index=17081, title='SCGB1C1 Plays a Critical Role in Suppression of Allergic Airway Inflammation through the Induction of Regulatory T Cell Expansion - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/38892470/#:~:text=administration%20of%20SCGB1C1%20significantly%20inhibited,of%20lung%20function%20through%20the')</li>
+<li>AnnotationURLCitation(end_index=17701, start_index=17528, title='SCGB1C1 Plays a Critical Role in Suppression of Allergic Airway Inflammation through the Induction of Regulatory T Cell Expansion - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/38892470/#:~:text=administration%20of%20SCGB1C1%20significantly%20inhibited,of%20lung%20function%20through%20the')</li>
+<li>AnnotationURLCitation(end_index=17982, start_index=17825, title='Differentially expressed Secretoglobin 1C1 gene in nasal polyposis | Cellular and Molecular Biology', type='url_citation', url='https://cellmolbiol.org/index.php/CMB/article/view/1686#:~:text=increased%20in%20NP%20%28P%3D%200,the%20gene%20expression%20biology%20in')</li>
+<li>AnnotationURLCitation(end_index=19159, start_index=18995, title='Novel genes for potential ligand-binding proteins in subregions of the olfactory mucosa - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC452990/#:~:text=predicted%20proteins%20for%20three%20of,bind%20separate%20classes%20of%20odorants')</li>
+<li>AnnotationURLCitation(end_index=19418, start_index=19298, title="Update of the human secretoglobin (SCGB) gene superfamily and an example of 'evolutionary bloom' of androgen-binding protein genes within the mouse Scgb gene superfamily - PMC", type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3251818/#:~:text=SCGB1C1%20has%20been%20shown%20to,25')</li>
+<li>AnnotationURLCitation(end_index=19709, start_index=19550, title='Differentially expressed Secretoglobin 1C1 gene in nasal polyposis | Cellular and Molecular Biology', type='url_citation', url='https://cellmolbiol.org/index.php/CMB/article/view/1686#:~:text=expression%20of%20Secretoglobin%201C1%20in,of%20developing%20NP%20in%20the')</li>
+<li>AnnotationURLCitation(end_index=20056, start_index=19883, title='SCGB1C1 Plays a Critical Role in Suppression of Allergic Airway Inflammation through the Induction of Regulatory T Cell Expansion - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/38892470/#:~:text=administration%20of%20SCGB1C1%20significantly%20inhibited,of%20lung%20function%20through%20the')</li>
+<li>AnnotationURLCitation(end_index=20368, start_index=20197, title='Spatiotemporal Expression of Three Secretoglobin Proteins, SCGB1A1, SCGB3A1, and SCGB3A2, in Mouse Airway Epithelia - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/30768367/#:~:text=Secretoglobins%20%28SCGBs%29%20are%20cytokine,relationships%20among%20the%20SCGBs%2C%20their')</li>
+</ol>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Perplexity</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(SCGB1C1-deep-research-perplexity.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q8TD33" data-a="DOC: Deep Research Perplexity" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: perplexity<br />
+model: sonar-deep-research<br />
+cached: false<br />
+start_time: '2025-11-03T22:24:48.034606'<br />
+end_time: '2025-11-03T22:26:55.189504'<br />
+duration_seconds: 127.16<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: human<br />
+  gene_id: Q8TD33<br />
+  gene_symbol: SCGB1C1<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    reasoning_effort: medium<br />
+    search_domain_filter: []<br />
+    return_citations: true<br />
+    temperature: 0.0<br />
+citation_count: 36</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<p>Please provide a comprehensive research report on the gene SCGB1C1 (Q8TD33) in human.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function. </p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p><think><br />
+This is a comprehensive request for a research report on the SCGB1C1 gene. The user wants:<br />
+1. Detailed narrative on function, biological processes, and localization<br />
+2. Citations for all claims<br />
+3. Focus on primary function (what does it do)<br />
+4. Localization (where in/outside cell)<br />
+5. Signaling/biochemical pathways<br />
+6. Evidence from experiments, structure, evolution, bioinformatics<br />
+7. Prioritize precise studies over high-throughput</p>
+<p>Let me review the sources I have:</p>
+<p>Key sources:<br />
+- [1], [18] - Human Protein Atlas - SCGB1C1 protein expression summary<br />
+- [2] - AlphaFold database - structural info on Q8TD33<br />
+- [3], [22], [29], [60] - Important pilot study on SCGB1C1 and upper respiratory infections in athletes (2016)<br />
+- [4], [12], [54] - NCBI Gene database entries<br />
+- [5] - Gene Ontology details<br />
+- [6] - Synapse database on SCGB1C1 modulators<br />
+- [7] - SCGB3A2 and pyroptosis (related secretoglobin)<br />
+- [8], [28], [56] - Broad genome survey on secretoglobins across species<br />
+- [9], [17] - Wikipedia on secretoglobins (general family info)<br />
+- [10], [23], [58] - Review on secretoglobins in immunoregulation in airway diseases (2021)<br />
+- [13], [21], [40] - GeneCards info<br />
+- [14], [25], [32], [44], [51], [55] - Update of human secretoglobin gene superfamily (2011)<br />
+- [15], [35] - Human Protein Atlas tissue expression<br />
+- [16], [36], [37], [41] - References to SCGB1C1 in nasal polyposis</p>
+<ul>
+<li>[19], [20], [26], [27], [43], [50], [57] - Recent 2024 study on SCGB1C1 in suppression of allergic airway inflammation</li>
+</ul>
+<p>I've identified multiple emerging research directions exploring SCGB1C1's immunomodulatory potential. The 2024 studies highlight its critical role in suppressing allergic airway inflammation, with potential therapeutic implications for respiratory conditions. Investigations into drug development modulators suggest promising pharmaceutical applications. Additionally, research extends into diverse domains like stem cell interactions, cancer biology, and inflammatory processes, indicating the gene's multifaceted biological significance.</p>
+<p>Key emerging research areas include:<br />
+- Immunomodulation in respiratory diseases<br />
+- Potential therapeutic drug development<br />
+- Interactions with stem cell extracellular vesicles<br />
+- Cancer-related molecular mechanisms<br />
+- Cytokine regulation in chronic inflammatory conditions</p>
+<p>The comprehensive research framework suggests SCGB1C1 as a versatile molecular target with broad clinical relevance across multiple physiological systems.<br />
+</think></p>
+<h1 id="comprehensive-functional-annotation-of-scgb1c1-a-multifunctional-secretory-protein-with-immune-regulatory-and-tissue-protective-functions">Comprehensive Functional Annotation of SCGB1C1: A Multifunctional Secretory Protein with Immune Regulatory and Tissue Protective Functions</h1>
+<p>SCGB1C1, encoding secretoglobin family 1C member 1 (also known as RYD5 or ligand binding protein RYD5), represents a distinctly functioning member of the secretoglobin protein superfamily with specialized roles in mucosal defense, immune regulation, and olfactory function. Recent research has elucidated that SCGB1C1 serves as a critical mediator of airway epithelial homeostasis through multiple mechanisms including pathogenic microorganism recognition and elimination, immunomodulatory signaling through regulatory T cell expansion, and binding of small hydrophobic ligands that may regulate local inflammatory responses. The protein exhibits tissue-specific expression patterns predominantly in the respiratory tract mucosa, salivary glands, and olfactory epithelium, where it functions as a secreted protein operating in extracellular compartments to maintain barrier integrity and coordinate immune tolerance at environmental interfaces.</p>
+<h2 id="molecular-characteristics-and-structural-organization">Molecular Characteristics and Structural Organization</h2>
+<h3 id="protein-structure-and-secretoglobin-family-classification">Protein Structure and Secretoglobin Family Classification</h3>
+<p>SCGB1C1 is a small secreted protein with molecular weight approximately 10 kilodaltons in humans, characteristic of the secretoglobin superfamily.[14][25] The protein consists of approximately 95 amino acids and exhibits the defining structural features of secretoglobins including four α-helical structures arranged in an antiparallel orientation.[25] As a member of the broader secretoglobin family, SCGB1C1 contains structural elements conserved throughout this protein class. The secretoglobins are characterized by assembly into dimeric structures before secretion, with dimers demonstrating remarkable stability against proteases, heat, and extremes of pH.[25] These dimeric forms are stabilized through covalent disulfide bonds formed between conserved cysteine residues and reinforced by non-covalent interactions.</p>
+<p>The defining structural hallmark of classic secretoglobins involves the formation of a boomerang-shaped configuration at the protein fold level, which creates an internal hydrophobic cavity at the dimer interface. However, SCGB1C1 presents a somewhat atypical structural profile within the secretoglobin family when analyzed across diverse species. While all 27 known SCGB1C sequences examined in recent comprehensive surveys retain the characteristic UG fold (the four-helix bundle in boomerang configuration), with the notable exception of two species (Cape golden mole and black flying fox), SCGB1C1 appears to lack the proximal and distal half-cysteine residues required for conventional dimer formation.[28][56] This structural peculiarity raises intriguing questions about whether SCGB1C1 functions as a monomer or forms alternative dimeric complexes through non-standard mechanisms. Despite this deviation from canonical secretoglobin architecture, the SCGB1C1 protein maintains the six conserved residues essential for ligand binding, suggesting preserved capacity for binding hydrophobic molecules.[28]</p>
+<h3 id="gene-localization-and-genomic-organization">Gene Localization and Genomic Organization</h3>
+<p>The SCGB1C1 gene is located on human chromosome 11p15.5, occupying genomic coordinates that position it in a chromosomal region previously implicated in cancer pathogenesis and genetic diversity studies.[37][41] The gene structure consists of three exons separated by two introns, maintaining the exon/intron organization characteristic of secretoglobin genes throughout vertebrate species.[28] This consistent genomic organization across diverse animal taxa suggests evolutionary conservation of the SCGB1C1 locus, consistent with its fundamental biological roles. The UniProt identifier for the human SCGB1C1 protein is Q8TD33, and the gene has received official nomenclature designation HGNC 18394 according to the Hugo Gene Nomenclature Committee.[13][21]</p>
+<h2 id="tissue-expression-and-cellular-localization">Tissue Expression and Cellular Localization</h2>
+<h3 id="spatial-distribution-across-human-tissues">Spatial Distribution Across Human Tissues</h3>
+<p>SCGB1C1 exhibits highly tissue-enriched and region-specific expression patterns centered on mucosal barrier tissues, particularly those exposed to environmental antigens and pathogens.[15] The most prominent expression occurs in the upper respiratory tract mucosa, where SCGB1C1 is synthesized by specialized secretory cells and released into the mucosal surface layer.[3] The protein demonstrates substantial expression in salivary glands, another major source of mucosal defense proteins, as well as in pancreatic tissue and blood-derived cells including neutrophils and monocytes.[1][15][35][40] This distribution pattern aligns with roles in innate immunity at environmental barriers and systemic immune regulation.</p>
+<p>Within the olfactory system, SCGB1C1 achieves particularly high expression levels, specifically localizing to Bowman's glands in the olfactory mucosa.[44][47] These specialized branched tubuloalveolar serous glands secrete compounds through ducts to the olfactory surface, where their secretions serve as a trap and solvent for odoriferous substances. The pronounced enrichment of SCGB1C1 in olfactory epithelium suggests its role as an odorant-binding protein, functioning to bind and potentially modify small hydrophobic odorant molecules before their presentation to olfactory receptors.[44][47]</p>
+<h3 id="subcellular-localization-and-secretory-pathway">Subcellular Localization and Secretory Pathway</h3>
+<p>SCGB1C1 is predicted to be located in the extracellular region as its primary site of biological activity.[1][13] The protein contains a signal peptide directing it through the secretory pathway, and functional studies confirm its secretion into extracellular compartments where it operates as a soluble, secreted protein.[14][25] The presence of conserved cysteine residues supports formation of disulfide-bonded dimers in oxidizing extracellular compartments, with the dimeric form likely representing the biologically active molecular species. Blood expression of SCGB1C1 gene transcripts correlates closely with mucosal tissue concentrations of the SCGB1C1 protein, suggesting that circulating SCGB1C1 levels may reflect mucosal protein production and potentially serve as a systemic biomarker of mucosal status.[3][22]</p>
+<h2 id="primary-biological-functions">Primary Biological Functions</h2>
+<h3 id="defense-against-microbial-pathogens-and-mucosa-protection">Defense Against Microbial Pathogens and Mucosa Protection</h3>
+<p>The primary biological function of SCGB1C1 involves recognition and elimination of pathogenic microorganisms from mucosal surfaces through mechanisms consistent with innate immune defense.[3][22][29][60] The SCGB1C1 protein plays critical roles in primary defense mechanisms by actively recognizing pathogenic microorganisms at mucosal barriers and promoting their removal, while simultaneously protecting lung epithelial cells from pathogen-induced damage.[3][29] The molecular mechanisms underlying this microbial recognition remain incompletely characterized but likely involve ligand binding and potential interaction with microbial surface components. The involvement of SCGB1C1 in common cold development suggests its participation in antiviral defense responses at upper respiratory surfaces.[3][25][29]</p>
+<p>Recent experimental evidence from 2024 research directly demonstrates the protective function of SCGB1C1 through intranasal administration studies in mouse asthma models.[19][20][26] When SCGB1C1 was administered intranasally at 5 μg/50 μL before allergen challenge, the protein produced significant reduction in airway hyperresponsiveness, markedly decreased eosinophil infiltration in bronchoalveolar lavage fluid, and substantially reduced eosinophilic lung inflammation.[19][20][26][27] Lung histological examination revealed that SCGB1C1 treatment dramatically decreased inflammatory cell infiltration and goblet cell hyperplasia compared to untreated asthmatic mice. These findings directly establish SCGB1C1's capacity to modulate harmful inflammatory responses while preserving mucosal barrier function.</p>
+<h3 id="ligand-binding-and-hydrophobic-molecule-interaction">Ligand Binding and Hydrophobic Molecule Interaction</h3>
+<p>SCGB1C1 functions as a ligand-binding protein with specificity for small hydrophobic molecules, reflecting its structural organization containing the six conserved residues required for ligand binding.[28] The hydrophobic cavity formed at the dimer interface of secretoglobins provides a binding site accommodating steroid hormones, phospholipid metabolites, retinoids, and various eicosanoid mediators of inflammation.[9][14][25] For SCGB1C1 specifically, odorant-binding appears to be a primary ligand binding function, particularly given its enrichment in olfactory epithelium where it likely binds volatile odorant molecules to facilitate or modulate their interaction with olfactory receptors.[44][47]</p>
+<p>The capacity to bind and sequester inflammatory lipid mediators suggests that SCGB1C1 may regulate local inflammatory processes by controlling availability of pro-inflammatory eicosanoids and other lipid signals.[24] This ligand-binding function represents a potential mechanism by which SCGB1C1 exerts anti-inflammatory effects at mucosal barriers. The binding and release of ligands may be coupled with the redox state of cysteine residues, providing a mechanism for dynamic regulation of ligand availability based on local oxidative conditions.[17]</p>
+<h3 id="odorant-binding-and-olfactory-function">Odorant Binding and Olfactory Function</h3>
+<p>Within the olfactory system, SCGB1C1 serves specialized functions as an odorant-binding protein operating in Bowman's glands, the serous glands of the olfactory mucosa.[44][47] These glands produce secretions that trap and solubilize odoriferous molecules, facilitating their presentation to olfactory receptors located on sensory neurons. SCGB1C1's high expression in olfactory epithelium and its structural capacity for binding small hydrophobic molecules indicates it functions to capture and regulate the availability of volatile odorant compounds in the olfactory mucosa. The specific odorants bound by SCGB1C1 remain to be comprehensively characterized, though its localization suggests potential binding of diverse volatile molecules encountered in the nasal environment. This olfactory function appears to be independent of, though potentially complementary to, its immunomodulatory roles in respiratory mucosa.</p>
+<h2 id="regulation-by-inflammatory-cytokines-and-th1th2-responses">Regulation by Inflammatory Cytokines and Th1/Th2 Responses</h2>
+<h3 id="cytokine-driven-regulation-of-scgb1c1-expression">Cytokine-Driven Regulation of SCGB1C1 Expression</h3>
+<p>SCGB1C1 expression is dynamically regulated by the cytokine microenvironment at mucosal surfaces, with distinct modulation by Type 1 helper T cell (Th1) versus Type 2 helper T cell (Th2) cytokines.[3][22][29] The SCGB1C1 gene is downregulated by interferon-gamma (IFN-γ), a characteristic Th1 cytokine, while being upregulated by interleukin-4 (IL-4) and interleukin-13 (IL-13), both hallmark Th2 cytokines.[3][22][23][29] This bidirectional cytokine regulation positions SCGB1C1 as a sensor and responder to shifts in Th1/Th2 balance within the mucosal immune compartment.</p>
+<p>A particularly important and well-characterized relationship exists between SCGB1C1 expression and interleukin-5 (IL-5), a key Th2 cytokine driving eosinophil recruitment and differentiation. A pilot study examining gene expression in elite kayakers revealed an inverse correlation between blood expression of IL-5 and SCGB1C1 gene expression with a statistical relationship of high significance (corrected p = 0.00065; fold change = 3.17).[3][22] Athletes exhibiting elevated IL-5 concentrations showed substantial downregulation of SCGB1C1 transcription, suggesting that elevated IL-5 as part of a Th2-skewed immune response actively suppresses SCGB1C1 expression. Conversely, in controlled experimental settings, provision of exogenous SCGB1C1 protein substantially decreased IL-5 expression in broncoalveolar lavage fluid, creating a potential negative feedback loop where SCGB1C1 suppresses the Th2 responses that would otherwise downregulate its own expression.[19][20][26][27]</p>
+<h3 id="integration-into-th1th2-balance-and-immune-homeostasis">Integration into Th1/Th2 Balance and Immune Homeostasis</h3>
+<p>The Th1/Th2 balance represents a fundamental principle of adaptive immune regulation, with Type 1 responses mediated by Th1 cells producing interferon-gamma (IFN-γ), tumor necrosis factor-alpha (TNF-α), and interleukin-2 (IL-2), while Type 2 responses involve Th2 cells producing IL-4, IL-5, IL-6, and IL-10.[3][22][29] SCGB1C1's dual regulation by these opposing cytokine classes positions it as an effector of Th1/Th2 balance, potentially serving to stabilize appropriate immune responses and prevent excessive Th2 skewing. The downregulation by IFN-γ during Th1 responses may limit anti-inflammatory SCGB1C1 activity when microbial clearance requires robust inflammatory responses, while its upregulation by IL-4 and IL-13 during Th2 responses suggests it may help terminate excessive Th2-driven inflammation.</p>
+<p>This regulatory framework has particular relevance to understanding SCGB1C1's role in upper respiratory tract infections. In high-endurance athletes where temporary immunosuppression occurs following intensive exercise, alterations in Th1/Th2 balance create conditions predisposing to common cold susceptibility.[3][22] The finding that elevated IL-5 correlates with decreased SCGB1C1 expression in this athlete population suggested a potential mechanism by which Th2 skewing during post-exercise immunosuppression might impair mucosal defenses through downregulation of this critical SCGB1C1. This hypothesis aligns with the frequent observation of sudden immunological dysfunction and upper respiratory tract infection episodes in athletes during training camps or competitions.</p>
+<h2 id="immunomodulatory-mechanisms-and-regulatory-t-cell-induction">Immunomodulatory Mechanisms and Regulatory T Cell Induction</h2>
+<h3 id="regulatory-t-cell-expansion-and-il-10tgf-production">Regulatory T Cell Expansion and IL-10/TGF-β Production</h3>
+<p>Recent experimental evidence from 2024 studies demonstrates that SCGB1C1 exerts potent immunomodulatory effects through promoting expansion of CD4⁺CD25⁺Foxp3⁺ regulatory T cells (Tregs) in vivo.[19][20][26][27] When SCGB1C1 was administered intranasally to ovalbumin-sensitized asthmatic mice, the populations of these regulatory T cells in lung-draining lymph nodes increased dramatically compared to untreated asthmatic mice.[19][20][26][27] Regulatory T cells represent a critical component of immune tolerance and negative feedback regulation, and their expansion by SCGB1C1 provides a mechanistic explanation for the protein's anti-inflammatory effects.</p>
+<p>Concomitant with Treg expansion, SCGB1C1 administration produced marked increases in interleukin-10 (IL-10) and transforming growth factor-beta (TGF-β) in bronchoalveolar lavage fluid.[19][20][26][27] Both IL-10 and TGF-β represent key anti-inflammatory and immunosuppressive cytokines produced by regulatory T cells and serve to suppress effector T cell activation and limit inflammatory responses. The coordinated increases in Treg populations, IL-10 production, and TGF-β production following SCGB1C1 treatment establish a coherent mechanistic pathway through which SCGB1C1 suppresses allergic airway inflammation. This immunomodulatory mechanism represents a primary function distinct from the protein's direct microbial recognition capabilities, suggesting SCGB1C1 functions through multiple complementary pathways to maintain mucosal homeostasis.</p>
+<h3 id="eosinophil-recruitment-suppression-and-allergic-response-modulation">Eosinophil Recruitment Suppression and Allergic Response Modulation</h3>
+<p>SCGB1C1 administration significantly suppressed eosinophil recruitment to airways and eosinophilic lung inflammation in experimental asthma models.[19][20][26][27] Both total and allergen-specific immunoglobulin E (IgE) levels decreased substantially following SCGB1C1 treatment, with reductions in total IgE (p = 0.037) and allergen-specific IgE (p = 0.009).[19][20][43][57] The decreased IL-5 expression in broncoalveolar lavage fluid (p = 0.039) provides direct evidence that SCGB1C1 suppresses the key Th2 cytokine driving eosinophil differentiation and recruitment. Similarly, IL-4 expression in lung-draining lymph nodes decreased significantly (p = 0.040) following SCGB1C1 treatment, indicating suppression of IL-4 production by CD4⁺ T cells within lymphoid tissues draining the lungs.</p>
+<p>The preferential activation of CD4⁺CD25⁺Foxp3⁺ regulatory T cells by SCGB1C1 represents the central mechanism driving these broad suppressive effects on allergic responses.[19][20][26][27] Regulatory T cells express high levels of the IL-2 receptor alpha chain (CD25) and the transcription factor Foxp3, which is essential for their differentiation and suppressive functions. The strong and specific expansion of this T cell subset indicates that SCGB1C1 either directly engages regulatory T cell populations through receptor-mediated signaling or indirectly promotes their expansion through effects on antigen-presenting cells. The exact receptors and signaling cascades through which SCGB1C1 mediates these immunomodulatory effects remain to be definitively identified, representing an important area for future investigation.</p>
+<h2 id="association-with-disease-states-and-pathophysiological-implications">Association with Disease States and Pathophysiological Implications</h2>
+<h3 id="upper-respiratory-tract-infections-in-athletes">Upper Respiratory Tract Infections in Athletes</h3>
+<p>The expression of SCGB1C1 has emerged as a potential biomarker for individual susceptibility to upper respiratory tract infections, particularly in populations undergoing intense physical training.[3][22][29][60] High-endurance athletes frequently experience sudden episodes of immunological dysfunction resulting in susceptibility to common cold development, often occurring after intensive training periods or during competition tapering phases. A pilot study examining gene expression in elite kayakers identified low SCGB1C1 expression as significantly associated with elevated IL-5 concentrations, suggesting a potential mechanism for infection susceptibility in athletes.</p>
+<p>The mechanistic hypothesis proposes that exercise-induced shifts in Th1/Th2 balance occurring after intense training temporarily suppress SCGB1C1 expression through elevated IL-5 and other Th2 cytokines.[3][22][29][60] This exercise-induced Th2 skewing creates a window of enhanced susceptibility to upper respiratory viral infections by reducing mucosal defenses through SCGB1C1 downregulation. The inverse correlation between IL-5 and SCGB1C1 expression (corrected p = 0.00065; fold change = 3.17) provides strong support for this mechanism, suggesting that optimization of training protocols to maintain appropriate Th1/Th2 balance could potentially reduce infection-related absences during competitions.</p>
+<h3 id="allergic-airway-diseases-and-asthma">Allergic Airway Diseases and Asthma</h3>
+<p>SCGB1C1 is notably downregulated in allergic airway disease states including asthma and allergic rhinitis, positions it as a potential therapeutic target for these conditions.[19][20][26][27][46][57] The suppression of SCGB1C1 in allergic disease may contribute to enhanced susceptibility to allergen-induced inflammation through multiple mechanisms including reduced regulatory T cell populations, decreased IL-10 and TGF-β production, and impaired mucosal barrier function. When SCGB1C1 expression was assessed in ovalbumin-challenged asthmatic mice, the gene showed significant downregulation in lung tissue compared to control mice, with treatment using adipose stem cell-derived extracellular vesicles restoring SCGB1C1 expression and suppressing allergic airway inflammation.</p>
+<p>The recent experimental evidence showing that intranasal administration of SCGB1C1 protein provides significant reduction in allergic airway inflammation and improvement of lung function in asthmatic mice establishes this protein as a potential therapeutic intervention.[19][20][26][27] The effect size appears substantial, with marked reductions in airway hyperresponsiveness, inflammatory cell infiltration, goblet cell hyperplasia, and IgE production. These findings suggest SCGB1C1 could potentially be developed as a protein therapeutic for patients with allergic rhinitis and asthma, particularly those with Th2-skewed immune responses. The authors concluded that SCGB1C1 likely represents the major regulator responsible for suppressing allergic airway inflammation, suggesting therapeutic restoration of this protein in deficient states could provide clinical benefit.</p>
+<h3 id="nasal-polyposis-and-chronic-rhinosinusitis">Nasal Polyposis and Chronic Rhinosinusitis</h3>
+<p>SCGB1C1 expression undergoes differential regulation in nasal polyposis, with studies examining the role of SCGB1C1 polymorphisms in susceptibility to this chronic inflammatory condition.[36][37][38] The RYD5 gene (another designation for SCGB1C1) contains functionally relevant single-nucleotide polymorphisms associated with increased nasal polyp risk. Specifically, the RYD5 +66A&gt;G polymorphism in the recessive genetic model showed increased polyp risk, with the GG genotype conferring significantly elevated odds ratio (2.88; 95% CI 1.05–7.89; p = 0.032).[37]</p>
+<p>A polymorphism at position +57-14C&gt;T located within the exon-intron boundary of the RYD5 gene demonstrated association with nasal polyposis risk, particularly in the recessive genetic model.[37] Since approximately 15% of disease-causing single-nucleotide polymorphisms directly affect pre-messenger RNA splicing, and exon-intron boundary polymorphisms can impair splicing enhancer elements, this intronic variant may reduce normal SCGB1C1 mRNA splicing efficiency and thereby decrease protein production at mucosal surfaces. The proposed mechanism suggests that the +57-14 TT genotype may affect exon-splicing ability and transcriptional efficiency, potentially contributing to reduced SCGB1C1 production and increased polyp formation risk. SCGB1C1 protein can modulate inflammation by binding steroid ligands, resulting in prevention of nasal polyp development through both direct anti-inflammatory effects and suppression of local Th2 responses.</p>
+<p>The involvement of SCGB1C1 in chronic rhinosinusitis pathophysiology is further supported by findings from studies examining broader secretoglobin family expression patterns in chronic rhinosinusitis with and without nasal polyps.[33] SCGB3A2 (UGRP1), a related secretoglobin family member, showed marked decreased expression in both chronic rhinosinusitis with nasal polyps and without polyps, with protein levels inversely correlating with total infiltrating cell numbers, preoperative sinonasal CT scores, and postoperative symptom measures. While specific data on SCGB1C1 in chronic rhinosinusitis requires further investigation, the pattern observed with related secretoglobins suggests SCGB1C1 likely follows similar suppression in this chronic inflammatory nasal condition.</p>
+<h3 id="cancer-expression-and-prognostic-significance">Cancer Expression and Prognostic Significance</h3>
+<p>SCGB1C1 expression has been examined in multiple malignancies with varying prognostic implications. The protein is significantly increased in ovarian carcinoma compared to normal ovarian tissue, representing one of several secretoglobins overexpressed in this cancer type.[31][56] Lipophilin B (SCGB1D2) and mammaglobin proteins showed increased expression in ovarian carcinoma and correlated with less aggressive tumor phenotypes, though the specific prognostic role of SCGB1C1 specifically in ovarian cancer requires further clarification. Broader analysis of secretoglobin family members across cancer types indicates dysregulation in multiple malignancies including breast cancer, pancreatic cancer, and colorectal cancer, suggesting potential utility of secretoglobins as cancer biomarkers and potentially therapeutic targets.</p>
+<p>The oncological significance of SCGB1C1 alterations remains incompletely understood but may reflect either reactive expression changes secondary to inflammatory microenvironments within tumors or potentially autonomous cellular effects. The finding that certain secretoglobins like SCGB3A1 exhibit tumor suppressor functions in multiple cancer types raises the possibility that SCGB1C1 alterations may contribute to cancer development through loss of normal tissue-protective functions. Further investigation specifically examining SCGB1C1's role in cancer biology would clarify its prognostic value and potential therapeutic targeting in malignant diseases.</p>
+<h2 id="signaling-and-biochemical-pathways">Signaling and Biochemical Pathways</h2>
+<h3 id="integration-into-innate-immune-sensing-and-response">Integration into Innate Immune Sensing and Response</h3>
+<p>SCGB1C1 functions as an effector component within innate immune signaling pathways that recognize pathogenic microorganisms and initiate protective responses.[39] The protein's capacity to recognize and eliminate pathogenic microorganisms suggests interaction with or downstream effects on pathogen recognition receptors and innate immune signaling cascades. The involvement of SCGB1C1 in common cold development implies its participation in antiviral response pathways, though the specific mechanisms through which it contributes to viral recognition or clearance remain incompletely characterized.</p>
+<p>The integration of SCGB1C1 into innate immune responses likely involves its secretion from mucosal epithelial cells and operation within the mucus layer and epithelial surface fluid at respiratory barriers. From this location, SCGB1C1 can directly interact with inhaled pathogens or pathogen-associated molecular patterns, potentially promoting their recognition by epithelial pattern recognition receptors or facilitating their opsonization and clearance by mucosal immune cells. The protection of lung epithelial cells from pathogen-induced damage suggests SCGB1C1 may also provide signals to epithelial cells that suppress their production of excessive pro-inflammatory mediators during pathogenic challenge.</p>
+<h3 id="regulatory-t-cell-development-and-tolerance-pathways">Regulatory T Cell Development and Tolerance Pathways</h3>
+<p>The capacity of SCGB1C1 to promote regulatory T cell expansion indicates its integration into immunological tolerance pathways.[19][20][26][27] Regulatory T cell development requires specific antigen-presenting cell and cytokine signals including IL-2 and TGF-β in the thymus (central tolerance) or peripheral tissues (peripheral tolerance). SCGB1C1's induction of IL-10 and TGF-β production by expanding regulatory T cell populations creates a positive feedback loop stabilizing these anti-inflammatory cells.</p>
+<p>The specific mechanism through which SCGB1C1 promotes Treg expansion remains to be definitively established but likely involves either direct interaction with Treg-associated receptors or indirect signaling through antigen-presenting cells including dendritic cells and macrophages. The preference of SCGB1C1 for activating CD4⁺CD25⁺Foxp3⁺ cells specifically rather than other T cell subsets suggests recognition of a distinct receptor or signaling mechanism characteristic of regulatory T cells. Investigation of SCGB1C1 receptor identification represents a critical priority for understanding its immunomodulatory mechanisms.</p>
+<h3 id="steroid-hormone-and-lipid-mediator-regulation-pathways">Steroid Hormone and Lipid Mediator Regulation Pathways</h3>
+<p>Through its capacity to bind steroid hormones and eicosanoid inflammatory mediators, SCGB1C1 potentially regulates local availability of these signaling molecules.[24][25] The binding and sequestration of pro-inflammatory eicosanoids including prostaglandins and leukotrienes could suppress inflammatory responses by reducing local concentrations of these potent inflammatory mediators. Similarly, binding and potentially modulating steroid hormone availability at mucosal surfaces could affect local inflammatory responses if corticosteroid hormones are sequestered or released by SCGB1C1.</p>
+<p>The redox-dependent ligand binding suggested by SCGB1C1's cysteine residues implies that local oxidative stress states could influence its ligand-binding capacity, creating a mechanism linking antioxidant defense to SCGB1C1 function.[17] This redox-dependent regulation could allow SCGB1C1 to respond dynamically to localized inflammatory microenvironments where oxidative stress is elevated, potentially providing enhanced suppression of inflammatory mediators when oxidative damage risk is highest.</p>
+<h2 id="evolutionary-conservation-and-functional-inference-from-comparative-analysis">Evolutionary Conservation and Functional Inference from Comparative Analysis</h2>
+<h3 id="conservation-across-vertebrate-species-and-evolutionary-history">Conservation Across Vertebrate Species and Evolutionary History</h3>
+<p>SCGB1C1 represents an evolutionarily ancient protein family member found across diverse vertebrate taxa including mammals, birds, reptiles, and amphibians.[28][56] A broad genome survey revealed SCGB1C presence in 27 different species examined, with evolutionary history extending back to at least the Carboniferous Period approximately 320 million years ago.[28][56] This remarkable evolutionary conservation suggests SCGB1C1 performs fundamental biological functions essential across diverse vertebrate lineages occupying varied environmental niches and immune challenges.</p>
+<p>The subfamily classification of SCGB1C within the broader secretoglobin superfamily positions it within a group of proteins that share the boomerang-shaped four-helix bundle structural scaffold characteristic of the UG fold.[28][56] The consistent maintenance of SCGB1C1 across such evolutionary distance indicates strong selective pressure favoring retention of its gene and protein product, implicating critical roles in mucosal defense and immune regulation that have remained functionally important throughout vertebrate evolution. The identification of SCGB1C in birds, reptiles, and amphibians suggests its role in mucosal barrier defense may represent a fundamental property of adaptive immunity even in species with less developed adaptive immune systems than mammals.</p>
+<h3 id="structural-and-functional-implications-from-evolutionary-comparisons">Structural and Functional Implications from Evolutionary Comparisons</h3>
+<p>The evolutionary retention of six conserved ligand-binding residues in SCGB1C sequences across diverse species emphasizes the functional significance of ligand binding in this protein subfamily.[28] The presence of these residues in species as divergent as reptiles, birds, and mammals indicates that the capacity to bind and potentially sequester small hydrophobic molecules represents a core function of SCGB1C1 that predates mammalian evolution. This structural conservation suggests odorant-binding and potential regulation of hydrophobic inflammatory mediators represent ancient functions that have proven advantageous across multiple vertebrate taxa.</p>
+<p>The evolutionary "bloom" (independent expansion and diversification) observed in secretoglobin gene families in different mammalian lineages highlights their importance in mucosal biology specific to particular species.[28][56] While the basic secretoglobin scaffold appears ancient, the diversification of individual secretoglobin family members into multiple genes suggests evolutionary adaptation to specific mucosal challenges and immune requirements particular to different mammalian groups. SCGB1C1's conservation across multiple mammalian lineages with relatively limited gene duplication compared to other secretoglobin subfamilies suggests it performs a conserved function less subject to lineage-specific selection pressures than more rapidly evolving secretoglobin genes.</p>
+<h2 id="current-research-and-therapeutic-development">Current Research and Therapeutic Development</h2>
+<h3 id="scgb1c1-as-a-therapeutic-target-for-airway-diseases">SCGB1C1 as a Therapeutic Target for Airway Diseases</h3>
+<p>The emerging therapeutic potential of SCGB1C1 is supported by recent experimental evidence demonstrating that protein supplementation can reverse allergic airway inflammation in experimental disease models.[19][20][26][27] The intranasal administration route enables direct delivery to target mucosal surfaces while minimizing systemic exposure, potentially reducing adverse effects from systemic immunosuppression. The breadth of anti-inflammatory effects observed with SCGB1C1 administration including reduced airway hyperresponsiveness, decreased eosinophilic inflammation, suppressed allergen-specific IgE production, reduced Th2 cytokine expression, and expanded regulatory T cell populations suggests multiple complementary mechanisms contributing to its therapeutic benefit.</p>
+<p>The research community has begun exploring SCGB1C1 modulators and enhancers as potential therapeutic agents targeting SCGB1C1 function in anti-inflammatory processes, immune regulation, and tissue repair.[6][24] Drug discovery efforts aim to identify pharmacological compounds capable of enhancing endogenous SCGB1C1 production or augmenting its biological functions, potentially through receptor agonism or intracellular signaling pathway activation. Such SCGB1C1 enhancers could potentially reduce inflammation, promote tissue repair, and improve overall lung function in patients with asthma and other allergic airway diseases.[6][24]</p>
+<h3 id="extracellular-vesicle-mediated-scgb1c1-delivery">Extracellular Vesicle-Mediated SCGB1C1 Delivery</h3>
+<p>Recent research has identified SCGB1C1 as a key mediator of the immunomodulatory effects of adipose stem cell-derived extracellular vesicles in asthmatic disease models.[30][46] Adipose stromal cells (ASCs) secrete extracellular vesicles including exosomes and microvesicles that carry bioactive molecules including proteins, lipids, and nucleic acids. Transcriptomic analysis of lung tissue from asthmatic mice treated with ASC-derived extracellular vesicles identified SCGB1C1 as one of the most significantly upregulated genes, with expression levels increasing dramatically following treatment.[46]</p>
+<p>The therapeutic efficacy of adipose stem cell-derived extracellular vesicles in suppressing allergic airway inflammation appears substantially dependent on their capacity to increase SCGB1C1 production in target tissues.[30][46] This finding suggests that natural extracellular vesicle-based approaches to delivering SCGB1C1-inducing factors could complement approaches involving direct SCGB1C1 protein administration. The identification of SCGB1C1 as a critical mediator of mesenchymal stem cell therapeutic effects opens possibilities for engineering improved extracellular vesicles with enhanced SCGB1C1-inducing capacity or alternatively direct loading of SCGB1C1 protein into vesicles for targeted delivery.</p>
+<h3 id="biomarker-applications-for-disease-stratification-and-monitoring">Biomarker Applications for Disease Stratification and Monitoring</h3>
+<p>The association between SCGB1C1 expression levels and disease susceptibility in both athletic populations and allergic airway disease patients suggests potential utility as a biomarker for disease risk stratification and therapeutic monitoring.[3][22][29][36][37] Measurement of SCGB1C1 levels in blood, sputum, nasal lavage fluid, or exhaled breath condensate could potentially identify patients at enhanced risk for upper respiratory infections or progression of allergic airway disease. Dynamic monitoring of SCGB1C1 levels during disease treatment could provide evidence of therapeutic efficacy in modulating the anti-inflammatory SCGB1C1 pathway.</p>
+<p>The identification of functional SCGB1C1 polymorphisms associated with nasal polyposis risk raises possibilities for genetic screening to identify individuals at elevated polyp formation risk.[37] Such genetic risk assessment could potentially inform prevention strategies or justify more aggressive anti-inflammatory treatment approaches in genetically susceptible populations. Further validation of SCGB1C1 genetic and serological biomarkers in larger clinical cohorts would be required before clinical implementation.</p>
+<h2 id="limitations-of-current-knowledge-and-future-research-directions">Limitations of Current Knowledge and Future Research Directions</h2>
+<h3 id="incompletely-characterized-receptor-signaling-mechanisms">Incompletely Characterized Receptor Signaling Mechanisms</h3>
+<p>Despite the well-established effects of SCGB1C1 on regulatory T cell expansion and anti-inflammatory cytokine production, the specific cellular receptors and intracellular signaling cascades mediating these effects remain undefined.[19][20][26][27] Future research must identify the specific receptor or receptors through which SCGB1C1 signals to T cells, dendritic cells, or other target cell populations. The preferential activation of regulatory T cell subsets suggests specificity in receptor recognition rather than non-specific effects, implying the existence of one or more high-affinity SCGB1C1-binding receptors on these cells.</p>
+<p>The identification of SCGB1C1 receptor(s) would enable rational therapeutic development including receptor agonists mimicking SCGB1C1's effects and potentially receptor antagonists preventing pathological SCGB1C1-mediated suppression if circumstances warranted immune activation. Crystallographic or cryo-electron microscopic structural analysis of SCGB1C1 in complex with its putative receptor(s) would provide molecular-level understanding of SCGB1C1 signaling, enabling structure-based drug design and optimization of therapeutic efficacy.</p>
+<h3 id="ligand-specificity-and-binding-mechanisms-for-hydrophobic-molecules">Ligand Specificity and Binding Mechanisms for Hydrophobic Molecules</h3>
+<p>The specific hydrophobic ligands that SCGB1C1 binds in vivo remain incompletely characterized.[28] While structural analysis indicates capacity for binding small hydrophobic molecules including odorants, steroid hormones, and potentially inflammatory lipid mediators, systematic characterization of SCGB1C1 ligand preference through binding assays and biochemical fractionation studies would clarify its physiological roles. The identification of endogenous ligands recognized by SCGB1C1 in different tissue compartments could reveal tissue-specific regulatory mechanisms and enable discovery of therapeutic ligands recapitulating or enhancing SCGB1C1's anti-inflammatory functions.</p>
+<h3 id="mechanistic-understanding-of-pathogenic-microorganism-recognition">Mechanistic Understanding of Pathogenic Microorganism Recognition</h3>
+<p>The mechanisms through which SCGB1C1 recognizes and promotes elimination of pathogenic microorganisms require detailed investigation.[3][22][29][60] Current evidence indicates SCGB1C1 participates in defense against respiratory viruses and bacteria, but whether it directly binds pathogenic surface components, facilitates opsonization by other immune mechanisms, or indirectly promotes pathogen recognition through effects on epithelial or innate immune cell signaling remains unknown. In vitro microbial binding assays with recombinant SCGB1C1 protein and diverse respiratory pathogens could systematically characterize its pathogen recognition specificity.</p>
+<h2 id="conclusion">Conclusion</h2>
+<p>SCGB1C1 (secretoglobin family 1C member 1) represents a multifunctional secreted protein with specialized roles in mucosal defense, immune regulation, and olfactory function. The protein operates primarily in extracellular compartments at mucosal barrier tissues including the respiratory tract, salivary glands, and olfactory epithelium, where it functions through multiple complementary mechanisms to maintain homeostasis and prevent excessive inflammation. The primary biological functions of SCGB1C1 include recognition and elimination of pathogenic microorganisms from mucosal surfaces with concurrent protection of epithelial cells from pathogenic damage, binding of small hydrophobic ligands including odorants and potentially inflammatory mediators, and promotion of regulatory T cell expansion through production of anti-inflammatory interleukins IL-10 and TGF-β.</p>
+<p>The dynamic regulation of SCGB1C1 expression by inflammatory cytokines positions it as an integrator of Th1/Th2 immune balance, with downregulation by the Th1 cytokine interferon-gamma and upregulation by Th2 cytokines including IL-4 and IL-13. Recent experimental evidence conclusively demonstrates that SCGB1C1 suppresses allergic airway inflammation through induction of regulatory T cell populations, providing strong evidence for its therapeutic potential in allergic diseases. The evolutionary conservation of SCGB1C1 across diverse vertebrate taxa extending back approximately 320 million years indicates fundamental biological roles in mucosal defense that have remained important throughout vertebrate evolution.</p>
+<p>Future research directions must include identification of specific SCGB1C1 receptors and intracellular signaling pathways, characterization of endogenous ligands bound in different tissue compartments, and elucidation of mechanistic details underlying pathogenic microorganism recognition. The emerging therapeutic applications of SCGB1C1 protein supplementation and extracellular vesicle-mediated SCGB1C1 delivery for treating allergic airway diseases appear promising and warrant further clinical investigation. Integration of SCGB1C1 biomarker measurement into clinical practice for disease risk stratification and therapeutic monitoring represents an achievable goal requiring primarily additional validation studies in appropriately powered clinical cohorts. The protein's multifaceted roles in maintaining mucosal homeostasis, regulating immune tolerance, and defending against pathogens establish SCGB1C1 as a critical component of human innate immunity and a rational target for therapeutic intervention in multiple disease contexts.</p>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>https://www.proteinatlas.org/ENSG00000188076-SCGB1C1</li>
+<li>https://www.alphafold.ebi.ac.uk/entry/Q8TD33</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC4885620/</li>
+<li>https://www.ncbi.nlm.nih.gov/gene/147199</li>
+<li>https://amigo.geneontology.org/amigo/gene_product/UniProtKB:Q8TD33</li>
+<li>https://synapse.patsnap.com/article/what-are-scgb1c1-modulators-and-how-do-they-work</li>
+<li>https://www.nature.com/articles/s41420-020-00385-w</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC11884772/</li>
+<li>https://en.wikipedia.org/wiki/Secretoglobin</li>
+<li>https://onlinelibrary.wiley.com/doi/10.1111/all.15033</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC7252096/</li>
+<li>https://www.ncbi.nlm.nih.gov/gene?Db=gene&amp;Cmd=DetailsSearch&amp;Term=147199</li>
+<li>https://www.genecards.org/cgi-bin/carddisp.pl?gene=SCGB1C1</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC3251818/</li>
+<li>https://v19.proteinatlas.org/ENSG00000188076-SCGB1C1/tissue</li>
+<li>https://pubmed.ncbi.nlm.nih.gov/38892470/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC11173076/</li>
+<li>https://www.semanticscholar.org/paper/Culture-supernatant-of-adipose-stem-cells-can-via-T-Yu-Park/7df522e05c58e9b8e7c30190666a97a1b70f64d6</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC3706350/</li>
+<li>https://pubmed.ncbi.nlm.nih.gov/21385388/</li>
+<li>https://www.proteinatlas.org/ENSG00000188076-SCGB1C1/cancer/breast+cancer</li>
+<li>https://www.proteinatlas.org/ENSG00000188076-SCGB1C1/tissue/salivary+gland</li>
+<li>https://cellmolbiol.org/index.php/CMB/article/view/1686</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC4593873/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC3524297/</li>
+<li>https://www.tesisenred.net/bitstream/handle/10803/693643/LJG_PhD_THESIS.pdf?sequence=1&amp;isAllowed=y</li>
+<li>https://pubmed.ncbi.nlm.nih.gov/7835333/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC7336241/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC4982115/</li>
+<li>https://www.proteinatlas.org/ENSG00000188076-SCGB1C1/structure+interaction</li>
+<li>https://www.uniprot.org/uniprotkb/Q8TD33/entry</li>
+<li>https://www.uniprot.org/entry/Q7M742</li>
+<li>https://academic.oup.com/ced/article/48/10/1128/7160873?rss=1</li>
+<li>https://academic.oup.com/gbe/article/17/3/evaf024/8013461</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC3602116/</li>
+<li>the Hugo Gene Nomenclature Committee</li>
+</ol>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Perplexity Lite</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(SCGB1C1-deep-research-perplexity-lite.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q8TD33" data-a="DOC: Deep Research Perplexity Lite" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: perplexity<br />
+model: sonar-pro<br />
+cached: false<br />
+start_time: '2025-11-03T22:26:58.329306'<br />
+end_time: '2025-11-03T22:27:12.053016'<br />
+duration_seconds: 13.72<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    reasoning_effort: low<br />
+    search_domain_filter: []<br />
+    return_citations: true<br />
+    temperature: 0.0<br />
+citation_count: 11</p>
+<hr />
+<h2 id="question">Question</h2>
+<p>Research the SCGB1C1 (Q8TD33) gene in human, focusing on its molecular function, biological processes, and cellular localization. Include information about protein domains, known interactions, and any disease associations.</p>
+<h2 id="output">Output</h2>
+<p>The <strong>SCGB1C1 (Q8TD33) gene</strong> encodes the protein Secretoglobin Family 1C Member 1, which is a member of the secretoglobin superfamily in humans[3][5][7]. This protein is primarily predicted to be <strong>secreted into the extracellular region</strong>[3][5], and is associated with several biological processes, molecular functions, and disease associations.</p>
+<hr />
+<h3 id="key-concepts-and-definitions">Key Concepts and Definitions</h3>
+<ul>
+<li><strong>Gene Symbol:</strong> SCGB1C1</li>
+<li><strong>Protein Name:</strong> Secretoglobin Family 1C Member 1 (SG1C1_HUMAN)</li>
+<li><strong>HGNC ID:</strong> 18394</li>
+<li><strong>UniProt Accession:</strong> Q8TD33</li>
+<li><strong>NCBI Gene ID:</strong> 147199[3][5][7]</li>
+</ul>
+<hr />
+<h3 id="molecular-function">Molecular Function</h3>
+<ul>
+<li><strong>Secretoglobins</strong> are small, secreted proteins often involved in immunomodulation, anti-inflammatory responses, and tissue protection[2][5].</li>
+<li><strong>SCGB1C1</strong> is predicted to have <strong>binding functions</strong> typical of secretoglobins, such as binding to small hydrophobic molecules, though its specific ligands and activities remain less well characterized than other family members[5].</li>
+<li><strong>Gene Ontology (GO) annotations</strong> suggest involvement in protein binding and possibly in modulating immune responses, but direct experimental evidence for SCGB1C1’s molecular function is limited[10].</li>
+</ul>
+<hr />
+<h3 id="biological-processes">Biological Processes</h3>
+<ul>
+<li><strong>SCGB1C1</strong> is implicated in <strong>immune system processes</strong> and may play a role in <strong>inflammatory regulation</strong>[3][4].</li>
+<li>It is associated with <strong>inflammatory spondylopathy</strong>, suggesting a possible role in inflammatory disease mechanisms[3].</li>
+<li>Functional association datasets link SCGB1C1 to over 1,500 biological entities, including disease, phenotype, and chemical associations, indicating broad potential involvement in cellular and organismal processes[4].</li>
+</ul>
+<hr />
+<h3 id="cellular-localization">Cellular Localization</h3>
+<ul>
+<li><strong>Main localization:</strong> <strong>Extracellular region</strong> (secreted protein)[3][5].</li>
+<li><strong>Subcellular annotation:</strong> No transmembrane regions; predicted to be secreted based on signal peptide analysis[1][5].</li>
+<li><strong>Tissue expression:</strong> Expression data indicate presence in various tissues, but with low tissue specificity; detailed single-cell and tissue-level expression profiles are available in the Human Protein Atlas[1][3].</li>
+</ul>
+<hr />
+<h3 id="protein-domains">Protein Domains</h3>
+<ul>
+<li><strong>Secretoglobin domain:</strong> Characteristic of the secretoglobin family, typically forming small, compact structures that can bind hydrophobic molecules[5].</li>
+<li><strong>No transmembrane domains</strong>; contains a signal peptide for secretion[1][5].</li>
+<li><strong>Structural features:</strong> Predicted structures are available via AlphaFold and Human Protein Atlas, showing the typical secretoglobin fold[1].</li>
+</ul>
+<hr />
+<h3 id="known-interactions">Known Interactions</h3>
+<ul>
+<li><strong>Protein-protein interactions:</strong> Specific interaction partners for SCGB1C1 are not well established, but secretoglobins often form homo- or heterodimers[2][5].</li>
+<li><strong>Functional associations:</strong> Co-expression and functional association data suggest links to immune-related proteins and pathways[4].</li>
+<li><strong>No direct evidence</strong> for interaction with other secretoglobins or specific receptors in humans as of 2024.</li>
+</ul>
+<hr />
+<h3 id="disease-associations">Disease Associations</h3>
+<ul>
+<li><strong>Inflammatory Spondylopathy:</strong> SCGB1C1 is associated with this inflammatory disease, though the mechanistic link is not fully elucidated[3].</li>
+<li><strong>Potential marker:</strong> Some studies suggest SCGB1C1 expression may serve as a marker for susceptibility to certain conditions, but further validation is needed[6].</li>
+<li><strong>No strong evidence</strong> for direct involvement in cancer or other major diseases, unlike some other secretoglobins[2][3].</li>
+</ul>
+<hr />
+<h3 id="recent-developments-and-research-20232024">Recent Developments and Research (2023–2024)</h3>
+<ul>
+<li><strong>Updated annotations</strong> in GeneCards and UniProt (2024) confirm extracellular localization and disease association with inflammatory spondylopathy[3][5].</li>
+<li><strong>Human Protein Atlas (2024):</strong> Provides detailed RNA and protein expression data, supporting the secreted nature and broad tissue distribution of SCGB1C1[1].</li>
+<li><strong>Functional association studies</strong> (Harmonizome, 2024) highlight extensive links to immune and inflammatory processes, but experimental validation remains limited[4].</li>
+</ul>
+<hr />
+<h3 id="expert-opinions-and-analysis">Expert Opinions and Analysis</h3>
+<ul>
+<li><strong>Secretoglobins</strong> are increasingly recognized for their roles in immune modulation and tissue protection, but SCGB1C1 is less studied than other family members such as SCGB1A1[2].</li>
+<li><strong>Current consensus</strong> is that SCGB1C1 is a secreted protein with potential immunomodulatory functions, but more research is needed to clarify its specific molecular activities and disease relevance[3][5].</li>
+</ul>
+<hr />
+<h3 id="relevant-statistics-and-data">Relevant Statistics and Data</h3>
+<ul>
+<li><strong>GeneCards (2025):</strong> Lists SCGB1C1 as having 1,507 functional associations across 38 datasets[4].</li>
+<li><strong>Expression data:</strong> SCGB1C1 shows low tissue specificity, with expression detected in multiple tissues but not highly enriched in any particular cell type[1][3].</li>
+</ul>
+<hr />
+<h4 id="urls-and-publication-dates">URLs and Publication Dates</h4>
+<ul>
+<li><a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=SCGB1C1">GeneCards SCGB1C1 (Feb 2025)</a>[3]</li>
+<li><a href="https://www.uniprot.org/uniprotkb/Q8TD33/entry">UniProt Q8TD33 (2024)</a>[5]</li>
+<li><a href="https://www.proteinatlas.org/ENSG00000188076-SCGB1C1/structure+interaction">Human Protein Atlas SCGB1C1 (2024)</a>[1]</li>
+<li><a href="https://maayanlab.cloud/Harmonizome/gene/SCGB1C1">Harmonizome SCGB1C1 (2024)</a>[4]</li>
+<li><a href="https://www.ncbi.nlm.nih.gov/gene?Db=gene&amp;Cmd=DetailsSearch&amp;Term=147199">NCBI Gene SCGB1C1 (2024)</a>[7]</li>
+</ul>
+<hr />
+<p><strong>In summary:</strong> SCGB1C1 encodes a secreted protein of the secretoglobin family, with predicted roles in immune modulation and inflammation, extracellular localization, and association with inflammatory spondylopathy. Its molecular function and interactions remain incompletely characterized, and further research is needed to clarify its biological significance[3][5][1][4].</p>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>https://www.proteinatlas.org/ENSG00000188076-SCGB1C1/structure+interaction</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC3251818/</li>
+<li>https://www.genecards.org/cgi-bin/carddisp.pl?gene=SCGB1C1</li>
+<li>https://maayanlab.cloud/Harmonizome/gene/SCGB1C1</li>
+<li>https://www.uniprot.org/uniprotkb/Q8TD33/entry</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC4885620/</li>
+<li>https://www.ncbi.nlm.nih.gov/gene?Db=gene&amp;Cmd=DetailsSearch&amp;Term=147199</li>
+<li>http://biogps.org/gene/147199/</li>
+<li>https://www.proteomicsdb.org/proteomicsdb/</li>
+<li>https://amigo.geneontology.org/amigo/gene_product/UniProtKB:Q8TD33</li>
+<li>https://e2g-portal.stanford.edu/target/ENSG00000188076</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q8TD33
+gene_symbol: SCGB1C1
+product_type: PROTEIN
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: Secretoglobin family 1C member 1, small secreted protein (~10 kDa) belonging
+  to secretoglobin superfamily characterized by four-helix bundle structure. Secretoglobins
+  are secreted homodimeric proteins with conserved disulfide bonds and hydrophobic
+  cavity capable of binding small lipophilic ligands (steroids, pheromones, lipids).
+  SCGB1C1 likely functions as lipid-binding protein with anti-inflammatory or immunomodulatory
+  roles, consistent with other secretoglobin family members. Expression enriched in
+  specific epithelia. Secreted into extracellular space or body fluids where it may
+  sequester hydrophobic molecules or modulate immune responses. Specific ligands and
+  detailed biological function remain incompletely characterized. May play protective
+  role in mucosal tissues.
+existing_annotations:
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: Extracellular region - secretoglobins are secreted proteins.
+    action: ACCEPT
+    reason: Core localization for secreted protein function.
+references:
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt.
+  findings: []
+aliases:
+- Secretoglobin family 1C member 1
+- Lipophilin C
+core_functions:
+- molecular_function:
+    id: GO:0005549
+    label: odorant binding
+  description: Likely binds small hydrophobic ligands (lipids, steroids) via secretoglobin
+    four-helix bundle with hydrophobic cavity. May sequester or transport lipophilic
+    molecules in extracellular space.
+  locations:
+  - id: GO:0005576
+    label: extracellular region
+  directly_involved_in: []
+  supported_by:
+  - reference_id: UniProt:Q8TD33
+    supporting_text: SCGB1C1 is secretoglobin family member with characteristic four-helix
+      bundle structure for binding hydrophobic ligands.
+status: DRAFT
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

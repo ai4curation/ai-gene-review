@@ -1,0 +1,2441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>gatC - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>gatC</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/A0B5K3" target="_blank" class="term-link">
+                        A0B5K3
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Methanothrix thermoacetophila PT</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "gatC";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="A0B5K3" data-a="DESCRIPTION: Encodes the C subunit of the heterotrimeric glutam..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Encodes the C subunit of the heterotrimeric glutamyl-tRNA(Gln) amidotransferase complex (GatCAB). GATC is a small protein (~100 amino acids) that functions as a critical structural scaffold and catalytic cofactor, enabling proper assembly and stabilization of the GatA glutaminase domain and its binding to GatB. The GatCAB complex catalyzes the transamidation of misacylated Glu-tRNA(Gln) to correctly charged Gln-tRNA(Gln), a process essential for accurate protein synthesis in organisms lacking glutaminyl-tRNA synthetase. In M. thermautotrophicus, the GatCAB complex shows unusual flexibility in amide donor specificity, utilizing both asparagine and glutamine efficiently.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000166" target="_blank" class="term-link">
+                                    GO:0000166
+                                </a>
+                            </span>
+                            <span class="term-label">nucleotide binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="A0B5K3" data-a="GO:0000166" data-r="GO_REF:0000043" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is too general. GATC participates in ATP binding as part of the GatCAB complex, but this term does not capture the specificity. The more specific term GO:0005524 (ATP binding) is already present and should be used instead.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005524" target="_blank" class="term-link">
+                                    GO:0005524
+                                </a>
+                            </span>
+                            <span class="term-label">ATP binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="A0B5K3" data-a="GO:0005524" data-r="GO_REF:0000043" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> GATC itself does not bind ATP - the ATP binding site is in the GatB subunit. GATC stabilizes GatB and maintains the structural integrity of the nucleotide binding pocket, but this is a supporting role, not direct ATP binding activity. This annotation should be removed.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006412" target="_blank" class="term-link">
+                                    GO:0006412
+                                </a>
+                            </span>
+                            <span class="term-label">translation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="A0B5K3" data-a="GO:0006412" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is too general and doesn&#39;t capture the specific role of GATC. GATC is involved in translation, but more specifically in ensuring accurate tRNA aminoacylation for translation. The more specific BP term GO:0070681 (glutaminyl-tRNAGln biosynthesis via transamidation) better captures the core function.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006450" target="_blank" class="term-link">
+                                    GO:0006450
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of translational fidelity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A0B5K3" data-a="GO:0006450" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is supported by recent evidence from Mycobacterium tuberculosis showing that GatCAB functions as a modulator of translational fidelity, with reduced GatCAB activity leading to increased mistranslation. The GatCAB complex ensures accurate incorporation of glutamine at glutamine codons, directly contributing to translational fidelity.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016874" target="_blank" class="term-link">
+                                    GO:0016874
+                                </a>
+                            </span>
+                            <span class="term-label">ligase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="A0B5K3" data-a="GO:0016874" data-r="GO_REF:0000043" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is too general. The GatCAB complex catalyzes a carbon-nitrogen ligase reaction (formation of the amide bond in glutamine), but GATC itself is primarily a scaffolding subunit. The more specific term would be carbon-nitrogen ligase activity with glutamine as amido-N-donor, but even that may be overly specific for GATC&#39;s scaffolding role.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050566" target="_blank" class="term-link">
+                                    GO:0050566
+                                </a>
+                            </span>
+                            <span class="term-label">asparaginyl-tRNA synthase (glutamine-hydrolyzing) activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000116
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="A0B5K3" data-a="GO:0050566" data-r="GO_REF:0000116" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This enzymatic activity belongs to the GatCAB complex as a whole, not to GATC specifically. The catalytic activity is performed by GatA (glutaminase) and GatB (kinase/transamidase). GATC is a structural scaffold that enables the complex to function, but does not itself have synthase activity. Suggested replacement terms for GATC&#39;s actual function are GO:0060090 (molecular adaptor activity) and GO:0005515 (protein binding).
+                        </div>
+                        
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0060090" target="_blank" class="term-link">
+                                    molecular adaptor activity
+                                </a>
+                            </span>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    protein binding
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050567" target="_blank" class="term-link">
+                                    GO:0050567
+                                </a>
+                            </span>
+                            <span class="term-label">glutaminyl-tRNA synthase (glutamine-hydrolyzing) activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="A0B5K3" data-a="GO:0050567" data-r="GO_REF:0000120" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This describes the activity of the GatCAB complex, not GATC itself. The catalytic activities (glutaminase in GatA, kinase/transamidase in GatB) are performed by other subunits. GATC is essential for enabling this activity through its scaffolding role, but does not itself possess synthase activity. Suggested replacement terms are GO:0060090 (molecular adaptor activity) and GO:0005515 (protein binding).
+                        </div>
+                        
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0060090" target="_blank" class="term-link">
+                                    molecular adaptor activity
+                                </a>
+                            </span>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    protein binding
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070681" target="_blank" class="term-link">
+                                    GO:0070681
+                                </a>
+                            </span>
+                            <span class="term-label">glutaminyl-tRNAGln biosynthesis via transamidation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A0B5K3" data-a="GO:0070681" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This perfectly captures the core biological process in which GATC participates. The transamidation pathway is the only mechanism for generating Gln-tRNA(Gln) in M. thermautotrophicus and all archaea, as they lack glutaminyl-tRNA synthetase. This process is essential for accurate protein synthesis. This is the core biological process function.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0060090" target="_blank" class="term-link">
+                                    GO:0060090
+                                </a>
+                            </span>
+                            <span class="term-label">molecular adaptor activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            file:METTP/gatC/gatC-deep-research-perplexity.md
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="A0B5K3" data-a="GO:0060090" data-r="file:METTP/gatC/gatC-deep-research-perplexity.md" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> GATC functions as a molecular adaptor that brings together GatA and GatB subunits to form the functional heterotrimer. Structural studies show GATC is positioned at the interface between the larger catalytic subunits, and mutations disrupting these interfaces destabilize the entire complex. This is GATC&#39;s core molecular function.
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:METTP/gatC/gatC-deep-research-perplexity.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">GATC is a small protein (~100 amino acids) that serves as a critical structural scaffold and catalytic cofactor in the GatCAB heterotrimer. GATC is essential for stabilizing the GatA glutaminase domain and enabling its binding to GatB.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            file:METTP/gatC/gatC-deep-research-perplexity.md
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="A0B5K3" data-a="GO:0005515" data-r="file:METTP/gatC/gatC-deep-research-perplexity.md" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> GATC directly binds to both GatA and GatB subunits through specific interaction surfaces. The protein presents multiple contact points that enable it to serve as a bridge between the two larger catalytic subunits. This is a fundamental molecular function of GATC.
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:METTP/gatC/gatC-deep-research-perplexity.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">GATC directly binds to both GatA and GatB subunits through specific interaction surfaces, serving as a bridge between the two larger catalytic subunits.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Functions as molecular adaptor that brings together GatA and GatB subunits to form the functional GatCAB heterotrimer, stabilizing the GatA glutaminase domain and enabling proper positioning of catalytic residues for transamidation activity. Essential component of the archaeal tRNA-dependent transamidation pathway for accurate glutamine incorporation during protein synthesis.</h3>
+                <span class="vote-buttons" data-g="A0B5K3" data-a="FUNCTION: Functions as molecular adaptor that brings togethe..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0060090" target="_blank" class="term-link">
+                            molecular adaptor activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070681" target="_blank" class="term-link">
+                                glutaminyl-tRNAGln biosynthesis via transamidation
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006450" target="_blank" class="term-link">
+                                regulation of translational fidelity
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:METTP/gatC/gatC-deep-research-perplexity.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">GATC is a small protein (~100 amino acids) that serves as a critical structural scaffold and catalytic cofactor in the GatCAB heterotrimer...GATC is essential for stabilizing the GatA glutaminase domain and enabling its binding to GatB</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000116.md" target="_blank" class="term-link">
+                            GO_REF:0000116
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Automatic Gene Ontology annotation based on Rhea mapping.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:METTP/gatC/gatC-deep-research-perplexity.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep research report on gatC function and evolution</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">GATC is a small protein (~100 amino acids) that serves as a critical structural scaffold and catalytic cofactor in the GatCAB heterotrimer</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">GatCAB catalyzes transamidation of misacylated Glu-tRNA(Gln) to correctly charged Gln-tRNA(Gln)</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">M. thermautotrophicus GatCAB exhibits unusual flexibility in amide donor specificity, using both Asn and Gln efficiently (kcat/KM of 5.7 and 16.7 s−1/mM respectively)</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">M. thermautotrophicus GatCAB cannot transamidate homologous archaeal Glu-tRNA(Gln) but can work with bacterial Glu-tRNA(Gln)</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">GATC is essential for stabilizing the GatA glutaminase domain and enabling its binding to GatB</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Pathogenic mutations in human GATC cause combined OXPHOS deficiency and metabolic cardiomyopathy</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">GatCAB functions as a modulator of translational fidelity; reduced activity leads to increased mistranslation</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What are the specific identity elements in tRNA(Gln) that enable M. thermautotrophicus GatCAB to discriminate between homologous archaeal and bacterial tRNA substrates?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: tRNA biochemistry specialists, structural biologists studying tRNA-protein interactions</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="A0B5K3" data-a="Q: What are the specific identity elements in tRNA(Gl..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does M. thermautotrophicus regulate GatCAB activity or expression in response to environmental stresses such as temperature shifts or nutrient limitation?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: archaeal systems biologists, thermophile researchers</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="A0B5K3" data-a="Q: Does M. thermautotrophicus regulate GatCAB activit..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the evolutionary advantage of the flexible amide donor specificity (Asn vs Gln) in M. thermautotrophicus GatCAB compared to other archaeal species?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: evolutionary biochemists, comparative genomics researchers</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="A0B5K3" data-a="Q: What is the evolutionary advantage of the flexible..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Determine the crystal structure of M. thermautotrophicus GatCAB in complex with tRNA(Gln) to identify the specific tRNA recognition elements</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: The structure will reveal unique features in the tRNA binding interface that explain substrate specificity</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: structural biology</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="A0B5K3" data-a="EXPERIMENT: Determine the crystal structure of M. thermautotro..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Measure GatCAB expression levels and activity under various stress conditions (temperature, oxidative stress, nutrient limitation) using quantitative proteomics and enzyme assays</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: GatCAB expression or activity is regulated in response to environmental conditions that affect translation demand</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: biochemical characterization</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="A0B5K3" data-a="EXPERIMENT: Measure GatCAB expression levels and activity unde..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Create site-directed mutants of conserved residues in the GatC-GatA interface and assess their effects on complex assembly, stability, and catalytic activity</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Specific residues in GatC are critical for stabilizing the GatA glutaminase active site</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: mutagenesis study</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="A0B5K3" data-a="EXPERIMENT: Create site-directed mutants of conserved residues..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Perplexity</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(gatC-deep-research-perplexity.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="A0B5K3" data-a="DOC: Deep Research Perplexity" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <p>Please provide a comprehensive research report on the gene gatC in METTP.</p>
+<h2 id="research-focus-areas-for-go-annotation">Research Focus Areas for GO Annotation</h2>
+<p>I need detailed information covering these areas specifically for GO annotation curation:</p>
+<h3 id="1-molecular-function-mf">1. Molecular Function (MF)</h3>
+<ul>
+<li><strong>Primary molecular function(s)</strong> - specific biochemical activities</li>
+<li><strong>Enzymatic properties</strong> - catalytic activities, substrate specificity, cofactor requirements</li>
+<li><strong>Binding activities</strong> - what molecules does the protein bind (DNA, RNA, proteins, small molecules)</li>
+<li><strong>Regulatory functions</strong> - transcriptional regulation, kinase/phosphatase activities</li>
+<li><strong>Transport functions</strong> - ion channels, transporters, carriers</li>
+</ul>
+<h3 id="2-cellular-component-cc">2. Cellular Component (CC)</h3>
+<ul>
+<li><strong>Subcellular localization</strong> - where is the protein located within the cell</li>
+<li><strong>Membrane association</strong> - integral membrane, peripheral membrane, or cytosolic</li>
+<li><strong>Organellar localization</strong> - nucleus, mitochondria, ER, Golgi, etc.</li>
+<li><strong>Protein complexes</strong> - what complexes does this protein participate in</li>
+<li><strong>Cellular structures</strong> - cytoskeleton, ribosomes, proteasome components</li>
+</ul>
+<h3 id="3-biological-process-bp">3. Biological Process (BP)</h3>
+<ul>
+<li><strong>Primary biological pathways</strong> - metabolic, signaling, developmental processes</li>
+<li><strong>Physiological roles</strong> - what happens when this gene is mutated or deleted</li>
+<li><strong>Developmental processes</strong> - embryogenesis, organogenesis, differentiation</li>
+<li><strong>Response to stimuli</strong> - environmental, chemical, biological responses</li>
+<li><strong>Cellular processes</strong> - cell cycle, apoptosis, DNA repair, protein folding</li>
+</ul>
+<h3 id="4-experimental-evidence-quality">4. Experimental Evidence Quality</h3>
+<ul>
+<li><strong>Direct experimental evidence</strong> - biochemical assays, functional studies</li>
+<li><strong>Genetic evidence</strong> - knockout/knockdown phenotypes, complementation</li>
+<li><strong>Physical evidence</strong> - protein interactions, localization studies</li>
+<li><strong>Expression evidence</strong> - tissue/stage-specific expression patterns</li>
+<li><strong>Comparative evidence</strong> - ortholog function in other species</li>
+</ul>
+<h3 id="5-disease-and-phenotype-associations">5. Disease and Phenotype Associations</h3>
+<ul>
+<li><strong>Human disease associations</strong> - genetic disorders, cancer involvement</li>
+<li><strong>Model organism phenotypes</strong> - what happens when gene function is disrupted</li>
+<li><strong>Clinical relevance</strong> - therapeutic targets, biomarkers</li>
+<li><strong>Population genetics</strong> - natural variants and their effects</li>
+</ul>
+<h3 id="6-protein-structure-and-domains">6. Protein Structure and Domains</h3>
+<ul>
+<li><strong>Functional domains</strong> - catalytic domains, binding domains, regulatory regions</li>
+<li><strong>Structural features</strong> - transmembrane regions, signal peptides, nuclear localization signals</li>
+<li><strong>Post-translational modifications</strong> - phosphorylation, ubiquitination, glycosylation sites</li>
+<li><strong>Protein-protein interaction interfaces</strong> - binding sites for partners</li>
+</ul>
+<h3 id="7-evolutionary-conservation-and-orthologs">7. Evolutionary Conservation and Orthologs</h3>
+<ul>
+<li><strong>Conservation across species</strong> - which functions are conserved</li>
+<li><strong>Ortholog studies</strong> - functional evidence from other organisms</li>
+<li><strong>Paralog relationships</strong> - functional divergence within gene families</li>
+<li><strong>Essential gene status</strong> - is this gene required for viability</li>
+</ul>
+<h2 id="output-requirements-for-go-curation">Output Requirements for GO Curation</h2>
+<ul>
+<li><strong>Provide specific GO term suggestions</strong> where experimental evidence supports them</li>
+<li><strong>Include PMID citations</strong> for all major functional claims</li>
+<li><strong>Distinguish experimental evidence levels</strong> (direct vs. inferred)</li>
+<li><strong>Focus on experimental data over computational predictions</strong></li>
+<li><strong>Highlight recent discoveries</strong> (last 5 years) that might affect annotation</li>
+<li><strong>Note any conflicting evidence</strong> or ambiguous experimental results</li>
+<li><strong>Specify organism-specific differences</strong> if orthologs have different functions</li>
+</ul>
+<h2 id="gene-information">Gene Information</h2>
+<ul>
+<li><strong>Gene Symbol</strong>: gatC</li>
+<li><strong>Organism</strong>: METTP</li>
+<li><strong>Focus</strong>: Gene Ontology annotation curation and functional characterization</li>
+</ul>
+<p>Please prioritize experimental evidence and be explicit about the strength and type of evidence supporting each functional claim.</p>
+<h2 id="output">Output</h2>
+<p><think><br />
+The user is asking for a comprehensive research report on the gene gatC in METTP (Methanothermobacter thermautotrophicus). This is a very specific request focused on Gene Ontology (GO) annotation curation. Let me analyze the search results provided.</p>
+<p>Looking at the search results, I can identify the following key information about GATC:</p>
+<ol>
+<li>GATC is the gene encoding glutamyl-tRNA amidotransferase subunit C</li>
+<li>It's a protein-coding gene involved in glutaminyl-tRNA biosynthesis</li>
+<li>It's located in mitochondria (in humans) but the query is about METTP (Methanothermobacter thermautotrophicus)</li>
+<li>It's part of the glutamyl-tRNA(Gln) amidotransferase complex</li>
+<li>It's associated with combined oxidative phosphorylation deficiency 42 in humans</li>
+<li>The GatCAB complex is heterotrimeric with GatC being a small protein (~100 amino acids) that serves as a stabilizing linker</li>
+</ol>
+<p>Looking at METTP-specific information:<br />
+- Multiple search results discuss Methanothermobacter thermautotrophicus (METTP)<br />
+- There are several papers discussing GatCAB function in this organism<br />
+- Papers [14] and [17] specifically discuss M. thermautotrophicus GatCAB<br />
+- Paper [25] and [31] discuss M. thermautotrophicus in biotechnological contexts<br />
+- Papers [34] discusses integrated systems biology approach for M. thermautotrophicus</p>
+<p>The search results provide information about:<br />
+1. Molecular Function: amidotransferase activity, ATP binding, glutaminyl-tRNA synthesis<br />
+2. Cellular Component: mitochondrion in humans, but I need to infer localization in METTP<br />
+3. Biological Process: glutaminyl-tRNA biosynthesis, transamidation, protein translation<br />
+4. Protein structure: Small protein (~100 amino acids), serves as stabilizing linker</p>
+<ol>
+<li>GatC functions as a component of the GatCAB heterotrimer alongside GatA and GatB</li>
+<li>In humans, mutations in GATC are linked to combined oxidative phosphorylation deficiency 42</li>
+<li>The enzyme is conserved across bacteria, archaea, and eukaryotic mitochondria, suggesting ancient evolutionary origins</li>
+</ol>
+<p>The papers provide experimental support for these annotations. Paper [2] from PNAS 1997 characterized gatC from B. subtilis, while paper [5] from Nature 2018 identified pathogenic variants in human GATB and GATC associated with metabolic cardiomyopathy. Paper [9] discusses the evolutionary conservation of this system.</p>
+<p>Additional structural and functional insights come from studies of tRNA-dependent amidotransferases more broadly. Papers [14] and [17] examined tRNA recognition by M. thermautotrophicus enzymes, while paper [26] resolved the crystal structure of the Staphylococcus aureus GatCAB complex. Paper [27] demonstrated how mycobacterial GatCAB influences translational accuracy, and paper [29] provided structural details of the Pseudomonas aeruginosa transamidosome. Papers [33] and [51] address the evolutionary trajectory and comprehensive characterization of pathogenic variants in the GatCAB system.</p>
+<p>To develop a thorough report meeting the 10,000-word requirement, I'll organize the content into distinct sections: beginning with molecular function and enzymatic mechanisms, followed by structural architecture and protein domains, then cellular localization and complex assembly dynamics. Subsequent sections will cover biological processes and metabolic integration, evolutionary conservation patterns, functional characterization across organisms, disease associations with phenotypic evidence, and finally GO annotation recommendations. Each section requires substantial development to achieve the target length while maintaining depth and specificity.<br />
+</think></p>
+<h1 id="comprehensive-gene-ontology-annotation-report-for-gatc-in-methanothermobacter-thermautotrophicus">Comprehensive Gene Ontology Annotation Report for GATC in Methanothermobacter thermautotrophicus</h1>
+<p>This comprehensive research report provides a detailed functional characterization of the gatC gene in Methanothermobacter thermautotrophicus (METTP) based on experimental evidence from biochemical studies, structural analyses, genetic investigations, and comparative genomics. The gatC gene encodes glutamyl-tRNA(Gln) amidotransferase subunit C, a small protein (~100 amino acids) that functions as a critical catalytic cofactor and structural linker in the heterotrimeric GatCAB amidotransferase complex. This enzyme catalyzes the transamidation of misacylated Glu-tRNA(Gln) to correctly charged Gln-tRNA(Gln), a process essential for accurate protein synthesis in organisms lacking glutaminyl-tRNA synthetase. Our analysis integrates direct experimental evidence from enzyme kinetics studies, structural biology investigations, phylogenetic analyses, and functional genomics to establish a comprehensive annotation framework that clarifies the molecular function, cellular component localization, biological processes, and evolutionary significance of GATC in METTP and related archaea.</p>
+<h2 id="molecular-function-and-enzymatic-properties">Molecular Function and Enzymatic Properties</h2>
+<h3 id="primary-enzymatic-function-and-catalytic-activity">Primary Enzymatic Function and Catalytic Activity</h3>
+<p>The GATC gene encodes the C subunit of the glutamyl-tRNA amidotransferase complex, which catalyzes one of the most important post-aminoacylation reactions in protein synthesis[1][2][5]. In METTP specifically, the GatCAB complex functions as a tRNA-dependent amidotransferase that catalyzes the transamidation of mischarged tRNA molecules, converting Glu-tRNA(Gln) to correctly charged Gln-tRNA(Gln)[14][17]. Unlike direct aminoacylation pathways where glutaminyl-tRNA synthetase (GlnRS) directly charges glutamine to tRNA(Gln), organisms such as METTP must rely entirely on this indirect transamidation pathway, making it an essential pathway for survival[2][49].</p>
+<p>The catalytic mechanism of the GatCAB complex involves three distinct enzymatic reactions that occur in sequence[2][9][33]. The first reaction involves phosphorylation of the γ-carboxyl group of the glutamate moiety attached to the mischarged tRNA in an ATP-dependent manner, generating an activated gamma-phospho-Glu-tRNA(Gln) intermediate[2][9]. This kinase activity is the province of the GatB subunit, which possesses the catalytic machinery necessary for ATP hydrolysis and carboxyl group activation[20][33]. The second reaction requires the GatA subunit, which functions as the glutaminase catalytic domain and liberates ammonia from the glutamine amide donor through a two-step hydrolysis mechanism[2][9][20]. The third and final reaction utilizes the activated intermediate and the ammonia generated by GatA to perform the actual transamidation of the tRNA-bound amino acid, converting Glu-tRNA(Gln) to Gln-tRNA(Gln)[2][9].</p>
+<p>The GatC subunit, though small in size, is absolutely essential for this catalytic process. The primary molecular function of GATC is to serve as a stabilizing scaffold protein that enables proper folding and assembly of the GatA subunit[9][21]. GatC functions as a crucial cofactor that maintains the structural integrity and catalytic competence of the GatA glutaminase domain[20][33]. Research has demonstrated that GatC serves to properly orient and stabilize the catalytic residues of GatA, particularly the serine residues involved in the glutaminase active site[20]. Additionally, GatC is required for binding of GatA to GatB, ensuring formation of a functional heterotrimeric holoenzyme[9][21][33]. Without a functional GatC subunit, the individual GatA and GatB proteins become unstable and rapidly degraded, preventing holoenzyme assembly[20][51].</p>
+<p>In the specific case of METTP, the GatCAB complex has unique enzymatic properties distinct from many bacterial counterparts. Unlike typical bacterial GatCAB enzymes, the METTP GatCAB exhibits the remarkable ability to use asparagine (Asn) almost as efficiently as glutamine (Gln) as an amide donor, with kinetic constants (kcat/KM) of 5.7 s−1/mM and 16.7 s−1/mM respectively[14][17]. This unusual flexibility in amide donor specificity reflects the particular metabolic and translational requirements of thermophilic archaea. Furthermore, METTP GatCAB is unable to transamidate the homologous archaeal Glu-tRNA(Gln), demonstrating remarkable substrate specificity despite this functional flexibility with amide donors[14][17]. However, the same METTP GatCAB enzyme retains the ability to transamidate bacterial Glu-tRNA(Gln) from other organisms such as Helicobacter pylori or Bacillus subtilis, as well as archaeal Glu-tRNA(Asn), indicating that specificity determinants involve complex tRNA identity elements rather than simple recognition of the amino acid or tRNA type[14][17].</p>
+<h3 id="atp-binding-activity-and-nucleotide-recognition">ATP Binding Activity and Nucleotide Recognition</h3>
+<p>GATC is predicted to enable ATP binding activity[1][4][19], a molecular function that arises from its role as part of the GatCAB complex rather than as a primary function of the GatC subunit itself. The ATP binding activity of the complex is primarily mediated by the GatB subunit, which possesses the nucleotide binding site and kinase catalytic domain[20][33]. However, GatC contributes to this function through its role in stabilizing GatB and maintaining the structural integrity of the nucleotide binding pocket[20]. The ATP binding occurs at a defined active site within GatB where the nucleotide is positioned adjacent to the tRNA-bound glutamate residue during the catalytic cycle[26][29].</p>
+<p>The structural studies of the bacterial GatCAB complex have revealed that ATP binding is coupled to substrate recognition and positioning[26][29]. In the transamidosome complex, which represents the functional form of GatCAB in association with nondiscriminating aminoacyl-tRNA synthetases and cognate tRNAs, ATP binding triggers conformational changes in GatB that position the activated tRNA substrate for subsequent amidation[26][29]. These conformational changes are absolutely dependent on the proper assembly of the heterotrimer, making GatC's scaffolding role essential to nucleotide recognition and utilization[20][29].</p>
+<h3 id="glutaminyl-trna-synthase-activity-glutamine-hydrolyzing">Glutaminyl-tRNA Synthase Activity (Glutamine-Hydrolyzing)</h3>
+<p>GATC enables glutaminyl-tRNA synthase activity (glutamine-hydrolyzing), which reflects the overall functional role of the GatCAB complex in generating correctly charged Gln-tRNA(Gln)[1][19][21]. This activity is specifically designated as glutamine-hydrolyzing because it requires the hydrolysis of glutamine to liberate the amide group that is subsequently transferred to the tRNA-bound glutamate[1][2][9]. The term "glutaminyl-tRNA synthase" applied to this activity recognizes that the overall outcome of the GatCAB-catalyzed reaction is the synthesis of correctly charged glutaminyl-tRNA, even though the mechanism differs substantially from direct glutaminyl-tRNA synthetase enzymes[1][2].</p>
+<p>The glutamine-hydrolyzing activity involves a two-step process catalyzed by the GatA glutaminase domain[2][9][33]. In the first step, glutamine is hydrolyzed to generate free glutamate and sequestered ammonia within the GatA active site[2][9]. This ammonia is held within the protein active site rather than released into solution, which provides several mechanistic advantages including protection from competing reactions and channeling to the transamidation site[2][9]. In the second step, this sequestered ammonia is transferred to the activated tRNA-bound glutamate intermediate, resulting in the formation of Gln-tRNA(Gln)[2][9][33].</p>
+<p>The efficiency of this glutamine-hydrolyzing activity varies substantially among different organisms and GatCAB variants. In METTP, the enzyme demonstrates high catalytic efficiency with both glutamine and asparagine as substrates, indicating a relatively broad substrate specificity for the amide donor[14][17]. This contrasts with many bacterial GatCAB enzymes that show more restricted specificity for glutamine. The substrate flexibility of METTP GatCAB likely reflects adaptations to the thermophilic and potentially nutrient-limited environment of these organisms, where metabolic flexibility provides a selective advantage[14][17].</p>
+<h3 id="carbon-nitrogen-ligase-activity-with-glutamine-as-amido-n-donor">Carbon-Nitrogen Ligase Activity with Glutamine as Amido-N-Donor</h3>
+<p>GATC enables carbon-nitrogen ligase activity, with glutamine as amido-N-donor[21], which is the formal enzymatic classification for the amidotransferase reaction catalyzed by GatCAB. This enzyme classification recognizes that the reaction involves the formation of a new carbon-nitrogen bond through transfer of the amide nitrogen from glutamine to the tRNA-bound glutamate carboxyl group[21]. The reaction fundamentally is a nitrogen transfer process where the ammonia liberated by glutamine hydrolysis is covalently incorporated into the glutamate side chain of the tRNA-bound amino acid[2][9][21][33].</p>
+<p>The carbon-nitrogen ligase classification places GatCAB within the broader family of amidotransferases, which catalyze similar amide nitrogen transfer reactions in a wide variety of biosynthetic pathways[2][9][33]. These pathways include amino acid biosynthesis, nucleotide biosynthesis, and cell wall biosynthesis. The GatCAB complex represents a specialized form of amidotransferase activity that is coupled to tRNA aminoacylation and translation, but the fundamental chemical reaction is identical to other well-characterized carbon-nitrogen ligase reactions[2][9][33].</p>
+<h2 id="structural-characteristics-and-protein-domains">Structural Characteristics and Protein Domains</h2>
+<h3 id="protein-size-and-primary-structure">Protein Size and Primary Structure</h3>
+<p>GATC is a small protein of approximately 100 amino acids[9][21][33], making it the smallest subunit of the GatCAB heterotrimer. In humans, GATC (UniProt accession O43716) consists of 102 amino acids with a calculated molecular weight of approximately 11.4 kDa[22]. The METTP ortholog, while not directly characterized for exact amino acid length in the available literature, shares the characteristic small size and functional properties of GATC proteins across bacterial and archaeal species[14][17]. This small size is functionally significant, as it allows GatC to serve as an efficient molecular linker between the larger GatA and GatB catalytic subunits[20][26][29].</p>
+<p>The primary structure of GATC proteins shows relatively high conservation across different organisms, with identifiable sequence motifs that correlate with its scaffold function[9][33]. The conserved regions include sequences critical for interaction with GatA and GatB, as well as secondary structure elements that stabilize the overall shape of the protein[20][26]. However, despite overall conservation, some sequence variability exists between bacterial and archaeal GatC proteins, reflecting evolutionary adaptation to different environments and specific catalytic requirements[9][33].</p>
+<h3 id="protein-folding-and-conformational-stability">Protein Folding and Conformational Stability</h3>
+<p>GatC proteins typically adopt a compact, globular fold that positions them at the interface between the larger GatA and GatB subunits[26][29]. While no crystal structure of GATC alone has been published, the full-length GatCAB heterotrimer structures reveal that GatC forms a discrete domain that is structurally well-defined[26][29]. The GatC subunit in the GatCAB complex is positioned to physically contact both GatA and GatB, creating a stable tripartite interface that holds the catalytic domains in the proper orientation[26][29][33].</p>
+<p>Structural studies of the Staphylococcus aureus GatCAB complex revealed that GatC is located in proximity to the glutaminase active site of GatA, where specific mutations in met78 of GatC disrupted the interface with GatA[20][26]. This met78 residue makes critical hydrophobic and electrostatic interactions with two positively charged arginine residues in GatA, and mutation of this residue to arginine (Met78Arg) causes electrostatic repulsion that destabilizes the GatC-GatA interaction[20]. This demonstrates that GatC's conformational stability is achieved through specific amino acid interactions rather than through intrinsic structural properties of the isolated protein[20][26].</p>
+<p>The conformational stability of GatC is critically dependent on its assembly into the GatCAB heterotrimer. Studies of patient fibroblasts carrying pathogenic GATC mutations show that the steady-state protein level of GatC is dramatically decreased to approximately 20% of control levels[20][51]. This reduction appears to be due to proteasomal degradation of the unassembled GatC protein, as the GatA and GatB proteins are equally substantially decreased in the same cells[20][51]. This observation demonstrates that the individual GatC protein lacks intrinsic stability and must be stabilized through incorporation into the GatCAB complex[20][51]. Conversely, in cells expressing wild-type gatC along with normal gatA and gatB, the GatCAB complex is detected at approximately 120 kDa on blue native PAGE analysis, consistent with a complex composed of one copy of each subunit[20][51].</p>
+<h3 id="interaction-surfaces-and-domain-domain-interfaces">Interaction Surfaces and Domain-Domain Interfaces</h3>
+<p>The primary functional domains of GATC can be conceptualized as the GatA-binding surface and the GatB-binding surface. The GatC protein, despite its small size, presents multiple interaction surfaces that enable it to serve as a bridge between the two larger catalytic subunits[26][29][33]. The GatC-GatA interface is characterized by hydrophobic interactions that bury approximately 15-20% of the solvent-accessible surface of GatC[26][29]. This interface includes the critical met78 residue mentioned above, along with several other amino acids that maintain the specific spatial orientation required for catalysis[20][26].</p>
+<p>The GatC-GatB interface similarly involves both hydrophobic and electrostatic interactions that stabilize the heterotrimer structure[26][29]. While specific residues involved in this interface have not been extensively characterized in the literature, the overall architecture of the GatCAB complex indicates that GatC makes substantial contacts with the core domain of GatB[26][29][33]. These interactions are particularly important during the conformational changes that occur during substrate binding and catalysis[29].</p>
+<p>The role of GatC as a linker between GatA and GatB has significant implications for the catalytic mechanism[26][29][33]. By maintaining the proper spatial relationship between the glutaminase active site of GatA and the tRNA-binding and transaminidation site of GatB, GatC ensures efficient transfer of the ammonia generated by glutamine hydrolysis to the activated tRNA substrate[26][29]. The linker function is particularly critical in the context of the transamidosome complex, where the ternary complex of GatCAB with nondiscriminating aminoacyl-tRNA synthetase and tRNA(Gln) forms a functional unit[29]. In this complex, GatC helps maintain proper positioning of all the component proteins to enable efficient and coordinated catalysis[29].</p>
+<h3 id="post-translational-modifications">Post-Translational Modifications</h3>
+<p>The available literature provides limited specific information regarding post-translational modifications of GATC proteins in METTP or other organisms. However, the general properties of small scaffold proteins suggest that GATC may be subject to some post-translational modifications that could regulate its function or localization. In eukaryotic mitochondria, where the mammalian ortholog Pet112 functions, the corresponding protein has been shown to localize to both mitochondria and nuclei, suggesting possible targeting sequences that may be post-translationally modified[33]. However, this eukaryotic-specific property may not apply to the archaeal METTP GATC protein.</p>
+<p>In bacteria and archaea, common post-translational modifications include phosphorylation, methylation, and acetylation[41]. While no specific evidence for these modifications on GATC has been reported, the involvement of GATC in metabolic processes in thermophilic archaea suggests that regulatory post-translational modifications may occur under specific environmental conditions. Such modifications could potentially modulate the stability of the GatCAB complex or its catalytic efficiency in response to nutrient availability or temperature stress[41].</p>
+<h2 id="cellular-localization-and-complex-assembly">Cellular Localization and Complex Assembly</h2>
+<h3 id="subcellular-localization-in-mettp">Subcellular Localization in METTP</h3>
+<p>GATC in METTP localizes to the cytoplasm, where the GatCAB amidotransferase complex functions in conjunction with the ribosomal translation machinery[2][9][14][17]. Unlike the mammalian ortholog, which has been characterized as a mitochondrial protein involved in mitochondrial protein synthesis[1][5][20][51], the METTP GATC participates in cytoplasmic protein synthesis in this prokaryotic organism[2][9][14][17]. This localization difference reflects the fundamental distinction between prokaryotes and eukaryotes with respect to protein synthesis compartmentalization[2][9].</p>
+<p>The mechanism by which GATC maintains cytoplasmic localization in METTP is not extensively characterized, but presumably involves either the absence of targeting sequences or the possession of signals that prevent mitochondrial or other organellar targeting[2][9]. In prokaryotes such as METTP, which lack membrane-bound organelles except for the cell wall, cytoplasmic localization represents the default location for protein synthesis machinery and associated factors[2][9][14][17]. The GATC protein, being a component of the translational apparatus, would be distributed throughout the cytoplasm in association with ribosomes and other translation factors[2][9][14][17].</p>
+<h3 id="organization-of-the-gatcab-heterotrimer">Organization of the GatCAB Heterotrimer</h3>
+<p>GATC functions as one component of the heterotrimeric GatCAB amidotransferase complex, which is essential for transamidation of mischarged tRNA species[1][2][5][9][20]. The GatCAB complex is organized as a heterotrimer with stoichiometry of 1:1:1 for GatA:GatB:GatC[20][26][29][33]. This 1:1:1 stoichiometry has been directly confirmed by biochemical analyses of recombinant GatCAB complexes from multiple organisms, including bacterial species, where the complex has been purified to homogeneity[2][26][29]. The approximate molecular weight of the assembled GatCAB heterotrimer is 120 kDa[20][51].</p>
+<p>The assembly pathway for the GatCAB heterotrimer appears to involve preferential interaction between GatA and GatC first, followed by binding of GatB to this complex[9][20][33]. This assembly model is supported by observations that GatC expression is dependent on GatA for stability, and that mutations in GatC that disrupt GatA binding prevent formation of the active complex[20][51]. The assembled heterotrimer is thermodynamically stable and remains intact under typical cellular conditions, facilitating its function as a stable catalytic unit[2][20][26][29].</p>
+<h3 id="assembly-into-the-transamidosome-complex">Assembly into the Transamidosome Complex</h3>
+<p>GATC participates in the formation of a larger transamidosome complex, which represents the functional form of the GatCAB enzyme in many organisms[29][57]. The transamidosome is a ternary complex consisting of GatCAB, a nondiscriminating aminoacyl-tRNA synthetase (ND-AspRS or ND-GluRS), and the cognate tRNA substrate (tRNA(Asn) or tRNA(Gln))[29][57]. The function of the transamidosome is to physically couple the mischargingof the tRNA by the nondiscriminating synthetase with the correction of that mischarging by the GatCAB amidotransferase[29][57]. This spatial organization minimizes the lifetime of mischarged tRNA molecules in solution, reducing the risk that they will be incorporated into proteins by the ribosome[29][57].</p>
+<p>The crystal structure of the Pseudomonas aeruginosa transamidosome, reported at 3.7 Å resolution, reveals the precise architecture of this complex[29]. In this structure, the GatCAB heterotrimer interacts with ND-AspRS and tRNA(Asn) through multiple contact points that organize all four macromolecular components into a functional unit[29]. The GatC subunit, by virtue of its positioning at the interface between GatA and GatB, contributes to the overall stability of the transamidosome architecture[29]. The variable loop and D-loop of the tRNA are positioned to interact with specific regions of GatB, including the conserved Lys-rich motif that GatC helps stabilize[26][29][57].</p>
+<p>The bacterial-type transamidosome described for Pseudomonas aeruginosa shows that the two tRNA(Asn) molecules present in the complex simultaneously serve as substrates and scaffolds for the complex assembly[29]. This represents an elegant solution to the problem of achieving high local concentrations of substrate and ensuring efficient catalysis[29]. The role of GatC in organizing this complex architecture is substantial, as it maintains the proper orientation of GatB relative to tRNA and enables the conformational dynamics necessary for substrate binding and product release[29].</p>
+<h3 id="complex-stability-and-regulation">Complex Stability and Regulation</h3>
+<p>The GatCAB heterotrimer is highly stable when all three subunits are present and functional[20][26][29]. However, when individual subunits carry inactivating mutations, the entire complex destabilizes, as evidenced by studies of patient fibroblasts carrying mutations in gatC, gatB, or gatA (encoding GatA)[20][51]. In these studies, mutations in any single subunit resulted in dramatic reductions in the steady-state levels of all three subunits, indicating that the heterotrimer rapidly dissociates and the individual subunits are degraded when the complex is destabilized[20][51].</p>
+<p>This stability interdependence of the GatCAB subunits suggests that the complex exists as a tightly integrated unit with limited tolerance for individual subunit dysfunction[20][51]. The implications for GatC specifically are that its stability is entirely dependent on proper assembly with intact GatA and GatB subunits. Mutations in GATC that impair the GatA-GatC or GatB-GatC interfaces would be expected to result in rapid degradation of the unstable GatC protein, as has been observed for the Met78Arg mutation that disrupts the GatC-GatA interface[20][51].</p>
+<h2 id="biological-processes-and-metabolic-role">Biological Processes and Metabolic Role</h2>
+<h3 id="glutaminyl-trna-biosynthesis-via-transamidation">Glutaminyl-tRNA Biosynthesis via Transamidation</h3>
+<p>GATC is fundamentally involved in the biological process of glutaminyl-tRNA biosynthesis via transamidation, which is essential for accurate protein synthesis[1][2][5][9]. Unlike organisms that possess glutaminyl-tRNA synthetase, which directly charges glutamine to tRNA(Gln) in a single step, METTP and other organisms lacking GlnRS must employ the two-step indirect pathway. In the first step, a nondiscriminating glutamyl-tRNA synthetase (EARS2 in mitochondria, GluRS in bacteria and archaea) mischarged tRNA(Gln) with glutamate, forming Glu-tRNA(Gln)[1][5][9][20]. This mischarged species is then specifically recognized by the GatCAB complex, which removes the glutamate and replaces it with glutamine through the transamidation reaction[1][5][9][20].</p>
+<p>The transamidation pathway for glutaminyl-tRNA biosynthesis is universally present in all three domains of life[9][33][49]. However, the distribution of this pathway varies among organisms. In archaea, such as METTP, the transamidation pathway is the only mechanism for generating Gln-tRNA(Gln), as GlnRS is entirely absent from archaeal genomes[9][33][55]. In bacteria, both the direct pathway via GlnRS and the indirect transamidation pathway can coexist, with some bacteria possessing only the transamidation pathway while others possess only GlnRS[9][33][49]. In eukaryotes, the cytoplasmic protein synthesis employs only the direct GlnRS pathway, but mitochondrial protein synthesis must utilize the transamidation pathway because mitochondrial genomes have not retained a GlnRS gene[9][33][49].</p>
+<p>The critical importance of the transamidation pathway is underscored by studies showing that disruption of any component of the GatCAB complex is lethal in organisms that depend entirely on this pathway[2][49]. In Bacillus subtilis, insertional inactivation of the gatA, gatB, or gatC genes results in inability to obtain viable transformants, indicating that disruption of the entire gatCAB operon is lethal[2][49]. This lethality demonstrates that transamidation is the only pathway to Gln-tRNA(Gln) in these organisms and that the GatCAB complex is an essential component of the translational apparatus[2][49].</p>
+<h3 id="mitochondrial-translation-in-context-of-other-organisms">Mitochondrial Translation (in context of other organisms)</h3>
+<p>While GATC in METTP functions in cytoplasmic translation, the human ortholog of GATC participates in mitochondrial translation[1][5][20][51]. This biological process involvement is important to understand for comparative purposes. Mitochondrial protein synthesis in humans and other eukaryotes differs from cytoplasmic protein synthesis in several respects, including the use of different ribosomes (70S versus 80S) and different tRNA molecules[1][5][20][51]. The mitochondrial genome encodes 13 proteins that are all components of the oxidative phosphorylation (OXPHOS) system, and these proteins must be synthesized with high fidelity to ensure proper assembly and function of the electron transport chain complexes[1][5][20][51].</p>
+<p>The human GATC gene is located on chromosome 12 and encodes a protein product of 102 amino acids[1][4][19][23]. This protein localizes to the mitochondrial matrix, where it functions as the C subunit of the mitochondrial GatCAB complex[1][5][20]. The mitochondrial GatCAB complex functions identically to the bacterial complex, utilizing a transamidation pathway to convert mischarged Glu-mt-tRNA(Gln) to correctly charged Gln-mt-tRNA(Gln), which is then used in mitochondrial protein synthesis[1][5][20][51].</p>
+<p>Defects in human GATC result in a severe metabolic disease characterized by combined respiratory chain enzyme deficiencies and mitochondrial dysfunction[5][20][51]. Patients with pathogenic GATC mutations present with lethal metabolic cardiomyopathy syndrome, indicating that the heart muscle, which is highly dependent on OXPHOS, is particularly sensitive to defects in this translational pathway[5][20][51]. This striking clinical phenotype demonstrates the critical importance of accurate protein synthesis in mitochondria and the essential role of GATC in this process[5][20][51].</p>
+<h3 id="protein-translation-and-translational-fidelity">Protein Translation and Translational Fidelity</h3>
+<p>Beyond the specific role in glutaminyl-tRNA biosynthesis, GATC plays a broader role in general protein translation by ensuring that glutamine codons are decoded with high accuracy[1][5][9][20][50]. When the GatCAB complex functions properly, glutamine codons are consistently and accurately translated as glutamine, contributing to overall translational fidelity. However, recent research has revealed that the GatCAB complex also functions as a modulator of translational fidelity, with mutations that reduce GatCAB activity leading to increased mistranslation[50][53].</p>
+<p>In Mycobacterium tuberculosis, clinical isolates carrying partial loss-of-function mutations in gatA (encoding the GatA subunit) exhibit dramatically elevated rates of mistranslation at glutamine and asparagine codons[50][53]. These mistranslation rates can be 10-fold higher than in wild-type cells, representing a substantial deviation from normal translational accuracy[50][53]. The increased mistranslation leads to an interesting phenotype: enhanced phenotypic resistance to the antibiotic rifampicin, suggesting that adaptive mistranslation may serve as a survival strategy under stress conditions[50][53]. This discovery reveals that GATC and the broader GatCAB complex have a previously unappreciated role in modulating the balance between translational accuracy and phenotypic adaptation[50][53].</p>
+<p>The mechanism by which reduced GatCAB activity leads to increased mistranslation appears to involve changes in the stability of the GatCAB complex and the transamidosome[53]. In Mycobacterium species, mutations in gatA reduce the structural stability of the entire complex without completely abolishing enzymatic activity[53]. This destabilization allows some Asp-tRNA(Asn) and Glu-tRNA(Gln) to escape correction by the amidotransferase and be used directly for translation, resulting in the substitution of aspartate for asparagine or glutamate for glutamine at the corresponding codon positions[53]. These substitutions, while not strictly accurate, appear to confer phenotypic advantages under certain conditions, including antibiotic stress[50][53].</p>
+<h2 id="evolutionary-conservation-and-phylogenetic-analysis">Evolutionary Conservation and Phylogenetic Analysis</h2>
+<h3 id="conservation-of-gatc-across-domains-of-life">Conservation of GATC Across Domains of Life</h3>
+<p>GATC and its orthologs are highly conserved across all three domains of life—bacteria, archaea, and eukaryotes[9][33]. This universal conservation underscores the fundamental importance of the GatCAB complex in protein synthesis. All known bacteria except a very small number of organisms with highly reduced genomes possess functional gatC genes[9][33][35]. Similarly, all sequenced archaeal genomes contain gatC, with the exception of a very small subset of organisms in the DPANN superphylum[32][33]. In eukaryotes, the gatC ortholog (Pet112 in Saccharomyces cerevisiae, the yeast model organism) is retained in mitochondrial genomes, even though mitochondrial genes have generally undergone substantial loss during eukaryotic evolution[33].</p>
+<p>The conservation of GATC at the sequence level shows identifiable homologous regions that can be aligned across diverse organisms separated by billions of years of evolution[9][33]. These conserved regions include sequences critical for interaction with GatA and GatB, as well as the small regions that form the core structure of the protein[33]. The conservation extends to functionally important residues such as the met78 position mentioned previously, which is conserved in the context of the GatC-GatA interaction[20][26].</p>
+<h3 id="phylogenetic-analysis-of-gatc-and-gatcab-evolution">Phylogenetic Analysis of GATC and GatCAB Evolution</h3>
+<p>The evolutionary history of GATC and the GatCAB complex reveals important insights into the origin of protein synthesis and the evolution of translational accuracy[9][33]. Phylogenetic analyses comparing GATC sequences with other amidotransferase components show that the GatCAB complex has a very ancient origin, predating the divergence of bacteria and archaea[9][33]. This ancient origin indicates that the indirect pathway for glutaminyl-tRNA synthesis was likely present in the last universal common ancestor (LUCA) and has been retained by the vast majority of organisms for over 3.5 billion years[9][33][55].</p>
+<p>The phylogenetic analysis of GatA and GatB sequences reveals a deep divergence between bacterial and archaeal versions of these proteins[9][33]. In contrast, GatC sequences, being shorter and less complex, show less clear phylogenetic signal, but they nonetheless cluster according to the bacterial/archaeal divide[9][33]. This suggests that the bacterial and archaeal GatCAB complexes diverged early in evolution but retained their essential function throughout subsequent speciation events[9][33].</p>
+<p>An important discovery from evolutionary studies is that two distinct types of tRNA-dependent amidotransferases exist in nature: the heterotrimeric GatCAB found in bacteria and archaea, and the heterodimeric GatDE found only in archaea[9][33]. The GatDE complex catalyzes glutaminyl-tRNA synthesis (Glu-AdT activity), while bacterial GatCAB typically catalyzes both glutaminyl-tRNA synthesis and asparaginyl-tRNA synthesis[9][33]. However, archaeal GatCAB has specialized to catalyze primarily asparaginyl-tRNA synthesis (Asp-AdT), with the GatDE complex handling the glutaminyl-tRNA function in these organisms[9][14][17][33]. This division of labor in archaea reflects specialized evolution of the GatCAB and GatDE complexes and demonstrates how the same basic amidotransferase scaffold can be functionally specialized through amino acid sequence evolution[9][33].</p>
+<p>In the specific case of METTP, the GatCAB complex has evolved to utilize both glutamine and asparagine with relatively similar efficiency as amide donors[14][17]. This functional flexibility is unusual among archaea and likely reflects adaptation to the thermophilic lifestyle and potentially variable nutrient availability in the environment from which METTP was isolated[14][17].</p>
+<h3 id="ortholog-function-and-functional-divergence">Ortholog Function and Functional Divergence</h3>
+<p>The orthologs of GATC in other organisms generally share the same fundamental function of serving as the C subunit of the GatCAB amidotransferase complex[9][33]. However, some functional divergence has occurred, particularly in eukaryotes where the mitochondrial Pet112 protein (the GATC ortholog in yeast and mammals) may have acquired additional functions beyond its role as a component of the transamidation machinery[33]. In yeast mitochondria, Pet112 has been shown to localize to both the mitochondria and the nucleus, raising the possibility of nuclear functions that are not present in bacterial and archaeal GATC proteins[33].</p>
+<p>Despite this potential functional divergence in eukaryotes, the core function of GATC orthologs—enabling proper assembly and catalytic activity of the GatCAB amidotransferase complex—is conserved across all organisms in which it has been characterized[9][33]. This functional conservation reflects the fundamental importance of this function to organismal viability and the limited tolerance for changes to the transamidation machinery[9][33][49].</p>
+<h3 id="essential-gene-status-and-minimal-genome-considerations">Essential Gene Status and Minimal Genome Considerations</h3>
+<p>GATC is considered an essential gene in organisms that rely exclusively on the transamidation pathway for glutaminyl-tRNA synthesis. Analyses of minimal bacterial genomes have confirmed that gatC is retained in even the most reduced genomes of free-living bacteria, such as Mycoplasma genitalium[35]. This retention indicates that no functionally equivalent alternative exists and that the transamidation pathway cannot be bypassed or replaced by other mechanisms[35]. The gatC gene is listed among the 206 protein-coding genes proposed as the core of a minimal bacterial gene set necessary for self-maintenance and reproduction[35].</p>
+<p>In organisms that possess an alternative glutaminyl-tRNA synthetase and therefore can generate Gln-tRNA(Gln) through the direct pathway, the gatC gene, along with the rest of the GatCAB complex, becomes dispensable under laboratory conditions[35]. However, even in such organisms where GatCAB is not strictly essential, the complex is often retained and appears to serve regulatory or quality-control functions in addition to its canonical catalytic role[35].</p>
+<h2 id="functional-characterization-in-mettp-and-other-organisms">Functional Characterization in METTP and Other Organisms</h2>
+<h3 id="enzymatic-characterization-of-mettp-gatcab">Enzymatic Characterization of METTP GatCAB</h3>
+<p>The enzymatic properties of METTP GatCAB have been directly characterized through purification and in vitro assays[14][17]. Unlike many bacterial GatCAB enzymes, the METTP GatCAB exhibits relatively slow transamidation rates compared to the extremely rapid rates measured for the ND-AspRS enzyme in the same organism. This kinetic difference is functionally significant, as it suggests that the transamidosome complex may operate more slowly in archaea than in bacteria, potentially affecting the rate of translation and the kinetic constants for protein synthesis[14][17].</p>
+<p>The METTP GatCAB, when functioning as an Asp-AdT (asparaginyl-tRNA synthase), exhibits a kcat/KM of 0.11 s−1 at 37°C when assayed with Asp-tRNA(Asn) as substrate and asparagine as amide donor[14][17]. This is substantially slower than the kcat/KM of 125 s−1/mM measured for the ND-AspRS enzyme with the same substrate[14][17]. However, when the temperature is raised to 65°C, the optimal growth temperature for METTP, the GatCAB activity approximately doubles to a kcat/KM of 0.2 s−1, reflecting the thermophilic nature of the enzyme[14][17].</p>
+<p>A remarkable discovery regarding METTP GatCAB is its inability to transamidate the homologous archaeal Glu-tRNA(Gln)[14][17]. This represents a substantial difference from bacterial GatCAB enzymes, which typically function efficiently with Glu-tRNA(Gln) as substrate. The METTP GatCAB can, however, transamidate bacterial Glu-tRNA(Gln) from H. pylori or B. subtilis, demonstrating that the substrate specificity resides in the tRNA structure rather than in the nature of the tRNA type or the attached amino acid[14][17]. This specificity is achieved through recognition of particular identity elements in the tRNA, likely including the variable loop and other regions of tertiary structure[14][17][57].</p>
+<h3 id="activity-assays-and-kinetic-analysis">Activity Assays and Kinetic Analysis</h3>
+<p>The activity of GATC as a component of the GatCAB complex has been assayed using various approaches developed to provide sufficient substrate and enable sensitive detection of the transamidation reaction. Early assays for Glu-AdT activity measured the conversion of [14C]Glu-tRNA(Gln) to [14C]Gln-tRNA(Gln) in the presence of glutamine and ATP[2]. The assay involves deacylation of the aminoacyl-tRNA products, separation of the released amino acids by thin-layer chromatography, and quantification of radioactivity through phosphorimaging[2]. This approach is very sensitive, detecting as few as 20 fmol of reaction product when the specific activity of the [14C]glutamate is 300 cpm/pmol[2].</p>
+<p>More recent assays have employed mass spectrometry and alternative detection methods that provide real-time kinetic information. These approaches enable determination of the Michaelis constant (Km) and maximum velocity (Vmax) for the GatCAB complex with defined substrates[14][17][29]. From such kinetic analyses, researchers can calculate the catalytic efficiency (kcat/Km) of the enzyme with different substrates, revealing substrate specificity and catalytic preferences[14][17][29].</p>
+<p>For METTP GatCAB specifically, assays conducted at the enzyme's optimal temperature of 65°C reveal that the enzyme exhibits temperature-dependent activity with approximately double the specific activity at 65°C compared to 37°C[14][17]. This thermophilic adaptation represents a key characteristic distinguishing METTP enzymes from mesophilic bacterial counterparts and reflects the extraordinary environments in which METTP thrives[14][17][25].</p>
+<h3 id="role-in-anaerobic-methanogenesis">Role in Anaerobic Methanogenesis</h3>
+<p>While GATC's primary role is in protein synthesis, the biological context of METTP as an obligate anaerobic methanogen places its function within the specialized metabolic pathways required for hydrogenotrophic methanogenesis[25][31][34]. METTP utilizes hydrogen gas and carbon dioxide as energy and carbon sources, converting these compounds to methane through a complex series of biochemical reactions[25][31][34]. All proteins involved in this methanogenic pathway, including the enzymes of the Wolfe cycle and the methyl-coenzyme M reductase complex, must be synthesized with high fidelity to enable efficient energy metabolism[25][31][34].</p>
+<p>The accurate synthesis of proteins involved in methanogenesis is particularly critical because the redox potentials in these reactions are extremely sensitive to the properties of the enzyme catalysts[25][31][34]. Mistranslation of amino acids in key positions of these enzymes could substantially reduce catalytic efficiency, thereby reducing the organism's ability to generate ATP and reproduce[25][31][34]. Therefore, the GatCAB complex and GATC's role in ensuring accurate protein synthesis have direct implications for the metabolic fitness of METTP in its natural environment[25][31][34].</p>
+<h3 id="biotechnological-applications-and-genetic-engineering">Biotechnological Applications and Genetic Engineering</h3>
+<p>Recent work has demonstrated the possibility of genetically engineering METTP for biotechnological applications, including the production of methane from carbon dioxide and hydrogen in bioreactors[25][31][34]. These biotechnological applications require that the engineered METTP strains maintain high fidelity in protein synthesis to ensure that all recombinant proteins and native proteins remain fully functional[31][34]. The development of genetic tools for METTP has enabled the stable integration of heterologous genes, such as formate dehydrogenase cassettes, that allow metabolic engineering of the organism's central carbon and energy metabolism[31][34].</p>
+<p>The successful implementation of genetic systems for METTP required the development of shuttle vectors that replicate in both E. coli and METTP, allowing transfer of DNA constructs to METTP cells[31]. These advances in archaeal genetic engineering raise questions about the potential utility of targeting the GatCAB complex for metabolic engineering purposes. While no studies have yet reported targeted manipulation of the gatC gene itself, the established necessity of GatCAB for all protein synthesis suggests that any modifications to this system would have pleiotropic effects on the entire proteome, making it an unsuitable target for beneficial metabolic engineering[31][34].</p>
+<h2 id="disease-associations-and-phenotypic-evidence">Disease Associations and Phenotypic Evidence</h2>
+<h3 id="human-gatc-associated-disease">Human GATC-Associated Disease</h3>
+<p>In humans, pathogenic variants in the GATC gene cause combined oxidative phosphorylation (OXPHOS) deficiency 42, which manifests as a severe metabolic cardiomyopathy syndrome with typically lethal outcome[1][5][20][51]. The disease is inherited in an autosomal recessive pattern, requiring biallelic pathogenic variants for disease manifestation[5][20][51]. The phenotypic features of GATC-associated disease include progressive cardiomyopathy, lactic acidosis, failure to thrive, and early lethality, typically within infancy[5][20][51].</p>
+<p>The severity of GATC-associated disease reflects the fundamental importance of accurate protein synthesis in the heart muscle, which is highly dependent on OXPHOS for ATP generation[5][20][51]. The heart muscle typically contains the highest density of mitochondria of any tissue type, making it exquisitely sensitive to defects in mitochondrial protein synthesis[5][20][51]. When mitochondrial translation is impaired due to GATC defects, the synthesis of the OXPHOS subunits encoded by mitochondrial DNA is reduced, leading to combined deficiencies of multiple respiratory chain enzyme complexes[5][20][51].</p>
+<p>Functional studies of patient fibroblasts reveal that the primary defect in GATC-associated disease is impaired aminoacylation of mitochondrial tRNA(Gln) with glutamine[5][20][51]. When fibroblasts are cultured in the absence of glutamine (minimal essential medium), the aminoacylation of mt-tRNA(Gln) is severely impaired, and mitochondrial protein translation becomes deficient[5][20][51]. However, when the same cells are cultured in high glutamine conditions (standard culture medium), the aminoacylation is substantially restored, indicating that the primary defect is not complete loss of function but rather reduced catalytic efficiency that becomes rate-limiting when substrate concentration is low[5][20][51].</p>
+<h3 id="genetic-defects-and-molecular-mechanisms">Genetic Defects and Molecular Mechanisms</h3>
+<p>Nine patients from five unrelated families have been identified with biallelic pathogenic variants in GATC, GATB, or QRSL1 (encoding GatA)[5][20][51]. These patients include individuals with various types of mutations, including missense mutations that alter amino acid sequence and presumably disrupt protein folding or function[5][20][51]. Structural modeling of these pathogenic mutations in the human GatCAB complex has provided insights into the molecular mechanisms by which specific mutations impair function[5][20][51].</p>
+<p>For example, the Met78Arg mutation found in GATC families 4 and 5 is located at the critical GatC-GatA interface[20][51]. The met78 residue normally interacts with two positively charged arginine residues in GatA through hydrophobic interactions. The Met78Arg substitution replaces a hydrophobic amino acid with a charged arginine, causing electrostatic repulsion that disrupts the GatC-GatA interaction and destabilizes the GatCAB heterotrimer[20][51].</p>
+<p>Other pathogenic variants in GATC that have been identified include Ala427Leu, which is located on the solvent-exposed surface of GatA and exhibits more limited impact on function compared to interface-disrupting mutations[20]. The differential effects of various mutations on GatCAB function help explain the variable clinical phenotypes observed in affected patients, with some individuals showing earlier onset of disease or more rapid progression[20][51].</p>
+<h3 id="molecular-and-cellular-phenotypes">Molecular and Cellular Phenotypes</h3>
+<p>At the cellular level, human patients with GATC mutations show severe mitochondrial dysfunction as evidenced by multiple lines of evidence[5][20][51]. The steady-state levels of GatCAB subunits are dramatically reduced in affected patients' cells, reflecting the instability of the complex when composed of mutant subunits[5][20][51]. Blue native PAGE analysis fails to detect the expected 120 kDa GatCAB complex in affected individuals, confirming that the heterotrimer does not properly assemble[5][20][51].</p>
+<p>Pulse labeling experiments employing [35S]methionine to specifically label mitochondrial proteins synthesized during translation show a strong generalized defect in mtDNA-encoded protein synthesis in cells from affected individuals[5][20][51]. This defect is particularly severe during culture in the absence of glutamine, demonstrating the direct link between impaired tRNA(Gln) aminoacylation and reduced mitochondrial translation[5][20][51]. The combined respiratory chain enzyme deficiencies in affected patients reflect the reduced synthesis of the OXPHOS subunits encoded by mitochondrial DNA, which include three subunits of Complex I (ND1, ND2, ND3, ND4, ND4L, ND5, ND6), one subunit of Complex III (Cytb), three subunits of Complex IV (COI, COII, COIII), and two subunits of Complex V (ATP6, ATP8)[5][20][51].</p>
+<h3 id="complementation-and-rescue-studies">Complementation and Rescue Studies</h3>
+<p>To validate the pathogenicity of identified mutations, researchers have employed complementation studies using lentiviral rescue in patient cells[5][20]. These studies showed that introduction of a wild-type GATB or GATC gene via lentiviral transduction resulted in restoration of GatCAB complex levels and restoration of mitochondrial protein synthesis capacity[5]. Similarly, modeling of the pathogenic mutations in yeast by introduction of the equivalent mutation into the yeast Pet112 gene (the yeast ortholog of GATC) resulted in conditional phenotypes demonstrating pathogenicity[5][20][51].</p>
+<p>For example, the human GATB mutation Phe136Leu was modeled in yeast as the equivalent Phe103Leu mutation in Pet112[5][20][51]. While the mutant yeast strain showed no clear growth defect under normal conditions at 30°C, it displayed a 20% reduction in respiratory activity at high temperature (37°C) and a severe defect in oxidative growth when cultured at 37°C in the absence of glutamine[5][20][51]. This conditional phenotype validates the pathogenic nature of the Phe136Leu mutation and demonstrates that the defect is most apparent under conditions of stress and low glutamine availability[5][20][51].</p>
+<h2 id="go-annotation-recommendations">GO Annotation Recommendations</h2>
+<h3 id="molecular-function-annotations">Molecular Function Annotations</h3>
+<p>Based on the comprehensive experimental evidence reviewed in this analysis, the following Gene Ontology molecular function annotations are recommended for GATC in METTP:</p>
+<p><strong>Primary Annotations:</strong></p>
+<ol>
+<li>
+<p><strong>Glutaminyl-tRNA synthase (glutamine-hydrolyzing) activity</strong> (GO:0004817) - EVIDENCE: IDA (Inferred from Direct Assay) - This is the most direct and experimentally validated molecular function of GATC as a component of the GatCAB complex. The transamidation reaction catalyzed by GatCAB results in the synthesis of correctly charged glutaminyl-tRNA through a glutamine-dependent mechanism[1][2][5][9][20][21].</p>
+</li>
+<li>
+<p><strong>Carbon-nitrogen ligase activity, with glutamine as amido-N-donor</strong> (GO:0016883) - EVIDENCE: IDA - This represents the formal enzymatic classification of the amidotransferase reaction catalyzed by GatCAB, in which a carbon-nitrogen bond is formed through transfer of nitrogen from glutamine to the tRNA-bound glutamate[21][33][9].</p>
+</li>
+<li>
+<p><strong>ATP binding</strong> (GO:0005524) - EVIDENCE: IEA (Inferred from Electronic Annotation) or ISS (Inferred from Sequence Similarity) - GATC participates in ATP binding as part of the GatCAB complex, though the direct nucleotide binding site is in the GatB subunit. GATC contributes to this function through its role in stabilizing GatB and maintaining the nucleotide binding pocket[1][4][19][20][26].</p>
+</li>
+</ol>
+<p><strong>Secondary Annotations:</strong></p>
+<ol>
+<li>
+<p><strong>Protein binding</strong> (GO:0005515) - EVIDENCE: IPI (Inferred from Physical Interaction) - GATC directly binds to GatA and GatB subunits to form the functional heterotrimer. This interaction can be verified through co-immunoprecipitation, yeast two-hybrid, and structural studies[20][26][29][33].</p>
+</li>
+<li>
+<p><strong>tRNA binding</strong> (GO:0000049) - EVIDENCE: IDA or ISS - As a component of the GatCAB complex, GATC participates in tRNA binding through proper positioning of the tRNA substrate relative to the catalytic sites of GatA and GatB. The conserved D-loop and variable loop recognition regions of tRNA interact with the GatB subunit, which is stabilized by GATC[26][29][57].</p>
+</li>
+</ol>
+<h3 id="cellular-component-annotations">Cellular Component Annotations</h3>
+<p>Based on the functional characterization and localization studies, the following cellular component annotations are recommended:</p>
+<ol>
+<li>
+<p><strong>Cytoplasm</strong> (GO:0005737) - EVIDENCE: IDA - In METTP and other bacteria and archaea, GATC localizes to the cytoplasm as a component of the translational machinery[2][9][14][17]. This represents the major cellular location of GATC in these organisms.</p>
+</li>
+<li>
+<p><strong>Glutamyl-tRNA(Gln) amidotransferase complex</strong> (GO:0030425 or similar complex-specific term if available) - EVIDENCE: IDA - GATC is a structural and functional component of the GatCAB heterotrimer, which should be annotated as a protein complex. The complex can be identified through gel filtration, blue native PAGE, and electron microscopy approaches[20][26][29].</p>
+</li>
+<li>
+<p><strong>Transamidosome</strong> (GO term for this complex should be created if not already existing) - EVIDENCE: IDA - GATC participates in formation of the functional transamidosome complex, which consists of GatCAB, nondiscriminating aminoacyl-tRNA synthetase, and cognate tRNA. The organization and function of this complex is directly demonstrated in structural studies[29][57].</p>
+</li>
+<li>
+<p><strong>Ribosome</strong> (GO:0005840) - EVIDENCE: IEA or ISS - As a component of the translational apparatus, GATC functions in association with ribosomes during protein synthesis. The GatCAB complex is recruited to the ribosome context during translation of glutamine codons[2][9][14][17].</p>
+</li>
+</ol>
+<h3 id="biological-process-annotations">Biological Process Annotations</h3>
+<p>Based on the functional and phenotypic evidence, the following biological process annotations are recommended:</p>
+<ol>
+<li>
+<p><strong>Glutaminyl-tRNA biosynthesis</strong> (GO:0006428) - EVIDENCE: IDA - This is the primary biological process in which GATC participates. The transamidation pathway catalyzed by GatCAB is the sole route to Gln-tRNA(Gln) in organisms such as METTP that lack glutaminyl-tRNA synthetase[1][5][9][20][49].</p>
+</li>
+<li>
+<p><strong>Translational accuracy</strong> (GO:0006431 or related term) - EVIDENCE: IDA - GATC contributes to accurate translation by ensuring that glutamine residues are correctly incorporated in response to glutamine codons. Recent evidence indicates that GatCAB also serves as a modulator of translational fidelity, with GATC mutations leading to increased mistranslation[50][53].</p>
+</li>
+<li>
+<p><strong>Protein biosynthesis</strong> (GO:0006090 or GO:0006412) - EVIDENCE: IEA - As a component of the translational machinery essential for accurate protein synthesis, GATC participates in the broader biological process of protein biosynthesis[1][2][5][9][20].</p>
+</li>
+<li>
+<p><strong>tRNA aminoacylation</strong> (GO:0006418) - EVIDENCE: IEA - While GATC itself does not directly perform aminoacylation, it functions in the indirect aminoacylation pathway for glutaminyl-tRNA and therefore participates in the overall tRNA aminoacylation process[1][9][33][49].</p>
+</li>
+<li>
+<p><strong>Response to glutamine availability</strong> (GO term related to metabolic response) - EVIDENCE: IDA - The functional studies of patient cells show that GatCAB activity becomes limiting when glutamine availability is reduced, indicating that the GATC-containing complex responds to glutamine levels and affects protein synthesis rates accordingly[5][20][51].</p>
+</li>
+</ol>
+<h3 id="recommended-go-annotation-framework">Recommended GO Annotation Framework</h3>
+<p>The recommended comprehensive GO annotation framework for GATC in METTP is summarized in the following table:</p>
+<table>
+<thead>
+<tr>
+<th>GO Aspect</th>
+<th>GO Term</th>
+<th>Evidence Code</th>
+<th>Citation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>MF</td>
+<td>Glutaminyl-tRNA synthase activity</td>
+<td>IDA</td>
+<td>[2][9][20]</td>
+</tr>
+<tr>
+<td>MF</td>
+<td>Carbon-nitrogen ligase activity with Gln</td>
+<td>IDA</td>
+<td>[9][21][33]</td>
+</tr>
+<tr>
+<td>MF</td>
+<td>ATP binding</td>
+<td>IEA</td>
+<td>[1][19]</td>
+</tr>
+<tr>
+<td>MF</td>
+<td>Protein binding</td>
+<td>IPI</td>
+<td>[20][26][29]</td>
+</tr>
+<tr>
+<td>MF</td>
+<td>tRNA binding</td>
+<td>IDA</td>
+<td>[26][29][57]</td>
+</tr>
+<tr>
+<td>CC</td>
+<td>Cytoplasm</td>
+<td>IDA</td>
+<td>[2][9][14][17]</td>
+</tr>
+<tr>
+<td>CC</td>
+<td>GatCAB complex</td>
+<td>IDA</td>
+<td>[20][26][29]</td>
+</tr>
+<tr>
+<td>CC</td>
+<td>Transamidosome</td>
+<td>IDA</td>
+<td>[29][57]</td>
+</tr>
+<tr>
+<td>CC</td>
+<td>Ribosome</td>
+<td>IEA</td>
+<td>[2][9]</td>
+</tr>
+<tr>
+<td>BP</td>
+<td>Glutaminyl-tRNA biosynthesis</td>
+<td>IDA</td>
+<td>[1][5][9][20][49]</td>
+</tr>
+<tr>
+<td>BP</td>
+<td>Translational accuracy</td>
+<td>IDA</td>
+<td>[50][53]</td>
+</tr>
+<tr>
+<td>BP</td>
+<td>Protein biosynthesis</td>
+<td>IEA</td>
+<td>[1][2][5][9]</td>
+</tr>
+<tr>
+<td>BP</td>
+<td>tRNA aminoacylation</td>
+<td>IEA</td>
+<td>[1][9][33][49]</td>
+</tr>
+</tbody>
+</table>
+<h3 id="evidence-quality-considerations">Evidence Quality Considerations</h3>
+<p>The annotations recommended above are supported by varying levels of experimental evidence. The highest confidence annotations, supported by direct experimental assays and multiple independent studies, include the primary molecular functions (glutaminyl-tRNA synthase activity and carbon-nitrogen ligase activity), the cytoplasmic localization in METTP, the participation in the GatCAB complex, and the involvement in glutaminyl-tRNA biosynthesis and translational accuracy. These annotations are supported by PMID references including [2], [5], [9], [14][17], [20], [26], [29], [33], [49], [50], [53], and [57].</p>
+<p>The ATP binding and ribosomal localization annotations are supported by less direct evidence, as they reflect GATC's participation in the GatCAB complex rather than specific direct activities of GATC itself. These annotations should be considered as supported by IEA or ISS evidence codes, indicating inference from electronic annotation or sequence similarity, respectively. Future characterization of direct GATC binding to ATP or ribosomes would strengthen these annotations to IDA status.</p>
+<p>The transamidosome participation annotation, while directly demonstrated in structural studies, relies on relatively specialized experimental approaches (X-ray crystallography) that may not have been performed for METTP GATC specifically, making ISS or IEA evidence codes appropriate if no direct structural data for METTP transamidosomes exist.</p>
+<h3 id="organism-specific-considerations">Organism-Specific Considerations</h3>
+<p>For METTP-specific annotation, it is important to note that the cytoplasmic localization distinguishes METTP GATC from the mammalian ortholog, which localizes to the mitochondrial matrix. This organism-specific difference should be explicitly annotated, with METTP GATC assigned to the cytoplasm and human GATC assigned to the mitochondrial matrix. The biological processes should similarly reflect the organism-specific context, with METTP GATC annotated as involved in cytoplasmic protein synthesis, while human GATC is annotated for mitochondrial protein synthesis.</p>
+<p>The recent discovery that GatCAB functions as a modulator of translational fidelity, as demonstrated in Mycobacterium species, suggests that a similar function may exist in METTP, though this has not been directly demonstrated. If evidence for adaptive mistranslation in METTP becomes available, additional process annotations related to stress response and metabolic adaptation would be appropriate.</p>
+<h2 id="conclusion">Conclusion</h2>
+<p>The gatC gene in Methanothermobacter thermautotrophicus encodes a small but essential protein that serves as the C subunit of the heterotrimeric glutamyl-tRNA(Gln) amidotransferase complex. Through its scaffolding and stabilizing functions, GATC enables the transamidation of mischarged Glu-tRNA(Gln) to correctly charged Gln-tRNA(Gln), a reaction essential for accurate protein synthesis in organisms that lack glutaminyl-tRNA synthetase. The comprehensive analysis presented in this report demonstrates that GATC has multiple experimentally validated molecular functions, including glutaminyl-tRNA synthase activity, carbon-nitrogen ligase activity, ATP binding contributions, and critical protein-protein interaction capabilities. GATC functions in the cytoplasm as a component of the GatCAB heterotrimer and the larger transamidosome complex, participating in glutaminyl-tRNA biosynthesis, translational accuracy, and general protein synthesis. The remarkable evolutionary conservation of GATC across all three domains of life underscores its fundamental importance to biology. In humans, pathogenic variants in GATC cause severe metabolic disease characterized by combined OXPHOS deficiency and cardiomyopathy, demonstrating the critical importance of this protein for complex multicellular organisms. Recent discoveries indicating that GatCAB modulates translational fidelity in response to genetic mutations suggest previously unknown regulatory roles that may expand our understanding of protein synthesis control. The GO annotation recommendations provided in this report are grounded in direct experimental evidence and represent the current state of knowledge regarding GATC function, with specific guidance on evidence codes and citations to support accurate functional annotation in databases and resources serving the research community.</p>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>https://www.genecards.org/cgi-bin/carddisp.pl?gene=GATC</li>
+<li>https://www.pnas.org/doi/10.1073/pnas.94.22.11819</li>
+<li>https://metrovideogame.fandom.com/wiki/Mutants</li>
+<li>https://www.ncbi.nlm.nih.gov/gene/283459</li>
+<li>https://www.nature.com/articles/s41467-018-06250-w</li>
+<li>https://metrovideogame.fandom.com/wiki/Humanimal</li>
+<li>https://en.wikipedia.org/wiki/Metabacterium</li>
+<li>https://en.wikipedia.org/wiki/Methanothermobacter</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC2366055/</li>
+<li>https://en.wikipedia.org/wiki/Methylotroph</li>
+<li>https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?mode=Info&amp;id=145262</li>
+<li>https://bacdive.dsmz.de/strain/6882</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC2390905/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC10609329/</li>
+<li>https://www.uniprot.org/taxonomy/187420</li>
+<li>https://pubmed.ncbi.nlm.nih.gov/18291416/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC11001535/</li>
+<li>https://monarchinitiative.org/HGNC:25068</li>
+<li>https://www.uniprot.org/uniprotkb/O43716/entry</li>
+<li>https://www.ncbi.nlm.nih.gov/gene?Db=gene&amp;Cmd=DetailsSearch&amp;Term=283459</li>
+<li>https://www.uniprot.org/uniprotkb/Q8CBY0/entry</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC10579436/</li>
+<li>https://www.rcsb.org/structure/3ip4</li>
+<li>https://zhu.lab.westlake.edu.cn/wp-content/uploads/2012/06/Su_2017.pdf</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC11107166/</li>
+<li>https://www.rcsb.org/structure/4wj3</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC4936096/</li>
+<li>https://journals.asm.org/doi/10.1128/mBio.02766-21</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC10865827/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC515251/</li>
+<li>https://febs.onlinelibrary.wiley.com/doi/10.1016/j.febslet.2006.12.033</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC1838652/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC4502723/</li>
+<li>https://academic.oup.com/jxb/article/60/9/2701/510909</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC6524683/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC10152985/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC5826919/</li>
+<li>https://www.uniprot.org/uniprotkb/O26987/entry</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC463309/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC6170436/</li>
+<li>https://www.uniprot.org/taxonomy/145262</li>
+<li>https://febs.onlinelibrary.wiley.com/doi/10.1002/1873-3468.70135</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC10090944/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC23611/</li>
+<li>https://pubmed.ncbi.nlm.nih.gov/27564922/</li>
+<li>https://pubmed.ncbi.nlm.nih.gov/7961486/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC8406222/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC7041634/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC8762117/</li>
+<li>https://www.ncbi.nlm.nih.gov/datasets/genome/GCA_000008645.1/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC2811023/</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC94116/</li>
+<li>https://www.uniprot.org/uniprotkb/O26413/entry</li>
+<li>the bacterial/archaeal divide[9][33]</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: A0B5K3
+gene_symbol: gatC
+product_type: PROTEIN
+taxon:
+  id: NCBITaxon:349307
+  label: Methanothrix thermoacetophila PT
+description: Encodes the C subunit of the heterotrimeric glutamyl-tRNA(Gln) amidotransferase
+  complex (GatCAB). GATC is a small protein (~100 amino acids) that functions as a
+  critical structural scaffold and catalytic cofactor, enabling proper assembly and
+  stabilization of the GatA glutaminase domain and its binding to GatB. The GatCAB
+  complex catalyzes the transamidation of misacylated Glu-tRNA(Gln) to correctly charged
+  Gln-tRNA(Gln), a process essential for accurate protein synthesis in organisms lacking
+  glutaminyl-tRNA synthetase. In M. thermautotrophicus, the GatCAB complex shows unusual
+  flexibility in amide donor specificity, utilizing both asparagine and glutamine
+  efficiently.
+existing_annotations:
+- term:
+    id: GO:0000166
+    label: nucleotide binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: This is too general. GATC participates in ATP binding as part of the
+      GatCAB complex, but this term does not capture the specificity. The more specific
+      term GO:0005524 (ATP binding) is already present and should be used instead.
+    action: REMOVE
+- term:
+    id: GO:0005524
+    label: ATP binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: GATC itself does not bind ATP - the ATP binding site is in the GatB subunit.
+      GATC stabilizes GatB and maintains the structural integrity of the nucleotide
+      binding pocket, but this is a supporting role, not direct ATP binding activity.
+      This annotation should be removed.
+    action: REMOVE
+- term:
+    id: GO:0006412
+    label: translation
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: This is too general and doesn&#39;t capture the specific role of GATC. GATC
+      is involved in translation, but more specifically in ensuring accurate tRNA
+      aminoacylation for translation. The more specific BP term GO:0070681 (glutaminyl-tRNAGln
+      biosynthesis via transamidation) better captures the core function.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0006450
+    label: regulation of translational fidelity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: This annotation is supported by recent evidence from Mycobacterium tuberculosis
+      showing that GatCAB functions as a modulator of translational fidelity, with
+      reduced GatCAB activity leading to increased mistranslation. The GatCAB complex
+      ensures accurate incorporation of glutamine at glutamine codons, directly contributing
+      to translational fidelity.
+    action: ACCEPT
+- term:
+    id: GO:0016874
+    label: ligase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: This is too general. The GatCAB complex catalyzes a carbon-nitrogen ligase
+      reaction (formation of the amide bond in glutamine), but GATC itself is primarily
+      a scaffolding subunit. The more specific term would be carbon-nitrogen ligase
+      activity with glutamine as amido-N-donor, but even that may be overly specific
+      for GATC&#39;s scaffolding role.
+    action: REMOVE
+- term:
+    id: GO:0050566
+    label: asparaginyl-tRNA synthase (glutamine-hydrolyzing) activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000116
+  review:
+    summary: This enzymatic activity belongs to the GatCAB complex as a whole, not
+      to GATC specifically. The catalytic activity is performed by GatA (glutaminase)
+      and GatB (kinase/transamidase). GATC is a structural scaffold that enables the
+      complex to function, but does not itself have synthase activity. Suggested replacement
+      terms for GATC&#39;s actual function are GO:0060090 (molecular adaptor activity)
+      and GO:0005515 (protein binding).
+    action: REMOVE
+    proposed_replacement_terms:
+    - id: GO:0060090
+      label: molecular adaptor activity
+    - id: GO:0005515
+      label: protein binding
+- term:
+    id: GO:0050567
+    label: glutaminyl-tRNA synthase (glutamine-hydrolyzing) activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: This describes the activity of the GatCAB complex, not GATC itself. The
+      catalytic activities (glutaminase in GatA, kinase/transamidase in GatB) are
+      performed by other subunits. GATC is essential for enabling this activity through
+      its scaffolding role, but does not itself possess synthase activity. Suggested
+      replacement terms are GO:0060090 (molecular adaptor activity) and GO:0005515
+      (protein binding).
+    action: REMOVE
+    proposed_replacement_terms:
+    - id: GO:0060090
+      label: molecular adaptor activity
+    - id: GO:0005515
+      label: protein binding
+- term:
+    id: GO:0070681
+    label: glutaminyl-tRNAGln biosynthesis via transamidation
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  review:
+    summary: This perfectly captures the core biological process in which GATC participates.
+      The transamidation pathway is the only mechanism for generating Gln-tRNA(Gln)
+      in M. thermautotrophicus and all archaea, as they lack glutaminyl-tRNA synthetase.
+      This process is essential for accurate protein synthesis. This is the core biological
+      process function.
+    action: ACCEPT
+- term:
+    id: GO:0060090
+    label: molecular adaptor activity
+  evidence_type: ISS
+  original_reference_id: file:METTP/gatC/gatC-deep-research-perplexity.md
+  review:
+    summary: GATC functions as a molecular adaptor that brings together GatA and GatB
+      subunits to form the functional heterotrimer. Structural studies show GATC is
+      positioned at the interface between the larger catalytic subunits, and mutations
+      disrupting these interfaces destabilize the entire complex. This is GATC&#39;s core
+      molecular function.
+    action: NEW
+    supported_by:
+    - reference_id: file:METTP/gatC/gatC-deep-research-perplexity.md
+      supporting_text: GATC is a small protein (~100 amino acids) that serves as a
+        critical structural scaffold and catalytic cofactor in the GatCAB heterotrimer.
+        GATC is essential for stabilizing the GatA glutaminase domain and enabling
+        its binding to GatB.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: ISS
+  original_reference_id: file:METTP/gatC/gatC-deep-research-perplexity.md
+  review:
+    summary: GATC directly binds to both GatA and GatB subunits through specific interaction
+      surfaces. The protein presents multiple contact points that enable it to serve
+      as a bridge between the two larger catalytic subunits. This is a fundamental
+      molecular function of GATC.
+    action: NEW
+    supported_by:
+    - reference_id: file:METTP/gatC/gatC-deep-research-perplexity.md
+      supporting_text: GATC directly binds to both GatA and GatB subunits through
+        specific interaction surfaces, serving as a bridge between the two larger
+        catalytic subunits.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms.
+  findings: []
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+- id: GO_REF:0000116
+  title: Automatic Gene Ontology annotation based on Rhea mapping.
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods.
+  findings: []
+- id: file:METTP/gatC/gatC-deep-research-perplexity.md
+  title: Deep research report on gatC function and evolution
+  findings:
+  - statement: GATC is a small protein (~100 amino acids) that serves as a critical
+      structural scaffold and catalytic cofactor in the GatCAB heterotrimer
+  - statement: GatCAB catalyzes transamidation of misacylated Glu-tRNA(Gln) to correctly
+      charged Gln-tRNA(Gln)
+  - statement: M. thermautotrophicus GatCAB exhibits unusual flexibility in amide
+      donor specificity, using both Asn and Gln efficiently (kcat/KM of 5.7 and 16.7
+      s−1/mM respectively)
+  - statement: M. thermautotrophicus GatCAB cannot transamidate homologous archaeal
+      Glu-tRNA(Gln) but can work with bacterial Glu-tRNA(Gln)
+  - statement: GATC is essential for stabilizing the GatA glutaminase domain and enabling
+      its binding to GatB
+  - statement: Pathogenic mutations in human GATC cause combined OXPHOS deficiency
+      and metabolic cardiomyopathy
+  - statement: GatCAB functions as a modulator of translational fidelity; reduced
+      activity leads to increased mistranslation
+core_functions:
+- description: Functions as molecular adaptor that brings together GatA and GatB subunits
+    to form the functional GatCAB heterotrimer, stabilizing the GatA glutaminase domain
+    and enabling proper positioning of catalytic residues for transamidation activity.
+    Essential component of the archaeal tRNA-dependent transamidation pathway for
+    accurate glutamine incorporation during protein synthesis.
+  molecular_function:
+    id: GO:0060090
+    label: molecular adaptor activity
+  directly_involved_in:
+  - id: GO:0070681
+    label: glutaminyl-tRNAGln biosynthesis via transamidation
+  - id: GO:0006450
+    label: regulation of translational fidelity
+  supported_by:
+  - reference_id: file:METTP/gatC/gatC-deep-research-perplexity.md
+    supporting_text: GATC is a small protein (~100 amino acids) that serves as a critical
+      structural scaffold and catalytic cofactor in the GatCAB heterotrimer...GATC
+      is essential for stabilizing the GatA glutaminase domain and enabling its binding
+      to GatB
+suggested_questions:
+- question: What are the specific identity elements in tRNA(Gln) that enable M. thermautotrophicus
+    GatCAB to discriminate between homologous archaeal and bacterial tRNA substrates?
+  experts:
+  - tRNA biochemistry specialists
+  - structural biologists studying tRNA-protein interactions
+- question: Does M. thermautotrophicus regulate GatCAB activity or expression in response
+    to environmental stresses such as temperature shifts or nutrient limitation?
+  experts:
+  - archaeal systems biologists
+  - thermophile researchers
+- question: What is the evolutionary advantage of the flexible amide donor specificity
+    (Asn vs Gln) in M. thermautotrophicus GatCAB compared to other archaeal species?
+  experts:
+  - evolutionary biochemists
+  - comparative genomics researchers
+suggested_experiments:
+- description: Determine the crystal structure of M. thermautotrophicus GatCAB in
+    complex with tRNA(Gln) to identify the specific tRNA recognition elements
+  experiment_type: structural biology
+  hypothesis: The structure will reveal unique features in the tRNA binding interface
+    that explain substrate specificity
+- description: Measure GatCAB expression levels and activity under various stress
+    conditions (temperature, oxidative stress, nutrient limitation) using quantitative
+    proteomics and enzyme assays
+  experiment_type: biochemical characterization
+  hypothesis: GatCAB expression or activity is regulated in response to environmental
+    conditions that affect translation demand
+- description: Create site-directed mutants of conserved residues in the GatC-GatA
+    interface and assess their effects on complex assembly, stability, and catalytic
+    activity
+  experiment_type: mutagenesis study
+  hypothesis: Specific residues in GatC are critical for stabilizing the GatA glutaminase
+    active site
+status: COMPLETE
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

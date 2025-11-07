@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple
 
+import pandas as pd
 import requests
 import yaml
 from oaklib import get_adapter  # type: ignore[import-untyped]
@@ -49,6 +50,8 @@ class TermValidator:
     _go_adapter: Optional[Any] = field(default=None, init=False)
     _go_branch_cache: Dict[str, Set[str]] = field(default_factory=dict)
     _ontology_adapters: Dict[str, Any] = field(default_factory=dict)
+    _persistent_cache: Dict[str, Dict[str, Any]] = field(default_factory=dict, init=False)
+    _persistent_cache_loaded: bool = field(default=False, init=False)
 
     # OLS API base URL (can be overridden for testing)
     ols_base_url: str = "https://www.ebi.ac.uk/ols/api"
@@ -284,8 +287,59 @@ class TermValidator:
                 return True
         return False
 
+    def _load_persistent_cache(self):
+        """Load persistent cache from committed TSV files."""
+        if self._persistent_cache_loaded:
+            return
+
+        cache_dir = self._get_repo_root() / "cache" / "ontologies"
+        if not cache_dir.exists():
+            print(f"Note: Persistent cache directory not found at {cache_dir}")
+            self._persistent_cache_loaded = True
+            return
+
+        for ontology_id in ["go", "chebi", "uberon"]:
+            cache_file = cache_dir / f"{ontology_id}.tsv"
+            if cache_file.exists():
+                try:
+                    df = pd.read_csv(cache_file, sep="\t")
+                    for _, row in df.iterrows():
+                        term_id = row["term_id"]
+                        self._persistent_cache[term_id] = {
+                            "label": row["label"],
+                            "is_obsolete": row["is_obsolete"] == "true",
+                        }
+                    print(f"Loaded {len(df)} terms from {ontology_id} cache")
+                except Exception as e:
+                    print(f"Warning: Could not load cache from {cache_file}: {e}")
+
+        self._persistent_cache_loaded = True
+
+    def _get_repo_root(self) -> Path:
+        """Find the repository root directory.
+
+        Returns:
+            Path to repository root
+        """
+        # Try to find it by looking for characteristic files
+        current = Path.cwd()
+        for _ in range(10):  # Search up to 10 levels
+            if (current / "pyproject.toml").exists() and (current / "genes").exists():
+                return current
+            if current.parent == current:
+                break
+            current = current.parent
+
+        # Fallback to current directory
+        return Path.cwd()
+
     def _get_term_label(self, term_id: str) -> Optional[str]:
-        """Get the correct label for a term using OAK or cache.
+        """Get the correct label for a term using persistent cache, OAK, or OLS.
+
+        Uses a three-tier lookup strategy:
+        1. Check persistent cache (fast, offline, stable)
+        2. Fall back to OAK adapter (slower, requires download)
+        3. Fall back to OLS API (slowest, requires network)
 
         Args:
             term_id: The ontology term ID
@@ -293,9 +347,20 @@ class TermValidator:
         Returns:
             The correct label, or None if not found
         """
-        # Check cache first
+        # Check in-memory cache first
         if self.use_cache and term_id in self._label_cache:
             return self._label_cache[term_id]
+
+        # Check persistent cache
+        if not self._persistent_cache_loaded:
+            self._load_persistent_cache()
+
+        if term_id in self._persistent_cache:
+            label = self._persistent_cache[term_id]["label"]
+            # Also cache in memory for faster subsequent lookups
+            if self.use_cache:
+                self._label_cache[term_id] = label
+            return label
 
         # Determine the ontology from the prefix
         prefix = term_id.split(":")[0] if ":" in term_id else term_id.split("_")[0]
@@ -362,9 +427,20 @@ class TermValidator:
         Returns:
             True if the term is obsolete, False otherwise
         """
-        # Check cache first
+        # Check in-memory cache first
         if self.use_cache and term_id in self._obsolete_cache:
             return self._obsolete_cache[term_id]
+
+        # Check persistent cache
+        if not self._persistent_cache_loaded:
+            self._load_persistent_cache()
+
+        if term_id in self._persistent_cache:
+            is_obsolete = self._persistent_cache[term_id]["is_obsolete"]
+            # Also cache in memory
+            if self.use_cache:
+                self._obsolete_cache[term_id] = is_obsolete
+            return is_obsolete
 
         # Determine the ontology from the prefix
         prefix = term_id.split(":")[0] if ":" in term_id else term_id.split("_")[0]

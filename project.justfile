@@ -8,6 +8,19 @@ all: validate-all test
 # Example: just fetch-gene 9BACT F0JBF1 --alias HgcB
 # Example: just fetch-gene human TP53 --force
 fetch-gene organism gene *args="":
+    #!/usr/bin/env bash
+    # Check if gene directory already exists and warn if --force not used
+    gene_dir="genes/{{organism}}/{{gene}}"
+    if [[ "{{args}}" != *"--force"* ]] && [ -d "$gene_dir" ]; then
+        uniprot_file="$gene_dir/{{gene}}-uniprot.txt"
+        goa_file="$gene_dir/{{gene}}-goa.tsv"
+        if [ -f "$uniprot_file" ] || [ -f "$goa_file" ]; then
+            echo "⚠️  Gene data for {{organism}}/{{gene}} already exists."
+            echo "   To prevent churn, existing files will not be overwritten unless they differ from remote."
+            echo "   Use 'just fetch-gene {{organism}} {{gene}} --force' to force overwrite."
+            echo ""
+        fi
+    fi
     uv run ai-gene-review fetch-gene {{organism}} {{gene}} --output-dir . {{args}}
 
 # Fetch ncRNA gene data from RNAcentral
@@ -23,19 +36,41 @@ fetch-ncrna organism gene *args="":
 fetch-rna-gene organism gene *args="":
     uv run ai-gene-review fetch-ncrna {{organism}} {{gene}} --output-dir . {{args}}
 
-# Conduct deep research on a gene using OpenAI Deep Research API
-# Use --alias to specify a custom directory name and file prefix
-# Example: just deep-research human CFAP300
-# Example: just deep-research ACEPA A0A1Y0Y121 --alias xdhB
-deep-research organism gene_or_uniprot *args="":
-    uv run python src/ai_gene_review/tools/deep_research.py {{organism}} {{gene_or_uniprot}} {{args}}
 
-# Conduct deep research on a gene using FutureHouse Falcon API
-# Use --alias to specify a custom directory name and file prefix
-# Example: just deep-research-falcon human CFAP300
-# Example: just deep-research-falcon ACEPA A0A1Y0Y121 --alias xdhB
-deep-research-falcon organism gene_or_uniprot *args="":
-    uv run python src/ai_gene_review/tools/deep_research_falcon.py {{organism}} {{gene_or_uniprot}} {{args}}
+# Deep research using OpenAI (GPT models)
+# Gene symbol automatically looked up from UniProt file if --alias not provided
+# Examples:
+#   just deep-research-openai human TP53              # gene_symbol=TP53, gene_id=TP53
+#   just deep-research-openai ARATH BRI1              # Looks up gene symbol from UniProt
+#   just deep-research-openai METEA C5B1I4 --alias mllA  # gene_symbol=mllA, gene_id=C5B1I4
+#   just deep-research-openai human CFAP300 --extra-args --param "model=gpt-4o"
+deep-research-openai organism gene_id *args="":
+    uv run python scripts/deep_research_wrapper.py {{organism}} {{gene_id}} openai {{args}}
+
+# Deep research using Perplexity (sonar models)
+# Gene symbol automatically looked up from UniProt file if --alias not provided
+# Examples:
+#   just deep-research-perplexity human TP53          # gene_symbol=TP53, gene_id=TP53
+#   just deep-research-perplexity METEA mxcE          # Looks up gene symbol from UniProt
+#   just deep-research-perplexity METEA C5B1I4 --alias mllA  # gene_symbol=mllA, gene_id=C5B1I4
+deep-research-perplexity organism gene_id *args="":
+    uv run python scripts/deep_research_wrapper.py {{organism}} {{gene_id}} perplexity {{args}}
+
+# Quick Perplexity research with low reasoning effort
+# Gene symbol automatically looked up from UniProt file if --alias not provided
+# Examples:
+#   just deep-research-perplexity-lite human TP53     # Fast research
+#   just deep-research-perplexity-lite ARATH BRI1 --alias brassinosteroid-receptor
+deep-research-perplexity-lite organism gene_id *args="":
+    uv run python scripts/deep_research_wrapper.py {{organism}} {{gene_id}} perplexity-lite {{args}}
+
+# Deep research using Falcon (local models)
+# Gene symbol automatically looked up from UniProt file if --alias not provided
+# Examples:
+#   just deep-research-falcon human TP53
+#   just deep-research-falcon METEA C5B1I4 --alias mllA
+deep-research-falcon organism gene_id *args="":
+    uv run python scripts/deep_research_wrapper.py {{organism}} {{gene_id}} falcon {{args}}
 
 # Fetch a specific PMID
 fetch-pmid pmid output_dir="publications":
@@ -72,6 +107,31 @@ refresh-all-pmid-titles:
     uv run python src/ai_gene_review/cli/refresh_pmid_titles.py --all-genes
 
 # Validate gene review YAML files against LinkML schema (for multiple files or patterns)
+# Update ontology term cache from current annotations
+# Examples:
+#   just update-cache            # Update GO cache only (default)
+#   just update-cache go         # Update GO cache
+#   just update-cache all        # Update all ontology caches
+update-cache ontology="go":
+    @echo "Updating ontology cache for {{ontology}}..."
+    uv run python src/ai_gene_review/tools/build_ontology_cache.py --ontology {{ontology}}
+
+# Fix incorrect ontology term labels in YAML files using cache
+# Examples:
+#   just fix-labels                          # Fix all files (dry run)
+#   just fix-labels --write                  # Fix all files (write changes)
+#   just fix-labels genes/human/TP53/TP53-ai-review.yaml --write   # Fix specific file
+fix-labels *args="":
+    #!/usr/bin/env bash
+    if [[ "{{args}}" == *"--write"* ]]; then
+        # Remove --write flag and pass to script without --dry-run
+        other_args=$(echo "{{args}}" | sed 's/--write//')
+        uv run python src/ai_gene_review/tools/fix_labels.py $other_args
+    else
+        # Default to dry run
+        uv run python src/ai_gene_review/tools/fix_labels.py --dry-run {{args}}
+    fi
+
 validate-files files:
     uv run ai-gene-review validate {{files}}
 
@@ -118,6 +178,32 @@ validate-all-summary:
 validate-all-strict:
     @mkdir -p reports
     uv run ai-gene-review validate --verbose --strict --tsv-output reports/validation-strict.tsv "genes/*/*/*-ai-review.yaml"
+
+# Update status field for a single gene review file
+update-status organism gene:
+    uv run ai-gene-review update-status genes/{{organism}}/{{gene}}/{{gene}}-ai-review.yaml
+
+# Update status field for all gene reviews (dry run - shows what would be updated)
+update-status-all-dry-run:
+    uv run ai-gene-review update-status --dry-run
+
+# Update status field for all gene reviews
+update-status-all:
+    uv run ai-gene-review update-status
+
+# Check status field for all gene reviews and report issues only
+check-status:
+    uv run ai-gene-review update-status --report-only
+
+# Update status field for a specific organism
+update-status-organism organism:
+    #!/usr/bin/env bash
+    echo "Updating status for all {{organism}} genes..."
+    for yaml in genes/{{organism}}/*/*-ai-review.yaml; do
+        if [ -f "$yaml" ]; then
+            uv run ai-gene-review update-status "$yaml"
+        fi
+    done
 
 # Comprehensive validation: YAML schema + PMID references + mermaid syntax
 validate-comprehensive:
@@ -311,9 +397,18 @@ export-organism-annotations organism output_file="exports/exported_annotations.c
     uv run python -c "from ai_gene_review.export import TabularExporter; from pathlib import Path; exporter = TabularExporter(); files = list(Path('genes/{{organism}}').glob('**/*-ai-review.yaml')); print(f'Found {len(files)} files for {{organism}}'); exporter.export_to_csv(files, '{{output_file}}'); print(f'Exported to {{output_file}}')"
 
 
-# Batch fetch genes from a file
+# Batch fetch genes from a file (basic fetch only)
 batch-fetch input_file output_dir=".":
     uv run ai-gene-review batch-fetch {{input_file}} --output-dir {{output_dir}}
+
+# Batch gene pipeline: fetch genes and run deep research
+# Providers: openai, perplexity, perplexity-lite, falcon
+# Examples:
+#   just batch-pipeline genes.txt --providers perplexity
+#   just batch-pipeline genes.txt --providers openai perplexity --force
+#   just batch-pipeline genes.txt --skip-fetch --providers perplexity
+batch-pipeline input_file *args="":
+    uv run python scripts/batch_gene_pipeline.py {{input_file}} {{args}}
 
 # Example: Fetch common human genes
 fetch-examples:
@@ -432,7 +527,7 @@ convert-all-pathways:
     done
     echo "All $count pathway files converted!"
 
-# Find genes that lack deep research files (GENE-deep-research.md or GENE-falcon-research.md)
+# Find genes that lack deep research files (GENE-deep-research-PROVIDER.md pattern)
 find-genes-missing-research:
     #!/usr/bin/env bash
     echo "Finding gene directories missing deep research files..."
@@ -444,8 +539,8 @@ find-genes-missing-research:
             org=$(basename $(dirname "$gene_dir"))
             total_count=$((total_count + 1))
 
-            # Check for either pattern: GENE-deep-research.md or GENE-falcon-research.md
-            if ! ls "$gene_dir"*-*research.md >/dev/null 2>&1; then
+            # Check for pattern: GENE-deep-research-PROVIDER.md (includes legacy patterns)
+            if ! ls "$gene_dir"*-*research*.md >/dev/null 2>&1; then
                 echo "$org/$gene"
                 missing_count=$((missing_count + 1))
             fi
@@ -491,3 +586,32 @@ refresh-publications-force-all count="20000":
 refresh-publications-force-test count="10":
     @echo "Force refreshing {{count}} publications for testing..."
     uv run ai-gene-review refresh-publications --force-all --count {{count}} --delay 1.0
+
+# ============== InterPro Family Data Management ==============
+
+# Fetch PANTHER family metadata via InterPro API and store in interpro/panther/PTHRnnnn/ directory
+# By default includes reviewed protein entries as CSV file
+fetch-panther-family family_id *args="":
+    @echo "Fetching PANTHER family metadata for {{family_id}} via InterPro API..."
+    uv run python src/ai_gene_review/tools/fetch_interpro_family_simple.py panther {{family_id}} --include-proteins {{args}}
+
+# Fetch PANTHER family metadata only (no protein entries CSV)
+fetch-panther-family-metadata-only family_id *args="":
+    @echo "Fetching PANTHER family metadata only for {{family_id}} via InterPro API..."
+    uv run python src/ai_gene_review/tools/fetch_interpro_family_simple.py panther {{family_id}} {{args}}
+
+# Fetch any InterPro family metadata (panther, pfam, etc.) and store in interpro/database/family_id/ directory
+# By default only includes metadata (no protein entries) - use --include-proteins to add entries CSV
+fetch-interpro-family database family_id *args="":
+    @echo "Fetching {{database}} family metadata for {{family_id}} via InterPro API..."
+    uv run python src/ai_gene_review/tools/fetch_interpro_family_simple.py {{database}} {{family_id}} {{args}}
+
+# Fetch InterPro family with protein entries CSV
+fetch-interpro-family-with-proteins database family_id *args="":
+    @echo "Fetching {{database}} family metadata and proteins for {{family_id}} via InterPro API..."
+    uv run python src/ai_gene_review/tools/fetch_interpro_family_simple.py {{database}} {{family_id}} --include-proteins {{args}}
+
+# Fetch PANTHER family data for a specific gene (looks up family from gene)
+fetch-gene-panther-family organism gene:
+    @echo "Fetching PANTHER family data for {{organism}}/{{gene}}..."
+    uv run python src/ai_gene_review/tools/fetch_gene_panther_family.py {{organism}} {{gene}}

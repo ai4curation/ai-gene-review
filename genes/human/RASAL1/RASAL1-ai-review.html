@@ -1,0 +1,2559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RASAL1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>RASAL1</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/O95294" target="_blank" class="term-link">
+                        O95294
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Aliases:</span>
+                <div class="aliases">
+                    
+                    <span class="badge">RAS protein activator like 1</span>
+                    
+                    <span class="badge">GAP1(RasAL)</span>
+                    
+                    <span class="badge">RasGAP-activating-like protein 1</span>
+                    
+                </div>
+            </div>
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "RASAL1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="O95294" data-a="DESCRIPTION: RAS protein activator like 1, calcium-regulated GT..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>RAS protein activator like 1, calcium-regulated GTPase-activating protein for RAS and RAP1 small GTPases. Member of GAP1 family characterized by two N-terminal C2 domains (Ca2+ and phospholipid binding), pleckstrin homology (PH) domain, and C-terminal RasGAP catalytic domain. Functions as dual-specificity GAP: catalyzes GTP hydrolysis on both Ras proteins (H-Ras, N-Ras, K-Ras, R-Ras) and Rap1 GTPase using arginine-finger mechanism. C2 domains mediate Ca2+-dependent membrane translocation - protein cycles between cytosolic inactive state and membrane-bound active state upon Ca2+ bursts. PH domain binds membrane phosphoinositides. Cytosolic protein (~804 AA) that transiently associates with inner plasma membrane upon calcium elevation to access membrane-anchored Ras. Major tumor suppressor frequently inactivated in cancers - promoter hypermethylation found in ~32% follicular thyroid carcinoma, ~33% anaplastic thyroid carcinoma, and other cancers (colon, gastric, bladder). RASAL1 mutations largely mutually exclusive with RAS/BRAF mutations, indicating loss of RASAL1 provides alternative mechanism for Ras hyperactivation in tumors. Germline RASAL1 mutations identified in Cowden syndrome patients with thyroid cancers. Critical role in organ fibrosis - epigenetic silencing by TGF-β-induced promoter hypermethylation drives persistent fibroblast activation in kidney fibrosis. Demethylating agents (5-azacytidine, hydralazine) can restore RASAL1 expression and reduce fibrosis in animal models. In neurons, regulates dendritic branching and synaptic plasticity by interacting with tubulin, PKC, and CaMKII. Links calcium oscillations to Ras/MAPK pathway amplitude control.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005096" target="_blank" class="term-link">
+                                    GO:0005096
+                                </a>
+                            </span>
+                            <span class="term-label">GTPase activator activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95294" data-a="GO:0005096" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> GTPase activator activity - RasGAP and Rap1GAP function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core enzymatic function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1902531" target="_blank" class="term-link">
+                                    GO:1902531
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of intracellular signal transduction</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95294" data-a="GO:1902531" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Regulation of intracellular signal transduction - regulates Ras/Rap1 signaling.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core regulatory role.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005096" target="_blank" class="term-link">
+                                    GO:0005096
+                                </a>
+                            </span>
+                            <span class="term-label">GTPase activator activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95294" data-a="GO:0005096" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> GTPase activator activity - RasGAP and Rap1GAP function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core enzymatic function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95294" data-a="GO:0005829" data-r="GO_REF:0000117" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytosol - cytosolic with Ca2+-dependent membrane association.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core localization.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008270" target="_blank" class="term-link">
+                                    GO:0008270
+                                </a>
+                            </span>
+                            <span class="term-label">zinc ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95294" data-a="GO:0008270" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Zinc ion binding - RasGAP domain requires metal cofactors.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Enzymatic requirement.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030154" target="_blank" class="term-link">
+                                    GO:0030154
+                                </a>
+                            </span>
+                            <span class="term-label">cell differentiation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O95294" data-a="GO:0030154" data-r="GO_REF:0000043" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cell differentiation - involved in neuronal and melanocyte differentiation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Developmental context.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035556" target="_blank" class="term-link">
+                                    GO:0035556
+                                </a>
+                            </span>
+                            <span class="term-label">intracellular signal transduction</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95294" data-a="GO:0035556" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Intracellular signal transduction - participates in Ras/Rap1 signaling pathways.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Signaling role.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046580" target="_blank" class="term-link">
+                                    GO:0046580
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of Ras protein signal transduction</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95294" data-a="GO:0046580" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Negative regulation of Ras protein signal transduction - core function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core regulatory function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046872" target="_blank" class="term-link">
+                                    GO:0046872
+                                </a>
+                            </span>
+                            <span class="term-label">metal ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95294" data-a="GO:0046872" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Metal ion binding - requires metal cofactors.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Enzymatic requirement.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071277" target="_blank" class="term-link">
+                                    GO:0071277
+                                </a>
+                            </span>
+                            <span class="term-label">cellular response to calcium ion</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95294" data-a="GO:0071277" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cellular response to calcium ion - Ca2+-regulated membrane translocation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Regulatory mechanism.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1903861" target="_blank" class="term-link">
+                                    GO:1903861
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of dendrite extension</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23999003" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23999003
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    SYT14L, especially its C2 domain, is involved in regulating ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95294" data-a="GO:1903861" data-r="PMID:23999003" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Positive regulation of dendrite extension - regulates dendrite formation in melanocytes and neurons.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Specific neuronal function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            Reactome:R-HSA-5658231
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95294" data-a="GO:0005829" data-r="Reactome:R-HSA-5658231" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytosol - cytosolic with Ca2+-dependent membrane association.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core localization.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            Reactome:R-HSA-5658435
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95294" data-a="GO:0005829" data-r="Reactome:R-HSA-5658435" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytosol - cytosolic with Ca2+-dependent membrane association.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core localization.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16009725" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16009725
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    CAPRI and RASAL impose different modes of information proces...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95294" data-a="GO:0005829" data-r="PMID:16009725" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytosol - cytosolic with Ca2+-dependent membrane association.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core localization.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16009725" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16009725
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    CAPRI and RASAL impose different modes of information proces...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95294" data-a="GO:0005886" data-r="PMID:16009725" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Plasma membrane - translocates to plasma membrane upon Ca2+ elevation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Activity-dependent localization.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005096" target="_blank" class="term-link">
+                                    GO:0005096
+                                </a>
+                            </span>
+                            <span class="term-label">GTPase activator activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9751798" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9751798
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Restricted tissue expression pattern of a novel human rasGAP...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95294" data-a="GO:0005096" data-r="PMID:9751798" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> GTPase activator activity - RasGAP and Rap1GAP function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core enzymatic function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005543" target="_blank" class="term-link">
+                                    GO:0005543
+                                </a>
+                            </span>
+                            <span class="term-label">phospholipid binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9751798" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9751798
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Restricted tissue expression pattern of a novel human rasGAP...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95294" data-a="GO:0005543" data-r="PMID:9751798" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phospholipid binding - C2 and PH domains bind membrane phospholipids.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Domain function for membrane targeting.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007165" target="_blank" class="term-link">
+                                    GO:0007165
+                                </a>
+                            </span>
+                            <span class="term-label">signal transduction</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9751798" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9751798
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Restricted tissue expression pattern of a novel human rasGAP...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95294" data-a="GO:0007165" data-r="PMID:9751798" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Signal transduction - participates in Ras-mediated signaling.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Signaling role.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Calcium-regulated dual-specificity RasGAP that catalyzes GTP hydrolysis on both RAS proteins (H-Ras, N-Ras, K-Ras, R-Ras) and RAP1 GTPase. C2 domains mediate Ca2+-dependent membrane translocation. Functions as tumor suppressor and regulator of fibrosis. Links calcium oscillations to Ras/MAPK pathway control.</h3>
+                <span class="vote-buttons" data-g="O95294" data-a="FUNCTION: Calcium-regulated dual-specificity RasGAP that cat..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005096" target="_blank" class="term-link">
+                            GTPase activator activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046580" target="_blank" class="term-link">
+                                negative regulation of Ras protein signal transduction
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071277" target="_blank" class="term-link">
+                                cellular response to calcium ion
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                plasma membrane
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            UniProt:O95294
+                            
+                        </span>
+                        
+                        <div class="finding-text">RASAL1 is Ca2+-regulated dual Ras/Rap1 GAP. Major tumor suppressor silenced by hypermethylation in cancers and fibrosis. Essential for neuronal development and cytoskeletal regulation.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16009725" target="_blank" class="term-link">
+                            PMID:16009725
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">CAPRI and RASAL impose different modes of information processing on Ras due to contrasting temporal filtering of Ca2+.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23999003" target="_blank" class="term-link">
+                            PMID:23999003
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">SYT14L, especially its C2 domain, is involved in regulating melanocyte differentiation.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9751798" target="_blank" class="term-link">
+                            PMID:9751798
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Restricted tissue expression pattern of a novel human rasGAP-related gene and its murine ortholog.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        Reactome:R-HSA-5658231
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">RAS GAPs stimulate RAS GTPase activity</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        Reactome:R-HSA-5658435
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">RAS GAPs bind RAS:GTP</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Openai</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(RASAL1-deep-research-openai.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="O95294" data-a="DOC: Deep Research Openai" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: openai<br />
+model: o3-deep-research-2025-06-26<br />
+cached: true<br />
+start_time: '2025-11-04T00:09:53.432306'<br />
+end_time: '2025-11-04T00:09:53.436554'<br />
+duration_seconds: 0.0<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: human<br />
+  gene_id: O95294<br />
+  gene_symbol: RASAL1<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    temperature: 0.1<br />
+    top_p: 1.0<br />
+citation_count: 106</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<p>Please provide a comprehensive research report on the gene RASAL1 (O95294) in human.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function. </p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<h1 id="rasal1-ras-protein-activator-like-1-function-and-biological-role-in-humans">RASAL1 (Ras Protein Activator Like 1) – Function and Biological Role in Humans</h1>
+<h2 id="background-and-key-function">Background and Key Function</h2>
+<p><strong>RASAL1</strong> (UniProt O95294) is a human gene encoding a Ras GTPase-activating protein (RasGAP) that serves as a critical negative regulator of Ras signaling. Ras proteins (H-Ras, K-Ras, N-Ras) act as molecular switches cycling between an active GTP-bound state and an inactive GDP-bound state, controlling pathways for cell growth, differentiation, and survival (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3818169/#:~:text=various%20modulators%20that%20function%20as,development%20of%20a%20variety%20of">pmc.ncbi.nlm.nih.gov</a>). RASAL1 accelerates Ras’s intrinsic GTP hydrolysis, converting active Ras–GTP to inactive Ras–GDP and thereby terminating Ras signaling (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4184083/#:~:text=RASAL1%2C%20a%20RAS%20GTPase,4">pmc.ncbi.nlm.nih.gov</a>). This GAP activity “switches off” Ras, allowing tight control of Ras-driven processes such as cell proliferation and differentiation (<a href="https://geneglobe.qiagen.com/us/knowledge/gene/ENSG00000111344#:~:text=activating%20proteins,provided">geneglobe.qiagen.com</a>). Notably, RASAL1 belongs to the GAP1 family of RasGAPs and was first described in 1998 as a highly conserved RasGAP-related protein with a restricted tissue expression pattern (<a href="https://cellandbioscience.biomedcentral.com/articles/10.1186/s13578-024-01193-w#:~:text=References">cellandbioscience.biomedcentral.com</a>) (<a href="https://cellandbioscience.biomedcentral.com/articles/10.1186/s13578-024-01193-w#:~:text=1,1998%3B218%3A17%E2%80%9325">cellandbioscience.biomedcentral.com</a>). Biochemically, RASAL1 has <strong>dual substrate specificity</strong>, able to stimulate GTP hydrolysis on Ras as well as on the closely related Rap1 GTPase (<a href="https://cellandbioscience.biomedcentral.com/articles/10.1186/s13578-024-01193-w#:~:text=Rasal1%2C%20first%20described%20to%20our,in%20neuronal%20processes%20remains%20unexplored">cellandbioscience.biomedcentral.com</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC1904491/#:~:text=domain,association%20with%20the%20plasma%20membrane">pmc.ncbi.nlm.nih.gov</a>). This dual Ras/Rap GAP activity is uncommon – RASAL1 (also called GAP1(RasAL)) and a related protein CAPRI were shown to inactivate both Ras and Rap, whereas many other RasGAPs act only on Ras (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC1904491/#:~:text=domain,association%20with%20the%20plasma%20membrane">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC1904491/#:~:text=In%20mammalian%20cells%2C%20Ras,site%20of%20Ras%2C%20thereby%20stabilizing">pmc.ncbi.nlm.nih.gov</a>). By inactivating normal Ras p21 proteins (but not certain oncogenic mutant Ras that resist GAPs) (<a href="https://geneglobe.qiagen.com/us/knowledge/gene/ENSG00000111344#:~:text=The%20protein%20encoded%20by%20this,Alternatively%20spliced">geneglobe.qiagen.com</a>), RASAL1 functions as a <strong>suppressor of Ras signaling</strong>, ensuring Ras activity is restrained once a signal has been propagated (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4184083/#:~:text=the%20active%20GTP,in%20the%20context%20of%20recent">pmc.ncbi.nlm.nih.gov</a>). This role is analogous to applying a “brake” on Ras-driven pathways, which is vital for normal cell signaling homeostasis.  </p>
+<h2 id="structural-features-and-regulation">Structural Features and Regulation</h2>
+<p>The RASAL1 protein is ~804 amino acids and contains multiple defined domains that govern its function and subcellular targeting. Its central region is a conserved <strong>RasGAP domain</strong> responsible for binding Ras–GTP and inserting a catalytic “arginine finger” into Ras’s active site to stimulate GTP hydrolysis (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC1904491/#:~:text=hydrolysis%20in%20all%20other%20Ras,asparagine%20thumb%2C%20to%20stimulate%20GTP">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC1904491/#:~:text=distinct,the%20glutamine%20residue%20in%20Ras">pmc.ncbi.nlm.nih.gov</a>). Flanking this catalytic domain are regulatory lipid-binding modules that confer <strong>Ca²⁺-dependent membrane localization</strong> (<a href="https://cellandbioscience.biomedcentral.com/articles/10.1186/s13578-024-01193-w#:~:text=The%20structure%20of%20Rasal1%20gives,domain%2C%20which%20operates%20as">cellandbioscience.biomedcentral.com</a>). At the <strong>N-terminus, RASAL1 carries two C2 domains (C2A and C2B)</strong>, which are lipid-binding motifs sensitive to calcium. The C2A domain binds phosphatidylserine and the C2B domain binds phosphoinositides, such that when intracellular Ca²⁺ levels rise, these domains cooperate to recruit RASAL1 from the cytosol to the inner face of the plasma membrane (<a href="https://cellandbioscience.biomedcentral.com/articles/10.1186/s13578-024-01193-w#:~:text=motifs%20%5B7%20%5D.%20The%20N,15%2C%2013">cellandbioscience.biomedcentral.com</a>). This Ca²⁺-dependent membrane translocation is essential for function: Ras itself is membrane-anchored, so RASAL1 must co-localize at the membrane to engage and inactivate Ras (<a href="https://cellandbioscience.biomedcentral.com/articles/10.1186/s13578-024-01193-w#:~:text=11,2013%3B110%3A111%E2%80%936">cellandbioscience.biomedcentral.com</a>). Consistently, <strong>only during periods when RASAL1 is membrane-bound does it turn off Ras signaling</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC394250/#:~:text=repetitive%20Ca,and%20the%20regulation%20of%20Ras">pmc.ncbi.nlm.nih.gov</a>). RASAL1 also possesses a <strong>C-terminal pleckstrin homology (PH) domain</strong>, which binds membrane phosphoinositides and works in concert with the C2 domains to stabilize RASAL1 at the membrane upon Ca²⁺ signaling (<a href="https://cellandbioscience.biomedcentral.com/articles/10.1186/s13578-024-01193-w#:~:text=phospholipid,15%2C%2013">cellandbioscience.biomedcentral.com</a>). Through this multi-domain architecture, RASAL1 acts as a Ca²⁺-regulated Ras GAP “<strong>sensor</strong>”: it remains in the cytosol under resting conditions, but bursts of intracellular Ca²⁺ trigger its rapid and reversible relocation to the plasma membrane (<a href="https://cellandbioscience.biomedcentral.com/articles/10.1186/s13578-024-01193-w#:~:text=molecular%20tools,synaptic%20activity%20and%20CaMKII%20phosphorylation">cellandbioscience.biomedcentral.com</a>) (<a href="https://cellandbioscience.biomedcentral.com/articles/10.1186/s13578-024-01193-w#:~:text=basal%20conditions%20%28Fig,40%C2%A0mM">cellandbioscience.biomedcentral.com</a>). This was vividly demonstrated in live-cell imaging, where RASAL1 tagged with EGFP showed diffuse cytosolic distribution at rest, but within seconds of a calcium spike it concentrated at the cell periphery, then cycled back off with calcium subsidence (<a href="https://cellandbioscience.biomedcentral.com/articles/10.1186/s13578-024-01193-w#:~:text=basal%20conditions%20%28Fig,40%C2%A0mM">cellandbioscience.biomedcentral.com</a>). Such oscillatory movements enable RASAL1 to <strong>decode complex Ca²⁺ signals</strong> – it synchronizes with repetitive Ca²⁺ spikes by repeatedly binding the membrane and inactivating Ras in step, effectively linking the frequency of Ca²⁺ transients to the amplitude of Ras activity (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC394250/#:~:text=induction%20of%20selective%20cellular%20functions,and%20the%20regulation%20of%20Ras">pmc.ncbi.nlm.nih.gov</a>). This unique regulation distinguishes RASAL1 from other RasGAPs that are constitutively membrane-bound (like p120^GAP) and allows cross-talk between calcium signaling and Ras pathways.  </p>
+<p>In terms of cellular localization, RASAL1 is predicted to be an intracellular protein and is observed in both the <strong>cytosol and plasma membrane</strong>, with enrichment at cell peripheries/junctions upon activation (<a href="https://www.proteinatlas.org/ENSG00000111344-RASAL1/structure%2Binteraction#:~:text=cluster%20%28RNA%29%5E%7Bi%7D%20Parathyroid%20gland%20,113136239">www.proteinatlas.org</a>). The dynamic Ca²⁺-mediated membrane targeting is a key regulatory mechanism: a 2013 structural study confirmed that <strong>RASAL1’s RasGAP activity strictly requires lipid membrane association via its C2 domains</strong> (<a href="https://cellandbioscience.biomedcentral.com/articles/10.1186/s13578-024-01193-w#:~:text=11,2013%3B110%3A111%E2%80%936">cellandbioscience.biomedcentral.com</a>). Thus, calcium acts as an allosteric activator of RASAL1 by driving its co-localization with Ras. This regulation is physiologically significant in cell types that experience calcium bursts (e.g. neurons, endocrine cells), as discussed below. </p>
+<h2 id="involvement-in-ras-signaling-pathways">Involvement in Ras Signaling Pathways</h2>
+<p>As a RasGAP, RASAL1 directly impacts major signaling cascades downstream of Ras. Active GTP-loaded Ras triggers multiple effector pathways – most prominently the RAF–MEK–ERK <strong>mitogen-activated protein kinase (MAPK) cascade</strong> and the <strong>PI3K–AKT–mTOR pathway</strong> – which together regulate cell proliferation, differentiation, survival, cytoskeleton dynamics and metabolism (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3818169/#:~:text=various%20modulators%20that%20function%20as,development%20of%20a%20variety%20of">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3818169/#:~:text=include%20RAF%E2%86%92%20MEK%20%E2%86%92%20ERK,PI3K%20pathway%2C%20genetic%20or%20epigenetic">pmc.ncbi.nlm.nih.gov</a>). By accelerating the conversion of Ras-GTP to Ras-GDP, RASAL1 attenuates these pathways once they have been initiated. For example, Ras activation of the Raf/MEK/ERK pathway leads to ERK-mediated phosphorylation of various targets including microtubule-associated proteins, influencing microtubule stability and cell cycle progression (<a href="https://cellandbioscience.biomedcentral.com/articles/10.1186/s13578-024-01193-w#:~:text=several%20pathways%20involved%20in%20cell,significant%20roles%20in%20remodelling%20spine">cellandbioscience.biomedcentral.com</a>). RASAL1, by shutting off Ras, will shorten the duration or intensity of ERK signaling, thereby modulating outcomes like cell proliferation and cytoskeletal remodeling. Similarly, Ras activates class I PI3-kinases, resulting in AKT kinase signaling; RASAL1’s action terminates Ras input into PI3K, helping to restrain the PI3K–AKT pathway. A recent large-scale analysis underscores RASAL1’s importance in this pathway: <strong>loss-of-function alterations in RASAL1 lead to aberrant PI3K–AKT activation, analogous to loss of the PI3K pathway brake PTEN</strong>. In a 2024 study with ~9,900 human tumors, concurrent RASAL1 inactivation and PTEN loss were associated with significantly higher AKT activity and more aggressive cancer progression (hazard ratio ~1.6), whereas either lesion alone was less impactful (<a href="https://pubmed.ncbi.nlm.nih.gov/39032134/#:~:text=clinical%20impacts%20of%20genetic%20alterations,gene%20alterations%2C%20with%20cancer%20progression">pubmed.ncbi.nlm.nih.gov</a>) (<a href="https://pubmed.ncbi.nlm.nih.gov/39032134/#:~:text=activation%2C%20with%20the%20development%20of,AKT%20pathway.%20This%20represents">pubmed.ncbi.nlm.nih.gov</a>). This indicates RASAL1 and PTEN normally cooperate to keep the PI3K–AKT pathway in check – RASAL1 prevents excessive Ras-driven PI3K activation at the membrane, while PTEN antagonizes PI3K signaling by dephosphorylating PIP₃ in the cytosol (<a href="https://pubmed.ncbi.nlm.nih.gov/39032134/#:~:text=activation%2C%20with%20the%20development%20of,AKT%20pathway.%20This%20represents">pubmed.ncbi.nlm.nih.gov</a>). When both brakes fail, Ras-PI3K signaling runs unchecked, driving malignancy (<a href="https://pubmed.ncbi.nlm.nih.gov/39032134/#:~:text=cancer%2C%20this%20genetic%20trio%20was,defects%20drive%20oncogenesis%20and%20cancer">pubmed.ncbi.nlm.nih.gov</a>).  </p>
+<p>RASAL1 may also interface with other signaling branches. Notably, <strong>Ras signaling is known to cross-talk with cyclic AMP (cAMP) pathways</strong> in certain contexts (for instance, via Ras effects on adenylate cyclase or through the Ras-related Rap1 which is activated by cAMP). RASAL1 has been described as a <em>“probable inhibitory regulator of the Ras–cAMP pathway”</em>, hinting that it might temper Ras’s influence on cAMP-dependent processes (<a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=RASAL1#:~:text=,RASL1_HUMAN%2CO95294">www.genecards.org</a>). In endocrine cells like thyroid follicular cells and adrenal medulla (where RASAL1 is strongly expressed) (<a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=RASAL1#:~:text=%2A%20RAS%20GTPase,thyroid%20and%20adrenal%20medulla%20RASAL1">www.genecards.org</a>), hormonal signals often use cAMP as a second messenger; RASAL1 could modulate responses in these cells by linking Ras activity to cAMP signaling outcomes. In hepatic stellate cells (liver fibroblasts), recent work found that RASAL1 can interact with the angiotensin II receptor (a GPCR) and influence downstream <strong>PKA–LKB1–AMPK signaling</strong>, suggesting RASAL1’s effects may extend beyond the classic Ras→ERK/AKT pathways to other signaling modules (<a href="https://www.oncotarget.com/article/17609/text/#:~:text=decreased%20during%20HSC%20activation%2C%20and,We%20demonstrate%20that%20RASAL1%20suppresses">www.oncotarget.com</a>). These findings are cell-type specific, but they illustrate that by controlling Ras and even Rap GTPases, RASAL1 can broadly influence signaling networks, acting as a node where calcium, GPCR, and growth factor pathways converge on Ras. </p>
+<h2 id="biological-roles-in-cells-and-tissues">Biological Roles in Cells and Tissues</h2>
+<p>Through its regulation of Ras activity, RASAL1 impacts a range of biological processes, especially those involving cell proliferation, differentiation, and morphology. <strong>Cell Growth and Differentiation:</strong> By dampening Ras/MAPK signaling, RASAL1 helps control normal cell proliferation and differentiation signals (<a href="https://geneglobe.qiagen.com/us/knowledge/gene/ENSG00000111344#:~:text=activating%20proteins,provided">geneglobe.qiagen.com</a>). When Ras is appropriately inactivated, cells can exit the growth cycle or differentiate in response to cues. Conversely, loss of RASAL1 leads to prolonged Ras signaling, which can cause hyper-proliferation or aberrant differentiation. For example, experiments show that introducing RASAL1 into Ras-driven cancer cells curtails their growth: <strong>forced expression of RASAL1 in RASAL1-deficient gastric carcinoma cells significantly suppressed their proliferation and tumorigenic transformation ability</strong> (<a href="https://cellandbioscience.biomedcentral.com/articles/10.1186/s13578-024-01193-w#:~:text=6,2012%3B28%3A1475%E2%80%9381">cellandbioscience.biomedcentral.com</a>). This supports that RASAL1’s normal role is to restrain unchecked cell division. </p>
+<p><strong>Tissue Distribution:</strong> RASAL1 is expressed in many tissues but exhibits especially high or selective expression in certain cell types, hinting at specialized functions. Early studies noted <strong>enriched RASAL1 expression in the brain, in kidney (medulla region), and in endocrine glands such as the thyroid follicular cells and adrenal zona glomerulosa/medulla</strong> (<a href="https://cellandbioscience.biomedcentral.com/articles/10.1186/s13578-024-01193-w#:~:text=tumours%20where%20it%20has%20been,in%20neuronal%20processes%20remains%20unexplored">cellandbioscience.biomedcentral.com</a>) (<a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=RASAL1#:~:text=%2A%20RAS%20GTPase,thyroid%20and%20adrenal%20medulla%20RASAL1">www.genecards.org</a>). The Human Protein Atlas reports RASAL1 mRNA as <em>“tissue-enhanced”</em> in parathyroid and salivary glands and protein localized in cytoplasm and plasma membrane in multiple cell types (<a href="https://www.proteinatlas.org/ENSG00000111344-RASAL1/structure%2Binteraction#:~:text=expression%20cluster,i%7D%20Not%20available">www.proteinatlas.org</a>). In the brain, RASAL1 is notably abundant in neurons – a recent analysis confirmed strong expression in mouse hippocampus and cortex (<a href="https://cellandbioscience.biomedcentral.com/articles/10.1186/s13578-024-01193-w#:~:text=Rasal1%20is%20a%20Ca,which%20corresponds%20to%20the%20epitope">cellandbioscience.biomedcentral.com</a>). The high neuronal expression led researchers to investigate <strong>RASAL1’s role in the nervous system</strong>, revealing new functions beyond its tumor suppressor identity. In 2024, Wang et al. showed that RASAL1 is active in developing hippocampal neurons, where it influences neuronal maturation and synaptic function (<a href="https://cellandbioscience.biomedcentral.com/articles/10.1186/s13578-024-01193-w#:~:text=We%20examined%20the%20contributions%20of,is%20shown%20to%20promote%20NMDA">cellandbioscience.biomedcentral.com</a>) (<a href="https://cellandbioscience.biomedcentral.com/articles/10.1186/s13578-024-01193-w#:~:text=Rasal1%20functions%20in%20two%20separate,neuronal%20development%20and%20synapse%20formation">cellandbioscience.biomedcentral.com</a>). They found RASAL1 distributes throughout the neuron (soma, dendrites, axon) and translocates to synaptic membranes upon NMDA receptor-triggered Ca²⁺ influx (<a href="https://cellandbioscience.biomedcentral.com/articles/10.1186/s13578-024-01193-w#:~:text=molecular%20tools,synaptic%20activity%20and%20CaMKII%20phosphorylation">cellandbioscience.biomedcentral.com</a>) (<a href="https://cellandbioscience.biomedcentral.com/articles/10.1186/s13578-024-01193-w#:~:text=Rasal1%20translocation%20to%20the%20plasma,2%2B%7D%20in%20hippocampal%20neurons">cellandbioscience.biomedcentral.com</a>). <strong>Neuronal Structure and Plasticity:</strong> Intriguingly, RASAL1 was observed to bind directly to key regulators of the cytoskeleton and synaptic plasticity – <strong>protein kinase C (PKC), CaMKII (Ca²⁺/calmodulin-dependent kinase II), and tubulin</strong> – implying it has scaffolding or adapter functions in addition to Ras inactivation (<a href="https://cellandbioscience.biomedcentral.com/articles/10.1186/s13578-024-01193-w#:~:text=neuronal%20plasma%20membrane%20in%20response,synaptic%20activity%20and%20CaMKII%20phosphorylation">cellandbioscience.biomedcentral.com</a>). By interacting with tubulin, RASAL1 promoted microtubule stability and curtailed excessive dendritic branching during neuron development (<a href="https://cellandbioscience.biomedcentral.com/articles/10.1186/s13578-024-01193-w#:~:text=neuronal%20plasma%20membrane%20in%20response,synaptic%20activity%20and%20CaMKII%20phosphorylation">cellandbioscience.biomedcentral.com</a>). Neurons lacking RASAL1 had more exuberant dendrite outgrowth, whereas RASAL1 presence constrained neurite extension, consistent with Ras–ERK’s known role in stabilizing microtubules and limiting branching (<a href="https://cellandbioscience.biomedcentral.com/articles/10.1186/s13578-024-01193-w#:~:text=several%20pathways%20involved%20in%20cell,significant%20roles%20in%20remodelling%20spine">cellandbioscience.biomedcentral.com</a>) (<a href="https://cellandbioscience.biomedcentral.com/articles/10.1186/s13578-024-01193-w#:~:text=PKC%2C%20tubulin%2C%20and%20CaMKII,synaptic%20activity%20and%20CaMKII%20phosphorylation">cellandbioscience.biomedcentral.com</a>). On the other hand, RASAL1 enhanced certain aspects of synaptic activity: it facilitated NMDA receptor-mediated Ca²⁺ signaling and downstream CaMKII phosphorylation, which are important for synaptic strengthening (<a href="https://cellandbioscience.biomedcentral.com/articles/10.1186/s13578-024-01193-w#:~:text=PKC%2C%20tubulin%2C%20and%20CaMKII,synaptic%20activity%20and%20CaMKII%20phosphorylation">cellandbioscience.biomedcentral.com</a>). These findings suggest RASAL1 plays a <strong>dual role in neurons</strong> – it restrains structural growth of dendrites (possibly by inhibiting overactive Ras or Rho pathways that drive cytoskeletal remodeling) while tuning Ca²⁺-dependent signaling at synapses to modulate plasticity (<a href="https://cellandbioscience.biomedcentral.com/articles/10.1186/s13578-024-01193-w#:~:text=Rasal1%20functions%20in%20two%20separate,neuronal%20development%20and%20synapse%20formation">cellandbioscience.biomedcentral.com</a>). In summary, beyond controlling cell proliferation, RASAL1 contributes to <strong>cell morphology and differentiation</strong>. Another example is in pigment cells: RASAL1 is reported to <strong>participate in dendrite formation by melanocytes</strong> (<a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=RASAL1#:~:text=,RASL1_HUMAN%2CO95294">www.genecards.org</a>), the cells that extend dendritic processes to distribute melanin to keratinocytes. Melanocyte dendritogenesis involves Ras and Rho family signals controlling the actin/microtubule cytoskeleton (<a href="https://pubmed.ncbi.nlm.nih.gov/9699725/#:~:text=Dendrite%20formation%20requires%20actin%20polymerization,mutants%20of%20cdc42%20and%20rhoA">pubmed.ncbi.nlm.nih.gov</a>) (<a href="https://pubmed.ncbi.nlm.nih.gov/9699725/#:~:text=this%20paper%20we%20show%20that,rac1%20is%20an%20important%20signaling">pubmed.ncbi.nlm.nih.gov</a>), and RASAL1’s ability to modulate Ras (and possibly Rap1 or Rac1 indirectly) likely influences this process. Thus, whether in neurons or melanocytes, RASAL1 helps fine-tune the balance of signaling required for proper cell shape and connectivity, linking extracellular stimuli (e.g. Ca²⁺-mobilizing signals or hormones) to cytoskeletal outcomes. </p>
+<p>It’s worth noting that <strong>RASAL1 responds to physiological signals that elevate intracellular Ca²⁺</strong>, such as certain neurotransmitters, hormones, or growth factors. Many G-protein coupled receptors (GPCRs) and receptor tyrosine kinases can provoke Ca²⁺ release via IP₃ or calcium influx (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC394250/#:~:text=Many%20receptor%20tyrosine%20kinases%20and,Bootman%20et%20al%2C%202001">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC394250/#:~:text=Many%20receptor%20tyrosine%20kinases%20and,such%20as%20fertilisation%2C%20secretion%2C%20contraction">pmc.ncbi.nlm.nih.gov</a>). RASAL1, by sensing those Ca²⁺ transients, provides a feedback loop: for instance, a GPCR that raises Ca²⁺ will activate RASAL1, which in turn dampens Ras. In this way, RASAL1 acts as a <em>signal integrator</em>, and possibly a homeostatic safeguard, preventing runaway Ras activation in the face of repetitive stimuli. Researchers have characterized RASAL1 and its paralog CAPRI as <strong>“Ca²⁺-regulated Ras GAPs that decode Ca²⁺ oscillation frequency”</strong> to modulate downstream gene expression and cell fate decisions (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC394250/#:~:text=induction%20of%20selective%20cellular%20functions,and%20the%20regulation%20of%20Ras">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC394250/#:~:text=duration%20of%20the%20Ca,2%2B%7D%20signals">pmc.ncbi.nlm.nih.gov</a>). This mode of regulation may be especially important in excitable cells (neurons, muscle) and secretory cells that experience oscillatory Ca²⁺ signals. </p>
+<h2 id="clinical-and-pathological-significance">Clinical and Pathological Significance</h2>
+<p>Given its central role in downregulating Ras, it is not surprising that <strong>RASAL1 has emerged as a bona fide tumor suppressor gene</strong> and a factor in diseases characterized by abnormal Ras pathway activation. In healthy cells, RASAL1 keeps Ras signaling in check; if RASAL1 is lost or silenced, Ras can remain hyperactive even in the absence of mutations in Ras itself. This has been observed in multiple cancers. <strong>Cancer and RasAL1:</strong> A landmark study in 2013 identified RASAL1 as a major tumor suppressor frequently inactivated in thyroid carcinoma (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3818169/#:~:text=Conclusions">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4184083/#:~:text=the%20active%20GTP,to%20help%20further%20refine%20the">pmc.ncbi.nlm.nih.gov</a>). Among 13 negative Ras pathway regulators screened, <em>RASAL1 stood out as frequently silenced by epigenetic and genetic mechanisms in thyroid tumors</em>, particularly in follicular thyroid carcinoma (FTC) and anaplastic thyroid carcinoma (ATC) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3818169/#:~:text=Among%2013%20negative%20modulators%20of,of">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3818169/#:~:text=and%20thyroid%20tumor%E2%80%93suppressing%20activities%2C%20which,pathways%2C%20revealing%20a%20largely%20mutually">pmc.ncbi.nlm.nih.gov</a>). RASAL1’s promoter was found <strong>hypermethylated in ~32% of FTC and 33% of ATC cases</strong>, and a subset of aggressive tumors also harbored inactivating RASAL1 missense mutations (mutations were seen in ~5% of FTC and ~17% of ATC) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3818169/#:~:text=Among%2013%20negative%20modulators%20of,of">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3818169/#:~:text=which%20was%20coupled%20to%20its,of%20tumors%20carrying%20RASAL1%20mutation">pmc.ncbi.nlm.nih.gov</a>). Notably, these RASAL1 alterations were largely <em>mutually exclusive</em> with the classical oncogenic mutations in the Ras/MAPK/PI3K pathways (such as RAS or BRAF mutations) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3818169/#:~:text=collectively%20found%20in%20zero%20of,a%20largely%20mutually%20exclusive%20relationship">pmc.ncbi.nlm.nih.gov</a>). In other words, cancers that did not mutate Ras itself often instead had RASAL1 silenced, achieving a similar outcome of unchecked Ras pathway signaling (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4184083/#:~:text=the%20active%20GTP,in%20the%20context%20of%20recent">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3818169/#:~:text=collectively%20found%20in%20zero%20of,a%20largely%20mutually%20exclusive%20relationship">pmc.ncbi.nlm.nih.gov</a>). This firmly established RASAL1 loss as an <strong>“alternative mechanism of Ras activation”</strong> in tumors (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4184083/#:~:text=the%20active%20GTP,to%20help%20further%20refine%20the">pmc.ncbi.nlm.nih.gov</a>). Indeed, RASAL1 was the only RasGAP gene found <em>completely methylated and silenced</em> across a panel of thyroid cancer cell lines, underlining its unique importance in that context (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4184083/#:~:text=a%20tumor%20suppressor%20gene%20in,This">pmc.ncbi.nlm.nih.gov</a>). Functional assays supported its tumor-suppressive role: restoration of RASAL1 in thyroid cancer cells suppressed MAPK and PI3K signaling and curtailed tumorigenic growth, whereas cancer-associated mutations in RASAL1 abrogated these effects (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3818169/#:~:text=4.88,harbored%20any%20of%20the">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3818169/#:~:text=Conclusions">pmc.ncbi.nlm.nih.gov</a>). </p>
+<p>Beyond thyroid cancer, <strong>epigenetic silencing or loss of RASAL1 is a recurring theme in many malignancies</strong>. For example, RASAL1 downregulation (often via promoter hypermethylation) has been reported in colon cancer, gastric cancer, liver cancer, bladder cancer, and others (<a href="https://www.oncotarget.com/article/17609/text/#:~:text=%28GDP,as%20well%2C%20suggesting%20that%20RASAL1">www.oncotarget.com</a>). In colorectal and gastric tumors, studies have found <em>frequent RASAL1 promoter hypermethylation correlating with low expression</em>, and enforced re-expression of RASAL1 in cell lines from these cancers can inhibit their proliferation (<a href="https://www.oncotarget.com/article/17609/text/#:~:text=Ras%20protein%20activator%20like%201,to%20the%20inactive%20form">www.oncotarget.com</a>) (<a href="https://cellandbioscience.biomedcentral.com/articles/10.1186/s13578-024-01193-w#:~:text=6,2012%3B28%3A1475%E2%80%9381">cellandbioscience.biomedcentral.com</a>). In hepatocellular carcinoma, loss of RasGAPs including RASAL1 has been linked to elevated wild-type Ras activity driving growth (<a href="https://cellandbioscience.biomedcentral.com/articles/10.1186/s13578-024-01193-w#:~:text=new%20mechanism%20of%20Ras%20activation,2007%3B104%3A12353%E2%80%938">cellandbioscience.biomedcentral.com</a>). In one oncogenomic analysis of The Cancer Genome Atlas (TCGA) data (33 cancer types), <strong>RASAL1 genetic alterations (deletions or mutations) were found in a significant fraction of tumors and often co-occurred with alterations in other tumor suppressors</strong>; strikingly, co-loss of RASAL1 and PTEN was associated with substantially worse patient outcomes, as mentioned earlier (<a href="https://pubmed.ncbi.nlm.nih.gov/39032134/#:~:text=clinical%20impacts%20of%20genetic%20alterations,gene%20alterations%2C%20with%20cancer%20progression">pubmed.ncbi.nlm.nih.gov</a>) (<a href="https://pubmed.ncbi.nlm.nih.gov/39032134/#:~:text=in%209924%20cancers%20of%2033,CI">pubmed.ncbi.nlm.nih.gov</a>). This suggests a synergy in oncogenesis when Ras signaling is unleashed by RASAL1 loss and PI3K signaling is unchecked by PTEN loss. Consistent with a tumor suppressor, <em>germline</em> mutations in RASAL1 have also been discovered in rare cases. A 2014 report found deleterious RASAL1 germline mutations in individuals with Cowden syndrome (an inherited cancer syndrome typically caused by PTEN mutations) who developed thyroid cancers despite lacking PTEN mutations (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4184083/#:~:text=methylated%20and%20silenced%20in%20thyroid,genetic%20alterations%20can%20occur%20in">pmc.ncbi.nlm.nih.gov</a>). The fact that RASAL1 germline variants can predispose to thyroid tumors (especially follicular-type) further underscores RASAL1’s role as a critical Ras pathway inhibitor in vivo (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4184083/#:~:text=methylated%20and%20silenced%20in%20thyroid,genetic%20alterations%20can%20occur%20in">pmc.ncbi.nlm.nih.gov</a>). Overall, the evidence from human cancers positions RASAL1 alongside better-known Ras pathway tumor suppressors like <strong>NF1</strong> (neurofibromin) and <strong>RASA1/p120^GAP</strong>, wherein its inactivation removes a restraint on Ras, contributing to oncogenic signaling (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4184083/#:~:text=the%20active%20GTP,in%20the%20context%20of%20recent">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3818169/#:~:text=include%20RAF%E2%86%92%20MEK%20%E2%86%92%20ERK,PI3K%20pathway%2C%20genetic%20or%20epigenetic">pmc.ncbi.nlm.nih.gov</a>). </p>
+<p>Importantly, the <em>method of RASAL1 inactivation in disease is often epigenetic</em> (promoter DNA hypermethylation) rather than DNA mutation. This has two implications: (1) it may be reversible or targetable by epigenetic therapies, and (2) it can serve as a diagnostic marker. <strong>Methylation of the RASAL1 promoter</strong> has been proposed as a biomarker in certain cancers and pathological conditions. For instance, in thyroid neoplasms, RASAL1 methylation status distinguished malignant from benign tumors in some studies (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3818169/#:~:text=and%20thyroid%20tumor%E2%80%93suppressing%20activities%2C%20which,pathways%2C%20revealing%20a%20largely%20mutually">pmc.ncbi.nlm.nih.gov</a>). In circulating tumor DNA, hypermethylated RASAL1 sequences could potentially indicate the presence of a Ras-driven tumor, although more research is needed in this area. </p>
+<p>Beyond cancer, <strong>RASAL1 has a pivotal role in fibrotic diseases</strong>, which are characterized by pathological, persistent activation of fibroblasts. Fibroblast activation (myofibroblast transformation) is normally transient during wound healing, but in fibrosis it becomes self-sustaining, leading to excessive scar tissue deposition in organs. Groundbreaking research in 2010 found that epigenetic silencing of RASAL1 underlies this abnormal fibroblast persistence in the kidney (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3106179/#:~:text=molecular%20mechanisms%2C%20we%20hypothesized%20that,and%20fibrogenesis%20in%20the%20kidney">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4484502/#:~:text=Epigenetic%20modifications%20can%20cause%20the,fibroblast%20activation%20is%20associated%20with">pmc.ncbi.nlm.nih.gov</a>). In models of chronic kidney injury, <strong>fibroblasts from fibrotic kidneys showed hypermethylation of the RASAL1 promoter and loss of RASAL1 expression, which was directly linked to continuously high Ras–ERK signaling and fibroblast proliferation</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3106179/#:~:text=molecular%20mechanisms%2C%20we%20hypothesized%20that,and%20fibrogenesis%20in%20the%20kidney">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4484502/#:~:text=Epigenetic%20modifications%20can%20cause%20the,fibroblast%20activation%20is%20associated%20with">pmc.ncbi.nlm.nih.gov</a>). Normally, as a tissue heals, fibroblasts revert to quiescence in part because Ras activity diminishes; but if RASAL1 is permanently shut off by methylation, Ras remains active and keeps the fibroblasts in a pro-fibrotic state (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4484502/#:~:text=studies%20have%20showed%20a%20prominent,due%20to%20RASAL1%20promoter%20hypermethylation">pmc.ncbi.nlm.nih.gov</a>). This mechanism was confirmed by treating fibrotic mice with DNA methylation inhibitors: <strong>pharmacologically demethylating the RASAL1 gene reactivated its expression and dramatically reduced organ fibrosis</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3106179/#:~:text=To%20test%20our%20hypothesis%20that,1d%2Cf%29%20and%20type%20I">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4484502/#:~:text=In%20their%20article%20published%20in,subsequent%20replacement%20with%20unmethylated%20CpGs">pmc.ncbi.nlm.nih.gov</a>). Specifically, administration of 5-azacytidine (a DNA demethylating agent) to mice with folic acid–induced renal fibrosis restored RASAL1 levels in kidney fibroblasts and was associated with less collagen deposition and better kidney function than in untreated fibrotic mice (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3106179/#:~:text=To%20test%20our%20hypothesis%20that,1d%2Cf%29%20and%20type%20I">pmc.ncbi.nlm.nih.gov</a>). Similarly, a 2014 study found that low-dose <strong>hydralazine (an FDA-approved drug)</strong> can induce TET3-dependent demethylation of RASAL1, partially rescuing its expression and attenuating kidney fibrosis in rodents (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4484502/#:~:text=In%20their%20article%20published%20in,subsequent%20replacement%20with%20unmethylated%20CpGs">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4484502/#:~:text=is%20associated%20with%20ameliorating%20effects,subsequent%20replacement%20with%20unmethylated%20CpGs">pmc.ncbi.nlm.nih.gov</a>). Perhaps most convincingly, transgenic mice engineered to overexpress RASAL1 (via a doxycycline-inducible transgene) were protected from fibrosis: forcing RASAL1 back “on” in activated fibroblasts normalized their overzealous proliferation and reduced fibrogenesis in a unilateral kidney obstruction model (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4484502/#:~:text=The%20results%20add%20new%20information,fibroblast%20activation%20and%20fibrogenesis%20in">pmc.ncbi.nlm.nih.gov</a>). These findings make RASAL1 <strong>a key therapeutic target in fibrosis</strong>. They reveal that pro-fibrotic factors like TGF-β <strong>drive RASAL1 silencing</strong> (TGF-β was shown to induce RASAL1 promoter methylation via DNMT1 in fibroblasts (<a href="https://www.oncotarget.com/article/17609/text/#:~:text=experimental%20renal%20fibrosis%20models%20identified,fibroblasts%20increased%20the%20intrinsic%20proliferative">www.oncotarget.com</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4484502/#:~:text=%28Bechtel%20et%20al,2014">pmc.ncbi.nlm.nih.gov</a>)), and conversely anti-fibrotic factors like BMP7 counteract this (BMP7 prevented RASAL1 hypermethylation and blunted cardiac and renal fibrosis in experimental models (<a href="https://www.oncotarget.com/article/17609/text/#:~:text=match%20at%20L139%20increases%20global,15">www.oncotarget.com</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4484502/#:~:text=%28Bechtel%20et%20al,2014">pmc.ncbi.nlm.nih.gov</a>)). The <em>epigenetic balance</em> of RASAL1 thus determines fibroblast behavior: transient, unmethylated RASAL1 suppression allows normal wound repair, whereas stable RASAL1 hypermethylation locks fibroblasts in an active state leading to chronic fibrosis (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4484502/#:~:text=of%20the%20Ras%20protein%2C%20is,hypermethylation%20can%20be%20induced%20by">pmc.ncbi.nlm.nih.gov</a>). Clinically, this has spurred interest in detecting RASAL1 methylation in tissues as a prognostic indicator of fibrotic progression, and in designing therapies to <strong>reactivate RASAL1</strong>. While direct RASAL1 gene therapy is not yet available, the proof-of-concept with demethylating drugs and gene induction in animals is promising (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4484502/#:~:text=In%20their%20article%20published%20in,subsequent%20replacement%20with%20unmethylated%20CpGs">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4484502/#:~:text=The%20results%20add%20new%20information,fibroblast%20activation%20and%20fibrogenesis%20in">pmc.ncbi.nlm.nih.gov</a>). </p>
+<p>Finally, RASAL1’s relevance extends to other conditions. For example, hypermethylation of RASAL1 has been observed in <strong>choriocarcinoma (a trophoblastic cancer)</strong>, where it was linked to chemotherapy resistance and tumor progression (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11312928/#:~:text=Skip%20to%20main%20content%20BMC,1%7D%2C%20Han">pmc.ncbi.nlm.nih.gov</a>). In that study, restoring RASAL1 expression or preventing its hypermethylation (via TET2-mediated DNA demethylation) resensitized cancer cells to drugs and slowed their growth (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11312928/#:~:text=Skip%20to%20main%20content%20BMC,1%7D%2C%20Han">pmc.ncbi.nlm.nih.gov</a>). This suggests loss of RASAL1 confers survival advantages to cells under therapeutic stress, again through sustaining Ras/PI3K signaling. There is also emerging evidence that <strong>hypoxia and other stresses can alter RASAL1 epigenetics</strong> in certain cell types (e.g. trabecular meshwork cells in glaucoma) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4849706/#:~:text=Hypoxia,role%20in%20mediating%20fibrosis%20and">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4849706/#:~:text=Hypoxia,Absorbance%20450nm%29%2C%20and%20found">pmc.ncbi.nlm.nih.gov</a>), hinting that RASAL1 is a nexus in cellular responses beyond classical Ras-driven diseases. </p>
+<h2 id="conclusion-and-future-perspectives">Conclusion and Future Perspectives</h2>
+<p>RASAL1 is a multifaceted protein that lies at the intersection of signaling pathways controlling cell growth, shape, and fate. In essence, it is a Ca²⁺-regulated “off-switch” for Ras and related small GTPases, ensuring that Ras activity is properly curtailed after it has delivered proliferative or differentiation signals. Current understanding, reinforced by the latest research, paints RASAL1 as crucial for preventing pathological Ras hyperactivity – whether in the context of neoplastic transformation or fibrotic disease. Its regulation by calcium and complex domain structure enable RASAL1 to integrate diverse signals, from neuronal firing to hormonal stimulation, into appropriate Ras signaling outputs. Real-world applications of this knowledge are beginning to take shape. In oncology, RASAL1 methylation status is being explored as a diagnostic marker and as a stratification factor (e.g. patients with RASAL1-silenced tumors might benefit from Ras pathway inhibitors or epigenetic therapies). In fibrosis, RASAL1 reactivation strategies (such as low-dose DNA methylation inhibitors or TGF-β pathway modulators like BMP7) offer a novel therapeutic angle to halt or reverse organ scarring (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4484502/#:~:text=%28Bechtel%20et%20al,2014">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4484502/#:~:text=In%20their%20article%20published%20in,subsequent%20replacement%20with%20unmethylated%20CpGs">pmc.ncbi.nlm.nih.gov</a>). Furthermore, the discovery of RASAL1’s role in neural development and function opens new questions about its involvement in neurological disorders where Ras signaling or Ca²⁺ homeostasis is disrupted. Ongoing research in 2023–2024 continues to shed light on these aspects – for instance, delineating how RASAL1’s interaction with cytoskeletal regulators affects learning and memory, or how RASAL1 loss in stromal cells might contribute to tumor microenvironment changes. As one authoritative review aptly summarized, <em>genetic or epigenetic inactivation of negative Ras modulators like RASAL1 represents an important alternative mechanism of disease, analogous to direct oncogene activation</em> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3818169/#:~:text=include%20RAF%E2%86%92%20MEK%20%E2%86%92%20ERK,PI3K%20pathway%2C%20genetic%20or%20epigenetic">pmc.ncbi.nlm.nih.gov</a>). In the case of RASAL1, understanding and harnessing this mechanism holds promise for new clinical interventions in cancer and fibrosis, making this once “hidden” RasGAP an exciting focus of translational research. </p>
+<p><strong>References:</strong> (Each reference corresponds to cited information in the text above)</p>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>AnnotationURLCitation(end_index=639, start_index=476, title='Identification of RASAL1 as a Major Tumor Suppressor Gene in Thyroid Cancer - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3818169/#:~:text=various%20modulators%20that%20function%20as,development%20of%20a%20variety%20of')</li>
+<li>AnnotationURLCitation(end_index=890, start_index=776, title='RASAL1 in Thyroid Cancer: Promise From a New Friend - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4184083/#:~:text=RASAL1%2C%20a%20RAS%20GTPase,4')</li>
+<li>AnnotationURLCitation(end_index=1151, start_index=1024, title='RASAL1 [Human] | GeneGlobe', type='url_citation', url='https://geneglobe.qiagen.com/us/knowledge/gene/ENSG00000111344#:~:text=activating%20proteins,provided')</li>
+<li>AnnotationURLCitation(end_index=1467, start_index=1328, title='Rasal1 regulates calcium dependent neuronal maturation by modifying microtubule dynamics | Cell &amp; Bioscience | Full Text', type='url_citation', url='https://cellandbioscience.biomedcentral.com/articles/10.1186/s13578-024-01193-w#:~:text=References')</li>
+<li>AnnotationURLCitation(end_index=1625, start_index=1468, title='Rasal1 regulates calcium dependent neuronal maturation by modifying microtubule dynamics | Cell &amp; Bioscience | Full Text', type='url_citation', url='https://cellandbioscience.biomedcentral.com/articles/10.1186/s13578-024-01193-w#:~:text=1,1998%3B218%3A17%E2%80%9325')</li>
+<li>AnnotationURLCitation(end_index=1989, start_index=1771, title='Rasal1 regulates calcium dependent neuronal maturation by modifying microtubule dynamics | Cell &amp; Bioscience | Full Text', type='url_citation', url='https://cellandbioscience.biomedcentral.com/articles/10.1186/s13578-024-01193-w#:~:text=Rasal1%2C%20first%20described%20to%20our,in%20neuronal%20processes%20remains%20unexplored')</li>
+<li>AnnotationURLCitation(end_index=2125, start_index=1990, title='GAP1 Family Members Constitute Bifunctional Ras and Rap GTPase-activating Proteins - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC1904491/#:~:text=domain,association%20with%20the%20plasma%20membrane')</li>
+<li>AnnotationURLCitation(end_index=2454, start_index=2319, title='GAP1 Family Members Constitute Bifunctional Ras and Rap GTPase-activating Proteins - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC1904491/#:~:text=domain,association%20with%20the%20plasma%20membrane')</li>
+<li>AnnotationURLCitation(end_index=2613, start_index=2455, title='GAP1 Family Members Constitute Bifunctional Ras and Rap GTPase-activating Proteins - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC1904491/#:~:text=In%20mammalian%20cells%2C%20Ras,site%20of%20Ras%2C%20thereby%20stabilizing')</li>
+<li>AnnotationURLCitation(end_index=2867, start_index=2711, title='RASAL1 [Human] | GeneGlobe', type='url_citation', url='https://geneglobe.qiagen.com/us/knowledge/gene/ENSG00000111344#:~:text=The%20protein%20encoded%20by%20this,Alternatively%20spliced')</li>
+<li>AnnotationURLCitation(end_index=3129, start_index=2994, title='RASAL1 in Thyroid Cancer: Promise From a New Friend - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4184083/#:~:text=the%20active%20GTP,in%20the%20context%20of%20recent')</li>
+<li>AnnotationURLCitation(end_index=3769, start_index=3605, title='GAP1 Family Members Constitute Bifunctional Ras and Rap GTPase-activating Proteins - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC1904491/#:~:text=hydrolysis%20in%20all%20other%20Ras,asparagine%20thumb%2C%20to%20stimulate%20GTP')</li>
+<li>AnnotationURLCitation(end_index=3899, start_index=3770, title='GAP1 Family Members Constitute Bifunctional Ras and Rap GTPase-activating Proteins - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC1904491/#:~:text=distinct,the%20glutamine%20residue%20in%20Ras')</li>
+<li>AnnotationURLCitation(end_index=4222, start_index=4022, title='Rasal1 regulates calcium dependent neuronal maturation by modifying microtubule dynamics | Cell &amp; Bioscience | Full Text', type='url_citation', url='https://cellandbioscience.biomedcentral.com/articles/10.1186/s13578-024-01193-w#:~:text=The%20structure%20of%20Rasal1%20gives,domain%2C%20which%20operates%20as')</li>
+<li>AnnotationURLCitation(end_index=4746, start_index=4576, title='Rasal1 regulates calcium dependent neuronal maturation by modifying microtubule dynamics | Cell &amp; Bioscience | Full Text', type='url_citation', url='https://cellandbioscience.biomedcentral.com/articles/10.1186/s13578-024-01193-w#:~:text=motifs%20%5B7%20%5D.%20The%20N,15%2C%2013')</li>
+<li>AnnotationURLCitation(end_index=5081, start_index=4923, title='Rasal1 regulates calcium dependent neuronal maturation by modifying microtubule dynamics | Cell &amp; Bioscience | Full Text', type='url_citation', url='https://cellandbioscience.biomedcentral.com/articles/10.1186/s13578-024-01193-w#:~:text=11,2013%3B110%3A111%E2%80%936')</li>
+<li>AnnotationURLCitation(end_index=5314, start_index=5182, title='Identification of a Ras GTPase-activating protein regulated by receptor-mediated Ca2+ oscillations - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC394250/#:~:text=repetitive%20Ca,and%20the%20regulation%20of%20Ras')</li>
+<li>AnnotationURLCitation(end_index=5676, start_index=5524, title='Rasal1 regulates calcium dependent neuronal maturation by modifying microtubule dynamics | Cell &amp; Bioscience | Full Text', type='url_citation', url='https://cellandbioscience.biomedcentral.com/articles/10.1186/s13578-024-01193-w#:~:text=phospholipid,15%2C%2013')</li>
+<li>AnnotationURLCitation(end_index=6123, start_index=5924, title='Rasal1 regulates calcium dependent neuronal maturation by modifying microtubule dynamics | Cell &amp; Bioscience | Full Text', type='url_citation', url='https://cellandbioscience.biomedcentral.com/articles/10.1186/s13578-024-01193-w#:~:text=molecular%20tools,synaptic%20activity%20and%20CaMKII%20phosphorylation')</li>
+<li>AnnotationURLCitation(end_index=6291, start_index=6124, title='Rasal1 regulates calcium dependent neuronal maturation by modifying microtubule dynamics | Cell &amp; Bioscience | Full Text', type='url_citation', url='https://cellandbioscience.biomedcentral.com/articles/10.1186/s13578-024-01193-w#:~:text=basal%20conditions%20%28Fig,40%C2%A0mM')</li>
+<li>AnnotationURLCitation(end_index=6711, start_index=6544, title='Rasal1 regulates calcium dependent neuronal maturation by modifying microtubule dynamics | Cell &amp; Bioscience | Full Text', type='url_citation', url='https://cellandbioscience.biomedcentral.com/articles/10.1186/s13578-024-01193-w#:~:text=basal%20conditions%20%28Fig,40%C2%A0mM')</li>
+<li>AnnotationURLCitation(end_index=7152, start_index=6986, title='Identification of a Ras GTPase-activating protein regulated by receptor-mediated Ca2+ oscillations - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC394250/#:~:text=induction%20of%20selective%20cellular%20functions,and%20the%20regulation%20of%20Ras')</li>
+<li>AnnotationURLCitation(end_index=7724, start_index=7550, title='Protein structure - RASAL1 - The Human Protein Atlas', type='url_citation', url='https://www.proteinatlas.org/ENSG00000111344-RASAL1/structure%2Binteraction#:~:text=cluster%20%28RNA%29%5E%7Bi%7D%20Parathyroid%20gland%20,113136239')</li>
+<li>AnnotationURLCitation(end_index=8092, start_index=7934, title='Rasal1 regulates calcium dependent neuronal maturation by modifying microtubule dynamics | Cell &amp; Bioscience | Full Text', type='url_citation', url='https://cellandbioscience.biomedcentral.com/articles/10.1186/s13578-024-01193-w#:~:text=11,2013%3B110%3A111%E2%80%936')</li>
+<li>AnnotationURLCitation(end_index=8914, start_index=8751, title='Identification of RASAL1 as a Major Tumor Suppressor Gene in Thyroid Cancer - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3818169/#:~:text=various%20modulators%20that%20function%20as,development%20of%20a%20variety%20of')</li>
+<li>AnnotationURLCitation(end_index=9091, start_index=8915, title='Identification of RASAL1 as a Major Tumor Suppressor Gene in Thyroid Cancer - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3818169/#:~:text=include%20RAF%E2%86%92%20MEK%20%E2%86%92%20ERK,PI3K%20pathway%2C%20genetic%20or%20epigenetic')</li>
+<li>AnnotationURLCitation(end_index=9644, start_index=9427, title='Rasal1 regulates calcium dependent neuronal maturation by modifying microtubule dynamics | Cell &amp; Bioscience | Full Text', type='url_citation', url='https://cellandbioscience.biomedcentral.com/articles/10.1186/s13578-024-01193-w#:~:text=several%20pathways%20involved%20in%20cell,significant%20roles%20in%20remodelling%20spine')</li>
+<li>AnnotationURLCitation(end_index=10621, start_index=10443, title='The genetic duet of concurrent RASAL1 and PTEN alterations promotes cancer aggressiveness by cooperatively activating the PI3K-AKT pathway - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/39032134/#:~:text=clinical%20impacts%20of%20genetic%20alterations,gene%20alterations%2C%20with%20cancer%20progression')</li>
+<li>AnnotationURLCitation(end_index=10781, start_index=10622, title='The genetic duet of concurrent RASAL1 and PTEN alterations promotes cancer aggressiveness by cooperatively activating the PI3K-AKT pathway - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/39032134/#:~:text=activation%2C%20with%20the%20development%20of,AKT%20pathway.%20This%20represents')</li>
+<li>AnnotationURLCitation(end_index=11181, start_index=11022, title='The genetic duet of concurrent RASAL1 and PTEN alterations promotes cancer aggressiveness by cooperatively activating the PI3K-AKT pathway - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/39032134/#:~:text=activation%2C%20with%20the%20development%20of,AKT%20pathway.%20This%20represents')</li>
+<li>AnnotationURLCitation(end_index=11423, start_index=11260, title='The genetic duet of concurrent RASAL1 and PTEN alterations promotes cancer aggressiveness by cooperatively activating the PI3K-AKT pathway - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/39032134/#:~:text=cancer%2C%20this%20genetic%20trio%20was,defects%20drive%20oncogenesis%20and%20cancer')</li>
+<li>AnnotationURLCitation(end_index=11973, start_index=11863, title='RASAL1 Gene - GeneCards | RASL1 Protein | RASL1 Antibody', type='url_citation', url='https://www.genecards.org/cgi-bin/carddisp.pl?gene=RASAL1#:~:text=,RASL1_HUMAN%2CO95294')</li>
+<li>AnnotationURLCitation(end_index=12231, start_index=12081, title='RASAL1 Gene - GeneCards | RASL1 Protein | RASL1 Antibody', type='url_citation', url='https://www.genecards.org/cgi-bin/carddisp.pl?gene=RASAL1#:~:text=%2A%20RAS%20GTPase,thyroid%20and%20adrenal%20medulla%20RASAL1')</li>
+<li>AnnotationURLCitation(end_index=12850, start_index=12679, title='RASAL1 is a potent regulator of hepatic stellate cell activity and liver fibrosis | Oncotarget', type='url_citation', url='https://www.oncotarget.com/article/17609/text/#:~:text=decreased%20during%20HSC%20activation%2C%20and,We%20demonstrate%20that%20RASAL1%20suppresses')</li>
+<li>AnnotationURLCitation(end_index=13573, start_index=13446, title='RASAL1 [Human] | GeneGlobe', type='url_citation', url='https://geneglobe.qiagen.com/us/knowledge/gene/ENSG00000111344#:~:text=activating%20proteins,provided')</li>
+<li>AnnotationURLCitation(end_index=14234, start_index=14076, title='Rasal1 regulates calcium dependent neuronal maturation by modifying microtubule dynamics | Cell &amp; Bioscience | Full Text', type='url_citation', url='https://cellandbioscience.biomedcentral.com/articles/10.1186/s13578-024-01193-w#:~:text=6,2012%3B28%3A1475%E2%80%9381')</li>
+<li>AnnotationURLCitation(end_index=14891, start_index=14680, title='Rasal1 regulates calcium dependent neuronal maturation by modifying microtubule dynamics | Cell &amp; Bioscience | Full Text', type='url_citation', url='https://cellandbioscience.biomedcentral.com/articles/10.1186/s13578-024-01193-w#:~:text=tumours%20where%20it%20has%20been,in%20neuronal%20processes%20remains%20unexplored')</li>
+<li>AnnotationURLCitation(end_index=15042, start_index=14892, title='RASAL1 Gene - GeneCards | RASL1 Protein | RASL1 Antibody', type='url_citation', url='https://www.genecards.org/cgi-bin/carddisp.pl?gene=RASAL1#:~:text=%2A%20RAS%20GTPase,thyroid%20and%20adrenal%20medulla%20RASAL1')</li>
+<li>AnnotationURLCitation(end_index=15377, start_index=15224, title='Protein structure - RASAL1 - The Human Protein Atlas', type='url_citation', url='https://www.proteinatlas.org/ENSG00000111344-RASAL1/structure%2Binteraction#:~:text=expression%20cluster,i%7D%20Not%20available')</li>
+<li>AnnotationURLCitation(end_index=15701, start_index=15511, title='Rasal1 regulates calcium dependent neuronal maturation by modifying microtubule dynamics | Cell &amp; Bioscience | Full Text', type='url_citation', url='https://cellandbioscience.biomedcentral.com/articles/10.1186/s13578-024-01193-w#:~:text=Rasal1%20is%20a%20Ca,which%20corresponds%20to%20the%20epitope')</li>
+<li>AnnotationURLCitation(end_index=16215, start_index=16013, title='Rasal1 regulates calcium dependent neuronal maturation by modifying microtubule dynamics | Cell &amp; Bioscience | Full Text', type='url_citation', url='https://cellandbioscience.biomedcentral.com/articles/10.1186/s13578-024-01193-w#:~:text=We%20examined%20the%20contributions%20of,is%20shown%20to%20promote%20NMDA')</li>
+<li>AnnotationURLCitation(end_index=16436, start_index=16216, title='Rasal1 regulates calcium dependent neuronal maturation by modifying microtubule dynamics | Cell &amp; Bioscience | Full Text', type='url_citation', url='https://cellandbioscience.biomedcentral.com/articles/10.1186/s13578-024-01193-w#:~:text=Rasal1%20functions%20in%20two%20separate,neuronal%20development%20and%20synapse%20formation')</li>
+<li>AnnotationURLCitation(end_index=16793, start_index=16594, title='Rasal1 regulates calcium dependent neuronal maturation by modifying microtubule dynamics | Cell &amp; Bioscience | Full Text', type='url_citation', url='https://cellandbioscience.biomedcentral.com/articles/10.1186/s13578-024-01193-w#:~:text=molecular%20tools,synaptic%20activity%20and%20CaMKII%20phosphorylation')</li>
+<li>AnnotationURLCitation(end_index=17002, start_index=16794, title='Rasal1 regulates calcium dependent neuronal maturation by modifying microtubule dynamics | Cell &amp; Bioscience | Full Text', type='url_citation', url='https://cellandbioscience.biomedcentral.com/articles/10.1186/s13578-024-01193-w#:~:text=Rasal1%20translocation%20to%20the%20plasma,2%2B%7D%20in%20hippocampal%20neurons')</li>
+<li>AnnotationURLCitation(end_index=17553, start_index=17327, title='Rasal1 regulates calcium dependent neuronal maturation by modifying microtubule dynamics | Cell &amp; Bioscience | Full Text', type='url_citation', url='https://cellandbioscience.biomedcentral.com/articles/10.1186/s13578-024-01193-w#:~:text=neuronal%20plasma%20membrane%20in%20response,synaptic%20activity%20and%20CaMKII%20phosphorylation')</li>
+<li>AnnotationURLCitation(end_index=17918, start_index=17692, title='Rasal1 regulates calcium dependent neuronal maturation by modifying microtubule dynamics | Cell &amp; Bioscience | Full Text', type='url_citation', url='https://cellandbioscience.biomedcentral.com/articles/10.1186/s13578-024-01193-w#:~:text=neuronal%20plasma%20membrane%20in%20response,synaptic%20activity%20and%20CaMKII%20phosphorylation')</li>
+<li>AnnotationURLCitation(end_index=18342, start_index=18125, title='Rasal1 regulates calcium dependent neuronal maturation by modifying microtubule dynamics | Cell &amp; Bioscience | Full Text', type='url_citation', url='https://cellandbioscience.biomedcentral.com/articles/10.1186/s13578-024-01193-w#:~:text=several%20pathways%20involved%20in%20cell,significant%20roles%20in%20remodelling%20spine')</li>
+<li>AnnotationURLCitation(end_index=18559, start_index=18343, title='Rasal1 regulates calcium dependent neuronal maturation by modifying microtubule dynamics | Cell &amp; Bioscience | Full Text', type='url_citation', url='https://cellandbioscience.biomedcentral.com/articles/10.1186/s13578-024-01193-w#:~:text=PKC%2C%20tubulin%2C%20and%20CaMKII,synaptic%20activity%20and%20CaMKII%20phosphorylation')</li>
+<li>AnnotationURLCitation(end_index=18989, start_index=18773, title='Rasal1 regulates calcium dependent neuronal maturation by modifying microtubule dynamics | Cell &amp; Bioscience | Full Text', type='url_citation', url='https://cellandbioscience.biomedcentral.com/articles/10.1186/s13578-024-01193-w#:~:text=PKC%2C%20tubulin%2C%20and%20CaMKII,synaptic%20activity%20and%20CaMKII%20phosphorylation')</li>
+<li>AnnotationURLCitation(end_index=19484, start_index=19264, title='Rasal1 regulates calcium dependent neuronal maturation by modifying microtubule dynamics | Cell &amp; Bioscience | Full Text', type='url_citation', url='https://cellandbioscience.biomedcentral.com/articles/10.1186/s13578-024-01193-w#:~:text=Rasal1%20functions%20in%20two%20separate,neuronal%20development%20and%20synapse%20formation')</li>
+<li>AnnotationURLCitation(end_index=19822, start_index=19712, title='RASAL1 Gene - GeneCards | RASL1 Protein | RASL1 Antibody', type='url_citation', url='https://www.genecards.org/cgi-bin/carddisp.pl?gene=RASAL1#:~:text=,RASL1_HUMAN%2CO95294')</li>
+<li>AnnotationURLCitation(end_index=20184, start_index=20016, title='Rac1 mediates dendrite formation in response to melanocyte stimulating hormone and ultraviolet light in a murine melanoma model - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/9699725/#:~:text=Dendrite%20formation%20requires%20actin%20polymerization,mutants%20of%20cdc42%20and%20rhoA')</li>
+<li>AnnotationURLCitation(end_index=20333, start_index=20185, title='Rac1 mediates dendrite formation in response to melanocyte stimulating hormone and ultraviolet light in a murine melanoma model - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/9699725/#:~:text=this%20paper%20we%20show%20that,rac1%20is%20an%20important%20signaling')</li>
+<li>AnnotationURLCitation(end_index=21122, start_index=20969, title='Identification of a Ras GTPase-activating protein regulated by receptor-mediated Ca2+ oscillations - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC394250/#:~:text=Many%20receptor%20tyrosine%20kinases%20and,Bootman%20et%20al%2C%202001')</li>
+<li>AnnotationURLCitation(end_index=21306, start_index=21123, title='Identification of a Ras GTPase-activating protein regulated by receptor-mediated Ca2+ oscillations - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC394250/#:~:text=Many%20receptor%20tyrosine%20kinases%20and,such%20as%20fertilisation%2C%20secretion%2C%20contraction')</li>
+<li>AnnotationURLCitation(end_index=21982, start_index=21816, title='Identification of a Ras GTPase-activating protein regulated by receptor-mediated Ca2+ oscillations - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC394250/#:~:text=induction%20of%20selective%20cellular%20functions,and%20the%20regulation%20of%20Ras')</li>
+<li>AnnotationURLCitation(end_index=22108, start_index=21983, title='Identification of a Ras GTPase-activating protein regulated by receptor-mediated Ca2+ oscillations - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC394250/#:~:text=duration%20of%20the%20Ca,2%2B%7D%20signals')</li>
+<li>AnnotationURLCitation(end_index=22952, start_index=22857, title='Identification of RASAL1 as a Major Tumor Suppressor Gene in Thyroid Cancer - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3818169/#:~:text=Conclusions')</li>
+<li>AnnotationURLCitation(end_index=23090, start_index=22953, title='RASAL1 in Thyroid Cancer: Promise From a New Friend - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4184083/#:~:text=the%20active%20GTP,to%20help%20further%20refine%20the')</li>
+<li>AnnotationURLCitation(end_index=23457, start_index=23331, title='Identification of RASAL1 as a Major Tumor Suppressor Gene in Thyroid Cancer - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3818169/#:~:text=Among%2013%20negative%20modulators%20of,of')</li>
+<li>AnnotationURLCitation(end_index=23656, start_index=23458, title='Identification of RASAL1 as a Major Tumor Suppressor Gene in Thyroid Cancer - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3818169/#:~:text=and%20thyroid%20tumor%E2%80%93suppressing%20activities%2C%20which,pathways%2C%20revealing%20a%20largely%20mutually')</li>
+<li>AnnotationURLCitation(end_index=24008, start_index=23882, title='Identification of RASAL1 as a Major Tumor Suppressor Gene in Thyroid Cancer - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3818169/#:~:text=Among%2013%20negative%20modulators%20of,of')</li>
+<li>AnnotationURLCitation(end_index=24168, start_index=24009, title='Identification of RASAL1 as a Major Tumor Suppressor Gene in Thyroid Cancer - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3818169/#:~:text=which%20was%20coupled%20to%20its,of%20tumors%20carrying%20RASAL1%20mutation')</li>
+<li>AnnotationURLCitation(end_index=24510, start_index=24339, title='Identification of RASAL1 as a Major Tumor Suppressor Gene in Thyroid Cancer - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3818169/#:~:text=collectively%20found%20in%20zero%20of,a%20largely%20mutually%20exclusive%20relationship')</li>
+<li>AnnotationURLCitation(end_index=24800, start_index=24665, title='RASAL1 in Thyroid Cancer: Promise From a New Friend - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4184083/#:~:text=the%20active%20GTP,in%20the%20context%20of%20recent')</li>
+<li>AnnotationURLCitation(end_index=24972, start_index=24801, title='Identification of RASAL1 as a Major Tumor Suppressor Gene in Thyroid Cancer - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3818169/#:~:text=collectively%20found%20in%20zero%20of,a%20largely%20mutually%20exclusive%20relationship')</li>
+<li>AnnotationURLCitation(end_index=25209, start_index=25072, title='RASAL1 in Thyroid Cancer: Promise From a New Friend - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4184083/#:~:text=the%20active%20GTP,to%20help%20further%20refine%20the')</li>
+<li>AnnotationURLCitation(end_index=25512, start_index=25389, title='RASAL1 in Thyroid Cancer: Promise From a New Friend - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4184083/#:~:text=a%20tumor%20suppressor%20gene%20in,This')</li>
+<li>AnnotationURLCitation(end_index=25869, start_index=25755, title='Identification of RASAL1 as a Major Tumor Suppressor Gene in Thyroid Cancer - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3818169/#:~:text=4.88,harbored%20any%20of%20the')</li>
+<li>AnnotationURLCitation(end_index=25965, start_index=25870, title='Identification of RASAL1 as a Major Tumor Suppressor Gene in Thyroid Cancer - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3818169/#:~:text=Conclusions')</li>
+<li>AnnotationURLCitation(end_index=26370, start_index=26243, title='RASAL1 is a potent regulator of hepatic stellate cell activity and liver fibrosis | Oncotarget', type='url_citation', url='https://www.oncotarget.com/article/17609/text/#:~:text=%28GDP,as%20well%2C%20suggesting%20that%20RASAL1')</li>
+<li>AnnotationURLCitation(end_index=26746, start_index=26604, title='RASAL1 is a potent regulator of hepatic stellate cell activity and liver fibrosis | Oncotarget', type='url_citation', url='https://www.oncotarget.com/article/17609/text/#:~:text=Ras%20protein%20activator%20like%201,to%20the%20inactive%20form')</li>
+<li>AnnotationURLCitation(end_index=26905, start_index=26747, title='Rasal1 regulates calcium dependent neuronal maturation by modifying microtubule dynamics | Cell &amp; Bioscience | Full Text', type='url_citation', url='https://cellandbioscience.biomedcentral.com/articles/10.1186/s13578-024-01193-w#:~:text=6,2012%3B28%3A1475%E2%80%9381')</li>
+<li>AnnotationURLCitation(end_index=27232, start_index=27035, title='Rasal1 regulates calcium dependent neuronal maturation by modifying microtubule dynamics | Cell &amp; Bioscience | Full Text', type='url_citation', url='https://cellandbioscience.biomedcentral.com/articles/10.1186/s13578-024-01193-w#:~:text=new%20mechanism%20of%20Ras%20activation,2007%3B104%3A12353%E2%80%938')</li>
+<li>AnnotationURLCitation(end_index=27786, start_index=27608, title='The genetic duet of concurrent RASAL1 and PTEN alterations promotes cancer aggressiveness by cooperatively activating the PI3K-AKT pathway - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/39032134/#:~:text=clinical%20impacts%20of%20genetic%20alterations,gene%20alterations%2C%20with%20cancer%20progression')</li>
+<li>AnnotationURLCitation(end_index=27898, start_index=27787, title='The genetic duet of concurrent RASAL1 and PTEN alterations promotes cancer aggressiveness by cooperatively activating the PI3K-AKT pathway - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/39032134/#:~:text=in%209924%20cancers%20of%2033,CI')</li>
+<li>AnnotationURLCitation(end_index=28528, start_index=28361, title='RASAL1 in Thyroid Cancer: Promise From a New Friend - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4184083/#:~:text=methylated%20and%20silenced%20in%20thyroid,genetic%20alterations%20can%20occur%20in')</li>
+<li>AnnotationURLCitation(end_index=28876, start_index=28709, title='RASAL1 in Thyroid Cancer: Promise From a New Friend - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4184083/#:~:text=methylated%20and%20silenced%20in%20thyroid,genetic%20alterations%20can%20occur%20in')</li>
+<li>AnnotationURLCitation(end_index=29266, start_index=29131, title='RASAL1 in Thyroid Cancer: Promise From a New Friend - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4184083/#:~:text=the%20active%20GTP,in%20the%20context%20of%20recent')</li>
+<li>AnnotationURLCitation(end_index=29443, start_index=29267, title='Identification of RASAL1 as a Major Tumor Suppressor Gene in Thyroid Cancer - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3818169/#:~:text=include%20RAF%E2%86%92%20MEK%20%E2%86%92%20ERK,PI3K%20pathway%2C%20genetic%20or%20epigenetic')</li>
+<li>AnnotationURLCitation(end_index=30160, start_index=29962, title='Identification of RASAL1 as a Major Tumor Suppressor Gene in Thyroid Cancer - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3818169/#:~:text=and%20thyroid%20tumor%E2%80%93suppressing%20activities%2C%20which,pathways%2C%20revealing%20a%20largely%20mutually')</li>
+<li>AnnotationURLCitation(end_index=30985, start_index=30810, title='Methylation determines fibroblast activation and fibrogenesis in the kidney - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3106179/#:~:text=molecular%20mechanisms%2C%20we%20hypothesized%20that,and%20fibrogenesis%20in%20the%20kidney')</li>
+<li>AnnotationURLCitation(end_index=31165, start_index=30986, title='Hypermethylation of RASAL1: A Key for Renal Fibrosis - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4484502/#:~:text=Epigenetic%20modifications%20can%20cause%20the,fibroblast%20activation%20is%20associated%20with')</li>
+<li>AnnotationURLCitation(end_index=31588, start_index=31413, title='Methylation determines fibroblast activation and fibrogenesis in the kidney - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3106179/#:~:text=molecular%20mechanisms%2C%20we%20hypothesized%20that,and%20fibrogenesis%20in%20the%20kidney')</li>
+<li>AnnotationURLCitation(end_index=31768, start_index=31589, title='Hypermethylation of RASAL1: A Key for Renal Fibrosis - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4484502/#:~:text=Epigenetic%20modifications%20can%20cause%20the,fibroblast%20activation%20is%20associated%20with')</li>
+<li>AnnotationURLCitation(end_index=32167, start_index=31996, title='Hypermethylation of RASAL1: A Key for Renal Fibrosis - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4484502/#:~:text=studies%20have%20showed%20a%20prominent,due%20to%20RASAL1%20promoter%20hypermethylation')</li>
+<li>AnnotationURLCitation(end_index=32522, start_index=32376, title='Methylation determines fibroblast activation and fibrogenesis in the kidney - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3106179/#:~:text=To%20test%20our%20hypothesis%20that,1d%2Cf%29%20and%20type%20I')</li>
+<li>AnnotationURLCitation(end_index=32698, start_index=32523, title='Hypermethylation of RASAL1: A Key for Renal Fibrosis - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4484502/#:~:text=In%20their%20article%20published%20in,subsequent%20replacement%20with%20unmethylated%20CpGs')</li>
+<li>AnnotationURLCitation(end_index=33120, start_index=32974, title='Methylation determines fibroblast activation and fibrogenesis in the kidney - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3106179/#:~:text=To%20test%20our%20hypothesis%20that,1d%2Cf%29%20and%20type%20I')</li>
+<li>AnnotationURLCitation(end_index=33508, start_index=33333, title='Hypermethylation of RASAL1: A Key for Renal Fibrosis - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4484502/#:~:text=In%20their%20article%20published%20in,subsequent%20replacement%20with%20unmethylated%20CpGs')</li>
+<li>AnnotationURLCitation(end_index=33694, start_index=33509, title='Hypermethylation of RASAL1: A Key for Renal Fibrosis - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4484502/#:~:text=is%20associated%20with%20ameliorating%20effects,subsequent%20replacement%20with%20unmethylated%20CpGs')</li>
+<li>AnnotationURLCitation(end_index=34174, start_index=34001, title='Hypermethylation of RASAL1: A Key for Renal Fibrosis - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4484502/#:~:text=The%20results%20add%20new%20information,fibroblast%20activation%20and%20fibrogenesis%20in')</li>
+<li>AnnotationURLCitation(end_index=34591, start_index=34401, title='RASAL1 is a potent regulator of hepatic stellate cell activity and liver fibrosis | Oncotarget', type='url_citation', url='https://www.oncotarget.com/article/17609/text/#:~:text=experimental%20renal%20fibrosis%20models%20identified,fibroblasts%20increased%20the%20intrinsic%20proliferative')</li>
+<li>AnnotationURLCitation(end_index=34701, start_index=34592, title='Hypermethylation of RASAL1: A Key for Renal Fibrosis - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4484502/#:~:text=%28Bechtel%20et%20al,2014')</li>
+<li>AnnotationURLCitation(end_index=34989, start_index=34869, title='RASAL1 is a potent regulator of hepatic stellate cell activity and liver fibrosis | Oncotarget', type='url_citation', url='https://www.oncotarget.com/article/17609/text/#:~:text=match%20at%20L139%20increases%20global,15')</li>
+<li>AnnotationURLCitation(end_index=35099, start_index=34990, title='Hypermethylation of RASAL1: A Key for Renal Fibrosis - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4484502/#:~:text=%28Bechtel%20et%20al,2014')</li>
+<li>AnnotationURLCitation(end_index=35508, start_index=35349, title='Hypermethylation of RASAL1: A Key for Renal Fibrosis - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4484502/#:~:text=of%20the%20Ras%20protein%2C%20is,hypermethylation%20can%20be%20induced%20by')</li>
+<li>AnnotationURLCitation(end_index=36014, start_index=35839, title='Hypermethylation of RASAL1: A Key for Renal Fibrosis - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4484502/#:~:text=In%20their%20article%20published%20in,subsequent%20replacement%20with%20unmethylated%20CpGs')</li>
+<li>AnnotationURLCitation(end_index=36188, start_index=36015, title='Hypermethylation of RASAL1: A Key for Renal Fibrosis - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4484502/#:~:text=The%20results%20add%20new%20information,fibroblast%20activation%20and%20fibrogenesis%20in')</li>
+<li>AnnotationURLCitation(end_index=36556, start_index=36425, title='Hypermethylated RASAL1’s promotive role in chemoresistance and tumorigenesis of choriocarcinoma was regulated by TET2 but not DNMTs - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC11312928/#:~:text=Skip%20to%20main%20content%20BMC,1%7D%2C%20Han')</li>
+<li>AnnotationURLCitation(end_index=36864, start_index=36733, title='Hypermethylated RASAL1’s promotive role in chemoresistance and tumorigenesis of choriocarcinoma was regulated by TET2 but not DNMTs - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC11312928/#:~:text=Skip%20to%20main%20content%20BMC,1%7D%2C%20Han')</li>
+<li>AnnotationURLCitation(end_index=37297, start_index=37167, title='Hypoxia-Induced Changes in DNA Methylation Alter RASAL1 and TGFβ1 Expression in Human Trabecular Meshwork Cells - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4849706/#:~:text=Hypoxia,role%20in%20mediating%20fibrosis%20and')</li>
+<li>AnnotationURLCitation(end_index=37428, start_index=37298, title='Hypoxia-Induced Changes in DNA Methylation Alter RASAL1 and TGFβ1 Expression in Human Trabecular Meshwork Cells - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4849706/#:~:text=Hypoxia,Absorbance%20450nm%29%2C%20and%20found')</li>
+<li>AnnotationURLCitation(end_index=38872, start_index=38763, title='Hypermethylation of RASAL1: A Key for Renal Fibrosis - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4484502/#:~:text=%28Bechtel%20et%20al,2014')</li>
+<li>AnnotationURLCitation(end_index=39048, start_index=38873, title='Hypermethylation of RASAL1: A Key for Renal Fibrosis - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4484502/#:~:text=In%20their%20article%20published%20in,subsequent%20replacement%20with%20unmethylated%20CpGs')</li>
+<li>AnnotationURLCitation(end_index=39917, start_index=39741, title='Identification of RASAL1 as a Major Tumor Suppressor Gene in Thyroid Cancer - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3818169/#:~:text=include%20RAF%E2%86%92%20MEK%20%E2%86%92%20ERK,PI3K%20pathway%2C%20genetic%20or%20epigenetic')</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: O95294
+gene_symbol: RASAL1
+product_type: PROTEIN
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &#39;RAS protein activator like 1, calcium-regulated GTPase-activating protein
+  for RAS and RAP1 small GTPases. Member of GAP1 family characterized by two N-terminal
+  C2 domains (Ca2+ and phospholipid binding), pleckstrin homology (PH) domain, and
+  C-terminal RasGAP catalytic domain. Functions as dual-specificity GAP: catalyzes
+  GTP hydrolysis on both Ras proteins (H-Ras, N-Ras, K-Ras, R-Ras) and Rap1 GTPase
+  using arginine-finger mechanism. C2 domains mediate Ca2+-dependent membrane translocation
+  - protein cycles between cytosolic inactive state and membrane-bound active state
+  upon Ca2+ bursts. PH domain binds membrane phosphoinositides. Cytosolic protein
+  (~804 AA) that transiently associates with inner plasma membrane upon calcium elevation
+  to access membrane-anchored Ras. Major tumor suppressor frequently inactivated in
+  cancers - promoter hypermethylation found in ~32% follicular thyroid carcinoma,
+  ~33% anaplastic thyroid carcinoma, and other cancers (colon, gastric, bladder).
+  RASAL1 mutations largely mutually exclusive with RAS/BRAF mutations, indicating
+  loss of RASAL1 provides alternative mechanism for Ras hyperactivation in tumors.
+  Germline RASAL1 mutations identified in Cowden syndrome patients with thyroid cancers.
+  Critical role in organ fibrosis - epigenetic silencing by TGF-β-induced promoter
+  hypermethylation drives persistent fibroblast activation in kidney fibrosis. Demethylating
+  agents (5-azacytidine, hydralazine) can restore RASAL1 expression and reduce fibrosis
+  in animal models. In neurons, regulates dendritic branching and synaptic plasticity
+  by interacting with tubulin, PKC, and CaMKII. Links calcium oscillations to Ras/MAPK
+  pathway amplitude control.&#39;
+existing_annotations:
+- term:
+    id: GO:0005096
+    label: GTPase activator activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: GTPase activator activity - RasGAP and Rap1GAP function.
+    action: ACCEPT
+    reason: Core enzymatic function.
+- term:
+    id: GO:1902531
+    label: regulation of intracellular signal transduction
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: Regulation of intracellular signal transduction - regulates Ras/Rap1
+      signaling.
+    action: ACCEPT
+    reason: Core regulatory role.
+- term:
+    id: GO:0005096
+    label: GTPase activator activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: GTPase activator activity - RasGAP and Rap1GAP function.
+    action: ACCEPT
+    reason: Core enzymatic function.
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  review:
+    summary: Cytosol - cytosolic with Ca2+-dependent membrane association.
+    action: ACCEPT
+    reason: Core localization.
+- term:
+    id: GO:0008270
+    label: zinc ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: Zinc ion binding - RasGAP domain requires metal cofactors.
+    action: ACCEPT
+    reason: Enzymatic requirement.
+- term:
+    id: GO:0030154
+    label: cell differentiation
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: Cell differentiation - involved in neuronal and melanocyte differentiation.
+    action: KEEP_AS_NON_CORE
+    reason: Developmental context.
+- term:
+    id: GO:0035556
+    label: intracellular signal transduction
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: Intracellular signal transduction - participates in Ras/Rap1 signaling
+      pathways.
+    action: ACCEPT
+    reason: Signaling role.
+- term:
+    id: GO:0046580
+    label: negative regulation of Ras protein signal transduction
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: Negative regulation of Ras protein signal transduction - core function.
+    action: ACCEPT
+    reason: Core regulatory function.
+- term:
+    id: GO:0046872
+    label: metal ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: Metal ion binding - requires metal cofactors.
+    action: ACCEPT
+    reason: Enzymatic requirement.
+- term:
+    id: GO:0071277
+    label: cellular response to calcium ion
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: Cellular response to calcium ion - Ca2+-regulated membrane translocation.
+    action: ACCEPT
+    reason: Regulatory mechanism.
+- term:
+    id: GO:1903861
+    label: positive regulation of dendrite extension
+  evidence_type: IDA
+  original_reference_id: PMID:23999003
+  review:
+    summary: Positive regulation of dendrite extension - regulates dendrite formation
+      in melanocytes and neurons.
+    action: ACCEPT
+    reason: Specific neuronal function.
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-5658231
+  review:
+    summary: Cytosol - cytosolic with Ca2+-dependent membrane association.
+    action: ACCEPT
+    reason: Core localization.
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-5658435
+  review:
+    summary: Cytosol - cytosolic with Ca2+-dependent membrane association.
+    action: ACCEPT
+    reason: Core localization.
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IDA
+  original_reference_id: PMID:16009725
+  review:
+    summary: Cytosol - cytosolic with Ca2+-dependent membrane association.
+    action: ACCEPT
+    reason: Core localization.
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IDA
+  original_reference_id: PMID:16009725
+  review:
+    summary: Plasma membrane - translocates to plasma membrane upon Ca2+ elevation.
+    action: ACCEPT
+    reason: Activity-dependent localization.
+- term:
+    id: GO:0005096
+    label: GTPase activator activity
+  evidence_type: TAS
+  original_reference_id: PMID:9751798
+  review:
+    summary: GTPase activator activity - RasGAP and Rap1GAP function.
+    action: ACCEPT
+    reason: Core enzymatic function.
+- term:
+    id: GO:0005543
+    label: phospholipid binding
+  evidence_type: TAS
+  original_reference_id: PMID:9751798
+  review:
+    summary: Phospholipid binding - C2 and PH domains bind membrane phospholipids.
+    action: ACCEPT
+    reason: Domain function for membrane targeting.
+- term:
+    id: GO:0007165
+    label: signal transduction
+  evidence_type: TAS
+  original_reference_id: PMID:9751798
+  review:
+    summary: Signal transduction - participates in Ras-mediated signaling.
+    action: ACCEPT
+    reason: Signaling role.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms.
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods.
+  findings: []
+- id: PMID:16009725
+  title: CAPRI and RASAL impose different modes of information processing on Ras due
+    to contrasting temporal filtering of Ca2+.
+  findings: []
+- id: PMID:23999003
+  title: SYT14L, especially its C2 domain, is involved in regulating melanocyte differentiation.
+  findings: []
+- id: PMID:9751798
+  title: Restricted tissue expression pattern of a novel human rasGAP-related gene
+    and its murine ortholog.
+  findings: []
+- id: Reactome:R-HSA-5658231
+  title: RAS GAPs stimulate RAS GTPase activity
+  findings: []
+- id: Reactome:R-HSA-5658435
+  title: RAS GAPs bind RAS:GTP
+  findings: []
+aliases:
+- RAS protein activator like 1
+- GAP1(RasAL)
+- RasGAP-activating-like protein 1
+core_functions:
+- molecular_function:
+    id: GO:0005096
+    label: GTPase activator activity
+  description: Calcium-regulated dual-specificity RasGAP that catalyzes GTP hydrolysis
+    on both RAS proteins (H-Ras, N-Ras, K-Ras, R-Ras) and RAP1 GTPase. C2 domains
+    mediate Ca2+-dependent membrane translocation. Functions as tumor suppressor and
+    regulator of fibrosis. Links calcium oscillations to Ras/MAPK pathway control.
+  locations:
+  - id: GO:0005737
+    label: cytoplasm
+  - id: GO:0005886
+    label: plasma membrane
+  directly_involved_in:
+  - id: GO:0046580
+    label: negative regulation of Ras protein signal transduction
+  - id: GO:0071277
+    label: cellular response to calcium ion
+  supported_by:
+  - reference_id: UniProt:O95294
+    supporting_text: RASAL1 is Ca2+-regulated dual Ras/Rap1 GAP. Major tumor suppressor
+      silenced by hypermethylation in cancers and fibrosis. Essential for neuronal
+      development and cytoskeletal regulation.
+status: DRAFT
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

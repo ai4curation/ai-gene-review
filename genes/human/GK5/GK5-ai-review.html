@@ -1,0 +1,2539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GK5 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>GK5</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q6ZS86" target="_blank" class="term-link">
+                        Q6ZS86
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Aliases:</span>
+                <div class="aliases">
+                    
+                    <span class="badge">Glycerol kinase 5</span>
+                    
+                    <span class="badge">GLPK5</span>
+                    
+                </div>
+            </div>
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "GK5";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q6ZS86" data-a="DESCRIPTION: Glycerol kinase 5, tissue-specialized glycerol kin..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Glycerol kinase 5, tissue-specialized glycerol kinase enzyme predominantly expressed in skin sebaceous glands. Member of FGGY carbohydrate kinase family. Catalyzes ATP-dependent phosphorylation of glycerol to produce sn-glycerol-3-phosphate, the first step of glycerol utilization pathway. ~60 kDa protein with catalytic aspartate residues (Asp-280, Asp-443) essential for enzymatic activity. Cytosolic enzyme with distinct dual role: (1) Metabolic function - provides glycerol-3-phosphate for triglyceride synthesis in sebaceous glands; (2) Regulatory function - negatively regulates SREBP (sterol regulatory element-binding protein) processing and activation. Binds C-terminal regulatory domain of SREBP-1 and SREBP-2, inhibiting their cleavage and nuclear translocation, thereby limiting expression of lipid biosynthetic genes in skin. Skin-specific negative regulator of cholesterol and fatty acid synthesis - loss causes excessive lipid accumulation (cholesterol, triglycerides, ceramides) in sebaceous glands and pronounced alopecia in mice. GK5-deficient Gk5^toku mouse exhibits ~80% lethality due to hair growth defects, rescuable by simvastatin (HMG-CoA reductase inhibitor). Kinase activity essential for SREBP regulatory function - catalytically-dead mutants fail to suppress SREBP activation. Distinguishable from X-linked glycerol kinase (GK) which cannot compensate for GK5&#39;s regulatory role. Expression widespread at mRNA level but protein predominantly in skin; enriched in sebaceous glands. In cancer, GK5 upregulated in gefitinib-resistant NSCLC cells where it promotes cell survival through SREBP1/SCD1 pathway, conferring drug resistance. GK5 enables cancer cells to maintain lipogenesis and resist apoptosis under EGFR inhibition. Potential therapeutic target in oncology and dermatology.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004370" target="_blank" class="term-link">
+                                    GO:0004370
+                                </a>
+                            </span>
+                            <span class="term-label">glycerol kinase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6ZS86" data-a="GO:0004370" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Glycerol kinase activity - phosphorylates glycerol to glycerol-3-phosphate.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core enzymatic function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q6ZS86" data-a="GO:0005739" data-r="GO_REF:0000033" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Mitochondrion - experimental evidence shows cytosolic localization, not mitochondrial.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Localization incorrect based on functional studies.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046167" target="_blank" class="term-link">
+                                    GO:0046167
+                                </a>
+                            </span>
+                            <span class="term-label">glycerol-3-phosphate biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6ZS86" data-a="GO:0046167" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Glycerol-3-phosphate biosynthetic process - produces glycerol-3-phosphate.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core metabolic role.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006071" target="_blank" class="term-link">
+                                    GO:0006071
+                                </a>
+                            </span>
+                            <span class="term-label">glycerol metabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6ZS86" data-a="GO:0006071" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Glycerol metabolic process - first step of glycerol utilization.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core metabolic function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006641" target="_blank" class="term-link">
+                                    GO:0006641
+                                </a>
+                            </span>
+                            <span class="term-label">triglyceride metabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6ZS86" data-a="GO:0006641" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Triglyceride metabolic process - glycerol-3-phosphate feeds into TG synthesis.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Metabolic role.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000166" target="_blank" class="term-link">
+                                    GO:0000166
+                                </a>
+                            </span>
+                            <span class="term-label">nucleotide binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6ZS86" data-a="GO:0000166" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Nucleotide binding - binds ATP for phosphorylation reaction.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Enzymatic requirement.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004370" target="_blank" class="term-link">
+                                    GO:0004370
+                                </a>
+                            </span>
+                            <span class="term-label">glycerol kinase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6ZS86" data-a="GO:0004370" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Glycerol kinase activity - phosphorylates glycerol to glycerol-3-phosphate.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core enzymatic function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005524" target="_blank" class="term-link">
+                                    GO:0005524
+                                </a>
+                            </span>
+                            <span class="term-label">ATP binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6ZS86" data-a="GO:0005524" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ATP binding - ATP-dependent kinase.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Enzymatic requirement.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6ZS86" data-a="GO:0005737" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytoplasm - cytosolic enzyme.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core localization.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005975" target="_blank" class="term-link">
+                                    GO:0005975
+                                </a>
+                            </span>
+                            <span class="term-label">carbohydrate metabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6ZS86" data-a="GO:0005975" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Carbohydrate metabolic process - glycerol is polyol/carbohydrate metabolite.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Metabolic role.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006071" target="_blank" class="term-link">
+                                    GO:0006071
+                                </a>
+                            </span>
+                            <span class="term-label">glycerol metabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6ZS86" data-a="GO:0006071" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Glycerol metabolic process - first step of glycerol utilization.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core metabolic function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016301" target="_blank" class="term-link">
+                                    GO:0016301
+                                </a>
+                            </span>
+                            <span class="term-label">kinase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6ZS86" data-a="GO:0016301" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Kinase activity - ATP-dependent phosphotransferase.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Enzymatic classification.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016740" target="_blank" class="term-link">
+                                    GO:0016740
+                                </a>
+                            </span>
+                            <span class="term-label">transferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6ZS86" data-a="GO:0016740" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Transferase activity - transfers phosphate from ATP to glycerol.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Enzymatic classification.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016773" target="_blank" class="term-link">
+                                    GO:0016773
+                                </a>
+                            </span>
+                            <span class="term-label">phosphotransferase activity, alcohol group as acceptor</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6ZS86" data-a="GO:0016773" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phosphotransferase activity, alcohol group as acceptor - glycerol hydroxyl as acceptor.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Specific enzymatic activity.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046167" target="_blank" class="term-link">
+                                    GO:0046167
+                                </a>
+                            </span>
+                            <span class="term-label">glycerol-3-phosphate biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000107
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6ZS86" data-a="GO:0046167" data-r="GO_REF:0000107" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Glycerol-3-phosphate biosynthetic process - produces glycerol-3-phosphate.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core metabolic role.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HTP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:34800366
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Quantitative high-confidence human mitochondrial proteome an...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q6ZS86" data-a="GO:0005739" data-r="PMID:34800366" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Mitochondrion - experimental evidence shows cytosolic localization, not mitochondrial.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Localization incorrect based on functional studies.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004370" target="_blank" class="term-link">
+                                    GO:0004370
+                                </a>
+                            </span>
+                            <span class="term-label">glycerol kinase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6ZS86" data-a="GO:0004370" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Glycerol kinase activity - phosphorylates glycerol to glycerol-3-phosphate.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core enzymatic function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6ZS86" data-a="GO:0005737" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytoplasm - cytosolic enzyme.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core localization.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046167" target="_blank" class="term-link">
+                                    GO:0046167
+                                </a>
+                            </span>
+                            <span class="term-label">glycerol-3-phosphate biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6ZS86" data-a="GO:0046167" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Glycerol-3-phosphate biosynthetic process - produces glycerol-3-phosphate.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core metabolic role.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019563" target="_blank" class="term-link">
+                                    GO:0019563
+                                </a>
+                            </span>
+                            <span class="term-label">glycerol catabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000041
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q6ZS86" data-a="GO:0019563" data-r="GO_REF:0000041" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Glycerol catabolic process - involved in glycerol breakdown to G3P.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Catabolic aspect of function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>ATP-dependent glycerol kinase that phosphorylates glycerol to produce glycerol-3-phosphate. Predominantly expressed in skin sebaceous glands where it has dual role: metabolic (provides G3P for lipid synthesis) and regulatory (inhibits SREBP processing to limit lipogenesis). Kinase activity essential for SREBP regulation. Loss causes alopecia and lipid accumulation in skin.</h3>
+                <span class="vote-buttons" data-g="Q6ZS86" data-a="FUNCTION: ATP-dependent glycerol kinase that phosphorylates ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004370" target="_blank" class="term-link">
+                            glycerol kinase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046167" target="_blank" class="term-link">
+                                glycerol-3-phosphate biosynthetic process
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006071" target="_blank" class="term-link">
+                                glycerol metabolic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            UniProt:Q6ZS86
+                            
+                        </span>
+                        
+                        <div class="finding-text">GK5 is skin-specialized glycerol kinase that negatively regulates SREBP signaling. Gk5^toku mouse exhibits alopecia and excessive sebum lipid accumulation. Kinase activity required for regulatory function.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000041.md" target="_blank" class="term-link">
+                            GO_REF:0000041
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniPathway vocabulary mapping.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000107.md" target="_blank" class="term-link">
+                            GO_REF:0000107
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Automatic transfer of experimentally verified manual GO annotation data to orthologs using Ensembl Compara.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link">
+                            PMID:34800366
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Quantitative high-confidence human mitochondrial proteome and its dynamics in cellular context.</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Openai</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(GK5-deep-research-openai.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q6ZS86" data-a="DOC: Deep Research Openai" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: openai<br />
+model: o3-deep-research-2025-06-26<br />
+cached: true<br />
+start_time: '2025-11-04T00:41:06.733166'<br />
+end_time: '2025-11-04T00:41:06.734231'<br />
+duration_seconds: 0.0<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: human<br />
+  gene_id: Q6ZS86<br />
+  gene_symbol: GK5<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    temperature: 0.1<br />
+    top_p: 1.0<br />
+citation_count: 71</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<p>Please provide a comprehensive research report on the gene GK5 (Q6ZS86) in human.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function. </p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<h1 id="gk5-human-glycerol-kinase-5-function-processes-and-localization">GK5 (Human Glycerol Kinase 5): Function, Processes, and Localization</h1>
+<h2 id="gene-overview-and-family">Gene Overview and Family</h2>
+<p><strong>GK5</strong> (glycerol kinase 5) is a human gene encoding a putative glycerol kinase enzyme, identified by the UniProt accession Q6ZS86 (<a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=GK5#:~:text=4%20%7D%20,3">www.genecards.org</a>). It is located on chromosome 3q23 (<a href="https://www.proteinatlas.org/ENSG00000175066-GK5/summary/gene#:~:text=Chromosome%203%20Cytoband%20q23%20Chromosome,Evidence%20at%20transcript%20level">www.proteinatlas.org</a>) and is one of several glycerol kinase paralogs in the human genome. The <em>GK</em> gene on Xp21 encodes the classical cytosolic glycerol kinase important in general metabolism, while <strong>GK5</strong> appears to be a tissue-specialized isozyme. Another paralog, <strong>GK2</strong>, is a retrogene expressed in testes (notably in the sperm tail) (<a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=GK2#:~:text=Predicted%20to%20enable%20glycerol%20kinase,See%20more">www.genecards.org</a>), highlighting how duplication created tissue-specific glycerol kinases. GK5 was originally annotated as a "putative" enzyme based on sequence homology (classified in the FGGY carbohydrate kinase family) (<a href="https://www.abcam.com/en-us/targets/gk5/23412#:~:text=Sequence%20Similarities">www.abcam.com</a>). Its predicted molecular weight is ~60 kDa, and alternative splicing yields at least two transcript variants, though a 528–amino acid isoform (GK5-v2) is predominantly expressed in human tissues (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5495269/#:~:text=Using%20a%20polyclonal%20antibody%20against,transfected">pmc.ncbi.nlm.nih.gov</a>). Initial bioinformatic analyses suggested GK5 might localize to mitochondria (<a href="https://www.ncbi.nlm.nih.gov/gene/256356#:~:text=Summary%20Predicted%20to%20enable%20glycerol,of%20Genome%20Resources%2C%20Jul%202025">www.ncbi.nlm.nih.gov</a>), but subsequent experimental evidence refined our understanding of its cellular location and function, as detailed below.</p>
+<h2 id="enzymatic-function-and-substrate-specificity">Enzymatic Function and Substrate Specificity</h2>
+<p>GK5 is an <strong>enzyme</strong> that catalyzes the ATP-dependent phosphorylation of glycerol to produce sn-glycerol-3-phosphate (<a href="https://www.abcam.com/en-us/targets/gk5/23412#:~:text=Skin,processing%20and%20lipid%20biosynthesis">www.abcam.com</a>). This reaction is the first and only step of the glycerol utilization pathway (polyol pathway) leading from free glycerol to glycerol-3-phosphate (<a href="https://www.abcam.com/en-us/targets/gk5/23412#:~:text=Polyol%20metabolism%3B%20glycerol%20degradation%20via,phosphate%20from%20glycerol%3A%20step%201%2F1">www.abcam.com</a>). Like the canonical glycerol kinase (EC 2.7.1.30), GK5 binds ATP and glycerol in its active site, transferring a phosphate group to glycerol (<a href="https://www.abcam.com/en-us/targets/gk5/23412#:~:text=Skin,processing%20and%20lipid%20biosynthesis">www.abcam.com</a>). Biochemical studies have confirmed that GK5 indeed possesses glycerol kinase activity: recombinant human GK5 protein, when expressed and purified, can phosphorylate glycerol in vitro, with measurable enzymatic activity in the pmol/min·µg range (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5495269/#:~:text=To%20determine%20whether%20GK5%20harbors,of%20the%20purified%20GK5%20to">pmc.ncbi.nlm.nih.gov</a>). Mutagenesis experiments identified two conserved aspartate residues (Asp-280 and Asp-443) critical for catalysis, as substitution of these residues abrogates GK5’s activity (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5495269/#:~:text=and%20a%20representative%20experiment%20is,coli">pmc.ncbi.nlm.nih.gov</a>). These residues are conserved in the FGGY kinase family and likely coordinate substrate or cofactor binding, indicating GK5 shares the catalytic mechanism of other glycerol kinases. Importantly, GK5 shows a high substrate specificity for glycerol – its physiological role is to channel glycerol into glycerol-3-phosphate, a key intermediate in lipid metabolism. Consistent with this function, UniProt and pathway databases place GK5 in the glycerol degradation and glycerol-3-phosphate biosynthesis pathways (<a href="https://www.abcam.com/en-us/targets/gk5/23412#:~:text=Polyol%20metabolism%3B%20glycerol%20degradation%20via,phosphate%20from%20glycerol%3A%20step%201%2F1">www.abcam.com</a>). In summary, GK5’s primary biochemical role is as a glycerol 3-phosphotransferase, generating glycerol-3-phosphate for downstream metabolic processes.</p>
+<h2 id="role-in-skin-lipid-metabolism-and-srebp-regulation">Role in Skin Lipid Metabolism and SREBP Regulation</h2>
+<p>One of the most striking aspects of GK5 is its specialized role in <strong>skin lipid homeostasis</strong>. Unlike the ubiquitously expressed X-linked GK enzyme, GK5 functions predominantly in the skin and notably in sebaceous glands (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5495269/#:~:text=homozygote%20skin%20%28Fig,2D">pmc.ncbi.nlm.nih.gov</a>). A seminal 2017 study by Zhang <em>et al.</em> discovered GK5 as a previously unrecognized regulator of lipid synthesis in the skin (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5495269/#:~:text=We%20discovered%20a%20previously%20unrecognized,other%20skin%20lipids%20are%20necessary">pmc.ncbi.nlm.nih.gov</a>). In normal skin, GK5 acts as a <strong>negative regulator of SREBP signaling</strong> – it forms a complex with sterol regulatory element-binding proteins (SREBPs) (specifically binding the C-terminal regulatory domain of SREBP-1 and -2) and thereby <strong>inhibits SREBP processing and activation</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5495269/#:~:text=expressed%20predominantly%20in%20sebaceous%20glands,specific">pmc.ncbi.nlm.nih.gov</a>). SREBPs are transcription factors that, when activated, translocate to the nucleus and upregulate nearly all enzymes required for cholesterol and fatty acid synthesis. By restraining SREBP activation in sebocytes, GK5 helps limit the expression of lipid biosynthetic genes in the skin (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5495269/#:~:text=expressed%20predominantly%20in%20sebaceous%20glands,specific">pmc.ncbi.nlm.nih.gov</a>). In other words, GK5 serves as a “brake” on sebum lipid production under normal conditions, acting in a skin-specific feedback mechanism for cholesterol and fatty acid homeostasis (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5495269/#:~:text=We%20discovered%20a%20previously%20unrecognized,other%20skin%20lipids%20are%20necessary">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5495269/#:~:text=expressed%20predominantly%20in%20sebaceous%20glands,specific">pmc.ncbi.nlm.nih.gov</a>). This regulatory function is independent of systemic cholesterol regulation in other tissues, making GK5 part of a <strong>skin-exclusive metabolic control system</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5495269/#:~:text=We%20discovered%20a%20previously%20unrecognized,other%20skin%20lipids%20are%20necessary">pmc.ncbi.nlm.nih.gov</a>).</p>
+<p>The importance of GK5’s role was demonstrated by the <strong>Gk5^toku</strong> mouse model, a recessive loss-of-function mutant identified in an N-ethyl-N-nitrosourea (ENU) screen (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5495269/#:~:text=The%20recessive%20N,nucleus%20and%20led%20to%20elevated">pmc.ncbi.nlm.nih.gov</a>). Mice lacking GK5 in the skin exhibited <strong>excessive accumulation of lipids</strong> – including cholesterol, triglycerides, and ceramides – in the skin, indicating that SREBP-driven lipid synthesis went unchecked without GK5 (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5495269/#:~:text=We%20discovered%20a%20previously%20unrecognized,other%20skin%20lipids%20are%20necessary">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5495269/#:~:text=The%20recessive%20N,nucleus%20and%20led%20to%20elevated">pmc.ncbi.nlm.nih.gov</a>). These GK5-deficient mice developed pronounced alopecia (hair loss) due to impaired hair growth and maintenance (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5495269/#:~:text=of%20cholesterol%20regulation%20in%20other,other%20skin%20lipids%20are%20necessary">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5495269/#:~:text=The%20recessive%20N,nucleus%20and%20led%20to%20elevated">pmc.ncbi.nlm.nih.gov</a>). Proper hair follicle function requires a balanced production of sebum lipids, and the GK5-null mice showed that too much cholesterol and other lipids in the skin can disrupt hair growth (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5495269/#:~:text=of%20cholesterol%20regulation%20in%20other,other%20skin%20lipids%20are%20necessary">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5495269/#:~:text=The%20recessive%20N,nucleus%20and%20led%20to%20elevated">pmc.ncbi.nlm.nih.gov</a>). Mechanistically, in GK5-null (<strong>toku/toku</strong>) mice, the absence of GK5 led to uninhibited SREBP processing: the cleaved, active forms of SREBP-1 and SREBP-2 accumulated in the nucleus of skin sebocytes (while SREBP regulation in the liver remained normal) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5495269/#:~:text=expressed%20predominantly%20in%20sebaceous%20glands,specific">pmc.ncbi.nlm.nih.gov</a>). This resulted in <strong>overexpression of lipid-synthesis enzymes in the skin</strong> and overproduction of lipids. Notably, the phenotype could be partially reversed by treating the mice with simvastatin (an HMG-CoA reductase inhibitor that lowers cholesterol synthesis), which mitigated the excess cholesterol in skin and improved hair growth (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5495269/#:~:text=regulatory%20domains%2C%20inhibiting%20SREBP%20processing,regulation%20elsewhere%20in%20the%20body">pmc.ncbi.nlm.nih.gov</a>). This rescue experiment provided strong evidence that the hair loss and skin abnormalities were indeed due to dysregulated cholesterol biosynthesis downstream of SREBP, linking GK5’s regulatory role to a physiological outcome (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5495269/#:~:text=regulatory%20domains%2C%20inhibiting%20SREBP%20processing,regulation%20elsewhere%20in%20the%20body">pmc.ncbi.nlm.nih.gov</a>).</p>
+<p>Intriguingly, the <strong>kinase activity of GK5 appears essential for its regulatory function</strong> in vivo. Mice engineered to express a kinase-dead GK5 mutant (with catalytic aspartates mutated) displayed similar hair growth defects as the null mutants (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5495269/#:~:text=expressed%20predominantly%20in%20sebaceous%20glands,specific">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5495269/#:~:text=but%20not%20in%20the%20liver%3B,regulation%20elsewhere%20in%20the%20body">pmc.ncbi.nlm.nih.gov</a>). In these mice, GK5 protein was present but enzymatically inactive, and it failed to properly suppress SREBP-driven lipid synthesis, leading to the same pathological outcome. This finding suggests that it is not only the physical presence of GK5 but also its glycerol-phosphorylating activity that is required to control SREBP. One hypothesis is that the product of the GK5 reaction, glycerol-3-phosphate, or the act of ATP consumption might be integral to the signaling mechanism that restrains SREBP processing in sebaceous cells. Supporting the importance of GK5’s enzyme activity, researchers observed a compensatory upregulation of the X-linked glycerol kinase (GK) in the skin of GK5-knockout mice – enough to normalize total glycerol kinase activity in skin tissue (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5495269/#:~:text=match%20at%20L681%20lipid%20synthesis,to%20bind%20to%20each%20other">pmc.ncbi.nlm.nih.gov</a>). Despite this compensation in glycerol phosphorylation capacity, the mice still showed lipid over-accumulation and hair loss, underscoring that <strong>GK5’s unique role in SREBP regulation could not be fulfilled by the other kinase</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5495269/#:~:text=match%20at%20L681%20lipid%20synthesis,to%20bind%20to%20each%20other">pmc.ncbi.nlm.nih.gov</a>). Interestingly, GK5 and the canonical GK were found to physically interact in cells (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5495269/#:~:text=lipid%20synthesis,to%20bind%20to%20each%20other">pmc.ncbi.nlm.nih.gov</a>), hinting at a possible hetero-oligomeric or complex formation. While the significance of GK5–GK interaction is not fully elucidated, it suggests coordination between the isozyme and the house-keeping enzyme, potentially to fine-tune glycerol metabolism or signaling in tissues where both are present (like skin). In summary, GK5’s primary biological role is twofold: (1) <strong>metabolic</strong>, providing glycerol-3-phosphate for lipid synthesis in sebaceous glands, and (2) <strong>regulatory</strong>, modulating the SREBP pathway to prevent excessive lipid production in the skin (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5495269/#:~:text=We%20discovered%20a%20previously%20unrecognized,other%20skin%20lipids%20are%20necessary">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5495269/#:~:text=expressed%20predominantly%20in%20sebaceous%20glands,specific">pmc.ncbi.nlm.nih.gov</a>).</p>
+<h2 id="expression-patterns-and-subcellular-localization">Expression Patterns and Subcellular Localization</h2>
+<p><strong>Tissue expression:</strong> GK5 is expressed in a broad range of tissues at the mRNA level, but with notably higher functional expression in skin. Transcriptomic surveys (e.g. GTEx and HPA) indicate <strong>GK5 mRNA is detected in virtually all examined tissues (low tissue specificity)</strong>, with particularly appreciable levels in digestive tract, skin, and other organs (<a href="https://www.proteinatlas.org/ENSG00000175066-GK5/tissue#:~:text=Tissue%20expression%20cluster%20%28RNA%29,IMMUNOHISTOCHEMISTRY%20DATA%20RELIABILITY%20Data%20reliability">www.proteinatlas.org</a>). Despite this widespread transcription, actual protein expression or abundance appears more restricted. In mice, <em>Gk5</em> mRNA was found in many tissues, yet immunoblotting could detect GK5 protein <strong>only in the skin</strong> (and not in liver, muscle, adipose, brain, etc.) under normal conditions (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5495269/#:~:text=homozygote%20skin%20%28Fig,2D">pmc.ncbi.nlm.nih.gov</a>). This suggests that GK5 protein expression is either very low or regulated post-transcriptionally outside of skin. In human protein profiling data, GK5 shows predominantly cytoplasmic immunoreactivity in many tissues, but the antibody staining intensity varies and is only moderately consistent with RNA levels (<a href="https://www.proteinatlas.org/ENSG00000175066-GK5/tissue#:~:text=Tissue%20distribution%20%28RNA%29,i%7D%20Image%3A%20Approved%20Approved">www.proteinatlas.org</a>). The highest and most consistent expression of GK5 is observed in the <strong>skin’s sebaceous glands</strong>. Immunohistochemistry in mouse skin localizes GK5 strongly to sebaceous gland cells adjacent to hair follicles (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5495269/#:~:text=homozygote%20skin%20%28Fig,2D">pmc.ncbi.nlm.nih.gov</a>), aligning with its role in sebum lipid metabolism. Therefore, GK5 can be considered a <strong>sebocyte-enriched enzyme</strong>, even though its gene is not truly tissue-exclusive (low-level expression elsewhere may not translate into significant protein function).</p>
+<p><strong>Subcellular localization:</strong> Bioinformatics initially predicted a mitochondrial localization for GK5 (possibly due to an N-terminal sequence resembling a mitochondrial targeting signal in one isoform) (<a href="https://www.ncbi.nlm.nih.gov/gene/256356#:~:text=Summary%20Predicted%20to%20enable%20glycerol,of%20Genome%20Resources%2C%20Jul%202025">www.ncbi.nlm.nih.gov</a>). However, experimental evidence indicates that GK5 is primarily a <strong>cytosolic</strong> protein. When GK5 was expressed in cultured cells (e.g. FLAG-tagged human GK5 in NIH 3T3 fibroblasts), it was observed to reside <strong>mainly in the cytoplasm</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5495269/#:~:text=but%20not%20in%20other%20tissues,2D">pmc.ncbi.nlm.nih.gov</a>). No specific accumulation in mitochondria was noted in these assays, and the protein lacked transmembrane regions, suggesting it is a soluble cytosolic enzyme. The UniProt/Swiss-Prot annotation, updated after functional studies, lists GK5 as an intracellular, cytosolic protein (<a href="https://www.abcam.com/en-us/targets/gk5/23412#:~:text=Cellular%20localization">www.abcam.com</a>). Additionally, GK5’s interaction with SREBPs likely occurs at the cytosolic side of the endoplasmic reticulum or Golgi membranes where SREBP precursors are located. This implies that GK5 may <strong>associate with membranes</strong> or protein complexes in the cytosol without being an integral membrane protein. Consistently, the Human Protein Atlas reports “cytoplasmic and membranous expression in most tissues” for GK5 protein (<a href="https://www.proteinatlas.org/ENSG00000175066-GK5/tissue#:~:text=Tissue%20distribution%20%28RNA%29,IMMUNOHISTOCHEMISTRY%20DATA%20RELIABILITY%20Data%20reliability">www.proteinatlas.org</a>), meaning GK5 can sometimes be seen in a punctate pattern near membranes (possibly reflecting proximity to ER or lipid droplets in sebocytes). Overall, GK5 carries out its function in the cell interior, predominantly in the cytosolic compartment. Its cytosolic localization is appropriate for an enzyme that must access glycerol (a freely diffusible metabolite) and ATP, and that interacts with cytosolic domains of SREBP cleavage-regulating machinery.</p>
+<h2 id="emerging-links-to-disease-and-current-research-insights">Emerging Links to Disease and Current Research Insights</h2>
+<p>Beyond its fundamental role in skin biology, recent research has implicated GK5 in pathological and clinical contexts, highlighting its broader significance. One notable finding is the involvement of GK5 in cancer cell metabolism and drug resistance. <strong>Zhou *et al. (2019)</strong> discovered that GK5 is upregulated in certain therapy-resistant cancers, specifically in non-small cell lung cancer (NSCLC) cells resistant to the EGFR inhibitor gefitinib (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6385389/#:~:text=We%20found%20that%20the%20exosomal,apoptosis%20via%20SREBP1%2FSCD1%20signaling%20pathway">pmc.ncbi.nlm.nih.gov</a>). They found that <strong>GK5 mRNA and protein levels were significantly higher in gefitinib-resistant NSCLC cell lines</strong> (PC9/R and H1975) compared to their sensitive counterparts, and intriguingly, GK5 mRNA was also elevated in exosomes from the plasma of resistant patients (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6385389/#:~:text=We%20found%20that%20the%20exosomal,apoptosis%20via%20SREBP1%2FSCD1%20signaling%20pathway">pmc.ncbi.nlm.nih.gov</a>). This suggests GK5 might serve as a <strong>biomarker of drug resistance</strong>, potentially measurable via liquid biopsy. Functionally, GK5 appears to contribute to the resistance phenotype: knocking down GK5 in resistant lung cancer cells led to <strong>mitochondrial dysfunction, cell-cycle arrest, and apoptosis</strong> in those cells (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6385389/#:~:text=significantly%20upregulated%20in%20gefitinib,apoptosis%20via%20SREBP1%2FSCD1%20signaling%20pathway">pmc.ncbi.nlm.nih.gov</a>). Mechanistic analysis linked this effect to the <strong>SREBP1/SCD1 lipid signaling pathway</strong> – silencing GK5 resulted in lower levels of active SREBP1 and its target stearoyl-CoA desaturase-1 (SCD1), a key enzyme in fatty-acid metabolism (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6385389/#:~:text=match%20at%20L507%20significantly%20repressed,2%20were%20also%20repressed">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6385389/#:~:text=match%20at%20L621%20inhibit%20the,resistance%20via%20SREBP1%2FSCD1%20signaling%20pathway">pmc.ncbi.nlm.nih.gov</a>). The authors concluded that GK5 helps maintain SREBP1 activity and unsaturated lipid production in cancer cells, thereby promoting cell survival under drug treatment (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6385389/#:~:text=match%20at%20L621%20inhibit%20the,resistance%20via%20SREBP1%2FSCD1%20signaling%20pathway">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6385389/#:~:text=We%20demonstrated%20that%20GK5%20confers,to%20EGFR%20tyrosine%20kinase%20inhibitors">pmc.ncbi.nlm.nih.gov</a>). In essence, a high GK5 level supports augmented lipogenesis (through SREBP/SCD1) which cancer cells can exploit to build membranes and combat the stress of EGFR inhibition. By <strong>preventing apoptosis</strong> in this way, GK5 confers a survival advantage – a phenomenon succinctly summarized by Zhou et al.: “GK5 confers gefitinib resistance in lung cancer by inhibiting apoptosis and cell cycle arrest” (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6385389/#:~:text=We%20demonstrated%20that%20GK5%20confers,to%20EGFR%20tyrosine%20kinase%20inhibitors">pmc.ncbi.nlm.nih.gov</a>). This finding is significant because it extends GK5’s relevance from a specialized metabolic enzyme in normal skin to a potential <strong>therapeutic target in oncology</strong>. If compounds could be developed to inhibit GK5, they might induce lipogenic collapse in tumor cells and restore sensitivity to treatments like tyrosine kinase inhibitors. Indeed, GK5 was proposed as a novel target for overcoming EGFR-inhibitor resistance in NSCLC (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6385389/#:~:text=We%20demonstrated%20that%20GK5%20confers,to%20EGFR%20tyrosine%20kinase%20inhibitors">pmc.ncbi.nlm.nih.gov</a>), though such strategies remain to be tested clinically.</p>
+<p>The unique phenotype of GK5-deficient mice (alopecia with sebaceous lipid overload) also raises medical questions in dermatology. While <strong>no human hereditary disorder has yet been directly attributed to GK5 mutations</strong>, the mouse data suggest that <strong>variation in GK5 activity could impact skin and hair health</strong>. It is conceivable that polymorphisms or dysregulation of GK5 might contribute to conditions of sebaceous gland dysfunction – for example, disorders of hair growth, seborrhea, or acne – where lipid production is imbalanced. A 2019 molecular evolution study noted that certain sebum-producing genes are lost or inactivated in species that lack sebaceous glands (like whales) (<a href="https://academic.oup.com/mbe/article-abstract/36/6/1270/5415914#:~:text=lineages%2C%20including%20the%20iconic%20Cetacea,Partial%20loss%20profiles%20were">academic.oup.com</a>). Although GK5 itself was not highlighted in that study’s gene set, its role in sebocyte lipid regulation aligns with the concept of specialized lipid metabolism genes underpinning sebaceous gland function. Clinically, GK5 is beginning to appear in genetic testing panels and research. The NIH Genetic Testing Registry lists GK5 among genes of interest (updated in 2025) (<a href="http://www.cloud-clone.com/items/R859.html#:~:text=Glycerol%20Kinase%205%20%28GK5%29%20,Glycerol%20kinase%20catalyzes%20the">www.cloud-clone.com</a>), possibly in the context of multi-gene panels for skin disorders or metabolic studies. Further research is needed to determine if human GK5 variants cause subtle skin phenotypes or if GK5 expression changes are involved in common skin conditions. On the other hand, the <strong>cancer research community has taken interest in GK5</strong> as illustrated by the NSCLC study and other metabolic works. GK5’s connection to the SREBP pathway ties it into a larger trend of investigating metabolic enzymes that double as regulatory proteins (sometimes termed “moonlighting” functions). For example, the liver-expressed glycerol kinase (GK) was recently shown to drive lipogenesis in fatty liver disease by activating SREBP-1c transcription (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11633478/#:~:text=Glycerol%20Kinase%20Drives%20Hepatic%20de,6%E2%80%9325%20mM%20glucose%20had">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pubmed.ncbi.nlm.nih.gov/39418169/#:~:text=Glycerol%20Kinase%20Drives%20Hepatic%20de,expressed%20as%20mean%20%C2%B1%20SEM">pubmed.ncbi.nlm.nih.gov</a>), drawing a parallel to how GK5 modulates SREBP in skin. Such findings reinforce the idea that glycerol kinases are not mere passive metabolic catalysts but can actively influence lipid signaling networks.</p>
+<h2 id="conclusion">Conclusion</h2>
+<p><strong>GK5 (glycerol kinase 5)</strong> emerges as a multifaceted gene whose product plays a crucial role at the interface of metabolism and regulation in human cells. Biochemically, it performs a classic enzymatic function – phosphorylating glycerol to form glycerol-3-phosphate – thereby feeding into triglyceride synthesis and energy metabolism (<a href="https://www.abcam.com/en-us/targets/gk5/23412#:~:text=Skin,processing%20and%20lipid%20biosynthesis">www.abcam.com</a>). Biologically, GK5 has carved out a niche in the skin, where it is predominantly expressed in sebaceous glands and acts as a watchdog of lipid production. It <strong>binds and restrains SREBP transcription factors</strong> in these cells, preventing overproduction of cholesterol and fatty acids in the skin (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5495269/#:~:text=expressed%20predominantly%20in%20sebaceous%20glands,specific">pmc.ncbi.nlm.nih.gov</a>). This skin-specific function is vital for maintaining healthy hair and skin lipid balance, as evidenced by the alopecia and lipid accumulation seen in GK5-null mice (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5495269/#:~:text=of%20cholesterol%20regulation%20in%20other,other%20skin%20lipids%20are%20necessary">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5495269/#:~:text=The%20recessive%20N,nucleus%20and%20led%20to%20elevated">pmc.ncbi.nlm.nih.gov</a>). The enzymatic activity of GK5 is integral to this regulatory role, highlighting an elegant coupling between metabolism (glycerol-phosphate production) and signaling (SREBP modulation) in sebocytes (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5495269/#:~:text=regulatory%20domains%2C%20inhibiting%20SREBP%20processing,regulation%20elsewhere%20in%20the%20body">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5495269/#:~:text=match%20at%20L681%20lipid%20synthesis,to%20bind%20to%20each%20other">pmc.ncbi.nlm.nih.gov</a>). Current research has expanded the relevance of GK5, identifying it as a player in cancer cell lipid metabolism and a potential mediator of drug resistance via the SREBP/SCD1 pathway (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6385389/#:~:text=match%20at%20L621%20inhibit%20the,resistance%20via%20SREBP1%2FSCD1%20signaling%20pathway">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6385389/#:~:text=We%20demonstrated%20that%20GK5%20confers,to%20EGFR%20tyrosine%20kinase%20inhibitors">pmc.ncbi.nlm.nih.gov</a>). These insights underscore the broader principle that metabolic enzymes can have tissue-specific signaling functions with physiological and pathological consequences. Going forward, GK5 is a gene of interest in fields ranging from dermatology to oncology. Its study exemplifies how understanding the <strong>precise function, location, and interactions</strong> of a gene product can illuminate its role in health and disease. In summary, human GK5 is a glycerol kinase that not only fuels lipid synthesis with glycerol-3-phosphate, but also ensures that lipid synthesis in the skin is kept in check – a dual role that is supported by rigorous experimental evidence from molecular, cellular, and organismal studies (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5495269/#:~:text=We%20discovered%20a%20previously%20unrecognized,other%20skin%20lipids%20are%20necessary">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5495269/#:~:text=expressed%20predominantly%20in%20sebaceous%20glands,specific">pmc.ncbi.nlm.nih.gov</a>). </p>
+<p><strong>References:</strong> Key data and conclusions are drawn from recent authoritative sources, including Zhang <em>et al.</em> (2017) in <em>PNAS</em> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5495269/#:~:text=We%20discovered%20a%20previously%20unrecognized,other%20skin%20lipids%20are%20necessary">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5495269/#:~:text=expressed%20predominantly%20in%20sebaceous%20glands,specific">pmc.ncbi.nlm.nih.gov</a>), which first elucidated GK5’s skin-specific function, and Zhou <em>et al.</em> (2019) in <em>J. Exp. Clin. Cancer Res.</em> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6385389/#:~:text=We%20found%20that%20the%20exosomal,apoptosis%20via%20SREBP1%2FSCD1%20signaling%20pathway">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6385389/#:~:text=We%20demonstrated%20that%20GK5%20confers,to%20EGFR%20tyrosine%20kinase%20inhibitors">pmc.ncbi.nlm.nih.gov</a>), which explored GK5 in cancer metabolism, among other database and literature resources as cited throughout. All evidence has been referenced with direct citations to ensure accuracy and provide original publication context (with publication dates and links for verification).</p>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>AnnotationURLCitation(end_index=331, start_index=233, title='GK5 Gene - GeneCards | GLPK5 Protein | GLPK5 Antibody', type='url_citation', url='https://www.genecards.org/cgi-bin/carddisp.pl?gene=GK5#:~:text=4%20%7D%20,3')</li>
+<li>AnnotationURLCitation(end_index=541, start_index=366, title='GK5 gene information - The Human Protein Atlas', type='url_citation', url='https://www.proteinatlas.org/ENSG00000175066-GK5/summary/gene#:~:text=Chromosome%203%20Cytoband%20q23%20Chromosome,Evidence%20at%20transcript%20level')</li>
+<li>AnnotationURLCitation(end_index=1000, start_index=860, title='GK2 Gene - GeneCards | GLPK2 Protein | GLPK2 Antibody', type='url_citation', url='https://www.genecards.org/cgi-bin/carddisp.pl?gene=GK2#:~:text=Predicted%20to%20enable%20glycerol%20kinase,See%20more')</li>
+<li>AnnotationURLCitation(end_index=1300, start_index=1204, title='GK5 | Abcam', type='url_citation', url='https://www.abcam.com/en-us/targets/gk5/23412#:~:text=Sequence%20Similarities')</li>
+<li>AnnotationURLCitation(end_index=1635, start_index=1496, title='Skin-specific regulation of SREBP processing and lipid biosynthesis by glycerol kinase 5 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC5495269/#:~:text=Using%20a%20polyclonal%20antibody%20against,transfected')</li>
+<li>AnnotationURLCitation(end_index=1872, start_index=1713, title='GK5 glycerol kinase 5 [Homo sapiens (human)] - Gene - NCBI', type='url_citation', url='https://www.ncbi.nlm.nih.gov/gene/256356#:~:text=Summary%20Predicted%20to%20enable%20glycerol,of%20Genome%20Resources%2C%20Jul%202025')</li>
+<li>AnnotationURLCitation(end_index=2280, start_index=2163, title='GK5 | Abcam', type='url_citation', url='https://www.abcam.com/en-us/targets/gk5/23412#:~:text=Skin,processing%20and%20lipid%20biosynthesis')</li>
+<li>AnnotationURLCitation(end_index=2599, start_index=2427, title='GK5 | Abcam', type='url_citation', url='https://www.abcam.com/en-us/targets/gk5/23412#:~:text=Polyol%20metabolism%3B%20glycerol%20degradation%20via,phosphate%20from%20glycerol%3A%20step%201%2F1')</li>
+<li>AnnotationURLCitation(end_index=2858, start_index=2741, title='GK5 | Abcam', type='url_citation', url='https://www.abcam.com/en-us/targets/gk5/23412#:~:text=Skin,processing%20and%20lipid%20biosynthesis')</li>
+<li>AnnotationURLCitation(end_index=3259, start_index=3104, title='Skin-specific regulation of SREBP processing and lipid biosynthesis by glycerol kinase 5 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC5495269/#:~:text=To%20determine%20whether%20GK5%20harbors,of%20the%20purified%20GK5%20to')</li>
+<li>AnnotationURLCitation(end_index=3565, start_index=3434, title='Skin-specific regulation of SREBP processing and lipid biosynthesis by glycerol kinase 5 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC5495269/#:~:text=and%20a%20representative%20experiment%20is,coli')</li>
+<li>AnnotationURLCitation(end_index=4246, start_index=4074, title='GK5 | Abcam', type='url_citation', url='https://www.abcam.com/en-us/targets/gk5/23412#:~:text=Polyol%20metabolism%3B%20glycerol%20degradation%20via,phosphate%20from%20glycerol%3A%20step%201%2F1')</li>
+<li>AnnotationURLCitation(end_index=4789, start_index=4676, title='Skin-specific regulation of SREBP processing and lipid biosynthesis by glycerol kinase 5 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC5495269/#:~:text=homozygote%20skin%20%28Fig,2D')</li>
+<li>AnnotationURLCitation(end_index=5086, start_index=4915, title='Skin-specific regulation of SREBP processing and lipid biosynthesis by glycerol kinase 5 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC5495269/#:~:text=We%20discovered%20a%20previously%20unrecognized,other%20skin%20lipids%20are%20necessary')</li>
+<li>AnnotationURLCitation(end_index=5513, start_index=5369, title='Skin-specific regulation of SREBP processing and lipid biosynthesis by glycerol kinase 5 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC5495269/#:~:text=expressed%20predominantly%20in%20sebaceous%20glands,specific')</li>
+<li>AnnotationURLCitation(end_index=5943, start_index=5799, title='Skin-specific regulation of SREBP processing and lipid biosynthesis by glycerol kinase 5 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC5495269/#:~:text=expressed%20predominantly%20in%20sebaceous%20glands,specific')</li>
+<li>AnnotationURLCitation(end_index=6295, start_index=6124, title='Skin-specific regulation of SREBP processing and lipid biosynthesis by glycerol kinase 5 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC5495269/#:~:text=We%20discovered%20a%20previously%20unrecognized,other%20skin%20lipids%20are%20necessary')</li>
+<li>AnnotationURLCitation(end_index=6440, start_index=6296, title='Skin-specific regulation of SREBP processing and lipid biosynthesis by glycerol kinase 5 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC5495269/#:~:text=expressed%20predominantly%20in%20sebaceous%20glands,specific')</li>
+<li>AnnotationURLCitation(end_index=6771, start_index=6600, title='Skin-specific regulation of SREBP processing and lipid biosynthesis by glycerol kinase 5 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC5495269/#:~:text=We%20discovered%20a%20previously%20unrecognized,other%20skin%20lipids%20are%20necessary')</li>
+<li>AnnotationURLCitation(end_index=7080, start_index=6941, title='Skin-specific regulation of SREBP processing and lipid biosynthesis by glycerol kinase 5 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC5495269/#:~:text=The%20recessive%20N,nucleus%20and%20led%20to%20elevated')</li>
+<li>AnnotationURLCitation(end_index=7470, start_index=7299, title='Skin-specific regulation of SREBP processing and lipid biosynthesis by glycerol kinase 5 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC5495269/#:~:text=We%20discovered%20a%20previously%20unrecognized,other%20skin%20lipids%20are%20necessary')</li>
+<li>AnnotationURLCitation(end_index=7610, start_index=7471, title='Skin-specific regulation of SREBP processing and lipid biosynthesis by glycerol kinase 5 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC5495269/#:~:text=The%20recessive%20N,nucleus%20and%20led%20to%20elevated')</li>
+<li>AnnotationURLCitation(end_index=7889, start_index=7723, title='Skin-specific regulation of SREBP processing and lipid biosynthesis by glycerol kinase 5 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC5495269/#:~:text=of%20cholesterol%20regulation%20in%20other,other%20skin%20lipids%20are%20necessary')</li>
+<li>AnnotationURLCitation(end_index=8029, start_index=7890, title='Skin-specific regulation of SREBP processing and lipid biosynthesis by glycerol kinase 5 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC5495269/#:~:text=The%20recessive%20N,nucleus%20and%20led%20to%20elevated')</li>
+<li>AnnotationURLCitation(end_index=8383, start_index=8217, title='Skin-specific regulation of SREBP processing and lipid biosynthesis by glycerol kinase 5 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC5495269/#:~:text=of%20cholesterol%20regulation%20in%20other,other%20skin%20lipids%20are%20necessary')</li>
+<li>AnnotationURLCitation(end_index=8523, start_index=8384, title='Skin-specific regulation of SREBP processing and lipid biosynthesis by glycerol kinase 5 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC5495269/#:~:text=The%20recessive%20N,nucleus%20and%20led%20to%20elevated')</li>
+<li>AnnotationURLCitation(end_index=8924, start_index=8780, title='Skin-specific regulation of SREBP processing and lipid biosynthesis by glycerol kinase 5 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC5495269/#:~:text=expressed%20predominantly%20in%20sebaceous%20glands,specific')</li>
+<li>AnnotationURLCitation(end_index=9442, start_index=9260, title='Skin-specific regulation of SREBP processing and lipid biosynthesis by glycerol kinase 5 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC5495269/#:~:text=regulatory%20domains%2C%20inhibiting%20SREBP%20processing,regulation%20elsewhere%20in%20the%20body')</li>
+<li>AnnotationURLCitation(end_index=9851, start_index=9669, title='Skin-specific regulation of SREBP processing and lipid biosynthesis by glycerol kinase 5 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC5495269/#:~:text=regulatory%20domains%2C%20inhibiting%20SREBP%20processing,regulation%20elsewhere%20in%20the%20body')</li>
+<li>AnnotationURLCitation(end_index=10244, start_index=10100, title='Skin-specific regulation of SREBP processing and lipid biosynthesis by glycerol kinase 5 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC5495269/#:~:text=expressed%20predominantly%20in%20sebaceous%20glands,specific')</li>
+<li>AnnotationURLCitation(end_index=10401, start_index=10245, title='Skin-specific regulation of SREBP processing and lipid biosynthesis by glycerol kinase 5 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC5495269/#:~:text=but%20not%20in%20the%20liver%3B,regulation%20elsewhere%20in%20the%20body')</li>
+<li>AnnotationURLCitation(end_index=11325, start_index=11174, title='Skin-specific regulation of SREBP processing and lipid biosynthesis by glycerol kinase 5 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC5495269/#:~:text=match%20at%20L681%20lipid%20synthesis,to%20bind%20to%20each%20other')</li>
+<li>AnnotationURLCitation(end_index=11706, start_index=11555, title='Skin-specific regulation of SREBP processing and lipid biosynthesis by glycerol kinase 5 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC5495269/#:~:text=match%20at%20L681%20lipid%20synthesis,to%20bind%20to%20each%20other')</li>
+<li>AnnotationURLCitation(end_index=11922, start_index=11791, title='Skin-specific regulation of SREBP processing and lipid biosynthesis by glycerol kinase 5 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC5495269/#:~:text=lipid%20synthesis,to%20bind%20to%20each%20other')</li>
+<li>AnnotationURLCitation(end_index=12655, start_index=12484, title='Skin-specific regulation of SREBP processing and lipid biosynthesis by glycerol kinase 5 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC5495269/#:~:text=We%20discovered%20a%20previously%20unrecognized,other%20skin%20lipids%20are%20necessary')</li>
+<li>AnnotationURLCitation(end_index=12800, start_index=12656, title='Skin-specific regulation of SREBP processing and lipid biosynthesis by glycerol kinase 5 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC5495269/#:~:text=expressed%20predominantly%20in%20sebaceous%20glands,specific')</li>
+<li>AnnotationURLCitation(end_index=13410, start_index=13216, title='Tissue expression of GK5 - Summary - The Human Protein Atlas', type='url_citation', url='https://www.proteinatlas.org/ENSG00000175066-GK5/tissue#:~:text=Tissue%20expression%20cluster%20%28RNA%29,IMMUNOHISTOCHEMISTRY%20DATA%20RELIABILITY%20Data%20reliability')</li>
+<li>AnnotationURLCitation(end_index=13813, start_index=13700, title='Skin-specific regulation of SREBP processing and lipid biosynthesis by glycerol kinase 5 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC5495269/#:~:text=homozygote%20skin%20%28Fig,2D')</li>
+<li>AnnotationURLCitation(end_index=14286, start_index=14125, title='Tissue expression of GK5 - Summary - The Human Protein Atlas', type='url_citation', url='https://www.proteinatlas.org/ENSG00000175066-GK5/tissue#:~:text=Tissue%20distribution%20%28RNA%29,i%7D%20Image%3A%20Approved%20Approved')</li>
+<li>AnnotationURLCitation(end_index=14609, start_index=14496, title='Skin-specific regulation of SREBP processing and lipid biosynthesis by glycerol kinase 5 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC5495269/#:~:text=homozygote%20skin%20%28Fig,2D')</li>
+<li>AnnotationURLCitation(end_index=15225, start_index=15066, title='GK5 glycerol kinase 5 [Homo sapiens (human)] - Gene - NCBI', type='url_citation', url='https://www.ncbi.nlm.nih.gov/gene/256356#:~:text=Summary%20Predicted%20to%20enable%20glycerol,of%20Genome%20Resources%2C%20Jul%202025')</li>
+<li>AnnotationURLCitation(end_index=15582, start_index=15463, title='Skin-specific regulation of SREBP processing and lipid biosynthesis by glycerol kinase 5 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC5495269/#:~:text=but%20not%20in%20other%20tissues,2D')</li>
+<li>AnnotationURLCitation(end_index=15957, start_index=15861, title='GK5 | Abcam', type='url_citation', url='https://www.abcam.com/en-us/targets/gk5/23412#:~:text=Cellular%20localization')</li>
+<li>AnnotationURLCitation(end_index=16562, start_index=16376, title='Tissue expression of GK5 - Summary - The Human Protein Atlas', type='url_citation', url='https://www.proteinatlas.org/ENSG00000175066-GK5/tissue#:~:text=Tissue%20distribution%20%28RNA%29,IMMUNOHISTOCHEMISTRY%20DATA%20RELIABILITY%20Data%20reliability')</li>
+<li>AnnotationURLCitation(end_index=17696, start_index=17524, title='Glycerol kinase 5 confers gefitinib resistance through SREBP1/SCD1 signaling pathway - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC6385389/#:~:text=We%20found%20that%20the%20exosomal,apoptosis%20via%20SREBP1%2FSCD1%20signaling%20pathway')</li>
+<li>AnnotationURLCitation(end_index=18139, start_index=17967, title='Glycerol kinase 5 confers gefitinib resistance through SREBP1/SCD1 signaling pathway - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC6385389/#:~:text=We%20found%20that%20the%20exosomal,apoptosis%20via%20SREBP1%2FSCD1%20signaling%20pathway')</li>
+<li>AnnotationURLCitation(end_index=18638, start_index=18456, title='Glycerol kinase 5 confers gefitinib resistance through SREBP1/SCD1 signaling pathway - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC6385389/#:~:text=significantly%20upregulated%20in%20gefitinib,apoptosis%20via%20SREBP1%2FSCD1%20signaling%20pathway')</li>
+<li>AnnotationURLCitation(end_index=19029, start_index=18872, title='Glycerol kinase 5 confers gefitinib resistance through SREBP1/SCD1 signaling pathway - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC6385389/#:~:text=match%20at%20L507%20significantly%20repressed,2%20were%20also%20repressed')</li>
+<li>AnnotationURLCitation(end_index=19202, start_index=19030, title='Glycerol kinase 5 confers gefitinib resistance through SREBP1/SCD1 signaling pathway - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC6385389/#:~:text=match%20at%20L621%20inhibit%20the,resistance%20via%20SREBP1%2FSCD1%20signaling%20pathway')</li>
+<li>AnnotationURLCitation(end_index=19541, start_index=19369, title='Glycerol kinase 5 confers gefitinib resistance through SREBP1/SCD1 signaling pathway - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC6385389/#:~:text=match%20at%20L621%20inhibit%20the,resistance%20via%20SREBP1%2FSCD1%20signaling%20pathway')</li>
+<li>AnnotationURLCitation(end_index=19709, start_index=19542, title='Glycerol kinase 5 confers gefitinib resistance through SREBP1/SCD1 signaling pathway - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC6385389/#:~:text=We%20demonstrated%20that%20GK5%20confers,to%20EGFR%20tyrosine%20kinase%20inhibitors')</li>
+<li>AnnotationURLCitation(end_index=20274, start_index=20107, title='Glycerol kinase 5 confers gefitinib resistance through SREBP1/SCD1 signaling pathway - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC6385389/#:~:text=We%20demonstrated%20that%20GK5%20confers,to%20EGFR%20tyrosine%20kinase%20inhibitors')</li>
+<li>AnnotationURLCitation(end_index=20872, start_index=20705, title='Glycerol kinase 5 confers gefitinib resistance through SREBP1/SCD1 signaling pathway - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC6385389/#:~:text=We%20demonstrated%20that%20GK5%20confers,to%20EGFR%20tyrosine%20kinase%20inhibitors')</li>
+<li>AnnotationURLCitation(end_index=21791, start_index=21616, title='Complete Inactivation of Sebum-Producing Genes Parallels the Loss of Sebaceous Glands in Cetacea | Molecular Biology and Evolution | Oxford Academic', type='url_citation', url='https://academic.oup.com/mbe/article-abstract/36/6/1270/5415914#:~:text=lineages%2C%20including%20the%20iconic%20Cetacea,Partial%20loss%20profiles%20were')</li>
+<li>AnnotationURLCitation(end_index=22310, start_index=22162, title='R859 | Glycerol Kinase 5 (GK5)- Cloud-Clone Corp.', type='url_citation', url='http://www.cloud-clone.com/items/R859.html#:~:text=Glycerol%20Kinase%205%20%28GK5%29%20,Glycerol%20kinase%20catalyzes%20the')</li>
+<li>AnnotationURLCitation(end_index=23193, start_index=23033, title='Glycerol Kinase Drives Hepatic de novo Lipogenesis and Triglyceride Synthesis in Nonalcoholic Fatty Liver by Activating SREBP‐1c Transcription, Upregulating DGAT1/2 Expression, and Promoting Glycerol Metabolism - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC11633478/#:~:text=Glycerol%20Kinase%20Drives%20Hepatic%20de,6%E2%80%9325%20mM%20glucose%20had')</li>
+<li>AnnotationURLCitation(end_index=23351, start_index=23194, title='Glycerol Kinase Drives Hepatic de novo Lipogenesis and Triglyceride Synthesis in Nonalcoholic Fatty Liver by Activating SREBP-1c Transcription, Upregulating DGAT1/2 Expression, and Promoting Glycerol Metabolism - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/39418169/#:~:text=Glycerol%20Kinase%20Drives%20Hepatic%20de,expressed%20as%20mean%20%C2%B1%20SEM')</li>
+<li>AnnotationURLCitation(end_index=24027, start_index=23910, title='GK5 | Abcam', type='url_citation', url='https://www.abcam.com/en-us/targets/gk5/23412#:~:text=Skin,processing%20and%20lipid%20biosynthesis')</li>
+<li>AnnotationURLCitation(end_index=24467, start_index=24323, title='Skin-specific regulation of SREBP processing and lipid biosynthesis by glycerol kinase 5 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC5495269/#:~:text=expressed%20predominantly%20in%20sebaceous%20glands,specific')</li>
+<li>AnnotationURLCitation(end_index=24799, start_index=24633, title='Skin-specific regulation of SREBP processing and lipid biosynthesis by glycerol kinase 5 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC5495269/#:~:text=of%20cholesterol%20regulation%20in%20other,other%20skin%20lipids%20are%20necessary')</li>
+<li>AnnotationURLCitation(end_index=24939, start_index=24800, title='Skin-specific regulation of SREBP processing and lipid biosynthesis by glycerol kinase 5 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC5495269/#:~:text=The%20recessive%20N,nucleus%20and%20led%20to%20elevated')</li>
+<li>AnnotationURLCitation(end_index=25320, start_index=25138, title='Skin-specific regulation of SREBP processing and lipid biosynthesis by glycerol kinase 5 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC5495269/#:~:text=regulatory%20domains%2C%20inhibiting%20SREBP%20processing,regulation%20elsewhere%20in%20the%20body')</li>
+<li>AnnotationURLCitation(end_index=25472, start_index=25321, title='Skin-specific regulation of SREBP processing and lipid biosynthesis by glycerol kinase 5 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC5495269/#:~:text=match%20at%20L681%20lipid%20synthesis,to%20bind%20to%20each%20other')</li>
+<li>AnnotationURLCitation(end_index=25828, start_index=25656, title='Glycerol kinase 5 confers gefitinib resistance through SREBP1/SCD1 signaling pathway - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC6385389/#:~:text=match%20at%20L621%20inhibit%20the,resistance%20via%20SREBP1%2FSCD1%20signaling%20pathway')</li>
+<li>AnnotationURLCitation(end_index=25996, start_index=25829, title='Glycerol kinase 5 confers gefitinib resistance through SREBP1/SCD1 signaling pathway - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC6385389/#:~:text=We%20demonstrated%20that%20GK5%20confers,to%20EGFR%20tyrosine%20kinase%20inhibitors')</li>
+<li>AnnotationURLCitation(end_index=26870, start_index=26699, title='Skin-specific regulation of SREBP processing and lipid biosynthesis by glycerol kinase 5 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC5495269/#:~:text=We%20discovered%20a%20previously%20unrecognized,other%20skin%20lipids%20are%20necessary')</li>
+<li>AnnotationURLCitation(end_index=27015, start_index=26871, title='Skin-specific regulation of SREBP processing and lipid biosynthesis by glycerol kinase 5 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC5495269/#:~:text=expressed%20predominantly%20in%20sebaceous%20glands,specific')</li>
+<li>AnnotationURLCitation(end_index=27318, start_index=27147, title='Skin-specific regulation of SREBP processing and lipid biosynthesis by glycerol kinase 5 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC5495269/#:~:text=We%20discovered%20a%20previously%20unrecognized,other%20skin%20lipids%20are%20necessary')</li>
+<li>AnnotationURLCitation(end_index=27463, start_index=27319, title='Skin-specific regulation of SREBP processing and lipid biosynthesis by glycerol kinase 5 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC5495269/#:~:text=expressed%20predominantly%20in%20sebaceous%20glands,specific')</li>
+<li>AnnotationURLCitation(end_index=27746, start_index=27574, title='Glycerol kinase 5 confers gefitinib resistance through SREBP1/SCD1 signaling pathway - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC6385389/#:~:text=We%20found%20that%20the%20exosomal,apoptosis%20via%20SREBP1%2FSCD1%20signaling%20pathway')</li>
+<li>AnnotationURLCitation(end_index=27914, start_index=27747, title='Glycerol kinase 5 confers gefitinib resistance through SREBP1/SCD1 signaling pathway - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC6385389/#:~:text=We%20demonstrated%20that%20GK5%20confers,to%20EGFR%20tyrosine%20kinase%20inhibitors')</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q6ZS86
+gene_symbol: GK5
+product_type: PROTEIN
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &#39;Glycerol kinase 5, tissue-specialized glycerol kinase enzyme predominantly
+  expressed in skin sebaceous glands. Member of FGGY carbohydrate kinase family. Catalyzes
+  ATP-dependent phosphorylation of glycerol to produce sn-glycerol-3-phosphate, the
+  first step of glycerol utilization pathway. ~60 kDa protein with catalytic aspartate
+  residues (Asp-280, Asp-443) essential for enzymatic activity. Cytosolic enzyme with
+  distinct dual role: (1) Metabolic function - provides glycerol-3-phosphate for triglyceride
+  synthesis in sebaceous glands; (2) Regulatory function - negatively regulates SREBP
+  (sterol regulatory element-binding protein) processing and activation. Binds C-terminal
+  regulatory domain of SREBP-1 and SREBP-2, inhibiting their cleavage and nuclear
+  translocation, thereby limiting expression of lipid biosynthetic genes in skin.
+  Skin-specific negative regulator of cholesterol and fatty acid synthesis - loss
+  causes excessive lipid accumulation (cholesterol, triglycerides, ceramides) in sebaceous
+  glands and pronounced alopecia in mice. GK5-deficient Gk5^toku mouse exhibits ~80%
+  lethality due to hair growth defects, rescuable by simvastatin (HMG-CoA reductase
+  inhibitor). Kinase activity essential for SREBP regulatory function - catalytically-dead
+  mutants fail to suppress SREBP activation. Distinguishable from X-linked glycerol
+  kinase (GK) which cannot compensate for GK5&#39;&#39;s regulatory role. Expression widespread
+  at mRNA level but protein predominantly in skin; enriched in sebaceous glands. In
+  cancer, GK5 upregulated in gefitinib-resistant NSCLC cells where it promotes cell
+  survival through SREBP1/SCD1 pathway, conferring drug resistance. GK5 enables cancer
+  cells to maintain lipogenesis and resist apoptosis under EGFR inhibition. Potential
+  therapeutic target in oncology and dermatology.&#39;
+existing_annotations:
+- term:
+    id: GO:0004370
+    label: glycerol kinase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: Glycerol kinase activity - phosphorylates glycerol to glycerol-3-phosphate.
+    action: ACCEPT
+    reason: Core enzymatic function.
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: Mitochondrion - experimental evidence shows cytosolic localization, not
+      mitochondrial.
+    action: REMOVE
+    reason: Localization incorrect based on functional studies.
+- term:
+    id: GO:0046167
+    label: glycerol-3-phosphate biosynthetic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: Glycerol-3-phosphate biosynthetic process - produces glycerol-3-phosphate.
+    action: ACCEPT
+    reason: Core metabolic role.
+- term:
+    id: GO:0006071
+    label: glycerol metabolic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: Glycerol metabolic process - first step of glycerol utilization.
+    action: ACCEPT
+    reason: Core metabolic function.
+- term:
+    id: GO:0006641
+    label: triglyceride metabolic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: Triglyceride metabolic process - glycerol-3-phosphate feeds into TG synthesis.
+    action: ACCEPT
+    reason: Metabolic role.
+- term:
+    id: GO:0000166
+    label: nucleotide binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: Nucleotide binding - binds ATP for phosphorylation reaction.
+    action: ACCEPT
+    reason: Enzymatic requirement.
+- term:
+    id: GO:0004370
+    label: glycerol kinase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: Glycerol kinase activity - phosphorylates glycerol to glycerol-3-phosphate.
+    action: ACCEPT
+    reason: Core enzymatic function.
+- term:
+    id: GO:0005524
+    label: ATP binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: ATP binding - ATP-dependent kinase.
+    action: ACCEPT
+    reason: Enzymatic requirement.
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: Cytoplasm - cytosolic enzyme.
+    action: ACCEPT
+    reason: Core localization.
+- term:
+    id: GO:0005975
+    label: carbohydrate metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: Carbohydrate metabolic process - glycerol is polyol/carbohydrate metabolite.
+    action: ACCEPT
+    reason: Metabolic role.
+- term:
+    id: GO:0006071
+    label: glycerol metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: Glycerol metabolic process - first step of glycerol utilization.
+    action: ACCEPT
+    reason: Core metabolic function.
+- term:
+    id: GO:0016301
+    label: kinase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: Kinase activity - ATP-dependent phosphotransferase.
+    action: ACCEPT
+    reason: Enzymatic classification.
+- term:
+    id: GO:0016740
+    label: transferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: Transferase activity - transfers phosphate from ATP to glycerol.
+    action: ACCEPT
+    reason: Enzymatic classification.
+- term:
+    id: GO:0016773
+    label: phosphotransferase activity, alcohol group as acceptor
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: Phosphotransferase activity, alcohol group as acceptor - glycerol hydroxyl
+      as acceptor.
+    action: ACCEPT
+    reason: Specific enzymatic activity.
+- term:
+    id: GO:0046167
+    label: glycerol-3-phosphate biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  review:
+    summary: Glycerol-3-phosphate biosynthetic process - produces glycerol-3-phosphate.
+    action: ACCEPT
+    reason: Core metabolic role.
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: HTP
+  original_reference_id: PMID:34800366
+  review:
+    summary: Mitochondrion - experimental evidence shows cytosolic localization, not
+      mitochondrial.
+    action: REMOVE
+    reason: Localization incorrect based on functional studies.
+- term:
+    id: GO:0004370
+    label: glycerol kinase activity
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  review:
+    summary: Glycerol kinase activity - phosphorylates glycerol to glycerol-3-phosphate.
+    action: ACCEPT
+    reason: Core enzymatic function.
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  review:
+    summary: Cytoplasm - cytosolic enzyme.
+    action: ACCEPT
+    reason: Core localization.
+- term:
+    id: GO:0046167
+    label: glycerol-3-phosphate biosynthetic process
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  review:
+    summary: Glycerol-3-phosphate biosynthetic process - produces glycerol-3-phosphate.
+    action: ACCEPT
+    reason: Core metabolic role.
+- term:
+    id: GO:0019563
+    label: glycerol catabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000041
+  review:
+    summary: Glycerol catabolic process - involved in glycerol breakdown to G3P.
+    action: KEEP_AS_NON_CORE
+    reason: Catabolic aspect of function.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms.
+  findings: []
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs
+    by curator judgment of sequence similarity.
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000041
+  title: Gene Ontology annotation based on UniPathway vocabulary mapping.
+  findings: []
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+- id: GO_REF:0000107
+  title: Automatic transfer of experimentally verified manual GO annotation data to
+    orthologs using Ensembl Compara.
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods.
+  findings: []
+- id: PMID:34800366
+  title: Quantitative high-confidence human mitochondrial proteome and its dynamics
+    in cellular context.
+  findings: []
+aliases:
+- Glycerol kinase 5
+- GLPK5
+core_functions:
+- molecular_function:
+    id: GO:0004370
+    label: glycerol kinase activity
+  description: &#39;ATP-dependent glycerol kinase that phosphorylates glycerol to produce
+    glycerol-3-phosphate. Predominantly expressed in skin sebaceous glands where it
+    has dual role: metabolic (provides G3P for lipid synthesis) and regulatory (inhibits
+    SREBP processing to limit lipogenesis). Kinase activity essential for SREBP regulation.
+    Loss causes alopecia and lipid accumulation in skin.&#39;
+  locations:
+  - id: GO:0005737
+    label: cytoplasm
+  directly_involved_in:
+  - id: GO:0046167
+    label: glycerol-3-phosphate biosynthetic process
+  - id: GO:0006071
+    label: glycerol metabolic process
+  supported_by:
+  - reference_id: UniProt:Q6ZS86
+    supporting_text: GK5 is skin-specialized glycerol kinase that negatively regulates
+      SREBP signaling. Gk5^toku mouse exhibits alopecia and excessive sebum lipid
+      accumulation. Kinase activity required for regulatory function.
+status: DRAFT
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

@@ -1,0 +1,1177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P3R3URF - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>P3R3URF</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/A0A087WWA1" target="_blank" class="term-link">
+                        A0A087WWA1
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Aliases:</span>
+                <div class="aliases">
+                    
+                    <span class="badge">Putative uncharacterized protein P3R3URF</span>
+                    
+                </div>
+            </div>
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "P3R3URF";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="A0A087WWA1" data-a="DESCRIPTION: Putative uncharacterized protein encoded by P3R3UR..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Putative uncharacterized protein encoded by P3R3URF locus. Function unknown. May be non-coding or encode small peptide. Limited experimental characterization. Predicted to be involved in regulation of transcription based on sequence features, but this requires experimental validation.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019221" target="_blank" class="term-link">
+                                    GO:0019221
+                                </a>
+                            </span>
+                            <span class="term-label">cytokine-mediated signaling pathway</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="A0A087WWA1" data-a="GO:0019221" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytokine-mediated signaling pathway - prediction only.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Uncharacterized protein, function uncertain.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Openai</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(P3R3URF-deep-research-openai.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="A0A087WWA1" data-a="DOC: Deep Research Openai" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: openai<br />
+model: o3-deep-research-2025-06-26<br />
+cached: true<br />
+start_time: '2025-11-03T23:05:46.408962'<br />
+end_time: '2025-11-03T23:05:46.415073'<br />
+duration_seconds: 0.01<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: human<br />
+  gene_id: A0A087WWA1<br />
+  gene_symbol: P3R3URF<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    temperature: 0.1<br />
+    top_p: 1.0<br />
+citation_count: 66</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<p>Please provide a comprehensive research report on the gene P3R3URF (A0A087WWA1) in human.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function. </p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<h1 id="introduction">Introduction</h1>
+<p>(<a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=P3R3URF#:~:text=Predicted%20to%20be%20involved%20in,See%20more">www.genecards.org</a>) (<a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=P3R3URF#:~:text=Protein%20attributes%20for%20P3R3URF%20Gene">www.genecards.org</a>)<strong>P3R3URF</strong> (UniProt A0A087WWA1), short for <strong>“PIK3R3 Upstream Open Reading Frame,”</strong> is a recently annotated human gene encoding a microprotein of about <strong>95 amino acids (~11 kDa)</strong>. It is located on chromosome 1p34.1, immediately upstream of the <strong>PIK3R3</strong> gene, which encodes the p55γ regulatory subunit of phosphoinositide 3-kinase (PI3K). Notably, P3R3URF is transcribed as a small two-exon mRNA and classified as a protein-coding gene (<a href="https://www.proteinatlas.org/ENSG00000250719-P3R3URF/structure%2Binteraction#:~:text=Chromosome%201%20Cytoband%20p34,46176488">www.proteinatlas.org</a>) (<a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=P3R3URF#:~:text=Protein%20attributes%20for%20P3R3URF%20Gene">www.genecards.org</a>). Early database annotations predicted that P3R3URF is involved in cell signaling – for example, the Alliance of Genome Resources links it to <strong>cytokine-mediated signaling pathways</strong> (<a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=P3R3URF#:~:text=Predicted%20to%20be%20involved%20in,See%20more">www.genecards.org</a>). A distinctive feature of this locus is the existence of a <strong>naturally occurring readthrough transcript</strong> that splices P3R3URF and PIK3R3 together, producing a fused protein containing the entire P3R3URF peptide at the N-terminus of p55γ (<a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=P3R3URF-PIK3R3#:~:text=This%20locus%20represents%20naturally%20occurring,See%20more">www.genecards.org</a>). This implies that P3R3URF may function either as an independent microprotein or as an N-terminal extension of the PI3K p55γ subunit in certain transcripts. Given its recent discovery, P3R3URF’s biological role is still being elucidated through integrative computational analyses and emerging experimental data. Below, we summarize current knowledge on its function, processes, localization, and pathway involvement, drawing from up-to-date genomic annotations and the latest research on small open reading frame-encoded proteins.  </p>
+<h2 id="predicted-function-and-mechanism">Predicted Function and Mechanism</h2>
+<p><strong>P3R3URF</strong> is predicted to act as a <strong>regulatory or adaptor protein</strong> within the PI3K signaling pathway. In particular, genomic resources have attributed to it a <strong>“1-phosphatidylinositol-3-kinase regulator activity,”</strong> suggesting it may modulate the activity of PI3K enzymes (<a href="https://www.proteinatlas.org/ENSG00000250719-P3R3URF#:~:text=PROTEIN%20FUNCTION%20Gene%20summary%20%28Entrez%29,show%20less">www.proteinatlas.org</a>). This prediction stems from its genomic context: P3R3URF lies in the 5′ region of <em>PIK3R3</em>, a gene encoding the p55γ regulatory subunit of class I(A) PI3-kinases. Regulatory subunits like p55γ <em>bind and stabilize the p110 catalytic subunit</em> of PI3K and recruit it to activated receptors, thus controlling PI3K signaling intensity. By analogy, the 95-aa P3R3URF product could influence PI3K in one of two ways: (1) as an independent small protein that interacts with components of the PI3K complex, or (2) as part of a <strong>fusion protein</strong> that extends p55γ’s N-terminus (<a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=P3R3URF-PIK3R3#:~:text=This%20locus%20represents%20naturally%20occurring,See%20more">www.genecards.org</a>). The latter scenario is supported by RefSeq-cataloged transcripts showing an in-frame readthrough between the upstream ORF and <em>PIK3R3</em>, yielding a larger p55γ variant containing the P3R3URF sequence (<a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=P3R3URF-PIK3R3#:~:text=This%20locus%20represents%20naturally%20occurring,See%20more">www.genecards.org</a>). Importantly, the <strong>Uniprot/Swiss-Prot entry for P3R3URF</strong> confirms the protein’s existence at the protein level (evidence category PE1) (<a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=P3R3URF#:~:text=Protein%20attributes%20for%20P3R3URF%20Gene">www.genecards.org</a>), implying that this microprotein (or the fused isoform) has been detected in biological samples (e.g. by mass spectrometry). No classical enzyme active sites or domains have been identified in the 95-aa sequence so far – for instance, P3R3URF lacks known catalytic motifs and is not an enzyme. Instead, its size and context point to a role as a <strong>signaling modulator or scaffold</strong>. Supporting this, P3R3URF is <strong>predicted to be part of the phosphatidylinositol 3-kinase complex</strong> (<a href="https://www.proteinatlas.org/ENSG00000250719-P3R3URF#:~:text=PROTEIN%20FUNCTION%20Gene%20summary%20%28Entrez%29,show%20less">www.proteinatlas.org</a>), meaning it might bind PI3K subunits or associated proteins. This could make P3R3URF functionally analogous to the other PI3K regulatory subunits (p85α, p85β, p55γ, etc.), albeit dramatically smaller in size. Indeed, the <strong>KEGG database</strong> assigns the P3R3URF-PIK3R3 fusion the same orthology ID as PI3K regulatory subunits and places it in many PI3K-dependent signaling pathways (<a href="https://www.kegg.jp/entry/hsa%3A110117499#:~:text=110117499%20%28P3R3URF,Akt%20signaling%20pathway">www.kegg.jp</a>) (<a href="https://www.kegg.jp/entry/hsa%3A110117499#:~:text=110117499%20%28P3R3URF,PIK3R3%29%2004062%20Chemokine%20signaling%20pathway">www.kegg.jp</a>). In line with this, one inference is that P3R3URF might help tether the p110 catalytic unit in specific cellular contexts or compete with full-length p55γ for binding sites, thus fine-tuning PI3K activity. It is worth noting that <em>no unique conserved domains</em> (such as SH2 or SH3 domains common to p85/p55) have been annotated in P3R3URF’s sequence, indicating it may employ a short linear motif or an intrinsically disordered region to exert its effects. This kind of mechanism is plausible given emerging evidence that microproteins often <strong>lack large domains yet still bind larger proteins via short motifs</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10032668/#:~:text=,CLINT1%20are%20highlighted%20in%20red">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10032668/#:~:text=seven%20aa%20long%20peptide%20encoded,binder%20effect%20and%20supports%20direct">pmc.ncbi.nlm.nih.gov</a>). In summary, while <strong>direct biochemical characterization is lacking</strong>, current models propose that P3R3URF is a <strong>micro-regulator of PI3K</strong>, potentially influencing how the PI3K enzyme complex is activated by upstream signals. Experimental validation (e.g. co-immunoprecipitation to test P3R3URF–p110 binding, or gene knockout to assess signaling changes) has yet to be published, so these functions remain <strong>predictions</strong> to be tested.  </p>
+<h2 id="biological-processes-and-pathway-involvement">Biological Processes and Pathway Involvement</h2>
+<p>Because of its putative role in PI3K regulation, <strong>P3R3URF is linked to key cellular signaling pathways</strong> that rely on PI3K-Akt signaling. The Alliance of Genome Resources notes that P3R3URF is <em>“predicted to be involved in the phosphatidylinositol phosphate biosynthetic process,”</em> i.e. the generation of phosphatidylinositol 3,4,5-trisphosphate (PIP<sub>3</sub>) by PI3K (<a href="https://www.proteinatlas.org/ENSG00000250719-P3R3URF#:~:text=PROTEIN%20FUNCTION%20Gene%20summary%20%28Entrez%29,show%20less">www.proteinatlas.org</a>). This activity lies at the heart of the <strong>PI3K/Akt pathway</strong>, a central signaling cascade controlling cell growth, survival, metabolism, and proliferation. Accordingly, pathway databases (such as <strong>KEGG</strong>) include P3R3URF (via the readthrough product) in a broad array of signaling processes that engage PI3K. For example, KEGG lists P3R3URF-PIK3R3 as a component in <strong>insulin signaling</strong>, <strong>mTOR signaling,</strong> <strong>EGFR/RTK signaling,</strong> and various immune cell receptor pathways (<a href="https://www.kegg.jp/entry/hsa%3A110117499#:~:text=110117499%20%28P3R3URF,Akt%20signaling%20pathway">www.kegg.jp</a>) (<a href="https://www.kegg.jp/entry/hsa%3A110117499#:~:text=110117499%20%28P3R3URF,PIK3R3%29%2004062%20Chemokine%20signaling%20pathway">www.kegg.jp</a>). In these contexts, the PI3K complex acts downstream of activated receptors (insulin receptor, growth factor receptors, cytokine receptors, T/B-cell antigen receptors, etc.), converting PIP<sub>2</sub> to PIP<sub>3</sub> and triggering Akt and other effectors. By extension, the presence or absence of the P3R3URF subunit could modulate the efficiency or timing of PIP<sub>3</sub> production. It is intriguing that the <strong>Gene Ontology (GO)</strong> annotation (2018–2025) for P3R3URF also included involvement in “<strong>cytokine-mediated signaling</strong>” (<a href="https://www.ncbi.nlm.nih.gov/gene/110117498#:~:text=Summary%20Predicted%20to%20be%20involved,Try%20the%20new%20%2014">www.ncbi.nlm.nih.gov</a>) – a broad category consistent with PI3K’s role in mediating signals from cytokine receptors (which often activate PI3K via adaptor proteins like IRS1/2). This suggests that <strong>P3R3URF might influence how cells respond to external growth factors or cytokines</strong>, potentially by altering PI3K activation dynamics.  </p>
+<p>Crucially, because PI3K-Akt signaling has many downstream branches, any regulatory factor in this pathway could have <strong>pleiotropic effects</strong>. However, to focus on P3R3URF’s <em>precise role</em>, it’s useful to consider the specific function of its host gene <em>PIK3R3</em>. The p55γ subunit encoded by <em>PIK3R3</em> helps recruit the p110 catalytic subunit to phosphotyrosine sites on activated receptors (via its SH2 domains) and maintains p110 in an inhibited state until signaling is triggered. If the P3R3URF microprotein integrates into the PI3K complex, it might alter these interactions. For instance, it could provide an alternative interface or modify the existing p55γ interface with receptors or p110. One hint of a <strong>specialized role</strong> comes from the observation that <em>p55γ’s normal N-terminus (first 24 amino acids) binds the Retinoblastoma protein (Rb) and can induce cell cycle arrest</em> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC151709/#:~:text=Skip%20to%20main%20content%20Mol,%E2%80%A1">pmc.ncbi.nlm.nih.gov</a>) – a unique function not shared by other PI3K subunits. An extended isoform containing P3R3URF would lengthen or replace this N-terminal region, possibly <strong>changing the binding spectrum</strong> of p55γ. Thus, P3R3URF might imbue the PI3K complex with new protein–protein interactions or regulatory inputs that are context-dependent. The breadth of pathways listing P3R3URF-PIK3R3 (from <strong>immune cell activation to metabolic regulation</strong> (<a href="https://www.kegg.jp/entry/hsa%3A110117499#:~:text=match%20at%20L178%20110117499%20%28P3R3URF,B%20cell%20receptor%20signaling%20pathway">www.kegg.jp</a>) (<a href="https://www.kegg.jp/entry/hsa%3A110117499#:~:text=110117499%20%28P3R3URF,PIK3R3">www.kegg.jp</a>)) underscores that if P3R3URF alters PI3K function even subtly, it could ripple out to affect processes like glucose uptake (insulin response), cell survival/apoptosis, cytoskeletal rearrangements, and other PI3K-governed biology. It is important to stress, however, that <strong>no direct phenotypic studies</strong> of P3R3URF have been published to date. There are as yet no specific knockdown/knockout experiments or clinical associations reported for this gene. Thus, any assignment to pathways is based on inferred homology and network analysis. As research progresses, targeted studies will be needed to confirm which signaling outputs (Akt phosphorylation, downstream gene expression, etc.) are measurably impacted by P3R3URF. Developing such evidence will clarify whether P3R3URF’s primary role is a <strong>cis-acting peptide that tunes translation of PIK3R3</strong> (as some uORF-encoded peptides do (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10032668/#:~:text=uORF%20impacted%20downstream%20translation%2C%20we,candidate%2C%20we%20included%20ATG%20mutants">pmc.ncbi.nlm.nih.gov</a>)), or a bona fide trans-acting <strong>signal modulator</strong> that participates in PI3K signaling complexes. Given the emerging appreciation that even recently evolved microproteins can engage in vital biological processes (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10032668/#:~:text=match%20at%20L64%20unknown%20human,engage%20with%20vital%20biological%20processes">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10032668/#:~:text=size,a%20lower%20size%20cutoff%20for">pmc.ncbi.nlm.nih.gov</a>), P3R3URF represents a new piece in the PI3K puzzle that may refine our understanding of this critical pathway.  </p>
+<h2 id="expression-profile-and-localization">Expression Profile and Localization</h2>
+<p><strong>Tissue expression data</strong> indicate that P3R3URF is expressed in a highly specific manner. RNA profiling from the Human Protein Atlas shows that <strong>P3R3URF is enriched in the testis</strong>, particularly in the <strong>spermatid stage of developing sperm cells</strong> (<a href="https://www.proteinatlas.org/ENSG00000250719-P3R3URF/structure%2Binteraction#:~:text=HUMAN%20PROTEIN%20ATLAS%20INFORMATION,i%7D%20Not%20available">www.proteinatlas.org</a>). Single-cell RNA sequencing clusters P3R3URF with late spermatids, suggesting markedly elevated expression during spermatogenesis, while expression in most other tissues is minimal or undetectable (<a href="https://www.proteinatlas.org/ENSG00000250719-P3R3URF/structure%2Binteraction#:~:text=HUMAN%20PROTEIN%20ATLAS%20INFORMATION,i%7D%20Not%20available">www.proteinatlas.org</a>). This testis-specific pattern is noteworthy: many newly identified microproteins and unannotated ORFs tend to have restricted expression in reproductive or neuronal tissues, which are known to express a wide variety of unique transcripts. The functional implication is that <strong>P3R3URF might play a role in germ cell development or sperm function</strong>, possibly by modulating PI3K signals in spermatogenic cells (PI3K pathways are indeed active in testis for processes like cell survival and differentiation). However, without direct experimental evidence, this connection remains speculative. The testis bias does highlight that any phenotypes from P3R3URF disruption might be most readily observed in reproductive biology (for example, fertility or sperm abnormalities), rather than in ubiquitous processes. It’s also consistent with the idea that <strong>P3R3URF could be a recently evolved regulatory module</strong> – testis is often a “hotbed” for the expression of young or lineage-specific genes that may confer subtle advantages in reproduction (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10032668/#:~:text=Most%20sORF,and%20often%20evolved%20de%20novo">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10032668/#:~:text=We%20found%20that%20most%20of,were">pmc.ncbi.nlm.nih.gov</a>). Beyond the testis, P3R3URF mRNA is either low or absent in other examined tissues, and it has not been detected in blood plasma by proteomic assays (<a href="https://www.proteinatlas.org/ENSG00000250719-P3R3URF#:~:text=Cell%20line%20specificity,i%7D%20No">www.proteinatlas.org</a>). There is no evidence that the protein is secreted or present extracellularly. In fact, <strong>sequence analysis predicts P3R3URF to be an intracellular protein</strong> with no signal peptide or transmembrane domains (<a href="https://www.proteinatlas.org/ENSG00000250719-P3R3URF/structure%2Binteraction#:~:text=Synonyms%20Gene%20description,Late%20spermatids%29%20Tissue%20expression">www.proteinatlas.org</a>). This is consistent with its presumptive role in intracellular signaling complexes (like PI3K, which operates at the cytosol–membrane interface). The Human Protein Atlas classifies P3R3URF among “<strong>predicted intracellular proteins</strong>” (<a href="https://www.proteinatlas.org/ENSG00000250719-P3R3URF/structure%2Binteraction#:~:text=Synonyms%20Gene%20description,Late%20spermatids%29%20Tissue%20expression">www.proteinatlas.org</a>), and no subcellular localization by immunocytochemistry is available yet (likely due to the lack of specific antibodies or low expression outside testis) (<a href="https://www.proteinatlas.org/ENSG00000250719-P3R3URF/structure%2Binteraction#:~:text=Tissue%20expression%20cluster%20%28RNA%29,i%7D%20Not%20available">www.proteinatlas.org</a>). By analogy to other PI3K regulatory subunits, the P3R3URF protein (or the fusion isoform) would reside in the <strong>cytoplasm under basal conditions</strong> and relocate to the inner surface of the plasma membrane upon receptor stimulation. In activated cells, PI3K regulatory subunits bind phosphotyrosine motifs on receptors or adaptors at the membrane, bringing the p110 catalytic subunit to its substrate (PIP<sub>2</sub> in the membrane). If P3R3URF associates with the PI3K complex, it would likely follow this movement. To date, no direct microscopy or fractionation data have pinpointed P3R3URF’s location, so this remains an inference. Summarily, <strong>P3R3URF is an intracellular, cytosolic protein with a highly restricted expression pattern (testis-enriched)</strong>, reinforcing the notion that its role might be specialized and context-dependent.  </p>
+<h2 id="current-research-and-emerging-insights">Current Research and Emerging Insights</h2>
+<p>Research on P3R3URF specifically is still in its infancy, but its discovery ties into a broader trend in genomics and proteomics: the identification of <strong>small ORF-encoded microproteins</strong> and their hidden roles in cells. Until recently, proteins under ~100 amino acids were often missed in annotations. Large-scale studies in the last few years have revealed thousands of previously unrecognized microproteins across the human genome (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10032668/#:~:text=Summary">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10032668/#:~:text=match%20at%20L191%20We%20found,were">pmc.ncbi.nlm.nih.gov</a>). These include upstream ORFs within known mRNA leaders, small alternative reading frames in coding genes, and peptides from long non-coding RNAs. The <strong>Mol Cell (2023)</strong> study by Chen <em>et al.</em>, for example, cataloged over 7,200 putative human microproteins and showed that even <em>evolutionarily young</em> ones (lacking deep conservation) can <strong>integrate into essential cellular processes</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10032668/#:~:text=match%20at%20L64%20unknown%20human,engage%20with%20vital%20biological%20processes">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10032668/#:~:text=size,a%20lower%20size%20cutoff%20for">pmc.ncbi.nlm.nih.gov</a>). Many of these microproteins were found to form specific protein–protein interactions and modulate processes like mRNA splicing, translation, and signaling (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10032668/#:~:text=bioactivity%20of%20sORF,mRNA%20splicing%2C%20translational%20regulation%2C%20and">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10032668/#:~:text=microproteins%20and%20very%20small%20peptides,several%20candidates%20can%20modulate%20translation">pmc.ncbi.nlm.nih.gov</a>). In this context, P3R3URF stands out as a tangible example of a microprotein encoded by a uORF in a known gene. It has orthologs in mouse and rat (e.g., mouse <strong>P3r3urf</strong>), indicating it is conserved at least among mammals (<a href="https://www.ncbi.nlm.nih.gov/gene/110117499#:~:text=P3R3URF,ProfilesGTRIdentical%20Protein%20GroupsMedGenMeSHNLM%20CatalogNucleotideOMIMPMCProteinProtein%20ClustersProtein">www.ncbi.nlm.nih.gov</a>). This conservation (spanning human and rodent lineages) places P3R3URF among the minority (~10%) of newly identified microproteins that are not human-specific (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10032668/#:~:text=match%20at%20L191%20We%20found,were">pmc.ncbi.nlm.nih.gov</a>), which often suggests a biologically important function was retained. Another recent theme is that some uORF-encoded peptides act in <strong>cis</strong> to regulate their own mRNAs’ translation – essentially, the act of translating the uORF can inhibit or modulate the downstream main ORF. It’s unknown if P3R3URF plays such a role for <em>PIK3R3</em>, but it’s an intriguing possibility. By analogy, a 2023 study discovered an upstream microprotein in the <em>SLC35A4</em> gene that is translated and has a distinct function (localizing to mitochondria and regulating metabolism) without preventing the main protein’s expression (<a href="https://ouci.dntb.gov.ua/en/works/98ewyXa7/#:~:text=An%20Inner%20Mitochondrial%20Membrane%20Microprotein,2%2055">ouci.dntb.gov.ua</a>). P3R3URF’s case is somewhat different, since an alternative transcript merges it with the main coding sequence, hinting that <strong>nature may utilize P3R3URF as an additional exon</strong> of sorts in some situations. This readthrough mechanism (documented by RefSeq in 2017 (<a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=P3R3URF-PIK3R3#:~:text=This%20locus%20represents%20naturally%20occurring,See%20more">www.genecards.org</a>)) suggests a deliberate functional linkage: the cell might produce a <strong>p55γ variant with an extra 95-aa “extension”</strong>. If so, ongoing research might investigate whether this fusion isoform is expressed in specific tissues (perhaps in the testis, aligning with P3R3URF expression) and what functional advantages it confers. Expert commentary in the microprotein field emphasizes that these small proteins can serve as modular <strong>signaling regulators</strong>. For instance, Slavoff and colleagues have noted that micropeptides often “play with big networks,” interfacing with much larger proteins to adjust their activity (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10847964/#:~:text=Small%20protein%20plays%20with%20big,mRNA%29%20with%20an">pmc.ncbi.nlm.nih.gov</a>). Consistent with that view, P3R3URF could be a modulator of the extensive PI3K network, potentially affecting how strongly or in what context p110 is activated. As of 2024, no peer-reviewed study has specifically interrogated P3R3URF’s function via wet-lab experiments, but its annotation in curated databases (NCBI Gene, UniProt, Ensembl) as a protein-coding gene with <strong>“evidence at protein level”</strong> underscores that the scientific community recognizes it as a genuine protein-coding locus (<a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=P3R3URF#:~:text=Protein%20attributes%20for%20P3R3URF%20Gene">www.genecards.org</a>). The next steps will likely involve targeted experiments: e.g. creating a P3R3URF-knockout cell line to see if PI3K signaling or cell phenotypes change, or overexpressing a tagged P3R3URF to identify interacting partners. Given PI3K’s relevance in many diseases (cancer, diabetes, immune disorders), understanding P3R3URF could also have clinical implications. It’s conceivable that in certain cancers, the expression of P3R3URF (or the fusion isoform) might alter PI3K-driven tumor cell behavior – for instance, <strong>PIK3R3 itself is upregulated in some tumors and has been linked to enhanced cell migration and therapy resistance</strong> (<a href="https://www.ncbi.nlm.nih.gov/gene/110117499#:~:text=Family%20ModelsPubChem%20BioAssayPubChem%20CompoundPubChem%20SubstancePubMedSNPSRAStructureTaxonomyToolKitToolKitAllToolKitBookgh,Result">www.ncbi.nlm.nih.gov</a>), so an upstream regulator could influence those outcomes. While no direct clinical or mutational data on P3R3URF are published, researchers and databases are actively monitoring such novel genes. In sum, expert opinion in recent literature strongly advises that <strong>microproteins like P3R3URF be functionally characterized</strong>, since “many more human sORFs…have yet unknown biological roles” (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10032668/#:~:text=match%20at%20L85%20suggest%20that,have%20yet%20unknown%20biological%20roles">pmc.ncbi.nlm.nih.gov</a>). The discovery of P3R3URF expands the PI3K signaling paradigm, and ongoing research in the next few years is expected to clarify whether this small protein is a mere translational byproduct or a meaningful contributor to cellular signaling homeostasis.  </p>
+<h2 id="conclusion">Conclusion</h2>
+<p><strong>P3R3URF (A0A087WWA1)</strong> represents a newly recognized microprotein embedded in the PI3K signaling axis. Current understanding, drawn from computational predictions and genomic context, posits that the P3R3URF gene product is an <strong>intracellular regulator of PI3K</strong> activity, potentially functioning as a tiny accessory subunit that influences the formation or activation of the PI3K complex. It likely executes this role in specific physiological settings – most prominently in the testis, where it is predominantly expressed (<a href="https://www.proteinatlas.org/ENSG00000250719-P3R3URF/structure%2Binteraction#:~:text=HUMAN%20PROTEIN%20ATLAS%20INFORMATION,i%7D%20Not%20available">www.proteinatlas.org</a>). By associating with the <strong>PI3K-Akt pathway</strong>, P3R3URF could impact fundamental processes like cell growth, survival, and metabolism, although its precise biochemical interactions remain to be demonstrated. The unique readthrough fusion of P3R3URF with the canonical p55γ subunit further suggests a built-in mechanism to <strong>augment or modulate PI3K signaling</strong> by producing an alternative isoform (<a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=P3R3URF-PIK3R3#:~:text=This%20locus%20represents%20naturally%20occurring,See%20more">www.genecards.org</a>). While <strong>direct experimental evidence is still lacking</strong>, the weight of bioinformatic and evolutionary data supports P3R3URF as a functional protein-coding gene, not a spurious ORF. Its emergence underscores a paradigm shift in biology – an increasing appreciation that very small proteins can have <strong>discrete, yet important, functions</strong> within larger signaling networks (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10032668/#:~:text=size,a%20lower%20size%20cutoff%20for">pmc.ncbi.nlm.nih.gov</a>). As one authoritative review put it, many human microproteins (even those recently evolved) <em>“engage with vital biological processes”</em> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10032668/#:~:text=match%20at%20L64%20unknown%20human,engage%20with%20vital%20biological%20processes">pmc.ncbi.nlm.nih.gov</a>) and have been implicated in critical roles from development to disease. In the near future, focused studies on P3R3URF should reveal whether this microprotein serves as a <strong>fine-tuner of PI3K signaling</strong>, possibly offering new insights into the regulation of a pathway central to human health. With its discovery, researchers have gained a promising lead to deepen our understanding of PI3K regulation, and P3R3URF may even emerge as a novel target or biomarker if it proves to modulate pathways involved in cancer or fertility. Until such data are available, P3R3URF remains an intriguing example of the genome’s <strong>hidden complexity</strong> – a diminutive peptide potentially wielding influence in one of the cell’s major signaling circuits.  </p>
+<p><strong>References:</strong></p>
+<ul>
+<li>
+<p>Alliance of Genome Resources (2025), NCBI Gene ID:110117498 – <em>“Predicted to be involved in cytokine-mediated signaling pathway.”</em> (<a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=P3R3URF#:~:text=Predicted%20to%20be%20involved%20in,See%20more">www.genecards.org</a>)</p>
+</li>
+<li>
+<p>Human Protein Atlas (2022) – P3R3URF gene summary: <em>“Predicted to enable 1-phosphatidylinositol-3-kinase regulator activity… part of phosphatidylinositol 3-kinase complex.”</em> (<a href="https://www.proteinatlas.org/ENSG00000250719-P3R3URF#:~:text=PROTEIN%20FUNCTION%20Gene%20summary%20%28Entrez%29,show%20less">www.proteinatlas.org</a>)</p>
+</li>
+<li>
+<p>Human Protein Atlas – Expression data: <em>“Tissue enriched (Testis); Cell type enriched (Late spermatids).”</em> (<a href="https://www.proteinatlas.org/ENSG00000250719-P3R3URF/structure%2Binteraction#:~:text=HUMAN%20PROTEIN%20ATLAS%20INFORMATION,i%7D%20Not%20available">www.proteinatlas.org</a>)</p>
+</li>
+<li>
+<p>RefSeq (2017) – <em>“Naturally occurring readthrough between LOC110117498 and PIK3R3 encodes a fusion protein sharing sequence with each.”</em> (<a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=P3R3URF-PIK3R3#:~:text=This%20locus%20represents%20naturally%20occurring,See%20more">www.genecards.org</a>)</p>
+</li>
+<li>
+<p>Uniprot Knowledgebase – P3R3URF entry (A0A087WWA1): protein length 95 aa; <em>evidence at protein level</em> (<a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=P3R3URF#:~:text=Protein%20attributes%20for%20P3R3URF%20Gene">www.genecards.org</a>).</p>
+</li>
+<li>
+<p>Mol Cell <strong>83(6)</strong>:994–1011 (Mar 16, 2023) – Chen <em>et al.</em>: <em>“Most sORF-encoded human microproteins emerged in primates… yet can engage in vital biological processes (cell survival, brain development, cancer).”</em> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10032668/#:~:text=size,a%20lower%20size%20cutoff%20for">pmc.ncbi.nlm.nih.gov</a>)</p>
+</li>
+<li>
+<p>KEGG Pathway Database (2023) – Entry hsa:110117499 (P3R3URF-PIK3R3) mapped to PI3K/Akt signaling, insulin signaling, immune pathways, etc., via KO K02649 (class IA PI3K regulatory subunits) (<a href="https://www.kegg.jp/entry/hsa%3A110117499#:~:text=110117499%20%28P3R3URF,Akt%20signaling%20pathway">www.kegg.jp</a>) (<a href="https://www.kegg.jp/entry/hsa%3A110117499#:~:text=110117499%20%28P3R3URF,PIK3R3%29%2004062%20Chemokine%20signaling%20pathway">www.kegg.jp</a>).</p>
+</li>
+<li>
+<p>Xia <em>et al.</em>, <strong>Mol Cell Biol</strong> 23(5):1717–1725 (2003) – <em>“The N-terminal 24 amino acids of p55γ bind Rb and induce cell cycle arrest,”</em> highlighting unique functional motifs in the p55γ subunit (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC151709/#:~:text=Skip%20to%20main%20content%20Mol,%E2%80%A1">pmc.ncbi.nlm.nih.gov</a>).</p>
+</li>
+<li>
+<p>Zhang <em>et al.</em>, <strong>Mol Cancer</strong> 24:105 (2025) – <em>“Small open reading frame-encoded microproteins in cancer”</em> (review) – notes widespread discovery of microproteins and their emerging functional significance (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10032668/#:~:text=match%20at%20L64%20unknown%20human,engage%20with%20vital%20biological%20processes">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10032668/#:~:text=match%20at%20L191%20We%20found,were">pmc.ncbi.nlm.nih.gov</a>).</p>
+</li>
+<li>
+<p>Additional data sourced from GeneCards, Ensembl, and NCBI Gene for gene structure and ortholog information (<a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=P3R3URF-PIK3R3#:~:text=This%20locus%20represents%20naturally%20occurring,See%20more">www.genecards.org</a>) (<a href="https://www.ncbi.nlm.nih.gov/gene/110117499#:~:text=P3R3URF,ProfilesGTRIdentical%20Protein%20GroupsMedGenMeSHNLM%20CatalogNucleotideOMIMPMCProteinProtein%20ClustersProtein">www.ncbi.nlm.nih.gov</a>), and from the Human Protein Atlas for protein class and blood detectability (<a href="https://www.proteinatlas.org/ENSG00000250719-P3R3URF/structure%2Binteraction#:~:text=Synonyms%20Gene%20description,Late%20spermatids%29%20Tissue%20expression">www.proteinatlas.org</a>) (<a href="https://www.proteinatlas.org/ENSG00000250719-P3R3URF#:~:text=Cell%20line%20specificity,i%7D%20No">www.proteinatlas.org</a>).</p>
+</li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>AnnotationURLCitation(end_index=154, start_index=18, title='P3R3URF Gene - GeneCards | P3URF Protein | P3URF Antibody', type='url_citation', url='https://www.genecards.org/cgi-bin/carddisp.pl?gene=P3R3URF#:~:text=Predicted%20to%20be%20involved%20in,See%20more')</li>
+<li>AnnotationURLCitation(end_index=288, start_index=155, title='P3R3URF Gene - GeneCards | P3URF Protein | P3URF Antibody', type='url_citation', url='https://www.genecards.org/cgi-bin/carddisp.pl?gene=P3R3URF#:~:text=Protein%20attributes%20for%20P3R3URF%20Gene')</li>
+<li>AnnotationURLCitation(end_index=880, start_index=729, title='Protein structure - P3R3URF - The Human Protein Atlas', type='url_citation', url='https://www.proteinatlas.org/ENSG00000250719-P3R3URF/structure%2Binteraction#:~:text=Chromosome%201%20Cytoband%20p34,46176488')</li>
+<li>AnnotationURLCitation(end_index=1014, start_index=881, title='P3R3URF Gene - GeneCards | P3URF Protein | P3URF Antibody', type='url_citation', url='https://www.genecards.org/cgi-bin/carddisp.pl?gene=P3R3URF#:~:text=Protein%20attributes%20for%20P3R3URF%20Gene')</li>
+<li>AnnotationURLCitation(end_index=1333, start_index=1197, title='P3R3URF Gene - GeneCards | P3URF Protein | P3URF Antibody', type='url_citation', url='https://www.genecards.org/cgi-bin/carddisp.pl?gene=P3R3URF#:~:text=Predicted%20to%20be%20involved%20in,See%20more')</li>
+<li>AnnotationURLCitation(end_index=1729, start_index=1572, title='P3R3URF-PIK3R3 Gene - GeneCards | F6TDL0 Protein | F6TDL0 Antibody', type='url_citation', url='https://www.genecards.org/cgi-bin/carddisp.pl?gene=P3R3URF-PIK3R3#:~:text=This%20locus%20represents%20naturally%20occurring,See%20more')</li>
+<li>AnnotationURLCitation(end_index=2728, start_index=2579, title='P3R3URF protein expression summary - The Human Protein Atlas', type='url_citation', url='https://www.proteinatlas.org/ENSG00000250719-P3R3URF#:~:text=PROTEIN%20FUNCTION%20Gene%20summary%20%28Entrez%29,show%20less')</li>
+<li>AnnotationURLCitation(end_index=3454, start_index=3297, title='P3R3URF-PIK3R3 Gene - GeneCards | F6TDL0 Protein | F6TDL0 Antibody', type='url_citation', url='https://www.genecards.org/cgi-bin/carddisp.pl?gene=P3R3URF-PIK3R3#:~:text=This%20locus%20represents%20naturally%20occurring,See%20more')</li>
+<li>AnnotationURLCitation(end_index=3812, start_index=3655, title='P3R3URF-PIK3R3 Gene - GeneCards | F6TDL0 Protein | F6TDL0 Antibody', type='url_citation', url='https://www.genecards.org/cgi-bin/carddisp.pl?gene=P3R3URF-PIK3R3#:~:text=This%20locus%20represents%20naturally%20occurring,See%20more')</li>
+<li>AnnotationURLCitation(end_index=4083, start_index=3950, title='P3R3URF Gene - GeneCards | P3URF Protein | P3URF Antibody', type='url_citation', url='https://www.genecards.org/cgi-bin/carddisp.pl?gene=P3R3URF#:~:text=Protein%20attributes%20for%20P3R3URF%20Gene')</li>
+<li>AnnotationURLCitation(end_index=4713, start_index=4564, title='P3R3URF protein expression summary - The Human Protein Atlas', type='url_citation', url='https://www.proteinatlas.org/ENSG00000250719-P3R3URF#:~:text=PROTEIN%20FUNCTION%20Gene%20summary%20%28Entrez%29,show%20less')</li>
+<li>AnnotationURLCitation(end_index=5208, start_index=5093, title='KEGG T01001: 110117499', type='url_citation', url='https://www.kegg.jp/entry/hsa%3A110117499#:~:text=110117499%20%28P3R3URF,Akt%20signaling%20pathway')</li>
+<li>AnnotationURLCitation(end_index=5350, start_index=5209, title='KEGG T01001: 110117499', type='url_citation', url='https://www.kegg.jp/entry/hsa%3A110117499#:~:text=110117499%20%28P3R3URF,PIK3R3%29%2004062%20Chemokine%20signaling%20pathway')</li>
+<li>AnnotationURLCitation(end_index=6086, start_index=5963, title='Evolutionary origins and interactomes of human, young microproteins and small peptides translated from short open reading frames - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10032668/#:~:text=,CLINT1%20are%20highlighted%20in%20red')</li>
+<li>AnnotationURLCitation(end_index=6251, start_index=6087, title='Evolutionary origins and interactomes of human, young microproteins and small peptides translated from short open reading frames - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10032668/#:~:text=seven%20aa%20long%20peptide%20encoded,binder%20effect%20and%20supports%20direct')</li>
+<li>AnnotationURLCitation(end_index=7264, start_index=7115, title='P3R3URF protein expression summary - The Human Protein Atlas', type='url_citation', url='https://www.proteinatlas.org/ENSG00000250719-P3R3URF#:~:text=PROTEIN%20FUNCTION%20Gene%20summary%20%28Entrez%29,show%20less')</li>
+<li>AnnotationURLCitation(end_index=7856, start_index=7741, title='KEGG T01001: 110117499', type='url_citation', url='https://www.kegg.jp/entry/hsa%3A110117499#:~:text=110117499%20%28P3R3URF,Akt%20signaling%20pathway')</li>
+<li>AnnotationURLCitation(end_index=7998, start_index=7857, title='KEGG T01001: 110117499', type='url_citation', url='https://www.kegg.jp/entry/hsa%3A110117499#:~:text=110117499%20%28P3R3URF,PIK3R3%29%2004062%20Chemokine%20signaling%20pathway')</li>
+<li>AnnotationURLCitation(end_index=8681, start_index=8539, title='P3R3URF PIK3R3 upstream open reading frame [Homo sapiens (human)] - Gene - NCBI', type='url_citation', url='https://www.ncbi.nlm.nih.gov/gene/110117498#:~:text=Summary%20Predicted%20to%20be%20involved,Try%20the%20new%20%2014')</li>
+<li>AnnotationURLCitation(end_index=10004, start_index=9879, title='The N-Terminal 24 Amino Acids of the p55 Gamma Regulatory Subunit of Phosphoinositide 3-Kinase Binds Rb and Induces Cell Cycle Arrest - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC151709/#:~:text=Skip%20to%20main%20content%20Mol,%E2%80%A1')</li>
+<li>AnnotationURLCitation(end_index=10586, start_index=10435, title='KEGG T01001: 110117499', type='url_citation', url='https://www.kegg.jp/entry/hsa%3A110117499#:~:text=match%20at%20L178%20110117499%20%28P3R3URF,B%20cell%20receptor%20signaling%20pathway')</li>
+<li>AnnotationURLCitation(end_index=10683, start_index=10587, title='KEGG T01001: 110117499', type='url_citation', url='https://www.kegg.jp/entry/hsa%3A110117499#:~:text=110117499%20%28P3R3URF,PIK3R3')</li>
+<li>AnnotationURLCitation(end_index=11749, start_index=11569, title='Evolutionary origins and interactomes of human, young microproteins and small peptides translated from short open reading frames - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10032668/#:~:text=uORF%20impacted%20downstream%20translation%2C%20we,candidate%2C%20we%20included%20ATG%20mutants')</li>
+<li>AnnotationURLCitation(end_index=12128, start_index=11962, title='Evolutionary origins and interactomes of human, young microproteins and small peptides translated from short open reading frames - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10032668/#:~:text=match%20at%20L64%20unknown%20human,engage%20with%20vital%20biological%20processes')</li>
+<li>AnnotationURLCitation(end_index=12250, start_index=12129, title='Evolutionary origins and interactomes of human, young microproteins and small peptides translated from short open reading frames - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10032668/#:~:text=size,a%20lower%20size%20cutoff%20for')</li>
+<li>AnnotationURLCitation(end_index=12827, start_index=12656, title='Protein structure - P3R3URF - The Human Protein Atlas', type='url_citation', url='https://www.proteinatlas.org/ENSG00000250719-P3R3URF/structure%2Binteraction#:~:text=HUMAN%20PROTEIN%20ATLAS%20INFORMATION,i%7D%20Not%20available')</li>
+<li>AnnotationURLCitation(end_index=13196, start_index=13025, title='Protein structure - P3R3URF - The Human Protein Atlas', type='url_citation', url='https://www.proteinatlas.org/ENSG00000250719-P3R3URF/structure%2Binteraction#:~:text=HUMAN%20PROTEIN%20ATLAS%20INFORMATION,i%7D%20Not%20available')</li>
+<li>AnnotationURLCitation(end_index=14363, start_index=14233, title='Evolutionary origins and interactomes of human, young microproteins and small peptides translated from short open reading frames - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10032668/#:~:text=Most%20sORF,and%20often%20evolved%20de%20novo')</li>
+<li>AnnotationURLCitation(end_index=14483, start_index=14364, title='Evolutionary origins and interactomes of human, young microproteins and small peptides translated from short open reading frames - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10032668/#:~:text=We%20found%20that%20most%20of,were')</li>
+<li>AnnotationURLCitation(end_index=14755, start_index=14633, title='P3R3URF protein expression summary - The Human Protein Atlas', type='url_citation', url='https://www.proteinatlas.org/ENSG00000250719-P3R3URF#:~:text=Cell%20line%20specificity,i%7D%20No')</li>
+<li>AnnotationURLCitation(end_index=15145, start_index=14962, title='Protein structure - P3R3URF - The Human Protein Atlas', type='url_citation', url='https://www.proteinatlas.org/ENSG00000250719-P3R3URF/structure%2Binteraction#:~:text=Synonyms%20Gene%20description,Late%20spermatids%29%20Tissue%20expression')</li>
+<li>AnnotationURLCitation(end_index=15563, start_index=15380, title='Protein structure - P3R3URF - The Human Protein Atlas', type='url_citation', url='https://www.proteinatlas.org/ENSG00000250719-P3R3URF/structure%2Binteraction#:~:text=Synonyms%20Gene%20description,Late%20spermatids%29%20Tissue%20expression')</li>
+<li>AnnotationURLCitation(end_index=15893, start_index=15718, title='Protein structure - P3R3URF - The Human Protein Atlas', type='url_citation', url='https://www.proteinatlas.org/ENSG00000250719-P3R3URF/structure%2Binteraction#:~:text=Tissue%20expression%20cluster%20%28RNA%29,i%7D%20Not%20available')</li>
+<li>AnnotationURLCitation(end_index=17309, start_index=17217, title='Evolutionary origins and interactomes of human, young microproteins and small peptides translated from short open reading frames - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10032668/#:~:text=Summary')</li>
+<li>AnnotationURLCitation(end_index=17430, start_index=17310, title='Evolutionary origins and interactomes of human, young microproteins and small peptides translated from short open reading frames - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10032668/#:~:text=match%20at%20L191%20We%20found,were')</li>
+<li>AnnotationURLCitation(end_index=17983, start_index=17817, title='Evolutionary origins and interactomes of human, young microproteins and small peptides translated from short open reading frames - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10032668/#:~:text=match%20at%20L64%20unknown%20human,engage%20with%20vital%20biological%20processes')</li>
+<li>AnnotationURLCitation(end_index=18105, start_index=17984, title='Evolutionary origins and interactomes of human, young microproteins and small peptides translated from short open reading frames - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10032668/#:~:text=size,a%20lower%20size%20cutoff%20for')</li>
+<li>AnnotationURLCitation(end_index=18427, start_index=18262, title='Evolutionary origins and interactomes of human, young microproteins and small peptides translated from short open reading frames - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10032668/#:~:text=bioactivity%20of%20sORF,mRNA%20splicing%2C%20translational%20regulation%2C%20and')</li>
+<li>AnnotationURLCitation(end_index=18610, start_index=18428, title='Evolutionary origins and interactomes of human, young microproteins and small peptides translated from short open reading frames - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10032668/#:~:text=microproteins%20and%20very%20small%20peptides,several%20candidates%20can%20modulate%20translation')</li>
+<li>AnnotationURLCitation(end_index=19031, start_index=18834, title='P3R3URF-PIK3R3 P3R3URF-PIK3R3 readthrough [Homo sapiens (human)] - Gene - NCBI', type='url_citation', url='https://www.ncbi.nlm.nih.gov/gene/110117499#:~:text=P3R3URF,ProfilesGTRIdentical%20Protein%20GroupsMedGenMeSHNLM%20CatalogNucleotideOMIMPMCProteinProtein%20ClustersProtein')</li>
+<li>AnnotationURLCitation(end_index=19311, start_index=19191, title='Evolutionary origins and interactomes of human, young microproteins and small peptides translated from short open reading frames - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10032668/#:~:text=match%20at%20L191%20We%20found,were')</li>
+<li>AnnotationURLCitation(end_index=20049, start_index=19916, title='An Inner Mitochondrial Membrane Microprotein from the SLC35A4 Upstream ORF Regulates Cellular Metabolism', type='url_citation', url='https://ouci.dntb.gov.ua/en/works/98ewyXa7/#:~:text=An%20Inner%20Mitochondrial%20Membrane%20Microprotein,2%2055')</li>
+<li>AnnotationURLCitation(end_index=20471, start_index=20314, title='P3R3URF-PIK3R3 Gene - GeneCards | F6TDL0 Protein | F6TDL0 Antibody', type='url_citation', url='https://www.genecards.org/cgi-bin/carddisp.pl?gene=P3R3URF-PIK3R3#:~:text=This%20locus%20represents%20naturally%20occurring,See%20more')</li>
+<li>AnnotationURLCitation(end_index=21225, start_index=21084, title='Small protein plays with big networks - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10847964/#:~:text=Small%20protein%20plays%20with%20big,mRNA%29%20with%20an')</li>
+<li>AnnotationURLCitation(end_index=21851, start_index=21718, title='P3R3URF Gene - GeneCards | P3URF Protein | P3URF Antibody', type='url_citation', url='https://www.genecards.org/cgi-bin/carddisp.pl?gene=P3R3URF#:~:text=Protein%20attributes%20for%20P3R3URF%20Gene')</li>
+<li>AnnotationURLCitation(end_index=22697, start_index=22483, title='P3R3URF-PIK3R3 P3R3URF-PIK3R3 readthrough [Homo sapiens (human)] - Gene - NCBI', type='url_citation', url='https://www.ncbi.nlm.nih.gov/gene/110117499#:~:text=Family%20ModelsPubChem%20BioAssayPubChem%20CompoundPubChem%20SubstancePubMedSNPSRAStructureTaxonomyToolKitToolKitAllToolKitBookgh,Result')</li>
+<li>AnnotationURLCitation(end_index=23246, start_index=23086, title='Evolutionary origins and interactomes of human, young microproteins and small peptides translated from short open reading frames - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10032668/#:~:text=match%20at%20L85%20suggest%20that,have%20yet%20unknown%20biological%20roles')</li>
+<li>AnnotationURLCitation(end_index=24216, start_index=24045, title='Protein structure - P3R3URF - The Human Protein Atlas', type='url_citation', url='https://www.proteinatlas.org/ENSG00000250719-P3R3URF/structure%2Binteraction#:~:text=HUMAN%20PROTEIN%20ATLAS%20INFORMATION,i%7D%20Not%20available')</li>
+<li>AnnotationURLCitation(end_index=24770, start_index=24613, title='P3R3URF-PIK3R3 Gene - GeneCards | F6TDL0 Protein | F6TDL0 Antibody', type='url_citation', url='https://www.genecards.org/cgi-bin/carddisp.pl?gene=P3R3URF-PIK3R3#:~:text=This%20locus%20represents%20naturally%20occurring,See%20more')</li>
+<li>AnnotationURLCitation(end_index=25263, start_index=25142, title='Evolutionary origins and interactomes of human, young microproteins and small peptides translated from short open reading frames - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10032668/#:~:text=size,a%20lower%20size%20cutoff%20for')</li>
+<li>AnnotationURLCitation(end_index=25565, start_index=25399, title='Evolutionary origins and interactomes of human, young microproteins and small peptides translated from short open reading frames - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10032668/#:~:text=match%20at%20L64%20unknown%20human,engage%20with%20vital%20biological%20processes')</li>
+<li>AnnotationURLCitation(end_index=26592, start_index=26456, title='P3R3URF Gene - GeneCards | P3URF Protein | P3URF Antibody', type='url_citation', url='https://www.genecards.org/cgi-bin/carddisp.pl?gene=P3R3URF#:~:text=Predicted%20to%20be%20involved%20in,See%20more')</li>
+<li>AnnotationURLCitation(end_index=26919, start_index=26770, title='P3R3URF protein expression summary - The Human Protein Atlas', type='url_citation', url='https://www.proteinatlas.org/ENSG00000250719-P3R3URF#:~:text=PROTEIN%20FUNCTION%20Gene%20summary%20%28Entrez%29,show%20less')</li>
+<li>AnnotationURLCitation(end_index=27201, start_index=27030, title='Protein structure - P3R3URF - The Human Protein Atlas', type='url_citation', url='https://www.proteinatlas.org/ENSG00000250719-P3R3URF/structure%2Binteraction#:~:text=HUMAN%20PROTEIN%20ATLAS%20INFORMATION,i%7D%20Not%20available')</li>
+<li>AnnotationURLCitation(end_index=27499, start_index=27342, title='P3R3URF-PIK3R3 Gene - GeneCards | F6TDL0 Protein | F6TDL0 Antibody', type='url_citation', url='https://www.genecards.org/cgi-bin/carddisp.pl?gene=P3R3URF-PIK3R3#:~:text=This%20locus%20represents%20naturally%20occurring,See%20more')</li>
+<li>AnnotationURLCitation(end_index=27738, start_index=27605, title='P3R3URF Gene - GeneCards | P3URF Protein | P3URF Antibody', type='url_citation', url='https://www.genecards.org/cgi-bin/carddisp.pl?gene=P3R3URF#:~:text=Protein%20attributes%20for%20P3R3URF%20Gene')</li>
+<li>AnnotationURLCitation(end_index=28076, start_index=27955, title='Evolutionary origins and interactomes of human, young microproteins and small peptides translated from short open reading frames - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10032668/#:~:text=size,a%20lower%20size%20cutoff%20for')</li>
+<li>AnnotationURLCitation(end_index=28385, start_index=28270, title='KEGG T01001: 110117499', type='url_citation', url='https://www.kegg.jp/entry/hsa%3A110117499#:~:text=110117499%20%28P3R3URF,Akt%20signaling%20pathway')</li>
+<li>AnnotationURLCitation(end_index=28527, start_index=28386, title='KEGG T01001: 110117499', type='url_citation', url='https://www.kegg.jp/entry/hsa%3A110117499#:~:text=110117499%20%28P3R3URF,PIK3R3%29%2004062%20Chemokine%20signaling%20pathway')</li>
+<li>AnnotationURLCitation(end_index=28852, start_index=28727, title='The N-Terminal 24 Amino Acids of the p55 Gamma Regulatory Subunit of Phosphoinositide 3-Kinase Binds Rb and Induces Cell Cycle Arrest - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC151709/#:~:text=Skip%20to%20main%20content%20Mol,%E2%80%A1')</li>
+<li>AnnotationURLCitation(end_index=29229, start_index=29063, title='Evolutionary origins and interactomes of human, young microproteins and small peptides translated from short open reading frames - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10032668/#:~:text=match%20at%20L64%20unknown%20human,engage%20with%20vital%20biological%20processes')</li>
+<li>AnnotationURLCitation(end_index=29350, start_index=29230, title='Evolutionary origins and interactomes of human, young microproteins and small peptides translated from short open reading frames - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10032668/#:~:text=match%20at%20L191%20We%20found,were')</li>
+<li>AnnotationURLCitation(end_index=29619, start_index=29462, title='P3R3URF-PIK3R3 Gene - GeneCards | F6TDL0 Protein | F6TDL0 Antibody', type='url_citation', url='https://www.genecards.org/cgi-bin/carddisp.pl?gene=P3R3URF-PIK3R3#:~:text=This%20locus%20represents%20naturally%20occurring,See%20more')</li>
+<li>AnnotationURLCitation(end_index=29817, start_index=29620, title='P3R3URF-PIK3R3 P3R3URF-PIK3R3 readthrough [Homo sapiens (human)] - Gene - NCBI', type='url_citation', url='https://www.ncbi.nlm.nih.gov/gene/110117499#:~:text=P3R3URF,ProfilesGTRIdentical%20Protein%20GroupsMedGenMeSHNLM%20CatalogNucleotideOMIMPMCProteinProtein%20ClustersProtein')</li>
+<li>AnnotationURLCitation(end_index=30077, start_index=29894, title='Protein structure - P3R3URF - The Human Protein Atlas', type='url_citation', url='https://www.proteinatlas.org/ENSG00000250719-P3R3URF/structure%2Binteraction#:~:text=Synonyms%20Gene%20description,Late%20spermatids%29%20Tissue%20expression')</li>
+<li>AnnotationURLCitation(end_index=30200, start_index=30078, title='P3R3URF protein expression summary - The Human Protein Atlas', type='url_citation', url='https://www.proteinatlas.org/ENSG00000250719-P3R3URF#:~:text=Cell%20line%20specificity,i%7D%20No')</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: A0A087WWA1
+gene_symbol: P3R3URF
+product_type: PROTEIN
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: Putative uncharacterized protein encoded by P3R3URF locus. Function unknown.
+  May be non-coding or encode small peptide. Limited experimental characterization.
+  Predicted to be involved in regulation of transcription based on sequence features,
+  but this requires experimental validation.
+existing_annotations:
+- term:
+    id: GO:0019221
+    label: cytokine-mediated signaling pathway
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: Cytokine-mediated signaling pathway - prediction only.
+    action: KEEP_AS_NON_CORE
+    reason: Uncharacterized protein, function uncertain.
+references:
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+aliases:
+- Putative uncharacterized protein P3R3URF
+core_functions: []
+status: DRAFT
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

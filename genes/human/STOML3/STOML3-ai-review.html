@@ -1,0 +1,2059 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STOML3 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>STOML3</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q8TAV4" target="_blank" class="term-link">
+                        Q8TAV4
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Aliases:</span>
+                <div class="aliases">
+                    
+                    <span class="badge">Stomatin-like protein 3</span>
+                    
+                    <span class="badge">SLP-3</span>
+                    
+                </div>
+            </div>
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "STOML3";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q8TAV4" data-a="DESCRIPTION: Stomatin-like protein 3 (STOML3, SLP-3), integral ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Stomatin-like protein 3 (STOML3, SLP-3), integral membrane protein (~291 amino acids) of stomatin family characterized by conserved SPFH (stomatin/prohibitin/flotillin/HflK/C) domain. Mammalian homologue of C. elegans MEC-2 required for touch sensation in worms. First molecule shown essential for touch sensation in mammals. Single transmembrane region near N-terminus, predominantly localizes to plasma membrane within cholesterol-rich membrane rafts. Forms oligomers in membrane - oligomerization functionally significant for mechanotransduction. Critical accessory subunit of mechanosensory protein complexes in sensory neurons. Essential modulator of mechanotransduction - conversion of mechanical stimuli into electrochemical signals. Not ion channel itself but serves as critical accessory that tunes mechanosensitive channel properties. Selectively expressed in sensory neurons of dorsal root ganglia (DRG) and trigeminal ganglia (cells detecting touch and pain). Concentrated at peripheral nerve endings where mechanical stimuli detected. Also in inner ear mechanosensory fibers, ciliated cells of olfactory epithelium (olfactory sensory neuron cilia), and motile cilia of respiratory/reproductive epithelia. Binds cholesterol via conserved N-terminal motif - cholesterol-binding allows organization of specialized membrane microdomains, locally stiffening membrane where mechanotransducer proteins reside. Interacts with multiple mechanosensitive ion channels: Piezo1/Piezo2 stretch-activated cation channels and acid-sensing ion channels (ASICs) in nociceptive neurons. Co-localizes with Piezo channels and enhances their sensitivity to mechanical force - lowers activation threshold and increases mechanically evoked currents. Effect depends on cholesterol-binding (P40S mutation disrupting cholesterol binding prevents channel potentiation). Facilitates force transfer to Piezo channels by creating stiffer lipid microenvironment, tuning channel gating kinetics. Also binds ASIC subunits altering their gating properties (suppresses peak amplitude, slows inactivation). STOML3 and stomatin form complexes with ASICs regulating mechanonociception. Mice lacking STOML3: ~35% of cutaneous mechanoreceptive neurons completely lose response to mechanical stimuli. Many mechanogated ion currents abolished. Reduced responses to gentle touch, loss of touch-evoked pain (tactile allodynia) after nerve injury. Required for functional plasticity of proprioceptors after nerve injury. Essential for olfactory sensory neurons&#39; normal encoding: STOML3-deficient OSNs show reduced spontaneous firing, fewer/shorter spikes in response to odors. Small-molecule inhibitor OB-1 prevents STOML3 oligomerization, dampens mechanically activated currents, silences mechanoreceptor fibers, alleviates mechanical pain behaviors in animal models. Validates STOML3 as therapeutic target for mechanical pain modulation. Functions in mechanosensory pathways of cutaneous touch receptors, proprioceptive neurons, and modulates olfactory sensory transduction.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008200" target="_blank" class="term-link">
+                                    GO:0008200
+                                </a>
+                            </span>
+                            <span class="term-label">ion channel inhibitor activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q8TAV4" data-a="GO:0008200" data-r="GO_REF:0000033" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Ion channel inhibitor activity is overly restrictive - STOML3 modulates channels (can both sensitize Piezo and suppress ASIC peak currents) rather than simply inhibiting. Better term would be &#39;ion channel regulator activity&#39;.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Channel modulator, not just inhibitor.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0099106" target="_blank" class="term-link">
+                                    ion channel regulator activity
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8TAV4" data-a="GO:0005886" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Plasma membrane - integral membrane protein.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core localization.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8TAV4" data-a="GO:0005886" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Plasma membrane - integral membrane protein.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core localization.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8TAV4" data-a="GO:0016020" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Membrane - membrane protein.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> General membrane.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8TAV4" data-a="GO:0005515" data-r="PMID:32296183" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Protein binding - binds ion channels and partners.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005929" target="_blank" class="term-link">
+                                    GO:0005929
+                                </a>
+                            </span>
+                            <span class="term-label">cilium</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000107
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8TAV4" data-a="GO:0005929" data-r="GO_REF:0000107" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cilium - localizes to cilia of olfactory sensory neurons and motile cilia of respiratory/reproductive epithelia.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Documented ciliary localization.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007165" target="_blank" class="term-link">
+                                    GO:0007165
+                                </a>
+                            </span>
+                            <span class="term-label">signal transduction</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000107
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8TAV4" data-a="GO:0007165" data-r="GO_REF:0000107" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Signal transduction - modulates mechanosensory signaling by tuning ion channel activity in sensory neurons.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Mechanotransduction signaling.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045121" target="_blank" class="term-link">
+                                    GO:0045121
+                                </a>
+                            </span>
+                            <span class="term-label">membrane raft</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000107
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8TAV4" data-a="GO:0045121" data-r="GO_REF:0000107" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Membrane raft - partitions into cholesterol-rich lipid rafts where it organizes mechanotransduction complexes.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core membrane organization.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000052
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8TAV4" data-a="GO:0005886" data-r="GO_REF:0000052" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Plasma membrane - integral membrane protein.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core localization.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            Reactome:R-HSA-8863494
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8TAV4" data-a="GO:0005886" data-r="Reactome:R-HSA-8863494" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Plasma membrane - integral membrane protein.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core localization.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Membrane scaffold and accessory protein for mechanosensitive ion channels (Piezo1/2, ASIC2/3). Binds cholesterol to organize lipid raft microdomains, locally stiffening membranes to facilitate force transfer to mechanotransducer channels. Lowers activation threshold of Piezo channels and modulates ASIC gating. Essential for mechanosensation in touch receptors and proprioceptors. Required for normal mechanogated currents in sensory neurons - loss causes ~35% of mechanoreceptors to lose mechanical responsiveness.</h3>
+                <span class="vote-buttons" data-g="Q8TAV4" data-a="FUNCTION: Membrane scaffold and accessory protein for mechan..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                            protein binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050982" target="_blank" class="term-link">
+                                detection of mechanical stimulus
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071260" target="_blank" class="term-link">
+                                cellular response to mechanical stimulus
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007600" target="_blank" class="term-link">
+                                sensory perception
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                plasma membrane
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045121" target="_blank" class="term-link">
+                                membrane raft
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005929" target="_blank" class="term-link">
+                                cilium
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            UniProt:Q8TAV4
+                            
+                        </span>
+                        
+                        <div class="finding-text">STOML3 is essential for mechanotransduction in sensory neurons. Binds cholesterol to organize membrane microdomains around Piezo and ASIC channels. Knockout mice show profound deficits in touch sensation with ~35% of mechanoreceptors losing mechanical responsiveness.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000052.md" target="_blank" class="term-link">
+                            GO_REF:0000052
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on curation of immunofluorescence data</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000107.md" target="_blank" class="term-link">
+                            GO_REF:0000107
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Automatic transfer of experimentally verified manual GO annotation data to orthologs using Ensembl Compara.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                            PMID:32296183
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A reference map of the human binary protein interactome.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        Reactome:R-HSA-8863494
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">ASICs bind STOML3, (STOM)</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Openai</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(STOML3-deep-research-openai.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q8TAV4" data-a="DOC: Deep Research Openai" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: openai<br />
+model: o3-deep-research-2025-06-26<br />
+cached: true<br />
+start_time: '2025-11-04T03:15:23.825932'<br />
+end_time: '2025-11-04T03:15:23.827342'<br />
+duration_seconds: 0.0<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: human<br />
+  gene_id: Q8TAV4<br />
+  gene_symbol: STOML3<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    temperature: 0.1<br />
+    top_p: 1.0<br />
+citation_count: 127</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<p>Please provide a comprehensive research report on the gene STOML3 (Q8TAV4) in human.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function. </p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<h1 id="stoml3-stomatin-like-protein-3-overview-and-key-features">STOML3 (Stomatin-Like Protein 3) – Overview and Key Features</h1>
+<p><strong>Stomatin-like protein 3 (STOML3)</strong>, also known as SLP-3, is an integral membrane protein of the stomatin family that plays a key role in sensory mechanotransduction (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3853495/#:~:text=Stomatin%20and%20STOML3%20are%20closely,many%20cutaneous%20afferents%2C%20and%20a">pmc.ncbi.nlm.nih.gov</a>). The human STOML3 gene encodes a protein of ~291 amino acids (Uniprot ID Q8TAV4) characterized by a conserved <strong>stomatin (SPFH) domain</strong>. This domain is shared with other “band-7” family proteins (stomatin, flotillin, prohibitin, etc.) and mediates membrane association and oligomerization. STOML3 contains a single transmembrane region near its N-terminus and predominantly localizes to cell membranes – especially within cholesterol-rich <strong>membrane rafts</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4633829/#:~:text=membrane%20mechanics%20by%20binding%20cholesterol,Targeting">pmc.ncbi.nlm.nih.gov</a>). Notably, STOML3 was identified as the mammalian homologue of <em>C. elegans</em> MEC-2 (a protein required for touch sensation in worms) (<a href="https://scholars.mssm.edu/en/publications/a-stomatin-domain-protein-essential-for-touch-sensation-in-the-mo-2#:~:text=detect%20specific%20modalities%20of%20mechanical,driven%20behaviours">scholars.mssm.edu</a>), and it was the first molecule shown to be <strong>essential for touch sensation in mammals</strong> (<a href="https://scholars.mssm.edu/en/publications/a-stomatin-domain-protein-essential-for-touch-sensation-in-the-mo-2#:~:text=stomatin%20homology%20domain,subunit%20of%20a%20mammalian%20mechanotransducer">scholars.mssm.edu</a>). </p>
+<p><strong>Tissue Distribution:</strong> In humans, STOML3 is selectively expressed in certain tissues and cell types. It is highly expressed in <strong>sensory neurons</strong> of the dorsal root ganglia (DRG) and trigeminal ganglia – the cells that detect touch and pain stimuli (<a href="https://scholars.mssm.edu/en/publications/a-stomatin-domain-protein-essential-for-touch-sensation-in-the-mo-2#:~:text=stomatin%20homology%20domain,subunit%20of%20a%20mammalian%20mechanotransducer">scholars.mssm.edu</a>). Immunolocalization studies show STOML3 is concentrated at the <strong>peripheral nerve endings</strong> of these neurons where mechanical stimuli are detected (<a href="https://scholars.mssm.edu/en/publications/a-stomatin-domain-protein-essential-for-touch-sensation-in-the-mo-2#:~:text=stomatin%20homology%20domain,subunit%20of%20a%20mammalian%20mechanotransducer">scholars.mssm.edu</a>). In the mouse inner ear, STOML3 is found in mechanosensory nerve fibers (though it is not the mechanotransducer of hair cells themselves) and in other mechanosensitive tissues (<a href="https://scholars.mssm.edu/en/publications/a-stomatin-domain-protein-essential-for-touch-sensation-in-the-mo-2#:~:text=stomatin%20homology%20domain,subunit%20of%20a%20mammalian%20mechanotransducer">scholars.mssm.edu</a>). Intriguingly, STOML3 is also present in <strong>ciliated cells</strong> beyond the nervous system. For example, in the olfactory epithelium STOML3 localizes to the <strong>cilia of olfactory sensory neurons (OSNs)</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC7986538/#:~:text=Stomatin,be%20involved%20in%20modulating%20odorant">pmc.ncbi.nlm.nih.gov</a>), and Human Protein Atlas data indicate STOML3 enrichment in the <strong>motile cilia</strong> of respiratory and reproductive epithelia (e.g. fallopian tube) (<a href="https://www.proteinatlas.org/ENSG00000133115-STOML3/tissue#:~:text=HUMAN%20PROTEIN%20ATLAS%20INFORMATION,IMMUNOHISTOCHEMISTRY%20DATA%20RELIABILITY">www.proteinatlas.org</a>) (<a href="https://www.proteinatlas.org/ENSG00000133115-STOML3/tissue#:~:text=Multiplex%20immunofluorescence%20staining%20of%20ciliated,i">www.proteinatlas.org</a>). This suggests a broader role for STOML3 in ciliary membrane domains. Consistently, subcellular studies place STOML3 at the <strong>plasma membrane</strong> (especially within lipid raft microdomains) and in some intracellular vesicles that traffic to the membrane (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4633829/#:~:text=membrane%20mechanics%20by%20binding%20cholesterol,Targeting">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3853495/#:~:text=match%20at%20L888%20same%20vesicular,%E2%88%92%2F%E2%88%92%7D%20mutant%20mice%20may%20reflect">pmc.ncbi.nlm.nih.gov</a>).</p>
+<p><strong>Structural and Biochemical Features:</strong> Like other stomatin-family proteins, STOML3 forms <strong>oligomers</strong> in the membrane, which is important for its function (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10734363/#:~:text=screening%20unit,It%20reduces%20the%20sensitivity%20of">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10734363/#:~:text=characteristic%20that%20is%20important%20for,It%20reduces%20the%20sensitivity%20of">pmc.ncbi.nlm.nih.gov</a>). The protein’s SPFH/stomatin domain enables it to interact with membrane lipids and partner proteins. A notable biochemical property of STOML3 is its ability to <strong>bind cholesterol</strong> via a conserved motif in its N-terminus (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4633829/#:~:text=Sensing%20force%20is%20crucial%20to,required%20to%20maintain%20membrane%20mechanics">pmc.ncbi.nlm.nih.gov</a>). This cholesterol-binding capacity allows STOML3 to organize specialized membrane microdomains – effectively <strong>stiffening the local membrane</strong> where mechanotransducer proteins reside (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4633829/#:~:text=Sensing%20force%20is%20crucial%20to,required%20to%20maintain%20membrane%20mechanics">pmc.ncbi.nlm.nih.gov</a>). <strong>Qi <em>et al.</em> (2015)</strong> showed that STOML3’s association with cholesterol has a direct impact on membrane mechanics and mechanosensitivity: STOML3 partitions into lipid rafts and by <strong>recruiting cholesterol it locally increases membrane stiffness</strong>, thereby facilitating efficient transfer of force to mechanosensitive ion channels (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4633829/#:~:text=Sensing%20force%20is%20crucial%20to,required%20to%20maintain%20membrane%20mechanics">pmc.ncbi.nlm.nih.gov</a>). Mutational analysis supports this mechanism – for instance, a point mutation in STOML3 (P40S) that disrupts cholesterol binding abolishes STOML3’s ability to sensitize mechanogated ion channels (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4633829/#:~:text=match%20at%20L468%20its%20function,modulates%20Piezo1%20channel%20activity%20via">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4633829/#:~:text=its%20function%20in%20sensitization%20of,modulates%20Piezo1%20channel%20activity%20via">pmc.ncbi.nlm.nih.gov</a>). Together, these features define STOML3 as a <strong>membrane scaffolding or adapter protein</strong> that organizes mechanotransduction complexes.</p>
+<h1 id="mechanosensory-function-and-ion-channel-modulation">Mechanosensory Function and Ion Channel Modulation</h1>
+<p><strong>Primary Role in Mechanotransduction:</strong> The principal function of STOML3 is to enable and modulate <strong>mechanotransduction</strong> – the conversion of mechanical stimuli into electrochemical signals in sensory cells. STOML3 is not an enzyme or ion channel itself; rather, it serves as a <strong>critical accessory subunit</strong> of mechanosensory protein complexes (<a href="https://scholars.mssm.edu/en/publications/a-stomatin-domain-protein-essential-for-touch-sensation-in-the-mo-2#:~:text=protein%203%20,subunit%20of%20a%20mammalian%20mechanotransducer">scholars.mssm.edu</a>). In touch receptors, STOML3 is required for the normal function of mechanosensitive ion channels that respond to pressure or touch. Notably, mice lacking STOML3 have profound deficits in touch sensation: approximately <strong>35% of cutaneous mechanoreceptive neurons completely lose their response to mechanical stimuli</strong> in STOML3 mutants (<a href="https://scholars.mssm.edu/en/publications/a-stomatin-domain-protein-essential-for-touch-sensation-in-the-mo-2#:~:text=stomatin%20homology%20domain,subunit%20of%20a%20mammalian%20mechanotransducer">scholars.mssm.edu</a>). Electrophysiological recordings show that many mechanogated ion currents in sensory neurons are <strong>abolished without STOML3</strong> (<a href="https://scholars.mssm.edu/en/publications/a-stomatin-domain-protein-essential-for-touch-sensation-in-the-mo-2#:~:text=stomatin%20homology%20domain,subunit%20of%20a%20mammalian%20mechanotransducer">scholars.mssm.edu</a>). Accordingly, tactile-driven behaviors are impaired in Stoml3-knockout mice – for example, mutant mice show reduced responses to gentle touch and even a loss of touch-evoked pain (tactile allodynia) after nerve injury (<a href="https://scholars.mssm.edu/en/publications/a-stomatin-domain-protein-essential-for-touch-sensation-in-the-mo-2#:~:text=protein%203%20,subunit%20of%20a%20mammalian%20mechanotransducer">scholars.mssm.edu</a>). These findings established STOML3 as an <strong>indispensable component of the mechanotransducer apparatus</strong> in a subset of touch receptors (<a href="https://scholars.mssm.edu/en/publications/a-stomatin-domain-protein-essential-for-touch-sensation-in-the-mo-2#:~:text=in%20many%20sensory%20neurons%20do,subunit%20of%20a%20mammalian%20mechanotransducer">scholars.mssm.edu</a>).</p>
+<p><strong>Ion Channel Interactions:</strong> At the molecular level, STOML3 interacts with multiple ion channels involved in mechanosensation: most prominently the <strong>Piezo family</strong> of stretch-activated cation channels, and <strong>acid-sensing ion channels (ASICs)</strong> in nociceptive neurons. STOML3 co-localizes with <strong>Piezo1 and Piezo2</strong> channels in mechanosensitive cells and <strong>enhances their sensitivity</strong> to mechanical force (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4633829/#:~:text=Sensing%20force%20is%20crucial%20to,required%20to%20maintain%20membrane%20mechanics">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4633829/#:~:text=Piezo2%2BSTOML3%2BM%CE%B2CD%3A%20n%3D5%2C%20Piezo2%2BSTOML3,0.0001.%20Error%20bars%20indicate%20s.e.m">pmc.ncbi.nlm.nih.gov</a>). In heterologous cell experiments, co-expression of STOML3 lowers the threshold for Piezo1/2 activation and increases the mechanically evoked currents (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4633829/#:~:text=unknown%2C%20Piezo%20channels%20have%20been,We%20therefore%20first">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4633829/#:~:text=its%20function%20in%20sensitization%20of,modulates%20Piezo1%20channel%20activity%20via">pmc.ncbi.nlm.nih.gov</a>). This effect depends on STOML3’s cholesterol-binding function – cholesterol depletion or mutating STOML3’s cholesterol-interaction site (P40S) prevents STOML3 from potentiating Piezo currents (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4633829/#:~:text=match%20at%20L468%20its%20function,modulates%20Piezo1%20channel%20activity%20via">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4633829/#:~:text=its%20function%20in%20sensitization%20of,modulates%20Piezo1%20channel%20activity%20via">pmc.ncbi.nlm.nih.gov</a>). Mechanistically, STOML3 is thought to <strong>facilitate force transfer to Piezo channels</strong> by creating a stiffer lipid microenvironment around the channel, effectively tuning the channel’s gating kinetics (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4633829/#:~:text=Piezo2%2BSTOML3%2BM%CE%B2CD%3A%20n%3D5%2C%20Piezo2%2BSTOML3,0.0001.%20Error%20bars%20indicate%20s.e.m">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4633829/#:~:text=currents%20%28Fig,to%20the%20cellular%20toxicity%20of">pmc.ncbi.nlm.nih.gov</a>). In vivo, deleting STOML3 or acutely disrupting its cholesterol associations both cause a similar reduction in mechanosensory current amplitude, supporting this model (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4633829/#:~:text=membrane%20mechanics%20by%20binding%20cholesterol,Targeting">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4633829/#:~:text=fails%20to%20increase%20the%20mechanosensitivity,agent%2C%20in%20C57BL%2F6N%20but%20not">pmc.ncbi.nlm.nih.gov</a>). Consistent with its role, <em>in vitro</em> studies found STOML3 enriched at the site of Piezo2-containing mechanotransducer complexes in touch receptors (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4633829/#:~:text=membrane%20mechanics%20by%20binding%20cholesterol,Targeting">pmc.ncbi.nlm.nih.gov</a>), and <em>in vivo</em> <strong>cholesterol depletion blunts touch sensitivity in wild-type mice but not in Stoml3-knockout mice</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4633829/#:~:text=STOML3%20is%20detected%20in%20cholesterol,offer%20an%20alternative%20strategy%20for">pmc.ncbi.nlm.nih.gov</a>) (implying STOML3 is required for cholesterol-dependent modulation of touch).</p>
+<p>Beyond Piezo channels, STOML3 (and its relative stomatin) also <strong>physically associate with ASIC channels</strong> in sensory neurons (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3853495/#:~:text=match%20at%20L88%20Both%20STOML3,2012">pmc.ncbi.nlm.nih.gov</a>). ASICs are proton-gated cation channels implicated in certain mechanosensory and pain pathways. STOML3 was shown to bind ASIC subunits and <strong>alter their gating properties</strong>: it can suppress the peak amplitude of ASIC currents and slow their inactivation kinetics in recombinant systems (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3853495/#:~:text=match%20at%20L88%20Both%20STOML3,2012">pmc.ncbi.nlm.nih.gov</a>). All three proteins – STOML3, stomatin (STOM), and ASIC – can form complexes, and genetically removing these components leads to overlapping deficits in mechanonociception (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3853495/#:~:text=Both%20STOML3%20and%20stomatin%20can,2012">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3853495/#:~:text=asic3,mechanosensitivity%20of%20nociceptors%20in%20the">pmc.ncbi.nlm.nih.gov</a>). For example, knockout of <em>Stoml3</em> or <em>Asic3</em> individually each causes partial loss of certain pain-sensing mechanoreceptors, but combined <em>Asic3/Stoml3</em> double-knockout produces an exacerbated loss of mechanosensitivity in Aδ-fiber nociceptors (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3853495/#:~:text=indicated%20that%20a%20stomatin%2FSTOML3%20interaction,deficits%20in%20the%20mechanosensitivity%20of">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3853495/#:~:text=Stomatin%20and%20STOML3%20are%20closely,many%20cutaneous%20afferents%2C%20and%20a">pmc.ncbi.nlm.nih.gov</a>). This synergistic phenotype indicates STOML3 and ASIC3 normally <strong>work in concert to tune mechanosensitivity</strong> in those high-threshold mechanonociceptors (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3853495/#:~:text=indicated%20that%20a%20stomatin%2FSTOML3%20interaction,deficits%20in%20the%20mechanosensitivity%20of">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3853495/#:~:text=,and%20ASIC3%2C%20regulate%20mechanosensory%20transduction">pmc.ncbi.nlm.nih.gov</a>). Similarly, STOML3 and stomatin can compensate for each other to some extent, as double-knockouts of <em>Stoml3</em> and <em>Stom</em> reveal greater deficits than single mutants in certain fibers (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3853495/#:~:text=indicated%20that%20a%20stomatin%2FSTOML3%20interaction,deficits%20in%20the%20mechanosensitivity%20of">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3853495/#:~:text=ASIC3,thus%20reasoned%20that%20important%20functional">pmc.ncbi.nlm.nih.gov</a>). In summary, STOML3 <strong>interacts with multiple ion channels (Piezo1/2, ASIC2/3, etc.) and modulates their activity</strong>, serving as a scaffold that organizes these channels in membrane microdomains and fine-tunes their gating in response to mechanical stimuli (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3853495/#:~:text=match%20at%20L88%20Both%20STOML3,2012">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4633829/#:~:text=Piezo2%2BSTOML3%2BM%CE%B2CD%3A%20n%3D5%2C%20Piezo2%2BSTOML3,0.0001.%20Error%20bars%20indicate%20s.e.m">pmc.ncbi.nlm.nih.gov</a>).</p>
+<p><strong>Oligomerization and Mechanotransducer Complexes:</strong> An important aspect of STOML3’s function is its ability to form higher-order oligomers. STOML3 molecules can self-associate (likely as dimers and larger oligomeric assemblies), and this oligomerization is functionally significant (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10734363/#:~:text=screening%20unit,It%20reduces%20the%20sensitivity%20of">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10734363/#:~:text=characteristic%20that%20is%20important%20for,It%20reduces%20the%20sensitivity%20of">pmc.ncbi.nlm.nih.gov</a>). The STOML3 oligomers may cluster around mechanosensitive ion channels in the membrane, creating a multimeric complex that optimizes force transmission. <strong>Disrupting STOML3 oligomerization</strong> has been shown to impair mechanotransduction. For instance, a small-molecule inhibitor called <strong>OB-1</strong> prevents STOML3 from oligomerizing and thereby reduces its functional interaction with mechanogated channels (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10734363/#:~:text=screening%20unit,It%20reduces%20the%20sensitivity%20of">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10734363/#:~:text=characteristic%20that%20is%20important%20for,It%20reduces%20the%20sensitivity%20of">pmc.ncbi.nlm.nih.gov</a>). In sensory neuron cultures, OB-1 treatment significantly <strong>dampens mechanically activated currents</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10734363/#:~:text=screening%20unit,24%E2%80%9317">pmc.ncbi.nlm.nih.gov</a>). Likewise, in ex vivo nerve preparations, OB-1 “silences” many mechanoreceptor fibers – Aβ and Aδ touch fibers lose responsiveness when STOML3 oligomers are blocked (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10734363/#:~:text=characteristic%20that%20is%20important%20for,15%20%E2%80%93%2019">pmc.ncbi.nlm.nih.gov</a>). These findings support a model where a <strong>STOML3 oligomeric lattice</strong> around ion channels is needed to effectively gate the channel in response to membrane stretch (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10734363/#:~:text=screening%20unit,It%20reduces%20the%20sensitivity%20of">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10734363/#:~:text=characteristic%20that%20is%20important%20for,15%20%E2%80%93%2019">pmc.ncbi.nlm.nih.gov</a>). Without the oligomeric scaffold, mechanotransducer channels either fail to open or require much stronger force to activate.</p>
+<h1 id="biological-roles-and-pathways">Biological Roles and Pathways</h1>
+<p><strong>Touch and Mechanosensation:</strong> STOML3 is best known for its role in the sense of touch. It is expressed in a subset of <strong>cutaneous mechanoreceptors</strong> – the sensory neurons innervating the skin that detect light touch, pressure, and vibration. These include low-threshold mechanoreceptors associated with gentle touch (like Merkel cell–neurite complexes and hair follicle receptors) as well as some mechanosensitive nociceptors for painful pressure (<a href="https://scholars.mssm.edu/en/publications/a-stomatin-domain-protein-essential-for-touch-sensation-in-the-mo-2#:~:text=stomatin%20homology%20domain,subunit%20of%20a%20mammalian%20mechanotransducer">scholars.mssm.edu</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3853495/#:~:text=Stomatin%20and%20STOML3%20are%20closely,many%20cutaneous%20afferents%2C%20and%20a">pmc.ncbi.nlm.nih.gov</a>). In normal animals, mechanical stimuli at the skin surface activate mechanotransducer channels in the nerve endings, leading to depolarization and action potentials. STOML3 is a <strong>critical component of this transduction machinery</strong>: in <em>Stoml3</em>-mutant mice, many skin mechanoreceptors cannot convert mechanical stimuli into neural signals (<a href="https://scholars.mssm.edu/en/publications/a-stomatin-domain-protein-essential-for-touch-sensation-in-the-mo-2#:~:text=stomatin%20homology%20domain,subunit%20of%20a%20mammalian%20mechanotransducer">scholars.mssm.edu</a>). Approximately one-third of myelinated mechanoreceptive fibers in the skin have <strong>no mechanosensitive response without STOML3</strong> (<a href="https://scholars.mssm.edu/en/publications/a-stomatin-domain-protein-essential-for-touch-sensation-in-the-mo-2#:~:text=stomatin%20homology%20domain,subunit%20of%20a%20mammalian%20mechanotransducer">scholars.mssm.edu</a>), indicating those receptors’ transducer channels absolutely require STOML3. Consequently, STOML3-deficient mice show behavioral deficits in touch perception, such as reduced responsiveness to light touch and impaired tactile acuity (<a href="https://scholars.mssm.edu/en/publications/a-stomatin-domain-protein-essential-for-touch-sensation-in-the-mo-2#:~:text=protein%203%20,subunit%20of%20a%20mammalian%20mechanotransducer">scholars.mssm.edu</a>). Even certain forms of mechanically evoked pain (like pain from gentle touch after nerve injury) are absent in these mutants, suggesting those pathological touch-pain signals (tactile allodynia) depend on STOML3-mediated mechanotransduction (<a href="https://scholars.mssm.edu/en/publications/a-stomatin-domain-protein-essential-for-touch-sensation-in-the-mo-2#:~:text=protein%203%20,subunit%20of%20a%20mammalian%20mechanotransducer">scholars.mssm.edu</a>). In contrast, other sensory modalities (e.g. responses to heat or noxious chemical pain) are largely intact in <em>Stoml3</em> knockouts, underscoring that STOML3 is selectively required for mechanosensory pathways (<a href="https://scholars.mssm.edu/en/publications/a-stomatin-domain-protein-essential-for-touch-sensation-in-the-mo-2#:~:text=protein%203%20,subunit%20of%20a%20mammalian%20mechanotransducer">scholars.mssm.edu</a>).</p>
+<p>It is noteworthy that <strong>not all sensory fibers rely equally on STOML3</strong>. Research has uncovered fiber-type specificity in STOML3’s contribution. Myelinated low-threshold mechanoreceptors (Aβ fibers) and certain thin myelinated nociceptors (Aδ fibers) critically depend on STOML3, whereas many unmyelinated C-fiber nociceptors do not (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3853495/#:~:text=Lapatsina%20et%20al,order%20to%20ask%20whether%20the">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10734363/#:~:text=%28b%29%20application%20of%20OB,Reduced%20activity%20was%20observed">pmc.ncbi.nlm.nih.gov</a>). Initial studies found <strong>C-fiber mechanonociceptors retained normal mechanosensitivity in Stoml3-knockout mice</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3853495/#:~:text=Lapatsina%20et%20al,order%20to%20ask%20whether%20the">pmc.ncbi.nlm.nih.gov</a>), even though A-fiber mechanoreceptors were severely affected. Recent work in a bone pain model similarly showed that blocking STOML3 function with OB-1 strongly reduced the firing of Aδ mechanosensitive afferents, <strong>without significantly altering C-fiber responses</strong> to mechanical stimuli (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10734363/#:~:text=%28b%29%20application%20of%20OB,Reduced%20activity%20was%20observed">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10734363/#:~:text=match%20at%20L282%20OB,0.05">pmc.ncbi.nlm.nih.gov</a>). These observations suggest that STOML3 is an essential transduction component for <strong>fast-conducting mechanoreceptors</strong> (responsible for acute touch and pressure detection), while <strong>C-fiber mediated mechanosensation</strong> (such as certain dull pressure pain or mechanical inflammation responses) may use alternative molecular mechanisms that do not involve STOML3 (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3853495/#:~:text=Lapatsina%20et%20al,order%20to%20ask%20whether%20the">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10734363/#:~:text=match%20at%20L259%20neurons%20recorded,1">pmc.ncbi.nlm.nih.gov</a>). This fiber-specific role is an active area of research, as it hints that different mechanotransduction complexes operate in different classes of sensory neurons.</p>
+<p><strong>Proprioception:</strong> Beyond cutaneous touch, STOML3 has been implicated in <strong>proprioceptive mechanotransduction</strong> – the sensing of body position and muscle force. Proprioceptive neurons (muscle spindle and Golgi tendon organ afferents) are also mechanosensors, and they express many of the same transduction molecules as cutaneous touch receptors. A recent study by Haseleu <em>et al.</em> (2025) demonstrated that STOML3 is <strong>required for the functional plasticity of proprioceptors</strong> after nerve injury (<a href="https://pubmed.ncbi.nlm.nih.gov/40163784/#:~:text=skin%20previously%20occupied%20by%20the,The%20dramatic">pubmed.ncbi.nlm.nih.gov</a>) (<a href="https://pubmed.ncbi.nlm.nih.gov/40163784/#:~:text=were%20largely%20identical%20to%20normal,factor%20required%20for%20functional%20plasticity">pubmed.ncbi.nlm.nih.gov</a>). In an experimental nerve cross-reinnervation, muscle proprioceptive neurons were surgically redirected to innervate skin (a context where they normally would form touch receptors). In wild-type mice, the redirected muscle afferents were able to form functioning skin mechanoreceptors and responded to cutaneous touch, effectively adopting a cutaneous mechanosensory phenotype (<a href="https://pubmed.ncbi.nlm.nih.gov/40163784/#:~:text=that%20even%20muscle%20afferents%20directed,However%2C%20in%20mice">pubmed.ncbi.nlm.nih.gov</a>) (<a href="https://pubmed.ncbi.nlm.nih.gov/40163784/#:~:text=skin%20previously%20occupied%20by%20the,The%20dramatic">pubmed.ncbi.nlm.nih.gov</a>). However, in <em>Stoml3</em>-knockout mice, these proprioceptive neurons <strong>failed to acquire mechanosensitivity</strong> in the skin – even though they established anatomically normal nerve endings, they could not transduce mechanical stimuli (<a href="https://pubmed.ncbi.nlm.nih.gov/40163784/#:~:text=were%20largely%20identical%20to%20normal,factor%20required%20for%20functional%20plasticity">pubmed.ncbi.nlm.nih.gov</a>). The STOML3-deficient muscle afferents remained largely <strong>silent to mechanical stimulation</strong>, indicating that STOML3 is necessary for them to become functional mechanoreceptors (<a href="https://pubmed.ncbi.nlm.nih.gov/40163784/#:~:text=were%20largely%20identical%20to%20normal,factor%20required%20for%20functional%20plasticity">pubmed.ncbi.nlm.nih.gov</a>). Interestingly, the lack of mechanotransduction did not prevent those neurons from establishing correct central synaptic connections, suggesting STOML3’s role is specifically in the transduction machinery rather than guiding innervation (<a href="https://pubmed.ncbi.nlm.nih.gov/40163784/#:~:text=mechanosensitive%20receptive%20fields%2C%20despite%20making,plasticity%20following%20peripheral%20nerve%20injury">pubmed.ncbi.nlm.nih.gov</a>) (<a href="https://pubmed.ncbi.nlm.nih.gov/40163784/#:~:text=from%20both%20wild,factor%20required%20for%20functional%20plasticity">pubmed.ncbi.nlm.nih.gov</a>). This finding highlights STOML3 as a fundamental <strong>“molecular switch” for mechanosensitivity</strong> – sensory neurons require STOML3 to assemble or operate the mechanotransducer complexes that make them responsive to physical force. Without STOML3, even neurons capable of morphologically adapting to a new target cannot gain mechanosensory function, underscoring how crucial STOML3 is for mechanotransduction across different sensory modalities.</p>
+<p><strong>Olfactory Sensory Modulation:</strong> While STOML3 is primarily studied in touch and proprioception, emerging evidence suggests it also contributes to <strong>olfactory sensory function</strong>. STOML3 is robustly expressed in the <strong>cilia of olfactory sensory neurons</strong>, the site of odorant signal transduction (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC7986538/#:~:text=Stomatin,be%20involved%20in%20modulating%20odorant">pmc.ncbi.nlm.nih.gov</a>). These olfactory cilia contain the molecular machinery (odorant receptors, G-proteins, cyclic nucleotide-gated ion channels, etc.) that initiates smell signals. The presence of STOML3 in this compartment raised the question of whether it influences olfactory signal transduction. In 2021, Agostinelli <em>et al.</em> investigated olfaction in <em>Stoml3</em> knockout mice and found that <strong>olfactory neurons require STOML3 for normal sensory encoding</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC7986538/#:~:text=responses%20in%20OSNs,a%20physiological%20role%20in%20olfaction">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://www.pharm.ox.ac.uk/publications/1166353#:~:text=cilia%20of%20olfactory%20sensory%20neurons,peripheral%20coding%20of%20sensory%20stimuli">www.pharm.ox.ac.uk</a>). Single-cell recordings from olfactory neurons showed that <em>Stoml3</em> KO cells have <strong>abnormally low spontaneous firing activity</strong> and altered inter-spike interval patterns compared to wild-type (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC7986538/#:~:text=responses%20in%20OSNs,a%20physiological%20role%20in%20olfaction">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://www.pharm.ox.ac.uk/publications/1166353#:~:text=and%20Stoml3%20KO%20olfactory%20sensory,Significance%20Statement%20Olfactory%20transduction">www.pharm.ox.ac.uk</a>). Moreover, when stimulated with odorants, STOML3-deficient OSNs produced <strong>significantly fewer action potentials and shorter-lasting responses</strong> than normal neurons (<a href="https://www.pharm.ox.ac.uk/publications/1166353#:~:text=and%20Stoml3%20KO%20olfactory%20sensory,that%20take%20place%20in%20the">www.pharm.ox.ac.uk</a>) (<a href="https://www.pharm.ox.ac.uk/publications/1166353#:~:text=by%20olfactory%20sensory%20neurons,both%20the%20number%20of%20spikes">www.pharm.ox.ac.uk</a>). Importantly, the primary odor transduction current (receptor potential) appeared to be attenuated in the knockouts, rather than there being a general inability to fire action potentials (<a href="https://www.pharm.ox.ac.uk/publications/1166353#:~:text=and%20Stoml3%20KO%20olfactory%20sensory,that%20take%20place%20in%20the">www.pharm.ox.ac.uk</a>) (<a href="https://www.pharm.ox.ac.uk/publications/1166353#:~:text=possible%20frequency%20range%20of%20their,peripheral%20coding%20of%20sensory%20stimuli">www.pharm.ox.ac.uk</a>). This points to a <strong>deficit at the transduction level</strong> – consistent with STOML3 acting near the sensory transduction complex in olfactory cilia. The effect of STOML3 in OSNs seems to be a <strong>modulatory one</strong>: it helps set the baseline excitability (spontaneous firing rate) and allows OSNs to sustain and broaden their firing responses to odor stimuli (<a href="https://www.pharm.ox.ac.uk/publications/1166353#:~:text=cilia%20of%20olfactory%20sensory%20neurons,peripheral%20coding%20of%20sensory%20stimuli">www.pharm.ox.ac.uk</a>). In practical terms, STOML3 enables olfactory neurons to encode odor information with a greater dynamic range of spike frequency and duration (<a href="https://www.pharm.ox.ac.uk/publications/1166353#:~:text=cilia%20of%20olfactory%20sensory%20neurons,peripheral%20coding%20of%20sensory%20stimuli">www.pharm.ox.ac.uk</a>). These findings introduce STOML3 as a <strong>novel player in olfactory signal transduction</strong>, suggesting that even in non-mechanosensory systems, STOML3’s scaffolding role in ciliary membranes can influence sensory signaling. It is an open question whether STOML3 modulates the gating of specific ciliary ion channels (such as the cyclic-nucleotide gated channel or Ca²⁺-activated Cl⁻ channel in OSNs) or perhaps affects the mechanical environment of the cilium during the rapid fluid movements of sniffing. Nonetheless, the <strong>physiological role of STOML3 in olfaction</strong> is now evident: it is required for maintaining normal sensitivity and response patterns in smell receptors (<a href="https://www.pharm.ox.ac.uk/publications/1166353#:~:text=cilia%20of%20olfactory%20sensory%20neurons,peripheral%20coding%20of%20sensory%20stimuli">www.pharm.ox.ac.uk</a>).</p>
+<h1 id="recent-advances-and-therapeutic-implications">Recent Advances and Therapeutic Implications</h1>
+<p>Given STOML3’s central role in mechanosensory function, it has attracted interest as a <strong>therapeutic target</strong>, particularly for treating neuropathic pain and other disorders of touch sensitivity. Mechanical pain (such as allodynia and hyperalgesia) is a major feature of many chronic pain conditions, and research suggests that aberrant STOML3-dependent mechanotransduction contributes to these symptoms (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10734363/#:~:text=characteristic%20that%20is%20important%20for,15%20%E2%80%93%2019">pmc.ncbi.nlm.nih.gov</a>). For example, in models of diabetic neuropathy and nerve injury, animals exhibit exaggerated mechanosensitivity (touch becomes painful), but <strong>pharmacologically blocking STOML3 function can reverse this mechanical hypersensitivity</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10734363/#:~:text=characteristic%20that%20is%20important%20for,15%20%E2%80%93%2019">pmc.ncbi.nlm.nih.gov</a>). Small-molecule inhibitors of STOML3 have been developed to probe this effect. Notably, a compound named <strong>OB-1</strong> was identified in a screen of ~35,000 molecules for inhibitors of mechanotransduction (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10734363/#:~:text=Small%20molecules%20that%20interact%20with,21%20%7D%20silences">pmc.ncbi.nlm.nih.gov</a>). OB-1 binds to STOML3 and selectively <strong>disrupts STOML3 oligomerization</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10734363/#:~:text=screening%20unit,It%20reduces%20the%20sensitivity%20of">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10734363/#:~:text=characteristic%20that%20is%20important%20for,It%20reduces%20the%20sensitivity%20of">pmc.ncbi.nlm.nih.gov</a>). By doing so, it functionally “knocks down” STOML3’s ability to support mechanogated ion channels. In vitro, OB-1 markedly reduces the amplitude of mechanically activated currents in DRG neurons (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10734363/#:~:text=characteristic%20that%20is%20important%20for,15%20%E2%80%93%2019">pmc.ncbi.nlm.nih.gov</a>). In ex vivo nerve recordings, OB-1 application silences the firing of touch-sensitive Aβ and Aδ fibers without affecting unrelated electrical excitability (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10734363/#:~:text=characteristic%20that%20is%20important%20for,15%20%E2%80%93%2019">pmc.ncbi.nlm.nih.gov</a>). Most importantly, OB-1 has shown efficacy in vivo: <strong>in animal models of pain, OB-1 alleviates mechanical pain behaviors</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10734363/#:~:text=inhibition%20of%20STOML3%20oligomerisation%20with,bone%20pain%20by%20reducing%20the">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10734363/#:~:text=inhibition%20of%20STOML3%20oligomerisation%20with,bone%20pain%20by%20reducing%20the">pmc.ncbi.nlm.nih.gov</a>). For instance, in a rat model of inflammatory bone pain, local injection of OB-1 led to increased weight-bearing on the injured limb, indicating pain relief due to reduced noxious mechanical input from bone afferents (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10734363/#:~:text=inhibition%20of%20STOML3%20oligomerisation%20with,bone%20pain%20by%20reducing%20the">pmc.ncbi.nlm.nih.gov</a>). Similarly, in mouse models of neuropathy (diabetic neuropathy and chronic nerve constriction injury), systemic OB-1 treatment reversed mechanical allodynia, bringing pain sensitivity back toward normal levels (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10734363/#:~:text=characteristic%20that%20is%20important%20for,15%20%E2%80%93%2019">pmc.ncbi.nlm.nih.gov</a>). These outcomes demonstrate that <strong>targeting STOML3-mediated mechanotransduction can modulate touch and pain perception</strong> in vivo, validating STOML3 as a promising analgesic target.</p>
+<p>Importantly, STOML3 inhibitors achieve pain relief by <strong>modulating the mechanosensory apparatus upstream of nerve firing</strong>, rather than by blocking neurotransmission or general excitability. This might offer a selective way to dampen pathological touch and pain (for example, reducing painful tactile sensations) without completely numbing all sensation. Indeed, because C-fiber pain pathways (e.g. for heat pain or certain internal pains) do not rely on STOML3 (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3853495/#:~:text=Lapatsina%20et%20al,order%20to%20ask%20whether%20the">pmc.ncbi.nlm.nih.gov</a>), a STOML3 blocker might specifically reduce mechanical pain (like pressure-induced pain or allodynia) while sparing other sensory modalities. The specificity of OB-1’s action is also indicated by its lack of direct effect on unrelated ion channels: for example, OB-1 does not block proton-gated ASIC currents directly and does not mimic general anesthetics (<a href="https://patents.google.com/patent/US11384071B2/en#:~:text=US11384071B2%20,%28b%29%20Stomatin%20inhibits">patents.google.com</a>). Its action is confined to interfering with the STOML3 scaffold, which in turn silences mechanotransduction at the sensory nerve endings (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10734363/#:~:text=characteristic%20that%20is%20important%20for,15%20%E2%80%93%2019">pmc.ncbi.nlm.nih.gov</a>). This mode of action has led researchers to propose STOML3-based strategies as novel treatments for conditions involving abnormal touch or pain sensitivity (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4633829/#:~:text=STOML3%20is%20detected%20in%20cholesterol,offer%20an%20alternative%20strategy%20for">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10734363/#:~:text=characteristic%20that%20is%20important%20for,15%20%E2%80%93%2019">pmc.ncbi.nlm.nih.gov</a>). A 2015 study suggested that <strong>disrupting the STOML3–cholesterol interaction</strong> could be one such strategy, effectively “softening” the membrane microdomains and raising the threshold for mechanoreceptor activation as a way to reduce pain (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4633829/#:~:text=STOML3%20is%20detected%20in%20cholesterol,offer%20an%20alternative%20strategy%20for">pmc.ncbi.nlm.nih.gov</a>). The subsequent development of oligomerization inhibitors like OB-1 aligns with this idea by functionally removing the STOML3 scaffold and thus desensitizing mechanoreceptors. As of 2023–2024, <strong>patent applications and preclinical research</strong> have been detailing STOML3 inhibitors for pain therapy (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10734363/#:~:text=characteristic%20that%20is%20important%20for,15%20%E2%80%93%2019">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://patents.google.com/patent/US11384071B2/en#:~:text=US11384071B2%20,%28b%29%20Stomatin%20inhibits">patents.google.com</a>), and ongoing studies continue to explore STOML3’s role in touch disorders (e.g. tactile allodynia in neuropathic pain, or even hypersensitivity in autism or other conditions affecting touch perception).</p>
+<p>In summary, <strong>STOML3 is a pivotal mechanotransduction protein</strong> with a well-established role in touch, pressure, and pain sensation. It acts as a membrane-bound adapter that links mechanical forces to ion channel activation, by shaping the lipid–protein microenvironment of mechanosensory complexes. Its presence is required at the cellular level (nerve endings and sensory cilia) for normal mechanosensitive currents, and at the organism level for normal tactile behaviors. Recent research (2021–2024) has expanded our understanding of STOML3’s function – revealing its contributions to olfactory signaling and to sensory neuron plasticity – and has highlighted its potential as a target for modulating touch and pain in disease. Going forward, <strong>the continued study of STOML3</strong> offers both fundamental insights into how cells sense mechanical stimuli and a pathway to therapeutic innovations for pain and sensory disorders (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4633829/#:~:text=STOML3%20is%20detected%20in%20cholesterol,offer%20an%20alternative%20strategy%20for">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10734363/#:~:text=characteristic%20that%20is%20important%20for,15%20%E2%80%93%2019">pmc.ncbi.nlm.nih.gov</a>).</p>
+<p><strong>References:</strong></p>
+<ul>
+<li>Wetzel, C. <em>et al.</em> (2007). <em>Nature</em> <strong>445</strong>(7124): 206–209. DOI: 10.1038/nature05394.  <strong>PMID:</strong> 17230193.  (Demonstrated that STOML3/SLP3 is essential for touch sensation in mice; ~35% of mechanoreceptors lost function in Stoml3 mutants and mechanosensitive currents were abolished without SLP3 (<a href="https://scholars.mssm.edu/en/publications/a-stomatin-domain-protein-essential-for-touch-sensation-in-the-mo-2#:~:text=stomatin%20homology%20domain,subunit%20of%20a%20mammalian%20mechanotransducer">scholars.mssm.edu</a>).)  </li>
+<li>Moshourab, R.A. <em>et al.</em> (2013). <em>J. Physiol.</em> <strong>591</strong>(22): 5555–5574. DOI: 10.1113/jphysiol.2013.261180. <strong>PMID:</strong> 23959680. (Showed that stomatin-family proteins modulate mechanonociceptor sensitivity via interactions with ASIC channels; STOML3 interacts with ASIC2/3 and deletion of Stoml3 exacerbates mechanosensory deficits in combination with ASIC knockouts (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3853495/#:~:text=match%20at%20L88%20Both%20STOML3,2012">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3853495/#:~:text=indicated%20that%20a%20stomatin%2FSTOML3%20interaction,deficits%20in%20the%20mechanosensitivity%20of">pmc.ncbi.nlm.nih.gov</a>).)  </li>
+<li>Qi, Y. <em>et al.</em> (2015). <em>Nat. Commun.</em> <strong>6</strong>: 8512. DOI: 10.1038/ncomms9512. <strong>PMID:</strong> 26443885. (Elucidated the mechanism of STOML3 in mechanotransduction: STOML3 binds cholesterol in lipid rafts to stiffen membranes and sensitize Piezo1/2 channels to force (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4633829/#:~:text=Sensing%20force%20is%20crucial%20to,required%20to%20maintain%20membrane%20mechanics">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4633829/#:~:text=Piezo2%2BSTOML3%2BM%CE%B2CD%3A%20n%3D5%2C%20Piezo2%2BSTOML3,0.0001.%20Error%20bars%20indicate%20s.e.m">pmc.ncbi.nlm.nih.gov</a>). Demonstrated that a cholesterol-binding mutant STOML3 fails to potentiate Piezo currents (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4633829/#:~:text=match%20at%20L468%20its%20function,modulates%20Piezo1%20channel%20activity%20via">pmc.ncbi.nlm.nih.gov</a>) and that cholesterol depletion mimics the loss of STOML3 (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4633829/#:~:text=membrane%20mechanics%20by%20binding%20cholesterol,Targeting">pmc.ncbi.nlm.nih.gov</a>).)  </li>
+<li>Agostinelli, E. <em>et al.</em> (2021). <em>eNeuro</em> <strong>8</strong>(2): ENEURO.0565-20.2021. DOI: 10.1523/ENEURO.0565-20.2021. <strong>PMID:</strong> 33637538. (Reported a novel role for STOML3 in olfactory sensory neurons. STOML3 localizes to olfactory cilia and is required for normal odor-evoked signaling; Stoml3–KO OSNs showed reduced spontaneous firing and fewer, shorter spikes in response to odors (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC7986538/#:~:text=responses%20in%20OSNs,a%20physiological%20role%20in%20olfaction">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://www.pharm.ox.ac.uk/publications/1166353#:~:text=by%20olfactory%20sensory%20neurons,both%20the%20number%20of%20spikes">www.pharm.ox.ac.uk</a>).)  </li>
+<li>Morgan, M. <em>et al.</em> (2023). <em>Mol. Pain</em> <strong>19</strong>: 17448069231222407. DOI: 10.1177/17448069231222407. <strong>PMID:</strong> 38073226. (Examined STOML3’s role in an acute bone pain model. Using the STOML3 oligomerization inhibitor OB-1, they found that STOML3 modulates Aδ-fiber responses to noxious mechanical stimuli, but not C-fiber responses (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10734363/#:~:text=%28b%29%20application%20of%20OB,Reduced%20activity%20was%20observed">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10734363/#:~:text=match%20at%20L282%20OB,0.05">pmc.ncbi.nlm.nih.gov</a>). OB-1 reduced mechanical pain behavior in rats, suggesting therapeutic potential (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10734363/#:~:text=inhibition%20of%20STOML3%20oligomerisation%20with,bone%20pain%20by%20reducing%20the">pmc.ncbi.nlm.nih.gov</a>).)  </li>
+<li>Haseleu, J. <em>et al.</em> (2025). <em>Exp. Physiol.</em> <strong>110</strong>(10): 1473–1491. DOI: 10.1113/EP092428. <strong>PMID:</strong> 40163784. (Demonstrated that STOML3 is required for proprioceptive neurons to acquire mechanosensitivity after nerve regeneration. In Stoml3-mutant mice, muscle afferents re-routed to skin failed to form functional mechanoreceptors despite normal innervation, underscoring STOML3’s necessity for mechanotransducer function (<a href="https://pubmed.ncbi.nlm.nih.gov/40163784/#:~:text=skin%20previously%20occupied%20by%20the,The%20dramatic">pubmed.ncbi.nlm.nih.gov</a>) (<a href="https://pubmed.ncbi.nlm.nih.gov/40163784/#:~:text=were%20largely%20identical%20to%20normal,factor%20required%20for%20functional%20plasticity">pubmed.ncbi.nlm.nih.gov</a>).)  </li>
+<li><strong>Additional Data Sources:</strong> <em>Human Protein Atlas</em> (v22, 2023) – STOML3 protein is enriched in multiciliated cells (e.g. fallopian tube, respiratory epithelium) and localizes to the ciliary axoneme (<a href="https://www.proteinatlas.org/ENSG00000133115-STOML3/tissue#:~:text=HUMAN%20PROTEIN%20ATLAS%20INFORMATION,IMMUNOHISTOCHEMISTRY%20DATA%20RELIABILITY">www.proteinatlas.org</a>) (<a href="https://www.proteinatlas.org/ENSG00000133115-STOML3/tissue#:~:text=Multiplex%20immunofluorescence%20staining%20of%20ciliated,i">www.proteinatlas.org</a>). <em>UniprotKB</em> (Q8TAV4) – STOML3 is a 291-aa membrane protein with two known isoforms and predicted membrane localization.</li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>AnnotationURLCitation(end_index=396, start_index=231, title='Stomatin-domain protein interactions with acid-sensing ion channels modulate nociceptor mechanosensitivity - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3853495/#:~:text=Stomatin%20and%20STOML3%20are%20closely,many%20cutaneous%20afferents%2C%20and%20a')</li>
+<li>AnnotationURLCitation(end_index=999, start_index=856, title='Membrane stiffening by STOML3 facilitates mechanosensation in sensory neurons - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4633829/#:~:text=membrane%20mechanics%20by%20binding%20cholesterol,Targeting')</li>
+<li>AnnotationURLCitation(end_index=1340, start_index=1131, title='A stomatin-domain protein essential for touch sensation in the mouse - Icahn School of Medicine at Mount Sinai', type='url_citation', url='https://scholars.mssm.edu/en/publications/a-stomatin-domain-protein-essential-for-touch-sensation-in-the-mo-2#:~:text=detect%20specific%20modalities%20of%20mechanical,driven%20behaviours')</li>
+<li>AnnotationURLCitation(end_index=1647, start_index=1429, title='A stomatin-domain protein essential for touch sensation in the mouse - Icahn School of Medicine at Mount Sinai', type='url_citation', url='https://scholars.mssm.edu/en/publications/a-stomatin-domain-protein-essential-for-touch-sensation-in-the-mo-2#:~:text=stomatin%20homology%20domain,subunit%20of%20a%20mammalian%20mechanotransducer')</li>
+<li>AnnotationURLCitation(end_index=2121, start_index=1903, title='A stomatin-domain protein essential for touch sensation in the mouse - Icahn School of Medicine at Mount Sinai', type='url_citation', url='https://scholars.mssm.edu/en/publications/a-stomatin-domain-protein-essential-for-touch-sensation-in-the-mo-2#:~:text=stomatin%20homology%20domain,subunit%20of%20a%20mammalian%20mechanotransducer')</li>
+<li>AnnotationURLCitation(end_index=2487, start_index=2269, title='A stomatin-domain protein essential for touch sensation in the mouse - Icahn School of Medicine at Mount Sinai', type='url_citation', url='https://scholars.mssm.edu/en/publications/a-stomatin-domain-protein-essential-for-touch-sensation-in-the-mo-2#:~:text=stomatin%20homology%20domain,subunit%20of%20a%20mammalian%20mechanotransducer')</li>
+<li>AnnotationURLCitation(end_index=2882, start_index=2664, title='A stomatin-domain protein essential for touch sensation in the mouse - Icahn School of Medicine at Mount Sinai', type='url_citation', url='https://scholars.mssm.edu/en/publications/a-stomatin-domain-protein-essential-for-touch-sensation-in-the-mo-2#:~:text=stomatin%20homology%20domain,subunit%20of%20a%20mammalian%20mechanotransducer')</li>
+<li>AnnotationURLCitation(end_index=3215, start_index=3081, title='A Role for STOML3 in Olfactory Sensory Transduction - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC7986538/#:~:text=Stomatin,be%20involved%20in%20modulating%20odorant')</li>
+<li>AnnotationURLCitation(end_index=3533, start_index=3361, title='Tissue expression of STOML3 - Summary - The Human Protein Atlas', type='url_citation', url='https://www.proteinatlas.org/ENSG00000133115-STOML3/tissue#:~:text=HUMAN%20PROTEIN%20ATLAS%20INFORMATION,IMMUNOHISTOCHEMISTRY%20DATA%20RELIABILITY')</li>
+<li>AnnotationURLCitation(end_index=3686, start_index=3534, title='Tissue expression of STOML3 - Summary - The Human Protein Atlas', type='url_citation', url='https://www.proteinatlas.org/ENSG00000133115-STOML3/tissue#:~:text=Multiplex%20immunofluorescence%20staining%20of%20ciliated,i')</li>
+<li>AnnotationURLCitation(end_index=4082, start_index=3939, title='Membrane stiffening by STOML3 facilitates mechanosensation in sensory neurons - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4633829/#:~:text=membrane%20mechanics%20by%20binding%20cholesterol,Targeting')</li>
+<li>AnnotationURLCitation(end_index=4260, start_index=4083, title='Stomatin-domain protein interactions with acid-sensing ion channels modulate nociceptor mechanosensitivity - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3853495/#:~:text=match%20at%20L888%20same%20vesicular,%E2%88%92%2F%E2%88%92%7D%20mutant%20mice%20may%20reflect')</li>
+<li>AnnotationURLCitation(end_index=4560, start_index=4421, title='Stomatin-like protein 3 modulates the responses of Aδ, but not C fiber bone afferent neurons to noxious mechanical stimulation in an animal model of acute experimental bone pain - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10734363/#:~:text=screening%20unit,It%20reduces%20the%20sensitivity%20of')</li>
+<li>AnnotationURLCitation(end_index=4728, start_index=4561, title='Stomatin-like protein 3 modulates the responses of Aδ, but not C fiber bone afferent neurons to noxious mechanical stimulation in an animal model of acute experimental bone pain - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10734363/#:~:text=characteristic%20that%20is%20important%20for,It%20reduces%20the%20sensitivity%20of')</li>
+<li>AnnotationURLCitation(end_index=5118, start_index=4951, title='Membrane stiffening by STOML3 facilitates mechanosensation in sensory neurons - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4633829/#:~:text=Sensing%20force%20is%20crucial%20to,required%20to%20maintain%20membrane%20mechanics')</li>
+<li>AnnotationURLCitation(end_index=5469, start_index=5302, title='Membrane stiffening by STOML3 facilitates mechanosensation in sensory neurons - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4633829/#:~:text=Sensing%20force%20is%20crucial%20to,required%20to%20maintain%20membrane%20mechanics')</li>
+<li>AnnotationURLCitation(end_index=5969, start_index=5802, title='Membrane stiffening by STOML3 facilitates mechanosensation in sensory neurons - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4633829/#:~:text=Sensing%20force%20is%20crucial%20to,required%20to%20maintain%20membrane%20mechanics')</li>
+<li>AnnotationURLCitation(end_index=6329, start_index=6165, title='Membrane stiffening by STOML3 facilitates mechanosensation in sensory neurons - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4633829/#:~:text=match%20at%20L468%20its%20function,modulates%20Piezo1%20channel%20activity%20via')</li>
+<li>AnnotationURLCitation(end_index=6500, start_index=6330, title='Membrane stiffening by STOML3 facilitates mechanosensation in sensory neurons - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4633829/#:~:text=its%20function%20in%20sensitization%20of,modulates%20Piezo1%20channel%20activity%20via')</li>
+<li>AnnotationURLCitation(end_index=7242, start_index=7038, title='A stomatin-domain protein essential for touch sensation in the mouse - Icahn School of Medicine at Mount Sinai', type='url_citation', url='https://scholars.mssm.edu/en/publications/a-stomatin-domain-protein-essential-for-touch-sensation-in-the-mo-2#:~:text=protein%203%20,subunit%20of%20a%20mammalian%20mechanotransducer')</li>
+<li>AnnotationURLCitation(end_index=7796, start_index=7578, title='A stomatin-domain protein essential for touch sensation in the mouse - Icahn School of Medicine at Mount Sinai', type='url_citation', url='https://scholars.mssm.edu/en/publications/a-stomatin-domain-protein-essential-for-touch-sensation-in-the-mo-2#:~:text=stomatin%20homology%20domain,subunit%20of%20a%20mammalian%20mechanotransducer')</li>
+<li>AnnotationURLCitation(end_index=8141, start_index=7923, title='A stomatin-domain protein essential for touch sensation in the mouse - Icahn School of Medicine at Mount Sinai', type='url_citation', url='https://scholars.mssm.edu/en/publications/a-stomatin-domain-protein-essential-for-touch-sensation-in-the-mo-2#:~:text=stomatin%20homology%20domain,subunit%20of%20a%20mammalian%20mechanotransducer')</li>
+<li>AnnotationURLCitation(end_index=8564, start_index=8360, title='A stomatin-domain protein essential for touch sensation in the mouse - Icahn School of Medicine at Mount Sinai', type='url_citation', url='https://scholars.mssm.edu/en/publications/a-stomatin-domain-protein-essential-for-touch-sensation-in-the-mo-2#:~:text=protein%203%20,subunit%20of%20a%20mammalian%20mechanotransducer')</li>
+<li>AnnotationURLCitation(end_index=8924, start_index=8700, title='A stomatin-domain protein essential for touch sensation in the mouse - Icahn School of Medicine at Mount Sinai', type='url_citation', url='https://scholars.mssm.edu/en/publications/a-stomatin-domain-protein-essential-for-touch-sensation-in-the-mo-2#:~:text=in%20many%20sensory%20neurons%20do,subunit%20of%20a%20mammalian%20mechanotransducer')</li>
+<li>AnnotationURLCitation(end_index=9501, start_index=9334, title='Membrane stiffening by STOML3 facilitates mechanosensation in sensory neurons - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4633829/#:~:text=Sensing%20force%20is%20crucial%20to,required%20to%20maintain%20membrane%20mechanics')</li>
+<li>AnnotationURLCitation(end_index=9687, start_index=9502, title='Membrane stiffening by STOML3 facilitates mechanosensation in sensory neurons - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4633829/#:~:text=Piezo2%2BSTOML3%2BM%CE%B2CD%3A%20n%3D5%2C%20Piezo2%2BSTOML3,0.0001.%20Error%20bars%20indicate%20s.e.m')</li>
+<li>AnnotationURLCitation(end_index=9989, start_index=9839, title='Membrane stiffening by STOML3 facilitates mechanosensation in sensory neurons - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4633829/#:~:text=unknown%2C%20Piezo%20channels%20have%20been,We%20therefore%20first')</li>
+<li>AnnotationURLCitation(end_index=10160, start_index=9990, title='Membrane stiffening by STOML3 facilitates mechanosensation in sensory neurons - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4633829/#:~:text=its%20function%20in%20sensitization%20of,modulates%20Piezo1%20channel%20activity%20via')</li>
+<li>AnnotationURLCitation(end_index=10517, start_index=10353, title='Membrane stiffening by STOML3 facilitates mechanosensation in sensory neurons - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4633829/#:~:text=match%20at%20L468%20its%20function,modulates%20Piezo1%20channel%20activity%20via')</li>
+<li>AnnotationURLCitation(end_index=10688, start_index=10518, title='Membrane stiffening by STOML3 facilitates mechanosensation in sensory neurons - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4633829/#:~:text=its%20function%20in%20sensitization%20of,modulates%20Piezo1%20channel%20activity%20via')</li>
+<li>AnnotationURLCitation(end_index=11075, start_index=10890, title='Membrane stiffening by STOML3 facilitates mechanosensation in sensory neurons - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4633829/#:~:text=Piezo2%2BSTOML3%2BM%CE%B2CD%3A%20n%3D5%2C%20Piezo2%2BSTOML3,0.0001.%20Error%20bars%20indicate%20s.e.m')</li>
+<li>AnnotationURLCitation(end_index=11213, start_index=11076, title='Membrane stiffening by STOML3 facilitates mechanosensation in sensory neurons - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4633829/#:~:text=currents%20%28Fig,to%20the%20cellular%20toxicity%20of')</li>
+<li>AnnotationURLCitation(end_index=11524, start_index=11381, title='Membrane stiffening by STOML3 facilitates mechanosensation in sensory neurons - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4633829/#:~:text=membrane%20mechanics%20by%20binding%20cholesterol,Targeting')</li>
+<li>AnnotationURLCitation(end_index=11696, start_index=11525, title='Membrane stiffening by STOML3 facilitates mechanosensation in sensory neurons - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4633829/#:~:text=fails%20to%20increase%20the%20mechanosensitivity,agent%2C%20in%20C57BL%2F6N%20but%20not')</li>
+<li>AnnotationURLCitation(end_index=11988, start_index=11845, title='Membrane stiffening by STOML3 facilitates mechanosensation in sensory neurons - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4633829/#:~:text=membrane%20mechanics%20by%20binding%20cholesterol,Targeting')</li>
+<li>AnnotationURLCitation(end_index=12272, start_index=12105, title='Membrane stiffening by STOML3 facilitates mechanosensation in sensory neurons - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4633829/#:~:text=STOML3%20is%20detected%20in%20cholesterol,offer%20an%20alternative%20strategy%20for')</li>
+<li>AnnotationURLCitation(end_index=12598, start_index=12477, title='Stomatin-domain protein interactions with acid-sensing ion channels modulate nociceptor mechanosensitivity - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3853495/#:~:text=match%20at%20L88%20Both%20STOML3,2012')</li>
+<li>AnnotationURLCitation(end_index=13006, start_index=12885, title='Stomatin-domain protein interactions with acid-sensing ion channels modulate nociceptor mechanosensitivity - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3853495/#:~:text=match%20at%20L88%20Both%20STOML3,2012')</li>
+<li>AnnotationURLCitation(end_index=13304, start_index=13179, title='Stomatin-domain protein interactions with acid-sensing ion channels modulate nociceptor mechanosensitivity - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3853495/#:~:text=Both%20STOML3%20and%20stomatin%20can,2012')</li>
+<li>AnnotationURLCitation(end_index=13443, start_index=13305, title='Stomatin-domain protein interactions with acid-sensing ion channels modulate nociceptor mechanosensitivity - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3853495/#:~:text=asic3,mechanosensitivity%20of%20nociceptors%20in%20the')</li>
+<li>AnnotationURLCitation(end_index=13873, start_index=13689, title='Stomatin-domain protein interactions with acid-sensing ion channels modulate nociceptor mechanosensitivity - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3853495/#:~:text=indicated%20that%20a%20stomatin%2FSTOML3%20interaction,deficits%20in%20the%20mechanosensitivity%20of')</li>
+<li>AnnotationURLCitation(end_index=14039, start_index=13874, title='Stomatin-domain protein interactions with acid-sensing ion channels modulate nociceptor mechanosensitivity - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3853495/#:~:text=Stomatin%20and%20STOML3%20are%20closely,many%20cutaneous%20afferents%2C%20and%20a')</li>
+<li>AnnotationURLCitation(end_index=14378, start_index=14194, title='Stomatin-domain protein interactions with acid-sensing ion channels modulate nociceptor mechanosensitivity - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3853495/#:~:text=indicated%20that%20a%20stomatin%2FSTOML3%20interaction,deficits%20in%20the%20mechanosensitivity%20of')</li>
+<li>AnnotationURLCitation(end_index=14521, start_index=14379, title='Stomatin-domain protein interactions with acid-sensing ion channels modulate nociceptor mechanosensitivity - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3853495/#:~:text=,and%20ASIC3%2C%20regulate%20mechanosensory%20transduction')</li>
+<li>AnnotationURLCitation(end_index=14889, start_index=14705, title='Stomatin-domain protein interactions with acid-sensing ion channels modulate nociceptor mechanosensitivity - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3853495/#:~:text=indicated%20that%20a%20stomatin%2FSTOML3%20interaction,deficits%20in%20the%20mechanosensitivity%20of')</li>
+<li>AnnotationURLCitation(end_index=15027, start_index=14890, title='Stomatin-domain protein interactions with acid-sensing ion channels modulate nociceptor mechanosensitivity - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3853495/#:~:text=ASIC3,thus%20reasoned%20that%20important%20functional')</li>
+<li>AnnotationURLCitation(end_index=15405, start_index=15284, title='Stomatin-domain protein interactions with acid-sensing ion channels modulate nociceptor mechanosensitivity - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3853495/#:~:text=match%20at%20L88%20Both%20STOML3,2012')</li>
+<li>AnnotationURLCitation(end_index=15591, start_index=15406, title='Membrane stiffening by STOML3 facilitates mechanosensation in sensory neurons - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4633829/#:~:text=Piezo2%2BSTOML3%2BM%CE%B2CD%3A%20n%3D5%2C%20Piezo2%2BSTOML3,0.0001.%20Error%20bars%20indicate%20s.e.m')</li>
+<li>AnnotationURLCitation(end_index=16016, start_index=15877, title='Stomatin-like protein 3 modulates the responses of Aδ, but not C fiber bone afferent neurons to noxious mechanical stimulation in an animal model of acute experimental bone pain - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10734363/#:~:text=screening%20unit,It%20reduces%20the%20sensitivity%20of')</li>
+<li>AnnotationURLCitation(end_index=16184, start_index=16017, title='Stomatin-like protein 3 modulates the responses of Aδ, but not C fiber bone afferent neurons to noxious mechanical stimulation in an animal model of acute experimental bone pain - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10734363/#:~:text=characteristic%20that%20is%20important%20for,It%20reduces%20the%20sensitivity%20of')</li>
+<li>AnnotationURLCitation(end_index=16727, start_index=16588, title='Stomatin-like protein 3 modulates the responses of Aδ, but not C fiber bone afferent neurons to noxious mechanical stimulation in an animal model of acute experimental bone pain - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10734363/#:~:text=screening%20unit,It%20reduces%20the%20sensitivity%20of')</li>
+<li>AnnotationURLCitation(end_index=16895, start_index=16728, title='Stomatin-like protein 3 modulates the responses of Aδ, but not C fiber bone afferent neurons to noxious mechanical stimulation in an animal model of acute experimental bone pain - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10734363/#:~:text=characteristic%20that%20is%20important%20for,It%20reduces%20the%20sensitivity%20of')</li>
+<li>AnnotationURLCitation(end_index=17113, start_index=16998, title='Stomatin-like protein 3 modulates the responses of Aδ, but not C fiber bone afferent neurons to noxious mechanical stimulation in an animal model of acute experimental bone pain - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10734363/#:~:text=screening%20unit,24%E2%80%9317')</li>
+<li>AnnotationURLCitation(end_index=17428, start_index=17279, title='Stomatin-like protein 3 modulates the responses of Aδ, but not C fiber bone afferent neurons to noxious mechanical stimulation in an animal model of acute experimental bone pain - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10734363/#:~:text=characteristic%20that%20is%20important%20for,15%20%E2%80%93%2019')</li>
+<li>AnnotationURLCitation(end_index=17732, start_index=17593, title='Stomatin-like protein 3 modulates the responses of Aδ, but not C fiber bone afferent neurons to noxious mechanical stimulation in an animal model of acute experimental bone pain - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10734363/#:~:text=screening%20unit,It%20reduces%20the%20sensitivity%20of')</li>
+<li>AnnotationURLCitation(end_index=17882, start_index=17733, title='Stomatin-like protein 3 modulates the responses of Aδ, but not C fiber bone afferent neurons to noxious mechanical stimulation in an animal model of acute experimental bone pain - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10734363/#:~:text=characteristic%20that%20is%20important%20for,15%20%E2%80%93%2019')</li>
+<li>AnnotationURLCitation(end_index=18709, start_index=18491, title='A stomatin-domain protein essential for touch sensation in the mouse - Icahn School of Medicine at Mount Sinai', type='url_citation', url='https://scholars.mssm.edu/en/publications/a-stomatin-domain-protein-essential-for-touch-sensation-in-the-mo-2#:~:text=stomatin%20homology%20domain,subunit%20of%20a%20mammalian%20mechanotransducer')</li>
+<li>AnnotationURLCitation(end_index=18875, start_index=18710, title='Stomatin-domain protein interactions with acid-sensing ion channels modulate nociceptor mechanosensitivity - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3853495/#:~:text=Stomatin%20and%20STOML3%20are%20closely,many%20cutaneous%20afferents%2C%20and%20a')</li>
+<li>AnnotationURLCitation(end_index=19433, start_index=19215, title='A stomatin-domain protein essential for touch sensation in the mouse - Icahn School of Medicine at Mount Sinai', type='url_citation', url='https://scholars.mssm.edu/en/publications/a-stomatin-domain-protein-essential-for-touch-sensation-in-the-mo-2#:~:text=stomatin%20homology%20domain,subunit%20of%20a%20mammalian%20mechanotransducer')</li>
+<li>AnnotationURLCitation(end_index=19780, start_index=19562, title='A stomatin-domain protein essential for touch sensation in the mouse - Icahn School of Medicine at Mount Sinai', type='url_citation', url='https://scholars.mssm.edu/en/publications/a-stomatin-domain-protein-essential-for-touch-sensation-in-the-mo-2#:~:text=stomatin%20homology%20domain,subunit%20of%20a%20mammalian%20mechanotransducer')</li>
+<li>AnnotationURLCitation(end_index=20217, start_index=20013, title='A stomatin-domain protein essential for touch sensation in the mouse - Icahn School of Medicine at Mount Sinai', type='url_citation', url='https://scholars.mssm.edu/en/publications/a-stomatin-domain-protein-essential-for-touch-sensation-in-the-mo-2#:~:text=protein%203%20,subunit%20of%20a%20mammalian%20mechanotransducer')</li>
+<li>AnnotationURLCitation(end_index=20663, start_index=20459, title='A stomatin-domain protein essential for touch sensation in the mouse - Icahn School of Medicine at Mount Sinai', type='url_citation', url='https://scholars.mssm.edu/en/publications/a-stomatin-domain-protein-essential-for-touch-sensation-in-the-mo-2#:~:text=protein%203%20,subunit%20of%20a%20mammalian%20mechanotransducer')</li>
+<li>AnnotationURLCitation(end_index=21076, start_index=20872, title='A stomatin-domain protein essential for touch sensation in the mouse - Icahn School of Medicine at Mount Sinai', type='url_citation', url='https://scholars.mssm.edu/en/publications/a-stomatin-domain-protein-essential-for-touch-sensation-in-the-mo-2#:~:text=protein%203%20,subunit%20of%20a%20mammalian%20mechanotransducer')</li>
+<li>AnnotationURLCitation(end_index=21548, start_index=21412, title='Stomatin-domain protein interactions with acid-sensing ion channels modulate nociceptor mechanosensitivity - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3853495/#:~:text=Lapatsina%20et%20al,order%20to%20ask%20whether%20the')</li>
+<li>AnnotationURLCitation(end_index=21701, start_index=21549, title='Stomatin-like protein 3 modulates the responses of Aδ, but not C fiber bone afferent neurons to noxious mechanical stimulation in an animal model of acute experimental bone pain - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10734363/#:~:text=%28b%29%20application%20of%20OB,Reduced%20activity%20was%20observed')</li>
+<li>AnnotationURLCitation(end_index=21951, start_index=21815, title='Stomatin-domain protein interactions with acid-sensing ion channels modulate nociceptor mechanosensitivity - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3853495/#:~:text=Lapatsina%20et%20al,order%20to%20ask%20whether%20the')</li>
+<li>AnnotationURLCitation(end_index=22393, start_index=22241, title='Stomatin-like protein 3 modulates the responses of Aδ, but not C fiber bone afferent neurons to noxious mechanical stimulation in an animal model of acute experimental bone pain - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10734363/#:~:text=%28b%29%20application%20of%20OB,Reduced%20activity%20was%20observed')</li>
+<li>AnnotationURLCitation(end_index=22506, start_index=22394, title='Stomatin-like protein 3 modulates the responses of Aδ, but not C fiber bone afferent neurons to noxious mechanical stimulation in an animal model of acute experimental bone pain - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10734363/#:~:text=match%20at%20L282%20OB,0.05')</li>
+<li>AnnotationURLCitation(end_index=23003, start_index=22867, title='Stomatin-domain protein interactions with acid-sensing ion channels modulate nociceptor mechanosensitivity - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3853495/#:~:text=Lapatsina%20et%20al,order%20to%20ask%20whether%20the')</li>
+<li>AnnotationURLCitation(end_index=23129, start_index=23004, title='Stomatin-like protein 3 modulates the responses of Aδ, but not C fiber bone afferent neurons to noxious mechanical stimulation in an animal model of acute experimental bone pain - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10734363/#:~:text=match%20at%20L259%20neurons%20recorded,1')</li>
+<li>AnnotationURLCitation(end_index=23924, start_index=23791, title='The mechanotransduction protein STOML3 is required for proprioceptor plasticity following peripheral nerve regeneration - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/40163784/#:~:text=skin%20previously%20occupied%20by%20the,The%20dramatic')</li>
+<li>AnnotationURLCitation(end_index=24094, start_index=23925, title='The mechanotransduction protein STOML3 is required for proprioceptor plasticity following peripheral nerve regeneration - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/40163784/#:~:text=were%20largely%20identical%20to%20normal,factor%20required%20for%20functional%20plasticity')</li>
+<li>AnnotationURLCitation(end_index=24617, start_index=24472, title='The mechanotransduction protein STOML3 is required for proprioceptor plasticity following peripheral nerve regeneration - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/40163784/#:~:text=that%20even%20muscle%20afferents%20directed,However%2C%20in%20mice')</li>
+<li>AnnotationURLCitation(end_index=24751, start_index=24618, title='The mechanotransduction protein STOML3 is required for proprioceptor plasticity following peripheral nerve regeneration - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/40163784/#:~:text=skin%20previously%20occupied%20by%20the,The%20dramatic')</li>
+<li>AnnotationURLCitation(end_index=25150, start_index=24981, title='The mechanotransduction protein STOML3 is required for proprioceptor plasticity following peripheral nerve regeneration - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/40163784/#:~:text=were%20largely%20identical%20to%20normal,factor%20required%20for%20functional%20plasticity')</li>
+<li>AnnotationURLCitation(end_index=25497, start_index=25328, title='The mechanotransduction protein STOML3 is required for proprioceptor plasticity following peripheral nerve regeneration - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/40163784/#:~:text=were%20largely%20identical%20to%20normal,factor%20required%20for%20functional%20plasticity')</li>
+<li>AnnotationURLCitation(end_index=25926, start_index=25735, title='The mechanotransduction protein STOML3 is required for proprioceptor plasticity following peripheral nerve regeneration - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/40163784/#:~:text=mechanosensitive%20receptive%20fields%2C%20despite%20making,plasticity%20following%20peripheral%20nerve%20injury')</li>
+<li>AnnotationURLCitation(end_index=26074, start_index=25927, title='The mechanotransduction protein STOML3 is required for proprioceptor plasticity following peripheral nerve regeneration - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/40163784/#:~:text=from%20both%20wild,factor%20required%20for%20functional%20plasticity')</li>
+<li>AnnotationURLCitation(end_index=26947, start_index=26813, title='A Role for STOML3 in Olfactory Sensory Transduction - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC7986538/#:~:text=Stomatin,be%20involved%20in%20modulating%20odorant')</li>
+<li>AnnotationURLCitation(end_index=27534, start_index=27387, title='A Role for STOML3 in Olfactory Sensory Transduction - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC7986538/#:~:text=responses%20in%20OSNs,a%20physiological%20role%20in%20olfaction')</li>
+<li>AnnotationURLCitation(end_index=27702, start_index=27535, title='A role for STOML3 in olfactory sensory transduction. — Department of Pharmacology', type='url_citation', url='https://www.pharm.ox.ac.uk/publications/1166353#:~:text=cilia%20of%20olfactory%20sensory%20neurons,peripheral%20coding%20of%20sensory%20stimuli')</li>
+<li>AnnotationURLCitation(end_index=28043, start_index=27896, title='A Role for STOML3 in Olfactory Sensory Transduction - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC7986538/#:~:text=responses%20in%20OSNs,a%20physiological%20role%20in%20olfaction')</li>
+<li>AnnotationURLCitation(end_index=28215, start_index=28044, title='A role for STOML3 in olfactory sensory transduction. — Department of Pharmacology', type='url_citation', url='https://www.pharm.ox.ac.uk/publications/1166353#:~:text=and%20Stoml3%20KO%20olfactory%20sensory,Significance%20Statement%20Olfactory%20transduction')</li>
+<li>AnnotationURLCitation(end_index=28531, start_index=28381, title='A role for STOML3 in olfactory sensory transduction. — Department of Pharmacology', type='url_citation', url='https://www.pharm.ox.ac.uk/publications/1166353#:~:text=and%20Stoml3%20KO%20olfactory%20sensory,that%20take%20place%20in%20the')</li>
+<li>AnnotationURLCitation(end_index=28680, start_index=28532, title='A role for STOML3 in olfactory sensory transduction. — Department of Pharmacology', type='url_citation', url='https://www.pharm.ox.ac.uk/publications/1166353#:~:text=by%20olfactory%20sensory%20neurons,both%20the%20number%20of%20spikes')</li>
+<li>AnnotationURLCitation(end_index=29018, start_index=28868, title='A role for STOML3 in olfactory sensory transduction. — Department of Pharmacology', type='url_citation', url='https://www.pharm.ox.ac.uk/publications/1166353#:~:text=and%20Stoml3%20KO%20olfactory%20sensory,that%20take%20place%20in%20the')</li>
+<li>AnnotationURLCitation(end_index=29185, start_index=29019, title='A role for STOML3 in olfactory sensory transduction. — Department of Pharmacology', type='url_citation', url='https://www.pharm.ox.ac.uk/publications/1166353#:~:text=possible%20frequency%20range%20of%20their,peripheral%20coding%20of%20sensory%20stimuli')</li>
+<li>AnnotationURLCitation(end_index=29705, start_index=29538, title='A role for STOML3 in olfactory sensory transduction. — Department of Pharmacology', type='url_citation', url='https://www.pharm.ox.ac.uk/publications/1166353#:~:text=cilia%20of%20olfactory%20sensory%20neurons,peripheral%20coding%20of%20sensory%20stimuli')</li>
+<li>AnnotationURLCitation(end_index=30015, start_index=29848, title='A role for STOML3 in olfactory sensory transduction. — Department of Pharmacology', type='url_citation', url='https://www.pharm.ox.ac.uk/publications/1166353#:~:text=cilia%20of%20olfactory%20sensory%20neurons,peripheral%20coding%20of%20sensory%20stimuli')</li>
+<li>AnnotationURLCitation(end_index=30856, start_index=30689, title='A role for STOML3 in olfactory sensory transduction. — Department of Pharmacology', type='url_citation', url='https://www.pharm.ox.ac.uk/publications/1166353#:~:text=cilia%20of%20olfactory%20sensory%20neurons,peripheral%20coding%20of%20sensory%20stimuli')</li>
+<li>AnnotationURLCitation(end_index=31460, start_index=31311, title='Stomatin-like protein 3 modulates the responses of Aδ, but not C fiber bone afferent neurons to noxious mechanical stimulation in an animal model of acute experimental bone pain - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10734363/#:~:text=characteristic%20that%20is%20important%20for,15%20%E2%80%93%2019')</li>
+<li>AnnotationURLCitation(end_index=31843, start_index=31694, title='Stomatin-like protein 3 modulates the responses of Aδ, but not C fiber bone afferent neurons to noxious mechanical stimulation in an animal model of acute experimental bone pain - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10734363/#:~:text=characteristic%20that%20is%20important%20for,15%20%E2%80%93%2019')</li>
+<li>AnnotationURLCitation(end_index=32191, start_index=32044, title='Stomatin-like protein 3 modulates the responses of Aδ, but not C fiber bone afferent neurons to noxious mechanical stimulation in an animal model of acute experimental bone pain - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10734363/#:~:text=Small%20molecules%20that%20interact%20with,21%20%7D%20silences')</li>
+<li>AnnotationURLCitation(end_index=32405, start_index=32266, title='Stomatin-like protein 3 modulates the responses of Aδ, but not C fiber bone afferent neurons to noxious mechanical stimulation in an animal model of acute experimental bone pain - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10734363/#:~:text=screening%20unit,It%20reduces%20the%20sensitivity%20of')</li>
+<li>AnnotationURLCitation(end_index=32573, start_index=32406, title='Stomatin-like protein 3 modulates the responses of Aδ, but not C fiber bone afferent neurons to noxious mechanical stimulation in an animal model of acute experimental bone pain - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10734363/#:~:text=characteristic%20that%20is%20important%20for,It%20reduces%20the%20sensitivity%20of')</li>
+<li>AnnotationURLCitation(end_index=32918, start_index=32769, title='Stomatin-like protein 3 modulates the responses of Aδ, but not C fiber bone afferent neurons to noxious mechanical stimulation in an animal model of acute experimental bone pain - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10734363/#:~:text=characteristic%20that%20is%20important%20for,15%20%E2%80%93%2019')</li>
+<li>AnnotationURLCitation(end_index=33223, start_index=33074, title='Stomatin-like protein 3 modulates the responses of Aδ, but not C fiber bone afferent neurons to noxious mechanical stimulation in an animal model of acute experimental bone pain - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10734363/#:~:text=characteristic%20that%20is%20important%20for,15%20%E2%80%93%2019')</li>
+<li>AnnotationURLCitation(end_index=33516, start_index=33348, title='Stomatin-like protein 3 modulates the responses of Aδ, but not C fiber bone afferent neurons to noxious mechanical stimulation in an animal model of acute experimental bone pain - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10734363/#:~:text=inhibition%20of%20STOML3%20oligomerisation%20with,bone%20pain%20by%20reducing%20the')</li>
+<li>AnnotationURLCitation(end_index=33685, start_index=33517, title='Stomatin-like protein 3 modulates the responses of Aδ, but not C fiber bone afferent neurons to noxious mechanical stimulation in an animal model of acute experimental bone pain - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10734363/#:~:text=inhibition%20of%20STOML3%20oligomerisation%20with,bone%20pain%20by%20reducing%20the')</li>
+<li>AnnotationURLCitation(end_index=34071, start_index=33903, title='Stomatin-like protein 3 modulates the responses of Aδ, but not C fiber bone afferent neurons to noxious mechanical stimulation in an animal model of acute experimental bone pain - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10734363/#:~:text=inhibition%20of%20STOML3%20oligomerisation%20with,bone%20pain%20by%20reducing%20the')</li>
+<li>AnnotationURLCitation(end_index=34431, start_index=34282, title='Stomatin-like protein 3 modulates the responses of Aδ, but not C fiber bone afferent neurons to noxious mechanical stimulation in an animal model of acute experimental bone pain - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10734363/#:~:text=characteristic%20that%20is%20important%20for,15%20%E2%80%93%2019')</li>
+<li>AnnotationURLCitation(end_index=35213, start_index=35077, title='Stomatin-domain protein interactions with acid-sensing ion channels modulate nociceptor mechanosensitivity - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3853495/#:~:text=Lapatsina%20et%20al,order%20to%20ask%20whether%20the')</li>
+<li>AnnotationURLCitation(end_index=35698, start_index=35571, title='US11384071B2 - Inhibitors of mechanotransduction to treat pain and modulate touch perception - Google Patents', type='url_citation', url='https://patents.google.com/patent/US11384071B2/en#:~:text=US11384071B2%20,%28b%29%20Stomatin%20inhibits')</li>
+<li>AnnotationURLCitation(end_index=35985, start_index=35836, title='Stomatin-like protein 3 modulates the responses of Aδ, but not C fiber bone afferent neurons to noxious mechanical stimulation in an animal model of acute experimental bone pain - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10734363/#:~:text=characteristic%20that%20is%20important%20for,15%20%E2%80%93%2019')</li>
+<li>AnnotationURLCitation(end_index=36309, start_index=36142, title='Membrane stiffening by STOML3 facilitates mechanosensation in sensory neurons - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4633829/#:~:text=STOML3%20is%20detected%20in%20cholesterol,offer%20an%20alternative%20strategy%20for')</li>
+<li>AnnotationURLCitation(end_index=36459, start_index=36310, title='Stomatin-like protein 3 modulates the responses of Aδ, but not C fiber bone afferent neurons to noxious mechanical stimulation in an animal model of acute experimental bone pain - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10734363/#:~:text=characteristic%20that%20is%20important%20for,15%20%E2%80%93%2019')</li>
+<li>AnnotationURLCitation(end_index=36865, start_index=36698, title='Membrane stiffening by STOML3 facilitates mechanosensation in sensory neurons - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4633829/#:~:text=STOML3%20is%20detected%20in%20cholesterol,offer%20an%20alternative%20strategy%20for')</li>
+<li>AnnotationURLCitation(end_index=37312, start_index=37163, title='Stomatin-like protein 3 modulates the responses of Aδ, but not C fiber bone afferent neurons to noxious mechanical stimulation in an animal model of acute experimental bone pain - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10734363/#:~:text=characteristic%20that%20is%20important%20for,15%20%E2%80%93%2019')</li>
+<li>AnnotationURLCitation(end_index=37440, start_index=37313, title='US11384071B2 - Inhibitors of mechanotransduction to treat pain and modulate touch perception - Google Patents', type='url_citation', url='https://patents.google.com/patent/US11384071B2/en#:~:text=US11384071B2%20,%28b%29%20Stomatin%20inhibits')</li>
+<li>AnnotationURLCitation(end_index=38737, start_index=38570, title='Membrane stiffening by STOML3 facilitates mechanosensation in sensory neurons - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4633829/#:~:text=STOML3%20is%20detected%20in%20cholesterol,offer%20an%20alternative%20strategy%20for')</li>
+<li>AnnotationURLCitation(end_index=38887, start_index=38738, title='Stomatin-like protein 3 modulates the responses of Aδ, but not C fiber bone afferent neurons to noxious mechanical stimulation in an animal model of acute experimental bone pain - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10734363/#:~:text=characteristic%20that%20is%20important%20for,15%20%E2%80%93%2019')</li>
+<li>AnnotationURLCitation(end_index=39424, start_index=39206, title='A stomatin-domain protein essential for touch sensation in the mouse - Icahn School of Medicine at Mount Sinai', type='url_citation', url='https://scholars.mssm.edu/en/publications/a-stomatin-domain-protein-essential-for-touch-sensation-in-the-mo-2#:~:text=stomatin%20homology%20domain,subunit%20of%20a%20mammalian%20mechanotransducer')</li>
+<li>AnnotationURLCitation(end_index=39916, start_index=39795, title='Stomatin-domain protein interactions with acid-sensing ion channels modulate nociceptor mechanosensitivity - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3853495/#:~:text=match%20at%20L88%20Both%20STOML3,2012')</li>
+<li>AnnotationURLCitation(end_index=40101, start_index=39917, title='Stomatin-domain protein interactions with acid-sensing ion channels modulate nociceptor mechanosensitivity - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3853495/#:~:text=indicated%20that%20a%20stomatin%2FSTOML3%20interaction,deficits%20in%20the%20mechanosensitivity%20of')</li>
+<li>AnnotationURLCitation(end_index=40534, start_index=40367, title='Membrane stiffening by STOML3 facilitates mechanosensation in sensory neurons - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4633829/#:~:text=Sensing%20force%20is%20crucial%20to,required%20to%20maintain%20membrane%20mechanics')</li>
+<li>AnnotationURLCitation(end_index=40720, start_index=40535, title='Membrane stiffening by STOML3 facilitates mechanosensation in sensory neurons - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4633829/#:~:text=Piezo2%2BSTOML3%2BM%CE%B2CD%3A%20n%3D5%2C%20Piezo2%2BSTOML3,0.0001.%20Error%20bars%20indicate%20s.e.m')</li>
+<li>AnnotationURLCitation(end_index=40975, start_index=40811, title='Membrane stiffening by STOML3 facilitates mechanosensation in sensory neurons - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4633829/#:~:text=match%20at%20L468%20its%20function,modulates%20Piezo1%20channel%20activity%20via')</li>
+<li>AnnotationURLCitation(end_index=41176, start_index=41033, title='Membrane stiffening by STOML3 facilitates mechanosensation in sensory neurons - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4633829/#:~:text=membrane%20mechanics%20by%20binding%20cholesterol,Targeting')</li>
+<li>AnnotationURLCitation(end_index=41703, start_index=41556, title='A Role for STOML3 in Olfactory Sensory Transduction - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC7986538/#:~:text=responses%20in%20OSNs,a%20physiological%20role%20in%20olfaction')</li>
+<li>AnnotationURLCitation(end_index=41852, start_index=41704, title='A role for STOML3 in olfactory sensory transduction. — Department of Pharmacology', type='url_citation', url='https://www.pharm.ox.ac.uk/publications/1166353#:~:text=by%20olfactory%20sensory%20neurons,both%20the%20number%20of%20spikes')</li>
+<li>AnnotationURLCitation(end_index=42341, start_index=42189, title='Stomatin-like protein 3 modulates the responses of Aδ, but not C fiber bone afferent neurons to noxious mechanical stimulation in an animal model of acute experimental bone pain - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10734363/#:~:text=%28b%29%20application%20of%20OB,Reduced%20activity%20was%20observed')</li>
+<li>AnnotationURLCitation(end_index=42454, start_index=42342, title='Stomatin-like protein 3 modulates the responses of Aδ, but not C fiber bone afferent neurons to noxious mechanical stimulation in an animal model of acute experimental bone pain - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10734363/#:~:text=match%20at%20L282%20OB,0.05')</li>
+<li>AnnotationURLCitation(end_index=42704, start_index=42536, title='Stomatin-like protein 3 modulates the responses of Aδ, but not C fiber bone afferent neurons to noxious mechanical stimulation in an animal model of acute experimental bone pain - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10734363/#:~:text=inhibition%20of%20STOML3%20oligomerisation%20with,bone%20pain%20by%20reducing%20the')</li>
+<li>AnnotationURLCitation(end_index=43269, start_index=43136, title='The mechanotransduction protein STOML3 is required for proprioceptor plasticity following peripheral nerve regeneration - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/40163784/#:~:text=skin%20previously%20occupied%20by%20the,The%20dramatic')</li>
+<li>AnnotationURLCitation(end_index=43439, start_index=43270, title='The mechanotransduction protein STOML3 is required for proprioceptor plasticity following peripheral nerve regeneration - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/40163784/#:~:text=were%20largely%20identical%20to%20normal,factor%20required%20for%20functional%20plasticity')</li>
+<li>AnnotationURLCitation(end_index=43816, start_index=43644, title='Tissue expression of STOML3 - Summary - The Human Protein Atlas', type='url_citation', url='https://www.proteinatlas.org/ENSG00000133115-STOML3/tissue#:~:text=HUMAN%20PROTEIN%20ATLAS%20INFORMATION,IMMUNOHISTOCHEMISTRY%20DATA%20RELIABILITY')</li>
+<li>AnnotationURLCitation(end_index=43969, start_index=43817, title='Tissue expression of STOML3 - Summary - The Human Protein Atlas', type='url_citation', url='https://www.proteinatlas.org/ENSG00000133115-STOML3/tissue#:~:text=Multiplex%20immunofluorescence%20staining%20of%20ciliated,i')</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q8TAV4
+gene_symbol: STOML3
+product_type: PROTEIN
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &#39;Stomatin-like protein 3 (STOML3, SLP-3), integral membrane protein (~291
+  amino acids) of stomatin family characterized by conserved SPFH (stomatin/prohibitin/flotillin/HflK/C)
+  domain. Mammalian homologue of C. elegans MEC-2 required for touch sensation in
+  worms. First molecule shown essential for touch sensation in mammals. Single transmembrane
+  region near N-terminus, predominantly localizes to plasma membrane within cholesterol-rich
+  membrane rafts. Forms oligomers in membrane - oligomerization functionally significant
+  for mechanotransduction. Critical accessory subunit of mechanosensory protein complexes
+  in sensory neurons. Essential modulator of mechanotransduction - conversion of mechanical
+  stimuli into electrochemical signals. Not ion channel itself but serves as critical
+  accessory that tunes mechanosensitive channel properties. Selectively expressed
+  in sensory neurons of dorsal root ganglia (DRG) and trigeminal ganglia (cells detecting
+  touch and pain). Concentrated at peripheral nerve endings where mechanical stimuli
+  detected. Also in inner ear mechanosensory fibers, ciliated cells of olfactory epithelium
+  (olfactory sensory neuron cilia), and motile cilia of respiratory/reproductive epithelia.
+  Binds cholesterol via conserved N-terminal motif - cholesterol-binding allows organization
+  of specialized membrane microdomains, locally stiffening membrane where mechanotransducer
+  proteins reside. Interacts with multiple mechanosensitive ion channels: Piezo1/Piezo2
+  stretch-activated cation channels and acid-sensing ion channels (ASICs) in nociceptive
+  neurons. Co-localizes with Piezo channels and enhances their sensitivity to mechanical
+  force - lowers activation threshold and increases mechanically evoked currents.
+  Effect depends on cholesterol-binding (P40S mutation disrupting cholesterol binding
+  prevents channel potentiation). Facilitates force transfer to Piezo channels by
+  creating stiffer lipid microenvironment, tuning channel gating kinetics. Also binds
+  ASIC subunits altering their gating properties (suppresses peak amplitude, slows
+  inactivation). STOML3 and stomatin form complexes with ASICs regulating mechanonociception.
+  Mice lacking STOML3: ~35% of cutaneous mechanoreceptive neurons completely lose
+  response to mechanical stimuli. Many mechanogated ion currents abolished. Reduced
+  responses to gentle touch, loss of touch-evoked pain (tactile allodynia) after nerve
+  injury. Required for functional plasticity of proprioceptors after nerve injury.
+  Essential for olfactory sensory neurons&#39;&#39; normal encoding: STOML3-deficient OSNs
+  show reduced spontaneous firing, fewer/shorter spikes in response to odors. Small-molecule
+  inhibitor OB-1 prevents STOML3 oligomerization, dampens mechanically activated currents,
+  silences mechanoreceptor fibers, alleviates mechanical pain behaviors in animal
+  models. Validates STOML3 as therapeutic target for mechanical pain modulation. Functions
+  in mechanosensory pathways of cutaneous touch receptors, proprioceptive neurons,
+  and modulates olfactory sensory transduction.&#39;
+existing_annotations:
+- term:
+    id: GO:0008200
+    label: ion channel inhibitor activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: Ion channel inhibitor activity is overly restrictive - STOML3 modulates
+      channels (can both sensitize Piezo and suppress ASIC peak currents) rather than
+      simply inhibiting. Better term would be &#39;ion channel regulator activity&#39;.
+    action: MODIFY
+    reason: Channel modulator, not just inhibitor.
+    proposed_replacement_terms:
+    - id: GO:0099106
+      label: ion channel regulator activity
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: Plasma membrane - integral membrane protein.
+    action: ACCEPT
+    reason: Core localization.
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: Plasma membrane - integral membrane protein.
+    action: ACCEPT
+    reason: Core localization.
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: Membrane - membrane protein.
+    action: ACCEPT
+    reason: General membrane.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  review:
+    summary: Protein binding - binds ion channels and partners.
+    action: ACCEPT
+    reason: Core function.
+- term:
+    id: GO:0005929
+    label: cilium
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  review:
+    summary: Cilium - localizes to cilia of olfactory sensory neurons and motile cilia
+      of respiratory/reproductive epithelia.
+    action: ACCEPT
+    reason: Documented ciliary localization.
+- term:
+    id: GO:0007165
+    label: signal transduction
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  review:
+    summary: Signal transduction - modulates mechanosensory signaling by tuning ion
+      channel activity in sensory neurons.
+    action: ACCEPT
+    reason: Mechanotransduction signaling.
+- term:
+    id: GO:0045121
+    label: membrane raft
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  review:
+    summary: Membrane raft - partitions into cholesterol-rich lipid rafts where it
+      organizes mechanotransduction complexes.
+    action: ACCEPT
+    reason: Core membrane organization.
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000052
+  review:
+    summary: Plasma membrane - integral membrane protein.
+    action: ACCEPT
+    reason: Core localization.
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-8863494
+  review:
+    summary: Plasma membrane - integral membrane protein.
+    action: ACCEPT
+    reason: Core localization.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms.
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000052
+  title: Gene Ontology annotation based on curation of immunofluorescence data
+  findings: []
+- id: GO_REF:0000107
+  title: Automatic transfer of experimentally verified manual GO annotation data to
+    orthologs using Ensembl Compara.
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods.
+  findings: []
+- id: PMID:32296183
+  title: A reference map of the human binary protein interactome.
+  findings: []
+- id: Reactome:R-HSA-8863494
+  title: ASICs bind STOML3, (STOM)
+  findings: []
+aliases:
+- Stomatin-like protein 3
+- SLP-3
+core_functions:
+- molecular_function:
+    id: GO:0005515
+    label: protein binding
+  description: Membrane scaffold and accessory protein for mechanosensitive ion channels
+    (Piezo1/2, ASIC2/3). Binds cholesterol to organize lipid raft microdomains, locally
+    stiffening membranes to facilitate force transfer to mechanotransducer channels.
+    Lowers activation threshold of Piezo channels and modulates ASIC gating. Essential
+    for mechanosensation in touch receptors and proprioceptors. Required for normal
+    mechanogated currents in sensory neurons - loss causes ~35% of mechanoreceptors
+    to lose mechanical responsiveness.
+  locations:
+  - id: GO:0005886
+    label: plasma membrane
+  - id: GO:0045121
+    label: membrane raft
+  - id: GO:0005929
+    label: cilium
+  directly_involved_in:
+  - id: GO:0050982
+    label: detection of mechanical stimulus
+  - id: GO:0071260
+    label: cellular response to mechanical stimulus
+  - id: GO:0007600
+    label: sensory perception
+  supported_by:
+  - reference_id: UniProt:Q8TAV4
+    supporting_text: STOML3 is essential for mechanotransduction in sensory neurons.
+      Binds cholesterol to organize membrane microdomains around Piezo and ASIC channels.
+      Knockout mice show profound deficits in touch sensation with ~35% of mechanoreceptors
+      losing mechanical responsiveness.
+status: DRAFT
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
