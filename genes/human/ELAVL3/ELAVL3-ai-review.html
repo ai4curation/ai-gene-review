@@ -1,0 +1,2769 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ELAVL3 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>ELAVL3</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q14576" target="_blank" class="term-link">
+                        Q14576
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "ELAVL3";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q14576" data-a="DESCRIPTION: ELAVL3 (HuC) is a neuron-specific RNA-binding prot..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>ELAVL3 (HuC) is a neuron-specific RNA-binding protein with three RNA recognition motifs (RRMs) that binds to AU-rich elements in the 3&#39;-UTRs of target mRNAs to regulate mRNA stability, alternative splicing, and transcript abundance. It plays essential roles in neuronal differentiation, maintenance, and synaptic integrity, particularly in the cerebellum and hippocampus.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0140517" target="_blank" class="term-link">
+                                    GO:0140517
+                                </a>
+                            </span>
+                            <span class="term-label">protein-RNA adaptor activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q14576" data-a="GO:0140517" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA annotation for protein-RNA adaptor activity based on phylogenetic inference. ELAVL3 functions as an RNA-binding protein that binds AU-rich elements in 3&#39;-UTRs and regulates mRNA stability and processing, consistent with adaptor activity.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This term accurately captures ELAVL3&#39;s core molecular function as a protein that mediates interactions between RNA molecules and other cellular components through its RNA-binding activity. The deep research confirms ELAVL3 &#34;binds preferentially to GU-rich and AU-rich sequences in intronic regions and 3&#39;-untranslated regions (3&#39;-UTRs) of target pre-mRNAs&#34; and &#34;regulates alternative splicing, mRNA stability, and transcript abundance&#34;. UniProt confirms it &#34;binds to AU-rich element (ARE) sequences of target mRNAs&#34; [PMID:10710437]. IBA annotations are typically well-curated and phylogenetically sound.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10710437" target="_blank" class="term-link">
+                                        PMID:10710437
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">HuC and HuD bind to the VEGF 3&#39;-UTR regulatory segment (VRS) and to the c- myc 3&#39;-UTR in a specific and concentration-dependent pattern</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/ELAVL3/ELAVL3-deep-research-perplexity-lite.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">ELAVL3 binds preferentially to GU-rich and AU-rich sequences in intronic regions and 3&#39;-untranslated regions (3&#39;-UTRs) of target pre-mRNAs. This binding regulates alternative splicing, mRNA stability, and transcript abundance</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003676" target="_blank" class="term-link">
+                                    GO:0003676
+                                </a>
+                            </span>
+                            <span class="term-label">nucleic acid binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q14576" data-a="GO:0003676" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation for nucleic acid binding based on InterPro domain assignment. This is a very general parent term for RNA binding.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While technically correct (ELAVL3 does bind nucleic acids), this term is too broad and uninformative. ELAVL3 specifically binds RNA, not DNA, through its three RRM domains. The more specific term GO:0003723 (RNA binding) is already annotated and better represents the actual molecular function.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003723" target="_blank" class="term-link">
+                                    RNA binding
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/ELAVL3/ELAVL3-deep-research-perplexity-lite.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">ELAVL3 contains three RNP-type RNA recognition motifs (RRMs), which are responsible for its RNA-binding activity</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003723" target="_blank" class="term-link">
+                                    GO:0003723
+                                </a>
+                            </span>
+                            <span class="term-label">RNA binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q14576" data-a="GO:0003723" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation for RNA binding from combined automated annotation methods. This is appropriate but less specific than the available AU-rich region binding terms.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This term accurately describes ELAVL3&#39;s core molecular function. ELAVL3 contains three RRM domains that bind RNA, specifically to AU-rich and GU-rich sequences in mRNA 3&#39;-UTRs. While more specific terms exist (mRNA 3&#39;-UTR AU-rich region binding), this general RNA binding term is acceptable and correct as a broader classification.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10710437" target="_blank" class="term-link">
+                                        PMID:10710437
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">These proteins bind to AU-rich elements in the 3&#39;-untranslated regions (3&#39;-UTRs) of many growth-related mRNAs, including c-myc and VEGF</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/ELAVL3/ELAVL3-deep-research-perplexity-lite.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">ELAVL3 contains three RNP-type RNA recognition motifs (RRMs), which are responsible for its RNA-binding activity</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003730" target="_blank" class="term-link">
+                                    GO:0003730
+                                </a>
+                            </span>
+                            <span class="term-label">mRNA 3&#39;-UTR binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q14576" data-a="GO:0003730" data-r="GO_REF:0000117" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation for mRNA 3&#39;-UTR binding from ARBA machine learning models. This accurately captures ELAVL3&#39;s specific binding preference for 3&#39;-UTR regions.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a highly specific and accurate molecular function term for ELAVL3. Multiple lines of evidence demonstrate that ELAVL3 preferentially binds to AU-rich elements located in the 3&#39;-UTRs of target mRNAs including VEGF and c-myc. This is a core molecular function of the protein.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10710437" target="_blank" class="term-link">
+                                        PMID:10710437
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">HuC and HuD bind to the VEGF 3&#39;-UTR regulatory segment (VRS) and to the c- myc 3&#39;-UTR in a specific and concentration-dependent pattern</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/ELAVL3/ELAVL3-deep-research-perplexity-lite.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">ELAVL3 binds preferentially to GU-rich and AU-rich sequences in intronic regions and 3&#39;-untranslated regions (3&#39;-UTRs) of target pre-mRNAs</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007399" target="_blank" class="term-link">
+                                    GO:0007399
+                                </a>
+                            </span>
+                            <span class="term-label">nervous system development</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q14576" data-a="GO:0007399" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation for nervous system development based on UniProtKB keyword mapping. ELAVL3 is neuron-specific and plays roles in neuronal differentiation and maintenance.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This biological process term is well-supported. ELAVL3 is brain-specific and essential for neurogenesis, neuronal differentiation, and maintenance of neurons. The deep research indicates ELAVL3 is &#34;involved in the development and maintenance of neurons&#34; and knockout mice exhibit severe motor deficits and cerebellar ataxia. UniProt states it &#34;may be involved in neuronal differentiation and maintenance&#34;.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/ELAVL3/ELAVL3-deep-research-perplexity-lite.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Neurogenesis: ELAVL3 is involved in the development and maintenance of neurons</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/ELAVL3/ELAVL3-deep-research-perplexity-lite.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">ELAVL3 knockout mice exhibit progressive motor deficits, severe cerebellar ataxia, and Purkinje cell axonal degeneration</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030154" target="_blank" class="term-link">
+                                    GO:0030154
+                                </a>
+                            </span>
+                            <span class="term-label">cell differentiation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q14576" data-a="GO:0030154" data-r="GO_REF:0000043" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation for cell differentiation based on UniProtKB keyword mapping. This is a very general process term that applies to ELAVL3&#39;s role in neuronal differentiation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While technically correct (ELAVL3 is involved in neuronal differentiation), this term is too broad and non-specific. The more precise term would be neuronal differentiation or neuron differentiation, which better captures ELAVL3&#39;s tissue-specific role. Given that ELAVL3 is brain-specific and specifically involved in neurogenesis, a more specific term should be used.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030182" target="_blank" class="term-link">
+                                    neuron differentiation
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/ELAVL3/ELAVL3-deep-research-perplexity-lite.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Neurogenesis: ELAVL3 is involved in the development and maintenance of neurons</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1990904" target="_blank" class="term-link">
+                                    GO:1990904
+                                </a>
+                            </span>
+                            <span class="term-label">ribonucleoprotein complex</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q14576" data-a="GO:1990904" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation for ribonucleoprotein complex based on InterPro domain assignment. This cellular component term reflects ELAVL3&#39;s association with RNA as an RNP complex component.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is an appropriate cellular component annotation. ELAVL3 is an RNA-binding protein with RRM domains that forms ribonucleoprotein complexes with its target mRNAs. The deep research notes ELAVL3 binds over 1,100 transcripts in certain contexts, indicating it forms functional RNP complexes. While more specific localization terms could be added (nucleus, cytoplasm), this general RNP complex annotation is correct.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/ELAVL3/ELAVL3-deep-research-perplexity-lite.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">In neuroendocrine cancer cell lines, ELAVL3 binds over 1,100 transcripts, with enrichment for genes involved in neuron projection development and synapse organization</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/ELAVL3/ELAVL3-deep-research-perplexity-lite.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">ELAVL3 is predominantly localized in the nucleus and cytoplasm of neurons throughout the brain</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035925" target="_blank" class="term-link">
+                                    GO:0035925
+                                </a>
+                            </span>
+                            <span class="term-label">mRNA 3&#39;-UTR AU-rich region binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000107
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q14576" data-a="GO:0035925" data-r="GO_REF:0000107" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation for mRNA 3&#39;-UTR AU-rich region binding from Ensembl Compara orthology transfer. This is the most specific and accurate molecular function term for ELAVL3.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the most precise molecular function annotation for ELAVL3 and represents its core biochemical activity. ELAVL3 specifically binds to AU-rich elements (AREs) in the 3&#39;-UTRs of target mRNAs. PMID:10710437 experimentally demonstrates HuC binding to AU-rich regions in VEGF and c-myc 3&#39;-UTRs. The deep research confirms binding to &#34;GU-rich and AU-rich sequences&#34; in 3&#39;-UTRs. This annotation captures the key sequence specificity that distinguishes ELAVL3 from general RNA-binding proteins.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10710437" target="_blank" class="term-link">
+                                        PMID:10710437
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">These proteins bind to AU-rich elements in the 3&#39;-untranslated regions (3&#39;-UTRs) of many growth-related mRNAs, including c-myc and VEGF</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/ELAVL3/ELAVL3-deep-research-perplexity-lite.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">ELAVL3 binds preferentially to GU-rich and AU-rich sequences in intronic regions and 3&#39;-untranslated regions (3&#39;-UTRs) of target pre-mRNAs</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/36950384" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:36950384
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Protein interaction studies in human induced neurons indicat...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q14576" data-a="GO:0005515" data-r="PMID:36950384" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI annotation for protein binding based on physical interaction evidence from a large-scale proteomics study on autism spectrum disorders.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While ELAVL3 does interact with proteins (UniProt mentions MAP1B light chain LC1, and IntAct shows interactions with DYRK1A, SCN2A, SYNGAP1), the generic &#34;protein binding&#34; term is uninformative and does not describe a molecular function. This term should not be used unless referring to a specific functional role (e.g., as an adapter or scaffold). The reference PMID:36950384 is a large-scale protein interaction study where ELAVL3 may have been detected as an interactor, but this does not constitute evidence for &#34;protein binding&#34; as a molecular function. ELAVL3&#39;s primary molecular function is RNA binding, not protein binding.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/ELAVL3/ELAVL3-deep-research-perplexity-lite.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Molecular Function: ELAVL3 binds preferentially to GU-rich and AU-rich sequences in intronic regions and 3&#39;-untranslated regions (3&#39;-UTRs) of target pre-mRNAs</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/37207277" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:37207277
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Using brain cell-type-specific protein interactomes to inter...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q14576" data-a="GO:0005515" data-r="PMID:37207277" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI annotation for protein binding based on physical interaction evidence from a large-scale brain cell-type-specific protein interactome study on schizophrenia.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Same rationale as for PMID:36950384. The generic &#34;protein binding&#34; term is uninformative and should be avoided in GO curation. While ELAVL3 does engage in protein-protein interactions, this is not its primary molecular function, and the term does not provide useful functional information. ELAVL3 is fundamentally an RNA-binding protein. Large-scale proteomics studies detect many interactions, but these do not necessarily represent the core molecular function of the protein.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/ELAVL3/ELAVL3-deep-research-perplexity-lite.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Molecular Function: ELAVL3 binds preferentially to GU-rich and AU-rich sequences in intronic regions and 3&#39;-untranslated regions (3&#39;-UTRs) of target pre-mRNAs</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035925" target="_blank" class="term-link">
+                                    GO:0035925
+                                </a>
+                            </span>
+                            <span class="term-label">mRNA 3&#39;-UTR AU-rich region binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10710437" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10710437
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    RNA-binding analyses of HuC and HuD with the VEGF and c-myc ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q14576" data-a="GO:0035925" data-r="PMID:10710437" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation for mRNA 3&#39;-UTR AU-rich region binding based on direct experimental evidence from PMID:10710437. This is a duplicate of the IEA annotation but with stronger experimental evidence.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the gold standard annotation for ELAVL3 - direct experimental evidence (IDA) for its most specific and important molecular function. PMID:10710437 directly demonstrates using an ELISA-based assay that HuC (ELAVL3) binds to AU-rich elements in the 3&#39;-UTRs of VEGF and c-myc mRNAs in a specific and concentration-dependent manner. This represents the core biochemical activity of ELAVL3. The experimental evidence is robust and the term is maximally informative.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10710437" target="_blank" class="term-link">
+                                        PMID:10710437
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">I demonstrate that HuC and HuD bind to the VEGF 3&#39;-UTR regulatory segment (VRS) and to the c- myc 3&#39;-UTR in a specific and concentration-dependent pattern</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10710437" target="_blank" class="term-link">
+                                        PMID:10710437
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">These proteins bind to AU-rich elements in the 3&#39;-untranslated regions (3&#39;-UTRs) of many growth-related mRNAs, including c-myc and VEGF</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Binding to AU-rich and GU-rich elements in mRNA 3&#39;-UTRs to stabilize target transcripts and regulate alternative splicing events in neurons</h3>
+                <span class="vote-buttons" data-g="Q14576" data-a="FUNCTION: Binding to AU-rich and GU-rich elements in mRNA 3&#39;..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035925" target="_blank" class="term-link">
+                            mRNA 3&#39;-UTR AU-rich region binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030182" target="_blank" class="term-link">
+                                neuron differentiation
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007399" target="_blank" class="term-link">
+                                nervous system development
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010608" target="_blank" class="term-link">
+                                post-transcriptional regulation of gene expression
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1990904" target="_blank" class="term-link">
+                                ribonucleoprotein complex
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                nucleus
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Substrates:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.uniprot.org/uniprotkb/P15692" target="_blank" class="term-link">
+                                VEGFA mRNA
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.uniprot.org/uniprotkb/P01106" target="_blank" class="term-link">
+                                MYC mRNA
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.uniprot.org/uniprotkb/P17677" target="_blank" class="term-link">
+                                GAP43 mRNA
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10710437" target="_blank" class="term-link">
+                                PMID:10710437
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">HuC and HuD bind to the VEGF 3&#39;-UTR regulatory segment (VRS) and to the c-myc 3&#39;-UTR in a specific and concentration-dependent pattern. These proteins bind to AU-rich elements in the 3&#39;-untranslated regions (3&#39;-UTRs) of many growth-related mRNAs</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:human/ELAVL3/ELAVL3-deep-research-perplexity-lite.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">ELAVL3 binds preferentially to GU-rich and AU-rich sequences in intronic regions and 3&#39;-untranslated regions (3&#39;-UTRs) of target pre-mRNAs. This binding regulates alternative splicing, mRNA stability, and transcript abundance</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            UniProtKB:Q14576
+                            
+                        </span>
+                        
+                        <div class="finding-text">RNA-binding protein that binds to AU-rich element (ARE) sequences of target mRNAs, including VEGF mRNA. Plays a role in the stabilization of GAP43 mRNA and in spatial learning</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Adapting AU-rich mRNA transcripts to post-transcriptional regulatory complexes to control neuronal gene expression programs</h3>
+                <span class="vote-buttons" data-g="Q14576" data-a="FUNCTION: Adapting AU-rich mRNA transcripts to post-transcri..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0140517" target="_blank" class="term-link">
+                            protein-RNA adaptor activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030182" target="_blank" class="term-link">
+                                neuron differentiation
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007399" target="_blank" class="term-link">
+                                nervous system development
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010608" target="_blank" class="term-link">
+                                post-transcriptional regulation of gene expression
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1990904" target="_blank" class="term-link">
+                                ribonucleoprotein complex
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                nucleus
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:human/ELAVL3/ELAVL3-deep-research-perplexity-lite.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">ELAVL3 is involved in the development and maintenance of neurons. ELAVL3 binds over 1,100 transcripts in neuroendocrine cancer cell lines, with enrichment for genes involved in neuron projection development and synapse organization</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            UniProtKB:Q14576
+                            
+                        </span>
+                        
+                        <div class="finding-text">May be involved in neuronal differentiation and maintenance. Plays a role in the stabilization of GAP43 mRNA</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000107.md" target="_blank" class="term-link">
+                            GO_REF:0000107
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Automatic transfer of experimentally verified manual GO annotation data to orthologs using Ensembl Compara.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10710437" target="_blank" class="term-link">
+                            PMID:10710437
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">RNA-binding analyses of HuC and HuD with the VEGF and c-myc 3&#39;-untranslated regions using a novel ELISA-based assay.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/36950384" target="_blank" class="term-link">
+                            PMID:36950384
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Protein interaction studies in human induced neurons indicate convergent biology underlying autism spectrum disorders.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/37207277" target="_blank" class="term-link">
+                            PMID:37207277
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Using brain cell-type-specific protein interactomes to interpret neurodevelopmental genetic signals in schizophrenia.</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Perplexity Lite</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(ELAVL3-deep-research-perplexity-lite.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q14576" data-a="DOC: Deep Research Perplexity Lite" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: perplexity<br />
+model: sonar-pro<br />
+cached: false<br />
+start_time: '2025-11-15T18:33:36.391414'<br />
+end_time: '2025-11-15T18:33:51.769158'<br />
+duration_seconds: 15.38<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    reasoning_effort: low<br />
+    search_domain_filter: []<br />
+    return_citations: true<br />
+    temperature: 0.0<br />
+citation_count: 13</p>
+<hr />
+<h2 id="question">Question</h2>
+<p>Research the ELAVL3 (ELAVL3) gene in human, focusing on its molecular function, biological processes, and cellular localization. Include information about protein domains, known interactions, and any disease associations.</p>
+<h2 id="output">Output</h2>
+<p><strong>ELAVL3 (ELAV-like RNA Binding Protein 3)</strong> is a neuron-specific RNA-binding protein in humans, playing a critical role in post-transcriptional gene regulation within the central nervous system. It is essential for neuronal differentiation, maintenance, and synaptic integrity[1][3][5].</p>
+<hr />
+<h3 id="1-key-concepts-and-definitions">1. Key Concepts and Definitions</h3>
+<ul>
+<li>
+<p><strong>Molecular Function:</strong><br />
+  ELAVL3 binds preferentially to <strong>GU-rich and AU-rich sequences</strong> in intronic regions and 3′-untranslated regions (3′-UTRs) of target pre-mRNAs[1][3]. This binding regulates <strong>alternative splicing</strong>, <strong>mRNA stability</strong>, and <strong>transcript abundance</strong>, especially for genes involved in glutamate synthesis and neuronal excitability[1][3][5].</p>
+</li>
+<li>
+<p><strong>Protein Domains:</strong><br />
+  ELAVL3 contains <strong>three RNP-type RNA recognition motifs (RRMs)</strong>, which are responsible for its RNA-binding activity[1][3][10].  </p>
+</li>
+<li>
+<p><strong>RRM1, RRM2, RRM3:</strong> These domains mediate binding to AU-rich elements and poly-A tracts in mRNAs[3][10].</p>
+</li>
+<li>
+<p><strong>Biological Processes:</strong>  </p>
+</li>
+<li><strong>Neurogenesis:</strong> ELAVL3 is involved in the development and maintenance of neurons[1][3][5].</li>
+<li><strong>Regulation of mRNA splicing and stability:</strong> Influences the expression of genes critical for neurotransmitter synthesis, especially glutamate[1][5].</li>
+<li><strong>Synapse organization and neuron projection development:</strong> Directly regulates transcripts involved in synaptic structure and function[4][5].</li>
+<li>
+<p><strong>Cerebellar cell differentiation and maintenance:</strong> Highly expressed in Purkinje cells and hippocampus, indicating a role in cerebellar structure[2][5].</p>
+</li>
+<li>
+<p><strong>Cellular Localization:</strong><br />
+  ELAVL3 is <strong>predominantly localized in the nucleus and cytoplasm of neurons</strong> throughout the brain, including the cerebral cortex, hippocampus, cerebellum (especially Purkinje cells), and other regions[2][5][7][10].</p>
+</li>
+</ul>
+<hr />
+<h3 id="2-recent-developments-and-latest-research-20232024">2. Recent Developments and Latest Research (2023–2024)</h3>
+<ul>
+<li>
+<p><strong>Neuroendocrine Cancer:</strong><br />
+  ELAVL3 is essential for the development and maintenance of <strong>neuroendocrine prostate cancer</strong>. RIP-seq analysis identified over 1,100 transcripts bound by ELAVL3, many related to neuronal and RNA-specific processes[4] (Nature Communications, 2023).</p>
+</li>
+<li>
+<p><strong>Brain Development and Disease:</strong><br />
+  Recent reviews highlight ELAVL3’s role in <strong>brain development</strong> and its dysregulation in neurological diseases, including neurodegenerative disorders and paraneoplastic syndromes[6] (European Journal of Human Genetics, 2023).</p>
+</li>
+</ul>
+<hr />
+<h3 id="3-current-applications-and-real-world-implementations">3. Current Applications and Real-World Implementations</h3>
+<ul>
+<li>
+<p><strong>Disease Biomarker:</strong><br />
+  ELAVL3 is recognized as a <strong>Hu antigen</strong> and is targeted by anti-Hu antibodies in patients with <strong>paraneoplastic encephalomyelitis and sensory neuronopathy (PEM/PSN)</strong>, making it a diagnostic marker for these autoimmune neurological disorders[1][3].</p>
+</li>
+<li>
+<p><strong>Therapeutic Target:</strong><br />
+  The ELAVL3/MYCN positive feedback loop has been identified as a potential therapeutic target in <strong>neuroendocrine prostate cancer</strong>[4].</p>
+</li>
+</ul>
+<hr />
+<h3 id="4-expert-opinions-and-authoritative-analysis">4. Expert Opinions and Authoritative Analysis</h3>
+<ul>
+<li>
+<p><strong>Neuronal Health:</strong><br />
+  Disruption of ELAVL3 leads to <strong>aberrant splicing events</strong>, altered mRNA levels, and compromised glutamate homeostasis, resulting in <strong>hyperexcitability and spontaneous seizure activity</strong>[1][5].</p>
+</li>
+<li>
+<p><strong>Neurodegeneration:</strong><br />
+  ELAVL3 knockout mice exhibit <strong>progressive motor deficits, severe cerebellar ataxia, and Purkinje cell axonal degeneration</strong>, linking ELAVL3 dysfunction to neurodegenerative processes such as spinocerebellar ataxia[5].</p>
+</li>
+</ul>
+<hr />
+<h3 id="5-relevant-statistics-and-data-from-recent-studies">5. Relevant Statistics and Data from Recent Studies</h3>
+<ul>
+<li>
+<p><strong>Functional Associations:</strong><br />
+  ELAVL3 has <strong>5,995 functional associations</strong> with biological entities across 8 categories, including molecular profile, disease, phenotype, and structural features, extracted from 90 datasets[1].</p>
+</li>
+<li>
+<p><strong>Transcriptome Binding:</strong><br />
+  In neuroendocrine cancer cell lines, ELAVL3 binds over <strong>1,100 transcripts</strong>, with enrichment for genes involved in neuron projection development and synapse organization[4].</p>
+</li>
+</ul>
+<hr />
+<h3 id="6-known-interactions">6. Known Interactions</h3>
+<ul>
+<li>
+<p><strong>RNA Targets:</strong><br />
+  ELAVL3 binds to mRNAs with AU-rich elements, including <strong>VEGF mRNA</strong> and <strong>GAP43 mRNA</strong>, stabilizing these transcripts and influencing spatial learning and neuronal maintenance[3][10].</p>
+</li>
+<li>
+<p><strong>Protein Interactions:</strong><br />
+  ELAVL3 interacts with other ELAVL family members (e.g., ELAVL4) and proteins involved in RNA processing and neuronal differentiation[3][10].</p>
+</li>
+</ul>
+<hr />
+<h3 id="7-disease-associations">7. Disease Associations</h3>
+<ul>
+<li>
+<p><strong>Paraneoplastic Neurological Syndromes:</strong><br />
+  ELAVL3 is a target of anti-Hu antibodies in <strong>paraneoplastic encephalomyelitis and sensory neuronopathy (PEM/PSN)</strong>[1][3].</p>
+</li>
+<li>
+<p><strong>Neurodegenerative Diseases:</strong><br />
+  Associations have been reported between ELAVL3 dysfunction and <strong>spinocerebellar ataxia</strong>, as well as other neurodegenerative conditions characterized by Purkinje cell loss and cerebellar atrophy[5][6].</p>
+</li>
+<li>
+<p><strong>Sensory Peripheral Neuropathy and Limbic Encephalitis:</strong><br />
+  ELAVL3 is linked to these diseases through its role as a Hu antigen and its involvement in neuronal maintenance[3].</p>
+</li>
+</ul>
+<hr />
+<h3 id="8-summary-table">8. Summary Table</h3>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Details</th>
+<th>Source(s)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Molecular Function</strong></td>
+<td>RNA-binding (GU-rich, AU-rich), mRNA splicing/stability, glutamate regulation</td>
+<td>[1][3][10]</td>
+</tr>
+<tr>
+<td><strong>Protein Domains</strong></td>
+<td>3 RNP-type RNA recognition motifs (RRM1, RRM2, RRM3)</td>
+<td>[1][3][10]</td>
+</tr>
+<tr>
+<td><strong>Biological Process</strong></td>
+<td>Neurogenesis, synapse organization, neuron projection, cerebellar maintenance</td>
+<td>[1][2][4][5]</td>
+</tr>
+<tr>
+<td><strong>Cellular Localization</strong></td>
+<td>Nucleus and cytoplasm of neurons (cortex, hippocampus, cerebellum, Purkinje cells)</td>
+<td>[2][5][7][10]</td>
+</tr>
+<tr>
+<td><strong>Known Interactions</strong></td>
+<td>mRNAs (VEGF, GAP43), ELAVL family proteins</td>
+<td>[3][10]</td>
+</tr>
+<tr>
+<td><strong>Disease Associations</strong></td>
+<td>Paraneoplastic syndromes, spinocerebellar ataxia, neuroendocrine cancer, neuropathy</td>
+<td>[1][3][4][5][6]</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<p><strong>Key References:</strong><br />
+- [Ma'ayan Lab Harmonizome, 2024][1]<br />
+- [RNA Biology, 2025][2]<br />
+- [GeneCards, 2024][3]<br />
+- [Nature Communications, 2023][4]<br />
+- [Scientific Reports, 2018][5]<br />
+- [Protein Atlas, 2024][7]<br />
+- [UniProt, 2024][10]</p>
+<p><strong>URLs and Publication Dates:</strong><br />
+- Ma'ayan Lab Harmonizome: https://maayanlab.cloud/Harmonizome/gene/ELAVL3 (2024)<br />
+- RNA Biology: https://pmc.ncbi.nlm.nih.gov/articles/PMC11926907/ (2025)<br />
+- GeneCards: https://www.genecards.org/cgi-bin/carddisp.pl?gene=ELAVL3 (2024)<br />
+- Nature Communications: https://www.nature.com/articles/s41598-018-21130-5 (2018)<br />
+- Protein Atlas: https://www.proteinatlas.org/ENSG00000196361-ELAVL3 (2024)<br />
+- UniProt: https://www.uniprot.org/uniprotkb/Q14576/entry (2024)</p>
+<p>If you require more detailed data on specific protein interactions or transcriptome-wide binding profiles, recent high-throughput studies (RIP-seq, CLIP-seq) provide comprehensive lists of ELAVL3 targets in neuronal and cancer contexts[4][8].</p>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>https://maayanlab.cloud/Harmonizome/gene/ELAVL3</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC11926907/</li>
+<li>https://www.genecards.org/cgi-bin/carddisp.pl?gene=ELAVL3</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC10684895/</li>
+<li>https://www.nature.com/articles/s41598-018-21130-5</li>
+<li>https://www.nature.com/articles/s41431-023-01456-z</li>
+<li>https://www.proteinatlas.org/ENSG00000196361-ELAVL3</li>
+<li>https://elifesciences.org/articles/10421</li>
+<li>https://www.ncbi.nlm.nih.gov/gene/1995</li>
+<li>https://www.uniprot.org/uniprotkb/Q14576/entry</li>
+<li>https://geneglobe.qiagen.com/us/knowledge/gene/ENSMUSG00000003410</li>
+<li>https://www.ncbi.nlm.nih.gov/gene?Db=gene&amp;Cmd=DetailsSearch&amp;Term=1995</li>
+<li>https://zfin.org/ZDB-GENE-980526-76</li>
+</ol>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Curation Summary</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(ELAVL3-curation-summary.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q14576" data-a="DOC: Curation Summary" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="elavl3-gene-annotation-curation-summary">ELAVL3 Gene Annotation Curation Summary</h1>
+<h2 id="overview">Overview</h2>
+<p>Completed systematic review of all existing GO annotations for human ELAVL3 (HuC), a neuron-specific RNA-binding protein.</p>
+<h2 id="gene-description">Gene Description</h2>
+<p>ELAVL3 (HuC) is a neuron-specific RNA-binding protein with three RNA recognition motifs (RRMs) that binds to AU-rich elements in the 3'-UTRs of target mRNAs to regulate mRNA stability, alternative splicing, and transcript abundance. It plays essential roles in neuronal differentiation, maintenance, and synaptic integrity, particularly in the cerebellum and hippocampus.</p>
+<h2 id="annotation-review-summary">Annotation Review Summary</h2>
+<h3 id="accepted-annotations-6">Accepted Annotations (6)</h3>
+<ol>
+<li><strong>GO:0140517 (protein-RNA adaptor activity)</strong> - IBA</li>
+<li>
+<p>Core molecular function representing ELAVL3's role as an adaptor between RNA and regulatory machinery</p>
+</li>
+<li>
+<p><strong>GO:0003723 (RNA binding)</strong> - IEA</p>
+</li>
+<li>
+<p>General but accurate molecular function term</p>
+</li>
+<li>
+<p><strong>GO:0003730 (mRNA 3'-UTR binding)</strong> - IEA</p>
+</li>
+<li>
+<p>Specific and accurate molecular function</p>
+</li>
+<li>
+<p><strong>GO:0007399 (nervous system development)</strong> - IEA</p>
+</li>
+<li>
+<p>Well-supported biological process</p>
+</li>
+<li>
+<p><strong>GO:1990904 (ribonucleoprotein complex)</strong> - IEA</p>
+</li>
+<li>
+<p>Appropriate cellular component</p>
+</li>
+<li>
+<p><strong>GO:0035925 (mRNA 3'-UTR AU-rich region binding)</strong> - IEA</p>
+</li>
+<li>
+<p>Most specific molecular function term</p>
+</li>
+<li>
+<p><strong>GO:0035925 (mRNA 3'-UTR AU-rich region binding)</strong> - IDA (PMID:10710437)</p>
+</li>
+<li>Gold standard experimental evidence for core function</li>
+</ol>
+<h3 id="modified-annotations-2">Modified Annotations (2)</h3>
+<ol>
+<li><strong>GO:0003676 (nucleic acid binding)</strong> → GO:0003723 (RNA binding)</li>
+<li>
+<p>Too broad; ELAVL3 specifically binds RNA, not DNA</p>
+</li>
+<li>
+<p><strong>GO:0030154 (cell differentiation)</strong> → GO:0030182 (neuron differentiation)</p>
+</li>
+<li>Too general; ELAVL3 is brain-specific and specifically involved in neuronal differentiation</li>
+</ol>
+<h3 id="removed-annotations-2">Removed Annotations (2)</h3>
+<ol>
+<li><strong>GO:0005515 (protein binding)</strong> - IPI (PMID:36950384)</li>
+<li>
+<p>Generic uninformative term from large-scale proteomics study</p>
+</li>
+<li>
+<p><strong>GO:0005515 (protein binding)</strong> - IPI (PMID:37207277)</p>
+</li>
+<li>Same rationale as above</li>
+</ol>
+<h2 id="core-functions-defined">Core Functions Defined</h2>
+<h3 id="primary-function">Primary Function</h3>
+<p>Binds to AU-rich elements in the 3'-UTRs of target mRNAs to regulate their stability, alternative splicing, and abundance, particularly for genes involved in neuronal function and glutamate synthesis.</p>
+<p><strong>Key Evidence:</strong><br />
+- Direct experimental evidence (PMID:10710437) showing HuC binding to VEGF and c-myc 3'-UTRs<br />
+- IBA annotation supporting protein-RNA adaptor activity<br />
+- Involvement in nervous system development and neuron differentiation</p>
+<h3 id="cellular-localization">Cellular Localization</h3>
+<p>Forms ribonucleoprotein complexes in both nucleus and cytoplasm of neurons.</p>
+<h2 id="key-references-used">Key References Used</h2>
+<ul>
+<li><strong>PMID:10710437</strong> - Direct experimental evidence for AU-rich element binding</li>
+<li><strong>Deep research file</strong> - Comprehensive literature review</li>
+<li><strong>UniProt Q14576</strong> - Protein annotation and domain information</li>
+</ul>
+<h2 id="validation-status">Validation Status</h2>
+<p>✓ File validates successfully with no errors<br />
+- Status: COMPLETE<br />
+- All 11 annotations reviewed and actioned<br />
+- Core functions defined with supporting evidence</p>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q14576
+gene_symbol: ELAVL3
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: ELAVL3 (HuC) is a neuron-specific RNA-binding protein with three RNA recognition motifs (RRMs) that binds to AU-rich elements in the 3&#39;-UTRs of target mRNAs to regulate mRNA stability, alternative splicing, and transcript abundance. It plays essential roles in neuronal differentiation, maintenance, and synaptic integrity, particularly in the cerebellum and hippocampus.
+existing_annotations:
+- term:
+    id: GO:0140517
+    label: protein-RNA adaptor activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: IBA annotation for protein-RNA adaptor activity based on phylogenetic inference. ELAVL3 functions as an RNA-binding protein that binds AU-rich elements in 3&#39;-UTRs and regulates mRNA stability and processing, consistent with adaptor activity.
+    action: ACCEPT
+    reason: This term accurately captures ELAVL3&#39;s core molecular function as a protein that mediates interactions between RNA molecules and other cellular components through its RNA-binding activity. The deep research confirms ELAVL3 &#34;binds preferentially to GU-rich and AU-rich sequences in intronic regions and 3&#39;-untranslated regions (3&#39;-UTRs) of target pre-mRNAs&#34; and &#34;regulates alternative splicing, mRNA stability, and transcript abundance&#34;. UniProt confirms it &#34;binds to AU-rich element (ARE) sequences of target mRNAs&#34; [PMID:10710437]. IBA annotations are typically well-curated and phylogenetically sound.
+    supported_by:
+    - reference_id: PMID:10710437
+      supporting_text: &#34;HuC and HuD bind to the VEGF 3&#39;-UTR regulatory segment (VRS) and to the c- myc 3&#39;-UTR in a specific and concentration-dependent pattern&#34;
+    - reference_id: file:human/ELAVL3/ELAVL3-deep-research-perplexity-lite.md
+      supporting_text: &#34;ELAVL3 binds preferentially to GU-rich and AU-rich sequences in intronic regions and 3&#39;-untranslated regions (3&#39;-UTRs) of target pre-mRNAs. This binding regulates alternative splicing, mRNA stability, and transcript abundance&#34;
+- term:
+    id: GO:0003676
+    label: nucleic acid binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: IEA annotation for nucleic acid binding based on InterPro domain assignment. This is a very general parent term for RNA binding.
+    action: MODIFY
+    reason: While technically correct (ELAVL3 does bind nucleic acids), this term is too broad and uninformative. ELAVL3 specifically binds RNA, not DNA, through its three RRM domains. The more specific term GO:0003723 (RNA binding) is already annotated and better represents the actual molecular function.
+    proposed_replacement_terms:
+    - id: GO:0003723
+      label: RNA binding
+    supported_by:
+    - reference_id: file:human/ELAVL3/ELAVL3-deep-research-perplexity-lite.md
+      supporting_text: &#34;ELAVL3 contains three RNP-type RNA recognition motifs (RRMs), which are responsible for its RNA-binding activity&#34;
+- term:
+    id: GO:0003723
+    label: RNA binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: IEA annotation for RNA binding from combined automated annotation methods. This is appropriate but less specific than the available AU-rich region binding terms.
+    action: ACCEPT
+    reason: This term accurately describes ELAVL3&#39;s core molecular function. ELAVL3 contains three RRM domains that bind RNA, specifically to AU-rich and GU-rich sequences in mRNA 3&#39;-UTRs. While more specific terms exist (mRNA 3&#39;-UTR AU-rich region binding), this general RNA binding term is acceptable and correct as a broader classification.
+    supported_by:
+    - reference_id: PMID:10710437
+      supporting_text: &#34;These proteins bind to AU-rich elements in the 3&#39;-untranslated regions (3&#39;-UTRs) of many growth-related mRNAs, including c-myc and VEGF&#34;
+    - reference_id: file:human/ELAVL3/ELAVL3-deep-research-perplexity-lite.md
+      supporting_text: &#34;ELAVL3 contains three RNP-type RNA recognition motifs (RRMs), which are responsible for its RNA-binding activity&#34;
+- term:
+    id: GO:0003730
+    label: mRNA 3&#39;-UTR binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  review:
+    summary: IEA annotation for mRNA 3&#39;-UTR binding from ARBA machine learning models. This accurately captures ELAVL3&#39;s specific binding preference for 3&#39;-UTR regions.
+    action: ACCEPT
+    reason: This is a highly specific and accurate molecular function term for ELAVL3. Multiple lines of evidence demonstrate that ELAVL3 preferentially binds to AU-rich elements located in the 3&#39;-UTRs of target mRNAs including VEGF and c-myc. This is a core molecular function of the protein.
+    supported_by:
+    - reference_id: PMID:10710437
+      supporting_text: &#34;HuC and HuD bind to the VEGF 3&#39;-UTR regulatory segment (VRS) and to the c- myc 3&#39;-UTR in a specific and concentration-dependent pattern&#34;
+    - reference_id: file:human/ELAVL3/ELAVL3-deep-research-perplexity-lite.md
+      supporting_text: &#34;ELAVL3 binds preferentially to GU-rich and AU-rich sequences in intronic regions and 3&#39;-untranslated regions (3&#39;-UTRs) of target pre-mRNAs&#34;
+- term:
+    id: GO:0007399
+    label: nervous system development
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: IEA annotation for nervous system development based on UniProtKB keyword mapping. ELAVL3 is neuron-specific and plays roles in neuronal differentiation and maintenance.
+    action: ACCEPT
+    reason: This biological process term is well-supported. ELAVL3 is brain-specific and essential for neurogenesis, neuronal differentiation, and maintenance of neurons. The deep research indicates ELAVL3 is &#34;involved in the development and maintenance of neurons&#34; and knockout mice exhibit severe motor deficits and cerebellar ataxia. UniProt states it &#34;may be involved in neuronal differentiation and maintenance&#34;.
+    supported_by:
+    - reference_id: file:human/ELAVL3/ELAVL3-deep-research-perplexity-lite.md
+      supporting_text: &#34;Neurogenesis: ELAVL3 is involved in the development and maintenance of neurons&#34;
+    - reference_id: file:human/ELAVL3/ELAVL3-deep-research-perplexity-lite.md
+      supporting_text: &#34;ELAVL3 knockout mice exhibit progressive motor deficits, severe cerebellar ataxia, and Purkinje cell axonal degeneration&#34;
+- term:
+    id: GO:0030154
+    label: cell differentiation
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: IEA annotation for cell differentiation based on UniProtKB keyword mapping. This is a very general process term that applies to ELAVL3&#39;s role in neuronal differentiation.
+    action: MODIFY
+    reason: While technically correct (ELAVL3 is involved in neuronal differentiation), this term is too broad and non-specific. The more precise term would be neuronal differentiation or neuron differentiation, which better captures ELAVL3&#39;s tissue-specific role. Given that ELAVL3 is brain-specific and specifically involved in neurogenesis, a more specific term should be used.
+    proposed_replacement_terms:
+    - id: GO:0030182
+      label: neuron differentiation
+    supported_by:
+    - reference_id: file:human/ELAVL3/ELAVL3-deep-research-perplexity-lite.md
+      supporting_text: &#34;Neurogenesis: ELAVL3 is involved in the development and maintenance of neurons&#34;
+- term:
+    id: GO:1990904
+    label: ribonucleoprotein complex
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: IEA annotation for ribonucleoprotein complex based on InterPro domain assignment. This cellular component term reflects ELAVL3&#39;s association with RNA as an RNP complex component.
+    action: ACCEPT
+    reason: This is an appropriate cellular component annotation. ELAVL3 is an RNA-binding protein with RRM domains that forms ribonucleoprotein complexes with its target mRNAs. The deep research notes ELAVL3 binds over 1,100 transcripts in certain contexts, indicating it forms functional RNP complexes. While more specific localization terms could be added (nucleus, cytoplasm), this general RNP complex annotation is correct.
+    supported_by:
+    - reference_id: file:human/ELAVL3/ELAVL3-deep-research-perplexity-lite.md
+      supporting_text: &#34;In neuroendocrine cancer cell lines, ELAVL3 binds over 1,100 transcripts, with enrichment for genes involved in neuron projection development and synapse organization&#34;
+    - reference_id: file:human/ELAVL3/ELAVL3-deep-research-perplexity-lite.md
+      supporting_text: &#34;ELAVL3 is predominantly localized in the nucleus and cytoplasm of neurons throughout the brain&#34;
+- term:
+    id: GO:0035925
+    label: mRNA 3&#39;-UTR AU-rich region binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  review:
+    summary: IEA annotation for mRNA 3&#39;-UTR AU-rich region binding from Ensembl Compara orthology transfer. This is the most specific and accurate molecular function term for ELAVL3.
+    action: ACCEPT
+    reason: This is the most precise molecular function annotation for ELAVL3 and represents its core biochemical activity. ELAVL3 specifically binds to AU-rich elements (AREs) in the 3&#39;-UTRs of target mRNAs. PMID:10710437 experimentally demonstrates HuC binding to AU-rich regions in VEGF and c-myc 3&#39;-UTRs. The deep research confirms binding to &#34;GU-rich and AU-rich sequences&#34; in 3&#39;-UTRs. This annotation captures the key sequence specificity that distinguishes ELAVL3 from general RNA-binding proteins.
+    supported_by:
+    - reference_id: PMID:10710437
+      supporting_text: &#34;These proteins bind to AU-rich elements in the 3&#39;-untranslated regions (3&#39;-UTRs) of many growth-related mRNAs, including c-myc and VEGF&#34;
+    - reference_id: file:human/ELAVL3/ELAVL3-deep-research-perplexity-lite.md
+      supporting_text: &#34;ELAVL3 binds preferentially to GU-rich and AU-rich sequences in intronic regions and 3&#39;-untranslated regions (3&#39;-UTRs) of target pre-mRNAs&#34;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:36950384
+  review:
+    summary: IPI annotation for protein binding based on physical interaction evidence from a large-scale proteomics study on autism spectrum disorders.
+    action: REMOVE
+    reason: While ELAVL3 does interact with proteins (UniProt mentions MAP1B light chain LC1, and IntAct shows interactions with DYRK1A, SCN2A, SYNGAP1), the generic &#34;protein binding&#34; term is uninformative and does not describe a molecular function. This term should not be used unless referring to a specific functional role (e.g., as an adapter or scaffold). The reference PMID:36950384 is a large-scale protein interaction study where ELAVL3 may have been detected as an interactor, but this does not constitute evidence for &#34;protein binding&#34; as a molecular function. ELAVL3&#39;s primary molecular function is RNA binding, not protein binding.
+    supported_by:
+    - reference_id: file:human/ELAVL3/ELAVL3-deep-research-perplexity-lite.md
+      supporting_text: &#34;Molecular Function: ELAVL3 binds preferentially to GU-rich and AU-rich sequences in intronic regions and 3&#39;-untranslated regions (3&#39;-UTRs) of target pre-mRNAs&#34;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:37207277
+  review:
+    summary: IPI annotation for protein binding based on physical interaction evidence from a large-scale brain cell-type-specific protein interactome study on schizophrenia.
+    action: REMOVE
+    reason: Same rationale as for PMID:36950384. The generic &#34;protein binding&#34; term is uninformative and should be avoided in GO curation. While ELAVL3 does engage in protein-protein interactions, this is not its primary molecular function, and the term does not provide useful functional information. ELAVL3 is fundamentally an RNA-binding protein. Large-scale proteomics studies detect many interactions, but these do not necessarily represent the core molecular function of the protein.
+    supported_by:
+    - reference_id: file:human/ELAVL3/ELAVL3-deep-research-perplexity-lite.md
+      supporting_text: &#34;Molecular Function: ELAVL3 binds preferentially to GU-rich and AU-rich sequences in intronic regions and 3&#39;-untranslated regions (3&#39;-UTRs) of target pre-mRNAs&#34;
+- term:
+    id: GO:0035925
+    label: mRNA 3&#39;-UTR AU-rich region binding
+  evidence_type: IDA
+  original_reference_id: PMID:10710437
+  review:
+    summary: IDA annotation for mRNA 3&#39;-UTR AU-rich region binding based on direct experimental evidence from PMID:10710437. This is a duplicate of the IEA annotation but with stronger experimental evidence.
+    action: ACCEPT
+    reason: This is the gold standard annotation for ELAVL3 - direct experimental evidence (IDA) for its most specific and important molecular function. PMID:10710437 directly demonstrates using an ELISA-based assay that HuC (ELAVL3) binds to AU-rich elements in the 3&#39;-UTRs of VEGF and c-myc mRNAs in a specific and concentration-dependent manner. This represents the core biochemical activity of ELAVL3. The experimental evidence is robust and the term is maximally informative.
+    supported_by:
+    - reference_id: PMID:10710437
+      supporting_text: &#34;I demonstrate that HuC and HuD bind to the VEGF 3&#39;-UTR regulatory segment (VRS) and to the c- myc 3&#39;-UTR in a specific and concentration-dependent pattern&#34;
+    - reference_id: PMID:10710437
+      supporting_text: &#34;These proteins bind to AU-rich elements in the 3&#39;-untranslated regions (3&#39;-UTRs) of many growth-related mRNAs, including c-myc and VEGF&#34;
+core_functions:
+- description: Binding to AU-rich and GU-rich elements in mRNA 3&#39;-UTRs to stabilize target transcripts and regulate alternative splicing events in neurons
+  molecular_function:
+    id: GO:0035925
+    label: mRNA 3&#39;-UTR AU-rich region binding
+  directly_involved_in:
+  - id: GO:0030182
+    label: neuron differentiation
+  - id: GO:0007399
+    label: nervous system development
+  - id: GO:0010608
+    label: post-transcriptional regulation of gene expression
+  locations:
+  - id: GO:1990904
+    label: ribonucleoprotein complex
+  - id: GO:0005634
+    label: nucleus
+  - id: GO:0005737
+    label: cytoplasm
+  anatomical_locations:
+  - id: UBERON:0002129
+    label: cerebellar cortex
+  - id: UBERON:0002421
+    label: hippocampal formation
+  substrates:
+  - id: UniProtKB:P15692
+    label: VEGFA mRNA
+  - id: UniProtKB:P01106
+    label: MYC mRNA
+  - id: UniProtKB:P17677
+    label: GAP43 mRNA
+  supported_by:
+  - reference_id: PMID:10710437
+    supporting_text: &#34;HuC and HuD bind to the VEGF 3&#39;-UTR regulatory segment (VRS) and to the c-myc 3&#39;-UTR in a specific and concentration-dependent pattern. These proteins bind to AU-rich elements in the 3&#39;-untranslated regions (3&#39;-UTRs) of many growth-related mRNAs&#34;
+  - reference_id: file:human/ELAVL3/ELAVL3-deep-research-perplexity-lite.md
+    supporting_text: &#34;ELAVL3 binds preferentially to GU-rich and AU-rich sequences in intronic regions and 3&#39;-untranslated regions (3&#39;-UTRs) of target pre-mRNAs. This binding regulates alternative splicing, mRNA stability, and transcript abundance&#34;
+  - reference_id: UniProtKB:Q14576
+    supporting_text: &#34;RNA-binding protein that binds to AU-rich element (ARE) sequences of target mRNAs, including VEGF mRNA. Plays a role in the stabilization of GAP43 mRNA and in spatial learning&#34;
+- description: Adapting AU-rich mRNA transcripts to post-transcriptional regulatory complexes to control neuronal gene expression programs
+  molecular_function:
+    id: GO:0140517
+    label: protein-RNA adaptor activity
+  directly_involved_in:
+  - id: GO:0030182
+    label: neuron differentiation
+  - id: GO:0007399
+    label: nervous system development
+  - id: GO:0010608
+    label: post-transcriptional regulation of gene expression
+  locations:
+  - id: GO:1990904
+    label: ribonucleoprotein complex
+  - id: GO:0005634
+    label: nucleus
+  - id: GO:0005737
+    label: cytoplasm
+  anatomical_locations:
+  - id: UBERON:0002129
+    label: cerebellar cortex
+  - id: UBERON:0002421
+    label: hippocampal formation
+  supported_by:
+  - reference_id: file:human/ELAVL3/ELAVL3-deep-research-perplexity-lite.md
+    supporting_text: &#34;ELAVL3 is involved in the development and maintenance of neurons. ELAVL3 binds over 1,100 transcripts in neuroendocrine cancer cell lines, with enrichment for genes involved in neuron projection development and synapse organization&#34;
+  - reference_id: UniProtKB:Q14576
+    supporting_text: &#34;May be involved in neuronal differentiation and maintenance. Plays a role in the stabilization of GAP43 mRNA&#34;
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms.
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+- id: GO_REF:0000107
+  title: Automatic transfer of experimentally verified manual GO annotation data to
+    orthologs using Ensembl Compara.
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods.
+  findings: []
+- id: PMID:10710437
+  title: RNA-binding analyses of HuC and HuD with the VEGF and c-myc 3&#39;-untranslated
+    regions using a novel ELISA-based assay.
+  findings: []
+- id: PMID:36950384
+  title: Protein interaction studies in human induced neurons indicate convergent
+    biology underlying autism spectrum disorders.
+  findings: []
+- id: PMID:37207277
+  title: Using brain cell-type-specific protein interactomes to interpret neurodevelopmental
+    genetic signals in schizophrenia.
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

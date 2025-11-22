@@ -72,6 +72,14 @@ deep-research-perplexity-lite organism gene_id *args="":
 deep-research-falcon organism gene_id *args="":
     uv run python scripts/deep_research_wrapper.py {{organism}} {{gene_id}} falcon {{args}}
 
+# Deep research using Cyberian
+# Gene symbol automatically looked up from UniProt file if --alias not provided
+# Examples:
+#   just deep-research-cyberian human TP53
+#   just deep-research-cyberian METEA C5B1I4 --alias mllA
+deep-research-cyberian organism gene_id *args="":
+    uv run python scripts/deep_research_wrapper.py {{organism}} {{gene_id}} cyberian {{args}}
+
 # Fetch a specific PMID
 fetch-pmid pmid output_dir="publications":
     uv run ai-gene-review fetch-pmid {{pmid}} --output-dir {{output_dir}}
@@ -615,3 +623,24 @@ fetch-interpro-family-with-proteins database family_id *args="":
 fetch-gene-panther-family organism gene:
     @echo "Fetching PANTHER family data for {{organism}}/{{gene}}..."
     uv run python src/ai_gene_review/tools/fetch_gene_panther_family.py {{organism}} {{gene}}
+
+# ============== iModulonDB Integration ==============
+
+# Compare gene review with iModulonDB data (for bacterial transcription factors)
+# Examples:
+#   just compare-imodulondb PSEPK BenR
+#   just compare-imodulondb ecoli FliA
+compare-imodulondb organism gene *args="":
+    @echo "Comparing {{organism}}/{{gene}} with iModulonDB..."
+    uv run python scripts/compare_with_imodulondb_v2.py {{organism}} {{gene}} {{args}}
+
+# List available organisms in iModulonDB
+list-imodulondb-organisms:
+    @echo "Available iModulonDB organisms:"
+    @uv run python -c "import yaml; data = yaml.safe_load(open('src/ai_gene_review/data/imodulondb_organisms.yaml')); print('\n'.join(f'  - {m[\"taxon_label\"]} ({m[\"imodulondb_code\"]})' for m in data['mappings'] if m['available']))"
+
+# Clean iModulonDB cache
+clean-imodulondb-cache:
+    @echo "Cleaning iModulonDB cache..."
+    rm -rf .cache/imodulondb
+    @echo "✓ Cache cleaned"

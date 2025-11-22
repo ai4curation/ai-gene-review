@@ -57,6 +57,8 @@ To validate all files, run:
 just validate-all
 ```
 
+files will be written to reports/validation-all.tsv 
+
 * All gene symbols follow the standard nomenclature for that species. For human, should be HGNC symbols.
 
 ## Gene Review Guidelines

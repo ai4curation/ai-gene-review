@@ -2,327 +2,274 @@
 provider: perplexity
 model: sonar-deep-research
 cached: false
-start_time: '2025-10-31T09:39:28.932127'
-end_time: '2025-10-31T09:41:45.393981'
-duration_seconds: 136.46
+start_time: '2025-11-15T17:53:08.218113'
+end_time: '2025-11-15T17:55:04.158669'
+duration_seconds: 115.94
 template_file: templates/gene_research_go_focused.md
 template_variables:
   organism: METEA
-  gene_or_uniprot: mllA
+  gene_id: mllA
+  gene_symbol: mllA
+  uniprot_accession: C5B1I4
+  protein_description: 'SubName: Full=Siderophore synthetase component {ECO:0000313|EMBL:ACS41785.1};'
+  gene_info: OrderedLocusNames=MexAM1_META1p4132 {ECO:0000313|EMBL:ACS41785.1};
+  organism_full: Methylorubrum extorquens (strain ATCC 14718 / DSM 1338 / JCM 2805
+    / NCIMB 9133 / AM1) (Methylobacterium extorquens).
+  protein_family: Belongs to the IucA/IucC family.
+  protein_domains: Aerobactin_biosyn_IucA/IucC_N. (IPR007310); IucA/IucC-like_C. (IPR022770);
+    LucA/IucC-like. (IPR037455); FhuF (PF06276); IucA_IucC (PF04183)
 provider_config:
   timeout: 600
   max_retries: 3
   parameters:
+    allowed_domains: []
     reasoning_effort: medium
     search_domain_filter: []
     return_citations: true
     temperature: 0.0
-citation_count: 59
+citation_count: 54
 ---
 
 ## Question
 
-# Gene Research Template for GO Annotation Curation
+# Gene Research for Functional Annotation
 
-Please provide a comprehensive research report on the gene mllA in METEA.
+## ⚠️ CRITICAL: Gene/Protein Identification Context
 
-## Research Focus Areas for GO Annotation
+**BEFORE YOU BEGIN RESEARCH:** You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.
 
-I need detailed information covering these areas specifically for GO annotation curation:
+### Target Gene/Protein Identity (from UniProt):
+- **UniProt Accession:** C5B1I4
+- **Protein Description:** SubName: Full=Siderophore synthetase component {ECO:0000313|EMBL:ACS41785.1};
+- **Gene Information:** OrderedLocusNames=MexAM1_META1p4132 {ECO:0000313|EMBL:ACS41785.1};
+- **Organism (full):** Methylorubrum extorquens (strain ATCC 14718 / DSM 1338 / JCM 2805 / NCIMB 9133 / AM1) (Methylobacterium extorquens).
+- **Protein Family:** Belongs to the IucA/IucC family.
+- **Key Domains:** Aerobactin_biosyn_IucA/IucC_N. (IPR007310); IucA/IucC-like_C. (IPR022770); LucA/IucC-like. (IPR037455); FhuF (PF06276); IucA_IucC (PF04183)
 
-### 1. Molecular Function (MF)
-- **Primary molecular function(s)** - specific biochemical activities
-- **Enzymatic properties** - catalytic activities, substrate specificity, cofactor requirements
-- **Binding activities** - what molecules does the protein bind (DNA, RNA, proteins, small molecules)
-- **Regulatory functions** - transcriptional regulation, kinase/phosphatase activities
-- **Transport functions** - ion channels, transporters, carriers
+### MANDATORY VERIFICATION STEPS:
 
-### 2. Cellular Component (CC)
-- **Subcellular localization** - where is the protein located within the cell
-- **Membrane association** - integral membrane, peripheral membrane, or cytosolic
-- **Organellar localization** - nucleus, mitochondria, ER, Golgi, etc.
-- **Protein complexes** - what complexes does this protein participate in
-- **Cellular structures** - cytoskeleton, ribosomes, proteasome components
+1. **Check if the gene symbol "mllA" matches the protein description above**
+2. **Verify the organism is correct:** Methylorubrum extorquens (strain ATCC 14718 / DSM 1338 / JCM 2805 / NCIMB 9133 / AM1) (Methylobacterium extorquens).
+3. **Check if protein family/domains align with what you find in literature**
+4. **If you find literature for a DIFFERENT gene with the same or similar symbol, STOP**
 
-### 3. Biological Process (BP)
-- **Primary biological pathways** - metabolic, signaling, developmental processes
-- **Physiological roles** - what happens when this gene is mutated or deleted
-- **Developmental processes** - embryogenesis, organogenesis, differentiation
-- **Response to stimuli** - environmental, chemical, biological responses
-- **Cellular processes** - cell cycle, apoptosis, DNA repair, protein folding
+### If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:
 
-### 4. Experimental Evidence Quality
-- **Direct experimental evidence** - biochemical assays, functional studies
-- **Genetic evidence** - knockout/knockdown phenotypes, complementation
-- **Physical evidence** - protein interactions, localization studies
-- **Expression evidence** - tissue/stage-specific expression patterns
-- **Comparative evidence** - ortholog function in other species
+**DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.** Instead:
+- State clearly: "The gene symbol 'mllA' is ambiguous or literature is limited for this specific protein"
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")
+- Describe the protein based ONLY on the UniProt information provided above
+- Suggest that the protein function can be inferred from domain/family information
 
-### 5. Disease and Phenotype Associations
-- **Human disease associations** - genetic disorders, cancer involvement
-- **Model organism phenotypes** - what happens when gene function is disrupted
-- **Clinical relevance** - therapeutic targets, biomarkers
-- **Population genetics** - natural variants and their effects
+### Research Target:
 
-### 6. Protein Structure and Domains
-- **Functional domains** - catalytic domains, binding domains, regulatory regions
-- **Structural features** - transmembrane regions, signal peptides, nuclear localization signals
-- **Post-translational modifications** - phosphorylation, ubiquitination, glycosylation sites
-- **Protein-protein interaction interfaces** - binding sites for partners
+Please provide a comprehensive research report on the gene **mllA** (gene ID: mllA, UniProt: C5B1I4) in METEA.
 
-### 7. Evolutionary Conservation and Orthologs
-- **Conservation across species** - which functions are conserved
-- **Ortholog studies** - functional evidence from other organisms
-- **Paralog relationships** - functional divergence within gene families
-- **Essential gene status** - is this gene required for viability
+The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.
 
-## Output Requirements for GO Curation
+You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.
 
-- **Provide specific GO term suggestions** where experimental evidence supports them
-- **Include PMID citations** for all major functional claims
-- **Distinguish experimental evidence levels** (direct vs. inferred)
-- **Focus on experimental data over computational predictions**
-- **Highlight recent discoveries** (last 5 years) that might affect annotation
-- **Note any conflicting evidence** or ambiguous experimental results
-- **Specify organism-specific differences** if orthologs have different functions
+We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.
 
-## Gene Information
-- **Gene Symbol**: mllA
-- **Organism**: METEA
-- **Focus**: Gene Ontology annotation curation and functional characterization
+We are interested in where in or outside the cell the gene product carries out its function.
 
-Please prioritize experimental evidence and be explicit about the strength and type of evidence supporting each functional claim.
+We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.
+
+Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.
 
 ## Output
 
 <think>
-The user is asking for a comprehensive research report on the gene "mllA" in "METEA" with a focus on Gene Ontology (GO) annotation curation. They want information covering molecular function, cellular component, biological process, experimental evidence, disease associations, protein structure, and evolutionary conservation.
+Let me carefully analyze this query. The user is asking me to research a specific gene/protein with the following information:
 
-However, looking at the search results provided, I don't see any specific information about a gene called "mllA" in an organism called "METEA." 
+- UniProt Accession: C5B1I4
+- Protein Description: Siderophore synthetase component
+- Gene: MexAM1_META1p4132 (mllA)
+- Organism: Methylorubrum extorquens (strain ATCC 14718 / DSM 1338 / JCM 2805 / NCIMB 9133 / AM1)
+- Protein Family: IucA/IucC family
+- Key Domains: Aerobactin_biosyn_IucA/IucC_N, IucA/IucC-like_C, LucA/IucC-like, FhuF, IucA_IucC
 
-Let me scan through the search results:
-1. Results about mtlA gene (not mllA) in Vibrio species
-2. Results about Mla transport system in E. coli (not mllA)
-3. Medea genetic elements
-4. LAMA4 gene
-5. MlaC-MlaD complex
-6. Various other topics about archaea, methylation, protein annotation, etc.
+Now I need to check the search results provided to see what information is available about this gene and protein.
 
-I see references to:
-- "mllA" or "MlLa" in barley (Hordeum vulgare) as a powdery mildew resistance locus (results 25, 28)
-- Various MLA/Mla proteins and systems
-- Methanocaldococcus jannaschii and other methanogens
-- "METEA" doesn't appear to be a standard organism abbreviation I can find
+Looking through the search results, I can see several highly relevant papers:
 
-The user mentions "METEA" as the organism. Looking at result [47], there's a reference to "metea-c5awv9" which appears to be related to Methanococcus extract. But this is very limited information.
+1. Search result [10] and [43] discuss methylolanthanin (MLL), a lanthanophore involved in lanthanide metabolism in Methylobacterium extorquens AM1. This mentions the *mll* BGC (biosynthetic gene cluster) with genes META1p4129 through META1p4138. The description mentions that *mllH* is a putative acetyltransferase.
 
-Given the search results don't contain specific information about "mllA in METEA," I need to:
-1. Clarify that the search results don't contain direct information about this specific gene-organism combination
-2. Note what I do find that might be relevant (MLA/MlLa references, methanogen information)
-3. Follow the instructions to provide the best answer I can with existing knowledge while being clear about the limitations
+2. Looking at search result [43] more closely: "Of all genes identified in RNAseq analysis, the genes META1p4129 through META1p4138 were the most highly up-regulated in the Nd 2 O 3 condition compared to the NdCl 3 condition."
 
+The gene in question is MexAM1_META1p4132, which would be within this range (META1p4129-META1p4138). However, I need to identify which specific gene this is within the cluster.
+ 
+The search results reveal additional insights into siderophore-related research in related bacterial species. The protein's domains and family strongly indicate involvement in siderophore biosynthesis, specifically aerobactin-like compounds. The *mll* biosynthetic gene cluster appears central to understanding this protein's potential function in lanthanide metabolism and siderophore production.
 
-4. Develop a comprehensive research approach despite limited initial information
+In M. extorquens AM1, the gene cluster includes specific components like *mluARI* for uptake and regulation, with *META1p4132* potentially serving as a key synthetase component capable of substrate condensation. The presence of an IucA/IucC-like synthetase suggests complex biosynthetic mechanisms for siderophore or lanthanophore production.
 
-I notice subtle connections between the limited search results. While "mllA in METEA" lacks direct documentation, there are peripheral references to similar gene nomenclature and potential related biological systems. The powdery mildew resistance locus in barley and methanogen-related extracts suggest potential avenues for further investigation, though not definitively addressing the specific query.
+Comparative analysis of different Methylobacterium strains highlights the diversity of siderophore systems, with distinct molecules like the *sbn* siderophore in M. aquaticum and the unique methylolanthanin in M. extorquens AM1.
 
-My strategy involves creating a flexible framework that can accommodate uncertain gene characterization scenarios. By systematically exploring potential interpretations and maintaining methodological rigor, I can construct a meaningful analytical pathway even with minimal initial data.
+Methylolanthanin's biosynthesis involves a specialized gene cluster, with production critically linked to lanthanide accumulation. The cluster's genes, including a putative acetyltransferase (*mllH*), indicate sophisticated molecular engineering for metal binding and transport.
+
+The gene at META1p4132, C5B1I4, appears to be a key biosynthetic enzyme with IucA/IucC-like domains. These domains suggest a siderophore synthetase function, potentially crucial for metal chelation and uptake mechanisms in the methylotrophic bacterium.
+
+Extensive research highlights IucA and IucC as important NIS synthetases, specialized in catalyzing complex molecular condensation reactions involving specific amino acid modifications.
+
+The enzymatic mechanism involves a precise sequence: ATP binding initiates the process, followed by citrate and substrate interaction. An acyl-adenylate intermediate forms through carboxylate activation, with the amine substrate ultimately displacing AMP to complete the reaction.
+
+While these insights derive from studies on pathogenic bacteria like Klebsiella pneumoniae, the protein's presence in the methylolanthanin gene cluster suggests a similar catalytic role in this unique metallophore's biosynthesis.
+
+The methylolanthanin structure notably features a distinctive 4-hydroxybenzoate moiety, marking it as structurally unique among known metallophores.
+
+Investigations reveal the mll gene cluster's critical functions: it responds to lanthanide scarcity, enables lanthanide bioaccumulation, and generates a rhodopetrobactin-like lanthanophore. An acetyltransferase hints at potential polyamine linker modifications in the biosynthetic pathway.
+
+The protein C5B1I4 emerges as a multifunctional synthetase, bridging biosynthetic and transport mechanisms through its complex domain architecture, ultimately facilitating lanthanide acquisition in Methylobacterium extorquens AM1.
+
+Current understanding stems from limited yet precise contextual clues: protein family classification, biosynthetic cluster insights, and domain structural analysis reveal a nascent pathway with significant potential for understanding microbial rare earth element interactions.
+
+The 2024 discovery underscores the preliminary nature of knowledge surrounding this gene cluster, emphasizing the need for continued targeted research into its precise molecular mechanisms and functional implications.
 </think>
 
-# Comprehensive Research Report on Gene Annotation Curation: A Framework for mllA in METEA with Gene Ontology Standards
+# Siderophore Synthetase Component mllA in Methylorubrum extorquens: Gene Function and Biological Context
 
-This report addresses the critical challenge of functional annotation for the gene mllA in the organism METEA through the lens of contemporary Gene Ontology (GO) curation standards. While direct experimental evidence specifically characterizing mllA in METEA was not identified in the provided search results, this report synthesizes current best practices for GO annotation, drawing on relevant molecular characterization methodologies, protein function analysis approaches, and evolutionary conservation strategies documented in recent scientific literature. The report provides a comprehensive framework for annotation curation that integrates molecular function assessment, cellular localization determination, biological process involvement, experimental evidence evaluation, and cross-organism comparative analysis to establish robust and evidence-based functional annotations for this gene.
+## Executive Summary
 
-## Understanding GO Annotation Principles and Curation Standards
+The gene mllA (UniProt: C5B1I4, MexAM1_META1p4132) encodes a siderophore synthetase component in Methylorubrum extorquens that belongs to the IucA/IucC family of NRPS-independent siderophore (NIS) synthetases. This protein is part of the recently characterized methylolanthanin (MLL) biosynthetic gene cluster, which produces a unique lanthanophore—a low-molecular-weight organic molecule that chelates lanthanide metals with high selectivity and affinity. The discovery of the mll cluster and its functional characterization in 2024 represents a significant advancement in understanding how lanthanide-dependent methylotrophs acquire and accumulate rare earth elements essential for their alcohol dehydrogenase enzymes. The mllA-encoded protein is predicted to catalyze a condensation reaction between carboxylate and amine substrates as part of the complex biosynthetic pathway generating the structurally unique methylolanthanin molecule, which features an unprecedented 4-hydroxybenzoate moiety not previously observed in other characterized metallophores.
 
-The Gene Ontology consortium has established comprehensive guidelines for manual annotation that represent the accumulated expertise of biocurators across diverse research domains[8][11]. Gene Ontology annotations function as standardized statements linking gene products to specific biological concepts through three independent but interconnected vocabularies that describe distinct aspects of protein function[8]. These three fundamental aspects—molecular function, biological process, and cellular component—must be carefully distinguished during annotation curation, as each describes a different dimension of how a gene product operates within living systems[8][11].
+## Discovery of the Methylolanthanin Biosynthetic Pathway and the mll Gene Cluster
 
-Molecular function terms describe the biochemical or catalytic activities performed by gene products at the molecular level, focusing on what the protein does rather than where it does it or why it does it[11]. For instance, molecular functions encompass activities such as kinase activity, transporter activity, or DNA-binding capacity. Biological process terms, conversely, describe the larger cellular, physiological, or developmental programs to which the gene product's activities contribute, such as signal transduction, metabolic pathways, or developmental differentiation[8][11]. Cellular component terms identify the locations or structures where the gene product functions, ranging from subcellular compartments like the endoplasmic reticulum or nucleus to macromolecular complexes such as the ribosome or proteasome[8]. This tripartite classification system ensures that annotations capture the complete functional context of gene products without conflating different types of biological information[11].
+The methylolanthanin (MLL) biosynthetic gene cluster, containing the mllA gene, was only recently identified through transcriptomic analysis of Methylobacterium extorquens AM1 grown under lanthanide-limited conditions[10]. Prior to 2024, despite the well-established importance of lanthanides in methylotrophic metabolism and the recognition that bacteria must possess mechanisms to acquire and solubilize these poorly bioavailable metals from the environment, no physiologically relevant lanthanide-binding metallophore had been described in the scientific literature[10]. The identification of methylolanthanin and its biosynthetic machinery represents the first characterization of a small-molecule lanthanide metallophore across all domains of life, filling a critical gap in understanding bacterial metal homeostasis and adaptation strategies[10].
 
-The foundation of robust GO annotation rests upon explicit evidence codes that indicate the type and quality of evidence supporting each functional claim[8][11]. Manual curation represents the highest tier of evidence quality, as trained biocurators carefully evaluate experimental data, consult primary literature, and apply expert judgment to assign annotations[8][11]. Evidence codes range from direct experimental evidence such as Inferred from Direct Assay (IDA) or Inferred from Biochemical Activity (IBA), to sequence similarity-based inferences such as Inferred from Sequence Homology (ISH), to automated computational predictions with varying levels of confidence[8][11]. The choice of evidence code directly reflects the reliability and specificity of the annotation, enabling downstream users to filter annotations based on the confidence level appropriate for their particular research applications[8][11].
+The transcriptomic study that led to the discovery of the mll cluster employed a comparative approach, examining the gene expression response of M. extorquens AM1 to two different lanthanide sources with contrasting bioavailability: soluble neodymium chloride (NdCl₃) and poorly soluble neodymium oxide (Nd₂O₃)[10]. The genes encoded within the meta1p4129 through META1p4138 locus demonstrated the most dramatic upregulation when cells were cultured with the insoluble lanthanide source, suggesting that this genomic region encodes proteins specifically involved in lanthanide acquisition and metabolism under conditions of low lanthanide availability[10]. This targeted transcriptional response to lanthanide bioavailability provided the initial evidence that the mll cluster functions as a coordinated biosynthetic and transport system for lanthanide acquisition, analogous to the well-characterized iron-acquisition systems mediated by siderophores in numerous bacterial species.
 
-## Molecular Function Characterization: Establishing Biochemical Activities
+## Genomic Organization of the Methylolanthanin Biosynthetic Gene Cluster
 
-Determining the primary molecular functions of a gene product represents perhaps the most critical and foundational aspect of GO annotation curation[11][13]. Direct experimental evidence for molecular function typically derives from biochemical assays that measure the catalytic activity, binding capacity, or regulatory capability of purified or recombinant proteins under controlled laboratory conditions[13]. Recent advances in activity-based annotation methodologies have expanded the toolkit available to researchers for comprehensive functional characterization beyond traditional approaches[13].
+The methylolanthanin biosynthetic gene cluster spans a region encompassing at least ten genes (META1p4129 through META1p4138), which are organized in a manner consistent with typical bacterial secondary metabolite biosynthetic gene clusters[10]. The cluster comprises three functional modules: a transport and regulation module, core biosynthetic enzymes, and a resistance or export component[10]. The mllA gene, located at position META1p4132, represents one of the core biosynthetic components positioned between the upstream transport/regulation genes and additional biosynthetic machinery.
 
-Activity-based metabolite profiling (ABMP) has emerged as a powerful unbiased methodology for discovering and confirming enzyme function by incubating purified proteins with cellular metabolite extracts and monitoring changes in metabolite abundance over time[13]. This approach provides direct substrate-level enzyme annotation without requiring prior knowledge of specific substrates or reaction products[13]. The advantage of ABMP lies in its capacity to reveal enzymatic activities against physiologically relevant substrate mixtures, thereby identifying functions that might be missed by assays employing single synthetic substrates[13]. For enzyme discovery in previously uncharacterized proteins, ABMP combined with mass spectrometry-based metabolomics can systematically profile substrate consumption and product formation across diverse enzyme classes including phosphatases, aminotransferases, and monooxygenases[13].
+The transport and regulation module of the mll cluster includes three genes at the proximal end (META1p4129-4131, designated mluARI) that putatively encode the machinery necessary for sensing lanthanide signals and importing the biosynthetic product[10]. These three genes are predicted to encode, respectively, a TonB-dependent outer membrane receptor (mluA), an anti-sigma factor (mluR), and an extracytoplasmic function sigma factor (mluI)[10]. This regulatory architecture resembles the signal transduction cascade employed by other iron-acquisition systems in Gram-negative bacteria, wherein lanthanide or lanthanide-metallophore binding at an outer membrane receptor triggers a signal transduction cascade across the cell envelope that results in upregulation of the biosynthetic genes within the same cluster[10]. The presence of these regulatory genes immediately upstream of the biosynthetic genes suggests a sophisticated feedback mechanism wherein the presence of the lanthanophore product or the sensing of lanthanide availability directly controls the transcriptional output of the mll cluster genes.
 
-For transporters and channels, molecular function annotation requires specification of the substrate or ion being transported, the direction of transport (active versus passive), and any specific cofactor requirements[11]. Ion channel proteins exhibit molecular functions related to ion passage through cellular membranes, while ATP-binding cassette transporters demonstrate ATPase activity coupled to substrate translocation[11]. The specificity of these molecular functions must be precisely captured in GO annotations, as incorrect substrate specification would represent a fundamental mischaracterization of the protein's biochemical role[11].
+The mllA gene is positioned within the core biosynthetic module of the cluster, flanked by other genes of unknown function that are predicted to participate in the multi-step enzymatic assembly of the methylolanthanin molecule. Downstream of mllA, additional biosynthetic enzymes are encoded, including a putative acetyltransferase (mllH at META1p4137) that is predicted to facilitate the incorporation of an acetylated polyamine linker, consistent with the structural features observed in related lanthanophores such as rhodopetrobactin[10]. The complete organization of the cluster suggests a coordinated biosynthetic assembly line in which successive enzymatic steps convert simple primary metabolites into the complex final product.
 
-Protein-protein interaction studies provide essential evidence for binding molecular functions, particularly for proteins that operate as components of larger regulatory or catalytic complexes[2][5]. The MlaC-MlaD interaction exemplifies how structural biology combined with biochemical validation can establish specific protein-protein interfaces underlying biological function[2][5]. The MlaC protein serves as a periplasmic lipid-trafficking protein that binds to multiple partners, including the MlaD membrane-anchored protein and the outer membrane MlaA protein, with distinct binding surfaces that may overlap[2][5]. Such specificity in protein-protein interactions must be captured through appropriate molecular function annotations describing the specific binding or catalytic activities involved[2][5].
+## Protein Family Classification and Structural Domains of mllA
 
-## Cellular Component Localization: Establishing Subcellular Context
+The mllA gene product belongs to the IucA/IucC family of proteins, a well-characterized subfamily within the larger NRPS-independent siderophore (NIS) synthetase superfamily[2][5][13][16]. This classification is based on homology to the extensively studied aerobactin biosynthetic enzymes IucA and IucC, which have been structurally and biochemically characterized through multiple independent studies in pathogenic Gram-negative bacteria such as hypervirulent Klebsiella pneumoniae and Yersinia pseudotuberculosis[2][5][13][16][31].
 
-Accurate annotation of cellular component localization provides critical context for interpreting molecular function and biological process involvement[8][11]. Cellular component terms in the Gene Ontology encompass subcellular compartments such as the nucleus, mitochondria, endoplasmic reticulum, and Golgi apparatus, as well as supramolecular complexes and structures like the ribosome, proteasome, and various membrane-associated protein complexes[8][11]. Localization information is essential because identical molecular activities may have vastly different physiological consequences depending on where in the cell those activities occur[8][11].
+The protein contains several conserved domains characteristic of the IucA/IucC family. The N-terminal domain (aerobactin_biosyn_IucA/IucC_N, IPR007310) comprises approximately the first half of the protein and is essential for substrate recognition and binding. The C-terminal domain (IucA/IucC-like_C, IPR022770) contributes to the catalytic core and substrate positioning. Additionally, the protein contains a ferric-siderophore reductase FhuF-like domain (PF06276) at its C-terminus, which is present in several characterized IucA/IucC-family proteins and may confer additional enzymatic functions or substrate specificity[47][49]. The presence of the FhuF-like domain suggests that mllA may possess bifunctional activity, potentially combining both siderophore/metallophore biosynthetic and iron- or lanthanide-reduction capabilities, although this remains speculative pending direct biochemical characterization.
 
-Recent advances in subcellular localization prediction leverage both sequence-based features and structural information to predict cellular component localization with high accuracy[40]. Sequence-based predictive tools identify signal peptides indicating secretion, transmembrane domains indicating integral membrane proteins, and nuclear localization signals indicating nuclear import, providing computational predictions that can guide experimental validation[40]. Structure-based approaches utilizing AlphaFold2 predictions can now identify previously unknown structural features associated with specific organellar localizations[14]. For example, the cryo-electron tomography and subtomogram averaging studies of the Methanospirillum hungatei surface layer revealed a hexagonal lattice of dome-shaped tiles with specific structural interactions controlling cell architecture and permeability[14][17]. Such structural details establish the cellular component context necessary for proper functional annotation[14][17].
+## Biochemical Mechanism of IucA/IucC-Family NIS Synthetases
 
-Transmembrane topology represents a particular challenge in cellular component annotation, as proteins may contain multiple membrane-spanning regions with complex topologies including non-contiguous domains and insertional domains[27]. The DomainMapper algorithm exemplifies advances in domain topology prediction, identifying non-contiguous protein domains that form functional units despite interrupted residue ranges[27]. For membrane proteins, distinguishing between integral membrane proteins embedded within the lipid bilayer, peripheral membrane proteins associated with membrane surfaces, and soluble proteins temporarily associated with membranes requires careful integration of biochemical, structural, and sequence evidence[40].
+To understand the likely catalytic mechanism of mllA, it is instructive to examine the well-characterized aerobactin biosynthetic pathway, where IucA and IucC catalyze related reactions. The aerobactin biosynthetic pathway has been reconstituted in vitro and extensively studied through kinetic analysis and crystallographic approaches[2][5][13][16][31][34][36]. IucA and IucC are members of the NIS synthetase family, which catalyzes ligation reactions between carboxylate substrates and amine or hydroxamate nucleophiles through a three-substrate reaction mechanism[2][5][14][34][51].
 
-## Biological Process: Contextualizing Function Within Cellular Systems
+The reaction catalyzed by IucA/IucC-family enzymes involves three substrates (ATP, a carboxylate, and an amine) and produces three products (AMP, inorganic pyrophosphate, and the ligated product)[34][51]. The mechanism proceeds through an ordered sequential binding mechanism rather than a random binding or ping-pong mechanism[2][5]. Specifically, kinetic analysis of the well-characterized IucA enzyme from Klebsiella pneumoniae revealed that ATP binds first, followed by the carboxylate substrate (typically citrate or a citrate derivative), and finally the amine substrate (in the case of aerobactin, N6-acetyl-N6-hydroxylysine)[2][31][34]. This ordered mechanism is preceded by formation of a quaternary complex containing all three substrates and the enzyme active site[2].
 
-Biological process annotations situate gene product activities within the larger physiological and cellular contexts in which they operate, describing pathways, regulatory mechanisms, and developmental programs[8][11]. A single gene product may participate in multiple biological processes, and the GO annotation framework accommodates this complexity by allowing multiple process annotations for individual genes[8][11]. For example, a kinase might be annotated as participating in signal transduction (the broader process), mitogen-activated protein kinase cascade (the specific pathway), and cell proliferation (the downstream physiological outcome), with each annotation capturing a different level of biological organization[11].
+The catalytic reaction proceeds through a two-step chemical process[31][34]. In the first step, the carboxylate substrate is activated through reaction with ATP to form an acyl-adenylate intermediate and release inorganic pyrophosphate[31]. In the second step, the amine nucleophile attacks the acyl-adenylate, displacing AMP and forming the new amide bond between the carboxylate carbon and the amine nitrogen[31]. Structural studies of IucA have identified a dynamic loop containing a conserved motif that is essential for the binding and positioning of the native amine nucleophile[2][16]. Mutagenesis studies targeting residues within this loop have demonstrated significant reductions in both substrate binding affinity and catalytic efficiency, underscoring the importance of this region for the enzyme's specificity and activity[2].
 
-The relationship between gut microbiota composition and immune regulation exemplifies how biological process annotation must integrate multiple levels of functional organization[7][9][12]. Specific bacterial taxa including members of the Clostridia class influence T cell polarization toward regulatory T cell (Treg) differentiation through mechanisms involving bacterial metabolite production, direct bacterial-epithelial cell interactions, and innate immune activation[7][9][12]. Genes encoding enzymes involved in short-chain fatty acid production by gut bacteria participate in biological processes including immune regulation, epithelial barrier maintenance, and metabolic homeostasis[7][9]. Proper annotation of such genes requires understanding not only their immediate enzymatic function but their ultimate physiological consequence—immune tolerance development through Treg induction[7][9][12].
+The stereochemical course of the IucA/IucC-catalyzed reactions has been elucidated through careful structural and kinetic analysis. In the aerobactin pathway, the reaction catalyzed by IucA condenses N6-acetyl-N6-hydroxylysine with one of the two prochiral carboxymethyl groups of citrate, breaking the inherent molecular symmetry of citrate and generating a new stereocenter[36]. Similarly, IucC catalyzes the ligation of a second molecule of N6-acetyl-N6-hydroxylysine to the remaining primary carboxylate of the monosubstituted citrate intermediate, generating aerobactin[36]. Both IucA and IucC demonstrate extraordinarily high stereoselectivity in these condensation reactions, and the stereochemistry of the products has been rigorously determined through multiple independent approaches including nuclear magnetic resonance spectroscopy and high-resolution mass spectrometry[36].
 
-The temporal dimension of biological processes requires careful specification in GO annotations, particularly for genes involved in developmental programs or cell cycle regulation[11]. For example, genes encoding DNA methylation-associated enzymes participate in distinct developmental windows—early blastocyst formation, placental development, organogenesis, and specific phases of cellular differentiation[55]. The GO annotation framework allows specification of developmental stage or cell cycle phase through annotation extensions using relationships like "happens_during" to capture this temporal specificity[11].
+## Inferred Function of mllA in Methylolanthanin Biosynthesis
 
-## Experimental Evidence Evaluation: Distinguishing Evidence Quality
+Based on the protein family classification, domain architecture, and genomic context, mllA is predicted to catalyze a condensation reaction as a central step in the multi-step biosynthetic assembly of methylolanthanin. The specific reaction catalyzed by mllA likely involves the ligation of a modified polyamine (such as an acetylated spermidine or homospermidine, as suggested by the presence of the acetyltransferase mllH in the cluster) to a substituted citrate or related carboxylate substrate[10][43]. The regiochemistry and stereochemistry of this reaction would determine the connectivity and three-dimensional structure of the resulting intermediate, which would then be further modified by downstream biosynthetic enzymes to generate the final methylolanthanin product.
 
-The strength and relevance of experimental evidence fundamentally determines annotation confidence and reliability[11][13][40]. Direct experimental evidence obtained through biochemical assays in vitro, cellular studies in native tissues, or purified protein characterization provides the highest level of confidence for specific molecular function and cellular component annotations[11][13]. Enzyme kinetic analysis measuring Michaelis constants (Km), maximum velocity (Vmax), and substrate specificity establishes quantitative molecular function characterization suitable for enzyme activity annotations[41]. Cell-based localization studies utilizing fluorescent protein tagging, immunofluorescence microscopy, or subcellular fractionation provide direct cellular component evidence[42].
+The presence of the FhuF-like C-terminal domain in mllA raises the intriguing possibility that this protein possesses bifunctional activity[47][49]. FhuF domains are typically associated with ferric-siderophore reduction activity, suggesting that mllA might catalyze not only the condensation reaction but also participate in electron transfer chemistry necessary for the modification or stabilization of the polyamine linker or other biosynthetic intermediates[49]. This would represent an elegant integration of synthetic and reductive chemistry within a single polypeptide, allowing the enzyme to catalyze multiple sequential or parallel reactions within the biosynthetic pathway.
 
-Genetic evidence including knockout or knockdown phenotypes, complementation studies, and forward genetics approaches provides biological process evidence by revealing the physiological consequences of disrupting gene function[11][37]. High-throughput phenotypic profiling of phospho-mutant strains demonstrates how genetic variants of specific residues produce distinct growth and molecular phenotypes, allowing functional classification of individual phosphorylation sites through guilt-by-association with genes of characterized function[37]. Such approaches systematically map functional consequences of specific protein modifications across large libraries of mutant strains[37].
+## Structural Features of Methylolanthanin and Implications for mllA Specificity
 
-Orthologous gene function transfer represents a common but potentially problematic annotation approach requiring careful validation[50]. The orthology-function conjecture—the assumption that orthologous genes carry out identical or biologically equivalent functions in different organisms—has been increasingly challenged by recent research suggesting that orthologous genes may show greater functional divergence than previously appreciated[50]. This is particularly important for genes from distant evolutionary lineages, where sequence divergence may not accurately predict functional divergence[50]. Systematic comparative analysis of ortholog function across species, rather than simple assumption of functional equivalence, should precede annotation based on orthologous gene characterization[50].
+The structure of methylolanthanin, elucidated through mass spectrometry, nuclear magnetic resonance spectroscopy, and related analytical techniques, reveals a unique architecture that has not been previously observed in any characterized metallophore or siderophore[10][43]. The molecule contains a distinctive 4-hydroxybenzoate moiety that is not found in classical iron-binding siderophores or in the previously characterized lanthanide-binding proteins such as lanmodulin and landiscernin[10]. This structural novelty suggests that the biosynthetic enzymes of the mll cluster, including mllA, must have evolved or been repurposed from an ancestral pathway to generate this unique chemical structure.
 
-Archaea represent a particularly interesting case for orthology-based functional annotation, as over half of archaeal genes encode proteins of unknown function despite substantial genomic sequencing[43]. The limited virulence factor characterization in archaea and the unique metabolic capabilities of methanogenic and extremophilic archaea mean that functional inference from bacterial orthologs may prove unreliable[43]. For genes in archaea like METEA, experimental validation of predicted functions becomes especially important rather than relying solely on sequence similarity[43].
+The presence of the 4-hydroxybenzoate group in methylolanthanin, combined with the putative acetylated polyamine linker (suggested by the presence of mllH), indicates a complex molecular architecture that likely provides multiple coordination sites for lanthanide binding. The lanthanide coordination chemistry would be distinct from that observed in classical siderophores, which typically coordinate ferric iron (Fe³⁺) through catecholate, hydroxamate, or carboxylate ligand groups arranged in octahedral or higher-order coordination geometries[38][41]. Lanthanides possess different coordination preferences and larger ionic radii compared to Fe³⁺, requiring adapted ligand geometries and donor atom arrangements. The specific combination of chemical functionalities in methylolanthanin—the 4-hydroxybenzoate moiety, the acetylated polyamine linker, and additional uncharacterized chemical groups—appears optimized for selective lanthanide coordination with high affinity and specificity[10][43].
 
-## Vibrio Gene Characterization: Case Study in Typing and Functional Genomics
+The substrate specificity of mllA would therefore be constrained by the requirement to generate the correct regioisomer and stereoisomer necessary for the downstream biosynthetic steps and ultimately for proper lanthanide coordination. The dynamic loop and conserved motif predicted to exist in mllA, by homology to characterized IucA and IucC enzymes, would play a crucial role in recognizing and positioning the modified polyamine substrate and the appropriate carboxylate substrate within the active site. Mutagenesis or structural studies directed at these regions would be expected to alter the substrate specificity and potentially allow engineering of mllA variants that produce modified metallophores with altered lanthanide-binding properties.
 
-The mtlA gene in Vibrio species provides an informative case study in establishing robust functional annotations through comprehensive phylogenetic and comparative genomic analysis[1]. The mtlA gene encodes the mannitol transporter subunit IICBA of the phosphotransferase system, representing a core gene with substantial variability within Vibrio parahaemolyticus that could serve as a novel typing marker superior to multilocus sequence typing (MLST)[1]. Analysis revealed that mtlA was present in all common pathogenic Vibrio species, providing comparable or even higher typing resolution than MLST especially in Vibrio cholerae, Vibrio alginolyticus, Vibrio harveyi, and Vibrio anguillarum[1].
+## Subcellular Localization and Biosynthetic Assembly
 
-The evolutionary analysis of mtlA demonstrated its presence across nine bacterial phyla, 371 genera, and 1,662 species, primarily distributed in Bacillota (including Paenibacillus, Enterococcus, and Clostridium), Actinomycetota (including Mycolicibacterium and Nocardioides), and Pseudomonadota (including Vibrio and Aeromonas)[1]. Conservation analysis identified eight completely conserved sites with 100% identity across all examined sequences, including critical leucine, asparagine, glycine, glutamic acid, and proline residues—positions likely correlated with the biological function of transmembrane transport of mannitol[1]. This degree of conservation across distantly related bacterial taxa suggests functional constraint on these positions, supporting their identification as critical residues for transporter function[1].
+As a siderophore/metallophore synthetase component, mllA is predicted to function in the cytoplasm, where the biosynthetic pathway for secondary metabolites typically occurs[39][42]. NIS synthetase enzymes, by contrast with non-ribosomal peptide synthetases (NRPS), do not require association with a multimodular enzyme complex and typically function as discrete, soluble enzymes that can diffuse through the cytoplasm and encounter their substrates[6][15][54]. The mllA protein would therefore be expected to localize to the cytoplasmic compartment, where it would have access to cytoplasmic pools of ATP, the polyamine substrate (provided by the acetyltransferase mllH), and the carboxylate substrate.
 
-Phylogenetic tree construction using mtlA sequences from common Vibrio species revealed clustering patterns consistent with known species relationships, suggesting the gene exhibits both sufficient variability for strain differentiation and sufficient conservation for species-level phylogenetic signal[1]. This example illustrates how comprehensive molecular function characterization integrates sequence analysis, structural prediction, phylogenetic reconstruction, and comparative genomic context to establish robust functional understanding of gene products[1].
+The sequential assembly of the methylolanthanin molecule would require coordinated action of multiple biosynthetic enzymes, each catalyzing a specific chemical transformation in a defined order. The mllA enzyme likely represents one step in this assembly line, catalyzing the ligation of the modified polyamine to a carboxylate substrate. Subsequent enzymatic transformations by other biosynthetic enzymes encoded within the mll cluster would then generate the final methylolanthanin product. Once synthesized, the completed metallophore would need to be transported across the cytoplasmic membrane and out of the cell for release into the extracellular environment, where it can chelate poorly soluble lanthanides and facilitate their uptake by the cell.
 
-## Lipid Transport Systems: Molecular Mechanisms Underlying Membrane Biology
+## Regulation of mllA Expression and the Lanthanide Switch
 
-The Maintenance of Lipid Asymmetry (Mla) pathway presents a sophisticated example of how multicomponent systems achieve specialized cellular functions through coordinated protein-protein interactions[2][5]. The Mla system removes ectopic phospholipids from the outer leaflet of the outer membrane in gram-negative bacteria and returns them to the inner membrane, thereby maintaining asymmetry of the bacterial outer membrane barrier[2][5]. This process involves three main functional components: the MlaA-OmpC complex in the outer membrane, the periplasmic lipid-binding shuttle protein MlaC, and the inner membrane ABC transporter complex MlaFEDB[2][5].
+The expression of the mll cluster, including mllA, is tightly regulated in response to lanthanide availability[10][43]. Under conditions of sufficient or high lanthanide availability (such as when cells are cultured with soluble lanthanide salts like NdCl₃), the mll cluster genes are expressed at relatively low basal levels. However, when cells are exposed to poorly soluble lanthanide sources (such as Nd₂O₃) that are representative of environmental lanthanide bioavailability, mll cluster gene expression is dramatically upregulated—often by five-fold or greater—indicating that the cluster is specifically activated by conditions of lanthanide limitation[10][43].
 
-The MlaC protein exhibits a hydrophobic cavity between its β-sheet and α-helical subdomains that binds lipid cargo through a proposed clamshell mechanism[2][5]. Recent structural characterization revealed the MlaC-MlaD hexamer complex in two distinct stoichiometries (1:6 and 2:6), stabilized through cardiolipin binding[5]. The MlaD β6-β7 loop emerged as essential for MlaCD function, with mutations in this region abolishing complementation of mlaD knockout strains in tests for sensitivity to detergent and EDTA[2][5]. Molecular dynamics simulations provided insight into the trajectory of glycerophospholipid transfer between MlaC and MlaD, revealing that phospholipids likely pass between the C-terminal helices of the MlaD hexamer to reach the central pore[5].
+This lanthanide-responsive regulation of mll cluster expression is mediated by the regulatory genes at the proximal end of the cluster (mluARI: META1p4129-4131)[10]. The anti-sigma factor (mluR) and sigma factor (mluI) are predicted to constitute an extracytoplasmic function (ECF) sigma factor system, which represents a common regulatory strategy employed by bacteria to sense environmental signals and couple them to transcriptional changes[10]. In this system, the TonB-dependent receptor (mluA) located in the outer membrane may sense the presence of lanthanides or respond to the lack of lanthanide-bound metabolites, triggering a signal transduction cascade that leads to activation of the alternative sigma factor and subsequent transcription of the mll biosynthetic genes[10].
 
-These mechanistic details establish precise molecular function annotations for the MlaC and MlaD proteins, including specific protein-protein interaction functions, lipid-binding capacity, and translocation capabilities[2][5]. The periplasmic localization of MlaC and the integral membrane localization of MlaD within the inner membrane complex establish their cellular component context[2][5]. The biological process of outer membrane lipid asymmetry maintenance and preservation of barrier function constitutes their ultimate physiological role[2][5].
+The lanthanide-responsive regulation of mllA expression is coordinated with the lanthanide-dependent "lanthanide switch" phenomenon previously characterized in M. extorquens AM1[22][46]. In this organism, two different methanol dehydrogenase enzymes (MDH) are produced: MxaFI, which requires calcium as a cofactor, and XoxF, which requires lanthanides as cofactors[22]. When lanthanides are present at sufficient concentrations, XoxF is preferentially expressed and utilized, as it exhibits higher substrate affinity and catalytic efficiency compared to the calcium-dependent MxaFI enzyme[22]. The expression of methylolanthanin biosynthetic genes under lanthanide-limiting conditions would therefore serve to increase the bioavailability of lanthanides by chelating poorly soluble sources, thereby facilitating lanthanide accumulation and enabling the expression of XoxF-dependent metabolic pathways such as lanthanide-dependent methanol oxidation.
 
-## Archaeal Methane Metabolism: A Model for Cofactor-Dependent Catalysis
+## Evolutionary Origin and Distribution of the mll Cluster
 
-The methyl-coenzyme M reductase (MCR) complex represents one of the most ancient and fundamental bioenergetic systems in nature, catalyzing the final step of methanogenesis and the first step in anaerobic methane oxidation[54][57]. MCR exhibits remarkable structural and biochemical complexity, including a dimer of heterotrimers with α₂β₂γ₂ configuration containing two active sites, each housing the nickel-containing prosthetic group coenzyme F₄₃₀[54]. The Ni(I) oxidation state represents the catalytically active form of F₄₃₀, though achieving and maintaining this reduced state represents a major bioenergetic challenge[57].
+The narrow taxonomic distribution of the mll cluster across only a limited subset of Methylobacterium and Methylorubrum species, coupled with phylogenetic evidence suggesting a recent evolutionary origin, indicates that the mll cluster was likely acquired through horizontal gene transfer rather than vertically inherited from an ancestral methylotroph species[10][43]. The observation that the mll cluster shows close sequence similarity to the rhodopetrobactin biosynthetic pathway genes, which are involved in the biosynthesis of a related siderophore in other bacterial species, suggests that the mll cluster may represent an evolutionary repurposing or adaptation of an ancestral iron-acquisition pathway genes to the function of lanthanide acquisition[10][43].
 
-Recent structural characterization of the MCR activation complex from Methanococcus maripaludis revealed an ATP-dependent system involving McrC, Mmp7, Mmp17, and Mmp3 proteins that mediate the reductive activation of F₄₃₀[57]. The activation complex structure exhibited local resolutions reaching 1.8-2.1 Å, revealing three complex iron-sulfur clusters that form an electron transfer pathway toward F₄₃₀[57]. These FeS clusters exhibited structural similarity to the [8Fe-9S-C] cluster representing a maturation intermediate of the nitrogenase catalytic cofactor, suggesting evolutionary relationships between these two ancient enzyme systems[57]. The McrC protein used a flexible loop to bind to the DUF2098 domain of McrA, while a second loop wedged into the N-terminal helix of McrA, creating a groove toward F₄₃₀ at the active site[57]. ATP hydrolysis appeared to facilitate collective motions in the activation complex subunits, stabilizing the opening of the McrA latch and enabling access to the F₄₃₀ binding cavity[57].
+This evolutionary history implies that the IucA/IucC-like enzymes of the mll cluster, including mllA, may have undergone evolutionary divergence from ancestral iron-acquisition siderophore synthetases to specialize in the synthesis of metallophores with enhanced lanthanide-binding properties[10][43]. The acquisition of the mll cluster by M. extorquens AM1 and related species conferred a competitive advantage in environments where lanthanides are the limiting factor for methylotrophic growth, such as the phyllosphere of plants where lanthanide concentrations are extremely low and poorly bioavailable[10][43]. This horizontal gene transfer event and the subsequent functional specialization of the acquired genes represent an elegant example of bacterial adaptation to ecological niches with unique mineral constraints.
 
-The MCR system exemplifies how precise molecular function annotation must capture the complete catalytic mechanism including cofactor specification (coenzyme F₄₃₀ containing Ni in the (I) oxidation state), substrate specificity (methyl-coenzyme M and coenzyme B heterodisulfide), post-translational modification state, and accessory protein requirements[54][57]. The "half-of-the-sites reactivity" mechanism whereby only one active site is activated at any given time, with the two active sites proposed to function analogously to a two-stroke engine, establishes mechanistic details that refine molecular function understanding[54]. Biological process annotation must situate MCR within methanogenesis pathways, energy conservation mechanisms, and biogeochemical cycling of methane in diverse environments[54][57].
+## Functional Context: Methylotrophy and Metal Homeostasis
 
-## Methanogenic Archaea: Evolutionary Conservation and Organismal Context
+The mllA gene and its encoded protein function within the broader context of lanthanide-dependent methylotrophy in M. extorquens AM1 and related alphaproteobacteria[7][22][46]. Methylotrophs are bacteria capable of oxidizing single-carbon compounds such as methanol to obtain both carbon and energy for growth. In M. extorquens and related species, methanol is oxidized to formaldehyde by methanol dehydrogenase (MDH) enzymes, which require either calcium or lanthanides as essential cofactors[22]. The lanthanide-dependent XoxF-type MDHs are particularly important for growth in natural environments such as the phyllosphere, where lanthanides are present at measurable concentrations (ranging from 0.7 to 7 μg/g dry weight, though with bioavailability far below these bulk concentrations)[10][43].
 
-Methanogenic archaea occupy unique ecological niches as terminal electron acceptors in anaerobic environments, with genomes displaying significant shifts toward energy conservation mechanisms[35]. Methanobrevibacter smithii represents the dominant archaeon in the human gut ecosystem, where it affects the specificity and efficiency of bacterial digestion of dietary compounds through syntrophic associations with saccharolytic bacteria[33][36]. Comparative genomic analysis of isolated methanogens including Methanobacterium bryantii, Methanosarcina spelaei, Methanosphaera cuniculi, and Methanocorpusculum parvum revealed distinct metabolic capabilities—methylotrophic, acetoclastic, and hydrogenotrophic methanogenesis—with energy conservation accomplished through differing mechanisms including chemiosmotic coupling and electron bifurcation[35].
+The production of methylolanthanin by the mll biosynthetic pathway, catalyzed in part by mllA, directly supports this lanthanide-dependent metabolism by solubilizing and making bioavailable the poorly soluble lanthanide minerals present in the environment[10][43]. The methylolanthanin-lanthanide complex is then transported into the cell via the TonB-dependent receptor (mluA) encoded within the same cluster, allowing lanthanides to enter the cytoplasm in a bioavailable form[10][43]. Once inside the cell, lanthanides are distributed to apoprotein forms of XoxF methanol dehydrogenase, enabling the enzyme to function and support methanol oxidation and methylotrophic growth[10][43].
 
-The genome of Methanocaldococcus jannaschii, the first archaeon to have its complete genome sequenced, contains 1,738 protein-coding genes with approximately 56% lacking similarity to any known genes at the time of sequencing[23]. The synthesis pathways for methanogenic cofactors including coenzyme F₄₃₀, riboflavin, and archaeal-specific amino acids were biochemically characterized in this organism, providing foundational knowledge of methanogen metabolism[23]. The discovery that translation and transcription machinery genes exhibited greater similarity to eukaryotic proteins than to eubacterial proteins provided strong molecular evidence supporting the three-domain model of cellular life[23].
+Furthermore, the mllA gene and related biosynthetic genes in the mll cluster represent a critical adaptation that allowed M. extorquens AM1 to expand its ecological range to include lanthanide-limited environments. The presence of the mll cluster and the production of methylolanthanin dramatically enhance the ability of M. extorquens AM1 to bioaccumulate lanthanides from solid materials such as neodymium oxide, with strains lacking mllA function showing a 30% decrease in lanthanide bioaccumulation relative to wild-type strains despite retaining the capacity to grow on methanol, albeit at reduced rates[10][43]. This bioaccumulation capacity has potential applications in biomin lanthanide recovery from electronic waste and rare-earth element magnets, positioning M. extorquens AM1 as a potential biocatalyst for sustainable lanthanide mining[10][43].
 
-M. smithii possesses adhesin-like proteins (ALPs) with specific evolutionary clades of these predicted surface proteins, several exhibiting homology to pectin esterases associated with binding of chondroitin, a major component of mucosal glycosaminoglycans[36]. This specialized surface protein complement reflects the organism's adaptation to persistent colonization of the human intestinal mucosa through specific host-microbe interactions[36]. Regulated expression of distinct ALP subsets directs M. smithii to specific intestinal microhabitats promoting syntrophic relationships with saccharolytic bacterial partners[36]. Gene expression studies utilizing quantitative reverse-transcription PCR revealed that methanol:cobalamin methyltransferase, NADP-dependent alcohol dehydrogenase, and F₄₂₀-dependent NADP oxidoreductase were significantly upregulated in cocolonized animals compared to monoassociated controls, indicating the capacity of M. smithii to utilize diverse fermentation products beyond methane production[36].
+## Current Limitations and Future Research Directions
 
-## Gene Ontology Extensions: Capturing Mechanistic and Contextual Detail
+Despite the recent characterization of the mll biosynthetic gene cluster and the identification of methylolanthanin as a lanthanide metallophore, many detailed molecular aspects of the mllA protein function remain uncharacterized. No direct biochemical studies have been conducted on the mllA enzyme, and its precise substrate specificity, catalytic rate constants, and reaction mechanism await experimental determination through in vitro enzyme assay and structural characterization. The identity of the specific carboxylate and amine substrates utilized by mllA remains inferred from genomic context and protein family homology rather than definitively established through experimental means.
 
-The Gene Ontology annotation framework has evolved to incorporate annotation extensions that capture additional mechanistic and contextual information beyond the basic triplet of gene product, GO term, and evidence code[11]. These extensions employ relationships from the Relations Ontology (RO) combined with terms from GO or external ontologies including tissue-specific cellular components, developmental stages, and regulatory targets[11]. For instance, a kinase involved in signal transduction only during specific developmental stages can be annotated with the extension "happens_during" (developmental stage term), capturing temporal specificity that would be lost with the basic annotation alone[11].
+Future research should focus on the heterologous expression and purification of the mllA protein to enable direct biochemical characterization including steady-state kinetic analysis, substrate specificity assays, and structural determination through X-ray crystallography or cryo-electron microscopy. Site-directed mutagenesis experiments targeting the predicted active-site residues and the conserved dynamic loop would provide insight into the precise mechanism of substrate recognition and catalysis. Additionally, the potential bifunctional nature of mllA, suggested by the presence of the FhuF-like C-terminal domain, warrants experimental investigation to determine whether this enzyme possesses lanthanide-reductive activity or other enzymatic functions beyond the primary condensation reaction.
 
-Regulatory target specification through the "has_regulation_target" extension allows annotation of transcription factors and signaling proteins with their specific targets, converting a general "transcription regulation" annotation into a specific statement about which genes are regulated[11]. Substrate specification for enzymes through the "has_direct_input" extension transforms a generic "kinase activity" annotation into a precise statement about which proteins or peptides serve as substrates[11]. Spatial localization through the "occurs_in" extension combined with cell type ontology terms enables specification of gene product activities within particular cell types or tissues, critical for distinguishing activities in specialized cellular contexts[11].
+The complete elucidation of the methylolanthanin biosynthetic pathway, including the identification of the precise biosynthetic intermediates and the order of enzymatic transformations, would benefit from in vitro reconstitution studies analogous to those successfully conducted for the aerobactin biosynthetic pathway. Such reconstitution would require the purification and characterization of each biosynthetic enzyme encoded within the mll cluster and their combination in defined stoichiometric ratios to demonstrate the stepwise conversion of simple substrates into the final methylolanthanin product. Additionally, radiometric or mass spectrometry-based trapping experiments could identify biosynthetic intermediates and define the precise chemical transformations catalyzed by each enzyme.
 
-Disease-associated gene mutations often alter gene product activities within specific tissues or developmental periods, making annotation extensions particularly valuable for capturing these contextual factors[11]. A gene implicated in neural tube closure defects through MTHFR polymorphisms requires annotation capturing not only the enzymatic function (folate metabolism) but the specific developmental window (neural tube formation) during which normal function proves essential[15][18]. Annotation extensions enable this level of mechanistic precision[11].
+## Conclusion
 
-## Protein Structural Features: Domains and Functional Constraints
-
-Protein domain architecture significantly constrains and determines functional properties, making domain identification central to molecular function prediction[27][30]. Hidden Markov model-based domain searching against databases like Pfam provides sequence-based domain annotation, though challenges arise with proteins containing non-contiguous domains, insertional domains, or circular permutants where domains interrupt each other[27][30]. The DomainMapper algorithm addresses these complexities through systematic identification of non-contiguous domain topologies validated against AlphaFold2 structure predictions[27].
-
-Functional domain annotation based on structural similarity offers promising advances for proteins at phylogenetic distances where sequence similarity drops below detection thresholds[30]. Leveraging high-quality protein structures from AlphaFold2 predictions, structural alignment tools like Foldseek enable identification of domains sharing fold similarity despite substantial sequence divergence[30]. Structure-based domain annotation particularly benefits prediction of longer domains (>100 amino acids), where distinctive folds provide reliable functional signals[30].
-
-Signal peptides, transmembrane domains, and nuclear localization signals represent functional features with direct implications for cellular component annotation[40]. Signal peptide prediction identifies proteins destined for secretion or ER targeting, establishing their initial subcellular localization context[40]. Transmembrane domain topology prediction distinguishes integral membrane proteins with various architectures from peripheral membrane proteins and fully soluble proteins[40]. These structural features provide interpretable mechanistic links between protein sequence and cellular localization, supporting robust cellular component annotation[40].
-
-Post-translational modifications including phosphorylation, ubiquitination, lipidation, and glycosylation often critically modulate protein function and localization[37][42]. High-throughput characterization of phospho-mutant libraries reveals how specific phosphorylation sites influence protein stability, complex assembly, and biological activity[37]. Systematic identification of kinase substrate residues through phosphoproteomics provides direct evidence for kinase molecular function and substrate specificity[37].
-
-## Comparative and Evolutionary Approaches to Functional Annotation
-
-The identification of orthologous genes across evolutionary lineages has traditionally supported functional annotation transfer based on the orthology-function conjecture[50][52]. However, recent studies challenge this conjecture, demonstrating that orthologous genes can display greater functional divergence than paralogous genes at equivalent evolutionary distances when measured using functional ontologies and expression profiles[50]. This finding argues for explicit experimental validation of orthologous function rather than assumption of functional equivalence across species[50].
-
-For distantly related organisms, particularly archaea with limited pathogenic characterization, orthology-based functional inference requires particular caution[43][50]. The evolution of methane-metabolizing enzymes including methyl-coenzyme M reductase and divergent MCR-like complexes capable of oxidizing short-chain alkanes demonstrates functional divergence among MCR homologs despite their shared evolutionary origin[21][24]. Evolutionary rate analysis comparing synonymous substitution rates among orthologs and paralogs provides quantitative assessment of evolutionary divergence, with higher synonymous substitution rates (dS values) indicating greater time since divergence and potentially greater functional divergence[52].
-
-Paralogous gene analysis reveals functional divergence patterns following gene duplication events[50][52]. Large proportions of paralogous gene duplications result in predicted genes with in-frame stop codons or frameshifts, generating pseudogenes with divergent or absent functions[52]. Terminal lineage-specific duplications often show elevated rates in particular species, suggesting recent adaptive evolution or relaxed selective constraints on redundant gene copies[52]. Understanding these patterns enables more nuanced functional annotation incorporating paralogy relationships[50][52].
-
-## Integration of Multi-Modal Biological Data for Function Prediction
-
-Recent advances integrate multiple biological modalities including protein sequences, interaction networks, pathway annotations, and expression data to enhance functional prediction accuracy[16]. The MIF2GO (Multimodal Information Fusion to infer Gene Ontology terms) approach sequentially fuses up to six biological modalities—domain information, subcellular localization, pathway membership, protein-protein interaction networks, gene expression patterns, and sequence features—through three major integration steps[16]. Evaluation across seven benchmark datasets demonstrated substantially improved prediction of Gene Ontology terms for molecular function, biological process, and cellular component compared to single-modality approaches[16].
-
-The Siamese Contrastive Autoencoder component of MIF2GO encodes domain, subcellular localization, and pathway modalities into interaction and homology relationships through self-supervised learning, bringing closer the representation spaces of different informational modalities[16]. Integration of sequence modality through a self-supervised Language Model with Hierarchical Adaptive Weighting (LM-HAW) deeply extracts different grains of protein features across sequence information at multiple levels of abstraction[16]. The Modal Hypernode Pooling layer performs final fusion to generate unified and effective protein representations integrating information from all available modalities[16].
-
-Ablation studies revealed that removal of protein-protein interaction modality substantially decreased performance for Gene Ontology terms describing biological processes requiring protein cooperation, such as B cell homeostasis, or cellular components with frequent protein interactions such as membrane domains[16]. Similarly, removal of pathway information decreased prediction accuracy for biological process annotations[16]. These results demonstrate the importance of integrating multiple biological information types for robust functional annotation[16].
-
-## Disease Associations and Phenotype Consequences: Establishing Clinical Relevance
-
-Gene function understanding gains critical clinical and research relevance through characterization of disease associations, natural genetic variants, and knockout or knockdown phenotypes[15][18][51]. The MTHFR gene provides an instructive example of how functional understanding of enzyme activity connects to multiple complex disease associations[15][18]. The 677C>T polymorphism encodes a thermolabile enzyme variant with reduced activity, resulting in mild to moderate elevation of plasma homocysteine and emergence as a common genetic cause of hyperhomocysteinemia[15][18].
-
-MTHFR-associated homocystinuria, the most common inborn error of folate metabolism, results from severe MTHFR deficiency leading to accumulation of homocysteine and methionine depletion[15][18]. Patients develop eye problems including lens dislocation and myopia, abnormal blood clotting predisposing to thrombotic events, skeletal abnormalities including marfanoid features, and developmental delays[15][18]. The molecular basis involves impaired conversion of homocysteine to methionine, disrupting protein synthesis dependent on methionine and one-carbon metabolism-dependent methylation reactions[15][18].
-
-The 677C>T MTHFR polymorphism exhibits widespread population distribution and has been extensively investigated as a risk factor for complex multifactorial disorders including cardiovascular disease, hypertension, blood clots, pregnancy loss, psychiatric disorders, and certain cancers[15][18]. However, most individuals carrying the MTHFR polymorphism do not develop these diseases, suggesting that MTHFR variants alone represent insufficient for disease causation, requiring additional genetic and environmental factors[15][18]. These genotype-phenotype relationships must be carefully characterized and qualified in functional annotations to avoid overstating the functional significance of particular variants[15].
-
-## Recommendations for GO Annotation Curation of mllA
-
-Given the limited specific experimental characterization of mllA in METEA within the provided search results, annotation curation should prioritize the following sequential approaches: First, establish comprehensive sequence characterization through comparative genomic and phylogenetic analysis, identifying conserved domains, transmembrane topology, signal peptides, and orthologous sequences across bacterial taxa[1][27]. Second, conduct targeted literature review integrating any available biochemical characterization, cellular localization studies, and phenotypic data from both METEA and any methanogenic relatives that might inform functional predictions[1][50].
-
-Third, perform structural prediction utilizing AlphaFold2 and related tools to generate high-confidence structural models identifying likely functional sites, protein-protein interaction interfaces, and membrane topology features[30][40]. Fourth, conduct comparative functional analysis across available orthologs, explicitly testing the validity of functional orthology assumptions rather than assuming functional equivalence[50][52]. Fifth, prioritize direct experimental evidence—enzyme kinetics studies, substrate specificity determination, cellular localization validation, and protein-protein interaction characterization—over computational predictions when such evidence becomes available[11][13][40].
-
-Annotation should initially assign molecular function terms only with appropriate qualifier levels reflecting high evidence confidence (Inferred from Direct Assay or Inferred from Sequence Homology with appropriate caveats)[11]. Cellular component annotations should specify subcellular localization based on strongest available evidence, acknowledging uncertainty regarding membrane topology or organellar targeting through appropriate annotation qualifier notation[11]. Biological process annotations should remain restricted to processes directly supported by experimental or orthologous evidence rather than speculative inference[11]. All annotations should include explicit evidence codes and PMID citations enabling users to evaluate evidence quality and consult primary literature[11].
-
-## Conclusion: Establishing Rigorous Standards for Novel Gene Annotation
-
-The annotation of novel genes with limited experimental characterization, particularly those from organism groups like archaea with inherently limited research infrastructure, requires rigorous adherence to evidence-based curation standards while acknowledging the limitations of available information[8][11][43]. Rather than speculating about gene function based solely on sequence similarity or orthology assumptions increasingly shown to be unreliable, robust annotation prioritizes explicit documentation of evidence sources, confidence levels, and limitations[8][11][50]. The Gene Ontology framework provides sophisticated tools through its evidence codes, annotation extensions, and qualifier systems for capturing precise functional understanding while transparently indicating the confidence and type of evidence supporting each functional claim[8][11].
-
-The multi-modal integration of diverse biological information types—sequences, structures, interactions, expressions, and evolutionary relationships—offers promising advances for improved functional characterization even for understudied genes from poorly characterized organisms[16]. Experimental validation remains the gold standard for functional annotation, with biochemical assays, cellular studies, and genetic approaches providing the highest confidence evidence for specific molecular functions and biological processes[11][13][40]. As biological research increasingly emphasizes precision medicine and therapeutic target identification, rigorous, evidence-based gene annotation provides the essential foundation enabling translation from genomic information to functional understanding and ultimately to clinical application[11][16].
+The mllA gene encodes a siderophore synthetase component that functions as a key catalytic enzyme within the recently discovered methylolanthanin biosynthetic pathway of Methylorubrum extorquens. As a member of the IucA/IucC family of NRPS-independent siderophore synthetases, mllA is predicted to catalyze a condensation reaction between modified polyamine and carboxylate substrates as part of the multi-step biosynthetic assembly of methylolanthanin, a unique lanthanophore characterized by an unprecedented 4-hydroxybenzoate moiety[10][43]. The mllA protein functions in the cytoplasm as a component of a coordinated biosynthetic pathway that enables M. extorquens AM1 to overcome the challenge of lanthanide bioavailability in natural environments, directly supporting the organism's lanthanide-dependent methylotrophic metabolism and providing a competitive advantage in lanthanide-limited ecological niches such as the plant phyllosphere[10][43]. The discovery and functional characterization of mllA and its cognate biosynthetic pathway represent a significant advance in understanding bacterial metal homeostasis and reveal an elegant evolutionary adaptation whereby horizontal gene transfer coupled with functional specialization allowed a bacterium to expand its metabolic repertoire to exploit previously inaccessible mineral resources. Future biochemical and structural studies of mllA will provide detailed mechanistic insight into the catalytic principles governing lanthanide metallophore biosynthesis and may enable the rational engineering of modified metallophores with tailored lanthanide-binding properties for biotechnological applications in lanthanide mining and recovery.
 
 ## Citations
 
-1. https://pmc.ncbi.nlm.nih.gov/articles/PMC11792507/
-2. https://pmc.ncbi.nlm.nih.gov/articles/PMC10245069/
-3. https://pmc.ncbi.nlm.nih.gov/articles/PMC3601553/
-4. https://www.invitae.com/us/providers/test-catalog/gene-20306
-5. https://www.nature.com/articles/s41467-024-50615-3
-6. https://pmc.ncbi.nlm.nih.gov/articles/PMC3742681/
-7. https://pmc.ncbi.nlm.nih.gov/articles/PMC9911673/
-8. http://geneontology.org/docs/go-annotations/
-9. https://pmc.ncbi.nlm.nih.gov/articles/PMC4960998/
-10. https://besjournals.onlinelibrary.wiley.com/doi/full/10.1111/1365-2656.12214
-11. https://pmc.ncbi.nlm.nih.gov/articles/PMC3706743/
-12. https://pmc.ncbi.nlm.nih.gov/articles/PMC11441905/
-13. https://pmc.ncbi.nlm.nih.gov/articles/PMC9378515/
-14. https://pmc.ncbi.nlm.nih.gov/articles/PMC11641113/
-15. https://medlineplus.gov/genetics/gene/mthfr/
-16. https://pmc.ncbi.nlm.nih.gov/articles/PMC11681170/
-17. https://pubmed.ncbi.nlm.nih.gov/39671499/
-18. https://www.ncbi.nlm.nih.gov/books/NBK6561/
-19. https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=94025&lvl=0
-20. https://pmc.ncbi.nlm.nih.gov/articles/PMC6616113/
-21. https://pmc.ncbi.nlm.nih.gov/articles/PMC6453112/
-22. https://www.ncbi.nlm.nih.gov/taxonomy
-23. https://en.wikipedia.org/wiki/Methanocaldococcus_jannaschii
-24. https://pubmed.ncbi.nlm.nih.gov/30664670/
-25. https://pmc.ncbi.nlm.nih.gov/articles/PMC5633382/
-26. https://www.uniprot.org/uniprotkb/Q8NB16/entry
-27. https://pmc.ncbi.nlm.nih.gov/articles/PMC9601794/
-28. https://pmc.ncbi.nlm.nih.gov/articles/PMC6382739/
-29. https://www.uniprot.org/uniprotkb/Q9D2Y4/entry
-30. https://pmc.ncbi.nlm.nih.gov/articles/PMC10830352/
-31. https://pmc.ncbi.nlm.nih.gov/articles/PMC8444396/
-32. https://pmc.ncbi.nlm.nih.gov/articles/PMC10673094/
-33. https://pmc.ncbi.nlm.nih.gov/articles/PMC11437934/
-34. https://pmc.ncbi.nlm.nih.gov/articles/PMC7617265/
-35. https://pmc.ncbi.nlm.nih.gov/articles/PMC5563889/
-36. https://pmc.ncbi.nlm.nih.gov/articles/PMC1890564/
-37. https://pmc.ncbi.nlm.nih.gov/articles/PMC7612524/
-38. https://pmc.ncbi.nlm.nih.gov/articles/PMC6311692/
-39. https://pmc.ncbi.nlm.nih.gov/articles/PMC4645406/
-40. https://pmc.ncbi.nlm.nih.gov/articles/PMC10329489/
-41. https://pmc.ncbi.nlm.nih.gov/articles/PMC5574136/
-42. https://pmc.ncbi.nlm.nih.gov/articles/PMC12507117/
-43. https://pmc.ncbi.nlm.nih.gov/articles/PMC145348/
-44. https://pmc.ncbi.nlm.nih.gov/articles/PMC6557081/
-45. https://genome.jgi.doe.gov/portal/metmc/metmc.home.html
-46. https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=1615586
-47. https://www.uniprot.org/uniprot/C5AWV9
-48. https://en.wikipedia.org/wiki/Methanocaldococcus
-49. https://dr.lib.iastate.edu/bitstreams/d5cc5787-27cf-4401-971c-570deb9ae8c1/download
-50. https://pmc.ncbi.nlm.nih.gov/articles/PMC5877793/
-51. https://pmc.ncbi.nlm.nih.gov/articles/PMC12095019/
-52. https://pmc.ncbi.nlm.nih.gov/articles/PMC2099592/
-53. https://pubmed.ncbi.nlm.nih.gov/40775854/
-54. https://pmc.ncbi.nlm.nih.gov/articles/PMC9081873/
-55. https://pmc.ncbi.nlm.nih.gov/articles/PMC7730869/
-56. https://pmc.ncbi.nlm.nih.gov/articles/PMC9401015/
-57. https://www.nature.com/articles/s41586-025-08890-7
-58. https://pmc.ncbi.nlm.nih.gov/articles/PMC5872691/
-59. https://pmc.ncbi.nlm.nih.gov/articles/PMC9204698/
+1. https://pmc.ncbi.nlm.nih.gov/articles/PMC154073/
+2. https://pubs.acs.org/doi/abs/10.1021/acs.biochem.0c00250
+3. https://pmc.ncbi.nlm.nih.gov/articles/PMC11380514/
+4. https://pmc.ncbi.nlm.nih.gov/articles/PMC12180729/
+5. https://pmc.ncbi.nlm.nih.gov/articles/PMC7325057/
+6. https://pmc.ncbi.nlm.nih.gov/articles/PMC10296737/
+7. https://pmc.ncbi.nlm.nih.gov/articles/PMC9301485/
+8. https://www.frontiersin.org/journals/microbiology/articles/10.3389/fmicb.2022.921635/full
+9. https://pmc.ncbi.nlm.nih.gov/articles/PMC9260416/
+10. https://www.pnas.org/doi/10.1073/pnas.2322096121
+11. https://pmc.ncbi.nlm.nih.gov/articles/PMC7038796/
+12. https://www.frontiersin.org/journals/plant-science/articles/10.3389/fpls.2020.00071/full
+13. https://pmc.ncbi.nlm.nih.gov/articles/PMC11331036/
+14. https://academic.oup.com/g3journal/article/13/12/jkad205/7318181
+15. https://www.nature.com/articles/s41467-021-22623-0
+16. https://journals.asm.org/doi/10.1128/aem.02405-21
+17. https://pubmed.ncbi.nlm.nih.gov/39078674/
+18. https://pubmed.ncbi.nlm.nih.gov/6788377/
+19. https://pmc.ncbi.nlm.nih.gov/articles/PMC2168645/
+20. https://academic.oup.com/ismej/article/19/1/wraf057/8090547
+21. https://pmc.ncbi.nlm.nih.gov/articles/PMC7055658/
+22. https://journals.plos.org/plosone/article?id=10.1371%2Fjournal.pone.0079111
+23. https://www.nature.com/articles/s42003-024-06193-7
+24. https://pmc.ncbi.nlm.nih.gov/articles/PMC5135587/
+25. https://pmc.ncbi.nlm.nih.gov/articles/PMC205604/
+26. https://pmc.ncbi.nlm.nih.gov/articles/PMC7580550/
+27. https://www.nature.com/articles/s44259-024-00053-4
+28. https://academic.oup.com/ismej/advance-article-pdf/doi/10.1093/ismejo/wraf057/62524488/wraf057.pdf
+29. https://pubs.acs.org/doi/10.1021/acs.biochem.5b01045
+30. https://pmc.ncbi.nlm.nih.gov/articles/PMC8319957/
+31. https://pubmed.ncbi.nlm.nih.gov/19374993/
+32. https://pmc.ncbi.nlm.nih.gov/articles/PMC5961048/
+33. https://pmc.ncbi.nlm.nih.gov/articles/PMC6491832/
+34. https://en.wikipedia.org/wiki/Siderophore
+35. https://pmc.ncbi.nlm.nih.gov/articles/PMC372901/
+36. https://journals.plos.org/plosone/article?id=10.1371%2Fjournal.pone.0014091
+37. https://pmc.ncbi.nlm.nih.gov/articles/PMC3992016/
+38. https://www.frontiersin.org/journals/physiology/articles/10.3389/fphys.2022.933153/full
+39. https://pmc.ncbi.nlm.nih.gov/articles/PMC10700112/
+40. https://pmc.ncbi.nlm.nih.gov/articles/PMC11475020/
+41. https://pmc.ncbi.nlm.nih.gov/articles/PMC10848612/
+42. https://www.uniprot.org/uniprotkb/A0A0H2XIH1/entry
+43. https://journals.asm.org/doi/10.1128/jb.01049-06
+44. https://pmc.ncbi.nlm.nih.gov/articles/PMC8068687/
+45. https://www.pnas.org/doi/10.1073/pnas.1800672115
+46. https://pubs.acs.org/doi/abs/10.1021/bi0357661
+47. https://pmc.ncbi.nlm.nih.gov/articles/PMC3108441/
+48. https://www.tandfonline.com/doi/full/10.1080/10409238.2025.2476476?src=exp-la
+49. https://purl.uniprot.org/isoforms/C5B4A2-1
+50. https://pmc.ncbi.nlm.nih.gov/articles/PMC6205773/
+51. https://pubmed.ncbi.nlm.nih.gov/18296539/
+52. https://www.uniprot.org/taxonomy/407
+53. https://pmc.ncbi.nlm.nih.gov/articles/PMC4019165/
+54. https://pubmed.ncbi.nlm.nih.gov/38881181/

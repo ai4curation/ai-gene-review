@@ -1,0 +1,3117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CNKSR3 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>CNKSR3</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q6P9H4" target="_blank" class="term-link">
+                        Q6P9H4
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "CNKSR3";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q6P9H4" data-a="DESCRIPTION: Connector enhancer of kinase suppressor of Ras 3 (..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Connector enhancer of kinase suppressor of Ras 3 (CNKSR3) is a multi-domain scaffold protein that coordinates signaling complexes at the apical plasma membrane of epithelial cells. Its primary characterized function is regulation of the epithelial sodium channel (ENaC), where it acts as a central organizing platform for aldosterone-induced sodium transport. CNKSR3 also regulates cell migration through Arf6 activation and modulates MAPK signaling. NOTE - This gene was formerly called MAGI1, but that name is now assigned to the unrelated membrane-associated guanylate kinase Q96QZ7.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007167" target="_blank" class="term-link">
+                                    GO:0007167
+                                </a>
+                            </span>
+                            <span class="term-label">enzyme-linked receptor protein signaling pathway</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q6P9H4" data-a="GO:0007167" data-r="GO_REF:0000033" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA annotation based on phylogenetic inference. CNKSR3 is a scaffold protein involved in multiple signaling pathways including HGF-induced Arf6 activation and aldosterone-ENaC signaling. While the protein participates in signaling downstream of receptors, the specific connection to enzyme-linked receptors is indirect and the term is too general for this scaffold protein&#39;s core functions.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The term &#39;enzyme-linked receptor protein signaling pathway&#39; is overly broad. CNKSR3&#39;s best-characterized role is in aldosterone signaling (which acts through nuclear receptors, not enzyme-linked receptors) and HGF signaling (which does involve receptor tyrosine kinases). A more specific term reflecting the scaffold/regulatory function would be more appropriate.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009966" target="_blank" class="term-link">
+                                    regulation of signal transduction
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22085542" target="_blank" class="term-link">
+                                        PMID:22085542
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Knockdown of this protein impairs HGF-induced Arf6 activation and migration in response to HGF treatment</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/MAGI1/MAGI1-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Acts as a scaffold protein coordinating the assembly of an ENaC-regulatory complex</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030674" target="_blank" class="term-link">
+                                    GO:0030674
+                                </a>
+                            </span>
+                            <span class="term-label">protein-macromolecule adaptor activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6P9H4" data-a="GO:0030674" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA annotation for adaptor/scaffold function. This is well-supported and represents a core molecular function of CNKSR3. The protein coordinates assembly of the ENaC-regulatory complex by binding multiple partners including SCNN1A, SCNN1B, NEDD4L, RAF1, and SGK1. It also scaffolds HGF-Arf6 signaling components.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This accurately captures CNKSR3&#39;s primary molecular function as a scaffold/adaptor protein that brings together multiple signaling components. Well-supported by experimental evidence.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/MAGI1/MAGI1-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Acts as a scaffold protein coordinating the assembly of an ENaC-regulatory complex (ERC). Interacts directly with SCNN1A (ENaC subunit alpha) and SCNN1B (ENaC subunit beta) C-terminal tails. Interacts with ENaC regulatory proteins NEDD4L, RAF1 and SGK1.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6P9H4" data-a="GO:0005737" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation based on InterPro domains and UniProtKB subcellular location. CNKSR3 is indeed found in cytoplasm, though its most functionally important localization is at the apical plasma membrane where it regulates ENaC. Cytoplasmic localization is confirmed but represents a secondary or transit location.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Accurate but not the most informative localization. CNKSR3 is present in cytoplasm as stated in UniProt, though apical plasma membrane is the more functionally relevant location.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/MAGI1/MAGI1-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm. Apical cell membrane; Peripheral membrane protein.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009966" target="_blank" class="term-link">
+                                    GO:0009966
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of signal transduction</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6P9H4" data-a="GO:0009966" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation from InterPro domain IPR010599 (CNK2/3 domain). This is appropriate - CNKSR3 regulates multiple signal transduction pathways including MAPK/ERK signaling (negative regulation) and aldosterone-ENaC signaling (positive regulation of sodium transport).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Accurate representation of CNKSR3&#39;s biological role as a regulator of signaling pathways. The protein negatively regulates ERK1/2 cascade and peptidyl-serine phosphorylation while positively regulating ENaC-mediated sodium transport.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/MAGI1/MAGI1-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">negative regulation of ERK1 and ERK2 cascade; ISS:UniProtKB. negative regulation of peptidyl-serine phosphorylation; ISS:UniProtKB. positive regulation of sodium ion transport; ISS:UniProtKB.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q6P9H4" data-a="GO:0016020" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation from InterPro. While CNKSR3 is a peripheral membrane protein at the apical plasma membrane, this extremely general term provides minimal information. More specific membrane localization terms are more appropriate.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The term &#39;membrane&#39; is too general. CNKSR3 specifically localizes to the apical plasma membrane where it functions in ENaC regulation. A more specific term is warranted.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016324" target="_blank" class="term-link">
+                                    apical plasma membrane
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/MAGI1/MAGI1-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Apical cell membrane; Peripheral membrane protein</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016324" target="_blank" class="term-link">
+                                    GO:0016324
+                                </a>
+                            </span>
+                            <span class="term-label">apical plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6P9H4" data-a="GO:0016324" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation from UniProtKB subcellular location vocabulary. This is accurate and functionally important - CNKSR3 localizes to the apical plasma membrane of epithelial cells where it coordinates the ENaC-regulatory complex.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the most functionally relevant subcellular location for CNKSR3. The protein is specifically targeted to the apical membrane where it regulates ENaC.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/MAGI1/MAGI1-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm. Apical cell membrane; Peripheral membrane protein. Acts as a scaffold protein coordinating the assembly of an ENaC-regulatory complex (ERC).</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25416956
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A proteome-scale map of the human interactome network.
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q6P9H4" data-a="GO:0005515" data-r="PMID:25416956" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI evidence from proteome-scale interactome study identifying interaction with NMI (Q13287). While protein binding is technically correct, it is uninformative as a molecular function annotation. CNKSR3&#39;s specific function is as a protein-macromolecule adaptor, which is already captured by GO:0030674.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The term &#39;protein binding&#39; is uninformative per curation guidelines. The specific adaptor function is better captured by GO:0030674 (protein-macromolecule adaptor activity). Large-scale interactome studies often identify interactions that may not be functionally relevant to core gene function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q6P9H4" data-a="GO:0005515" data-r="PMID:32296183" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI evidence from binary protein interactome reference map identifying multiple interactions. While protein binding is correct, it is redundant and uninformative given the more specific GO:0030674 annotation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Uninformative and redundant with the more specific adaptor activity term. This is from a large-scale binary interactome study.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/40205054" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:40205054
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Multimodal cell maps as a foundation for structural and func...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q6P9H4" data-a="GO:0005515" data-r="PMID:40205054" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI evidence from multimodal cell atlas study. Another protein binding annotation that is uninformative compared to the specific adaptor function already annotated.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Uninformative and redundant. Large-scale proteomics study. The specific molecular function is better captured by GO:0030674.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000052
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6P9H4" data-a="GO:0005829" data-r="GO_REF:0000052" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA evidence from immunofluorescence data (HPA project). Cytosol is a more specific cytoplasmic compartment and represents where CNKSR3 is found when not at the membrane. This is consistent with the protein&#39;s peripheral membrane association - it can be in cytosol and recruited to apical membrane.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Supported by direct experimental evidence from immunofluorescence. Cytosol localization is consistent with CNKSR3 being a peripheral (not integral) membrane protein that can shuttle between cytosol and membrane.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    GO_REF:0000052
+                                    
+                                </span>
+                                
+                                <div class="support-text">Gene Ontology annotation based on curation of immunofluorescence data from Human Protein Atlas project</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22085542" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22085542
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    CNK3 and IPCEF1 produce a single protein that is required fo...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q6P9H4" data-a="GO:0005515" data-r="PMID:22085542" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI evidence from the CNK3/IPCEF1 study showing interactions relevant to HGF-Arf6 signaling. While this paper provides important functional context, the protein binding annotation itself is uninformative.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Although PMID:22085542 is a key functional paper showing CNKSR3 interacts with cytohesin 2 and is required for Arf6 activation, the generic &#34;protein binding&#34; annotation is uninformative. The specific adaptor function (GO:0030674) is more appropriate.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010765" target="_blank" class="term-link">
+                                    GO:0010765
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of sodium ion transport</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6P9H4" data-a="GO:0010765" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ISS annotation based on mouse ortholog Q8BMA3. This represents a core function of CNKSR3 - it positively regulates ENaC-mediated sodium transport in response to aldosterone. This is the protein&#39;s best-characterized biological role in kidney epithelial cells.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a core biological function of CNKSR3. The protein regulates aldosterone-induced ENaC-mediated sodium transport through coordinating the assembly of the ENaC-regulatory complex. Well-supported by multiple studies.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/MAGI1/MAGI1-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">FUNCTION: Involved in transepithelial sodium transport. Regulates aldosterone-induced and epithelial sodium channel (ENaC)-mediated sodium transport through regulation of ENaC cell surface expression. Acts as a scaffold protein coordinating the assembly of an ENaC-regulatory complex (ERC).</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033137" target="_blank" class="term-link">
+                                    GO:0033137
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of peptidyl-serine phosphorylation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6P9H4" data-a="GO:0033137" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ISS annotation based on mouse ortholog. CNKSR3 scaffold proteins regulate kinase signaling cascades and this annotation likely reflects regulation of SGK1 or other serine kinases in the ENaC regulatory complex, or broader effects on MAPK pathway serine phosphorylation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is consistent with CNKSR3&#39;s role as a scaffold regulating kinase signaling. The protein interacts with SGK1 and RAF1 kinases and modulates their activity in the context of ENaC regulation and MAPK signaling.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/MAGI1/MAGI1-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Interacts with ENaC regulatory proteins NEDD4L, RAF1 and SGK1. The PDZ domain is required for interaction with ENaC and SGK1, but not for interaction with NEDDL4 and RAF1.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070373" target="_blank" class="term-link">
+                                    GO:0070373
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of ERK1 and ERK2 cascade</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6P9H4" data-a="GO:0070373" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ISS annotation based on mouse ortholog. CNKSR3 negatively regulates MAPK/ERK signaling. CNK family proteins are known scaffold proteins in Ras/MAPK pathways, and CNKSR3 specifically acts as a negative regulator of the ERK1/2 cascade.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Represents an important regulatory function of CNKSR3 beyond its ENaC role. CNK proteins are scaffolds in Ras/MAPK signaling pathways, and CNKSR3 negatively regulates ERK1/2. This is consistent with the protein&#39;s domain structure and family membership.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/MAGI1/MAGI1-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">negative regulation of ERK1 and ERK2 cascade; ISS:UniProtKB. SIMILARITY - Belongs to the CNKSR family.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Assembling and coordinating ENaC regulatory complex to control aldosterone-induced sodium transport at apical epithelial membranes</h3>
+                <span class="vote-buttons" data-g="Q6P9H4" data-a="FUNCTION: Assembling and coordinating ENaC regulatory comple..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030674" target="_blank" class="term-link">
+                            protein-macromolecule adaptor activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010765" target="_blank" class="term-link">
+                                positive regulation of sodium ion transport
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016324" target="_blank" class="term-link">
+                                apical plasma membrane
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Substrates:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.uniprot.org/uniprotkb/P37088" target="_blank" class="term-link">
+                                SCNN1A (ENaC alpha subunit)
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.uniprot.org/uniprotkb/P51168" target="_blank" class="term-link">
+                                SCNN1B (ENaC beta subunit)
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.uniprot.org/uniprotkb/Q96PU5" target="_blank" class="term-link">
+                                NEDD4L
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.uniprot.org/uniprotkb/P04049" target="_blank" class="term-link">
+                                RAF1
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.uniprot.org/uniprotkb/O00141" target="_blank" class="term-link">
+                                SGK1
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:human/MAGI1/MAGI1-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">Acts as a scaffold protein coordinating the assembly of an ENaC-regulatory complex (ERC). Regulates aldosterone-induced and epithelial sodium channel (ENaC)-mediated sodium transport through regulation of ENaC cell surface expression. Interacts directly with SCNN1A and SCNN1B C-terminal tails. Interacts with ENaC regulatory proteins NEDD4L, RAF1 and SGK1.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22851176" target="_blank" class="term-link">
+                                PMID:22851176
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Scaffold protein connector enhancer of kinase suppressor of Ras isoform 3 (CNK3) coordinates assembly of a multiprotein epithelial sodium channel (ENaC)-regulatory complex</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Negatively regulating ERK1/2 cascade through scaffold-mediated modulation of MAPK signaling components</h3>
+                <span class="vote-buttons" data-g="Q6P9H4" data-a="FUNCTION: Negatively regulating ERK1/2 cascade through scaff..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030674" target="_blank" class="term-link">
+                            protein-macromolecule adaptor activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070373" target="_blank" class="term-link">
+                                negative regulation of ERK1 and ERK2 cascade
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033137" target="_blank" class="term-link">
+                                negative regulation of peptidyl-serine phosphorylation
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:human/MAGI1/MAGI1-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">negative regulation of ERK1 and ERK2 cascade; negative regulation of peptidyl-serine phosphorylation. Belongs to the CNKSR family</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000052.md" target="_blank" class="term-link">
+                            GO_REF:0000052
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on curation of immunofluorescence data</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22085542" target="_blank" class="term-link">
+                            PMID:22085542
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">CNK3 and IPCEF1 produce a single protein that is required for HGF dependent Arf6 activation and migration.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">CNKSR3 (CNK3/IPCEF1 fusion) is required for HGF-induced Arf6 activation and cell migration</div>
+                        
+                        <div class="finding-text">"Knockdown of this protein impairs HGF-induced Arf6 activation and migration in response to HGF treatment"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The protein acts as a scaffold binding to cytohesin 2 (Arf6 GEF)</div>
+                        
+                        <div class="finding-text">"IPCEF1, a scaffold that binds to cytohesin 2, is required for cytohesin-induced scattering"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">IPCEF1 is actually the C-terminal half of CNK3</div>
+                        
+                        <div class="finding-text">"We report here that IPCEF1 is actually the C-terminal half of CNK3"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link">
+                            PMID:25416956
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A proteome-scale map of the human interactome network.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Large-scale systematic binary protein-protein interaction mapping study</div>
+                        
+                        <div class="finding-text">"systematically screening half of the interactome space with minimal inspection bias, we more than doubled the number of high-quality binary PPIs available from the literature"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                            PMID:32296183
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A reference map of the human binary protein interactome.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Systematic binary interactome reference map</div>
+                        
+                        <div class="finding-text">"reference map of the human binary protein interactome"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/40205054" target="_blank" class="term-link">
+                            PMID:40205054
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Multimodal cell maps as a foundation for structural and functional genomics.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Multimodal proteomics atlas study</div>
+                        
+                        <div class="finding-text">"Multimodal cell maps as a foundation for structural and functional genomics"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:human/MAGI1/MAGI1-uniprot.txt
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">UniProt entry for CNKSR3 (Connector enhancer of kinase suppressor of ras 3)</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Scaffold protein coordinating ENaC-regulatory complex assembly</div>
+                        
+                        <div class="finding-text">"Acts as a scaffold protein coordinating the assembly of an ENaC-regulatory complex (ERC)"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Regulates aldosterone-induced sodium transport via ENaC</div>
+                        
+                        <div class="finding-text">"Regulates aldosterone-induced and epithelial sodium channel (ENaC)-mediated sodium transport through regulation of ENaC cell surface expression"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Localizes to apical plasma membrane and cytoplasm</div>
+                        
+                        <div class="finding-text">"SUBCELLULAR LOCATION: Cytoplasm. Apical cell membrane; Peripheral membrane protein"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Contains SAM, CRIC, PDZ, and DUF1170 domains</div>
+                        
+                        <div class="finding-text">"DOMAIN 7..72 SAM...DOMAIN 80..174 CRIC...DOMAIN 211..293 PDZ...DOMAIN 325..546 DUF1170"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">PDZ domain required for ENaC and SGK1 interaction</div>
+                        
+                        <div class="finding-text">"The PDZ domain is required for interaction with ENaC and SGK1, but not for interaction with NEDDL4 and RAF1"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Interacts with SCNN1A, SCNN1B, NEDD4L, RAF1, SGK1</div>
+                        
+                        <div class="finding-text">"Interacts directly with SCNN1A (ENaC subunit alpha) and SCNN1B (ENaC subunit beta) C-terminal tails. Interacts with ENaC regulatory proteins NEDD4L, RAF1 and SGK1"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Up-regulated by aldosterone</div>
+                        
+                        <div class="finding-text">"INDUCTION: Up-regulated by aldosterone (at protein level)"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Negatively regulates ERK1/2 cascade and peptidyl-serine phosphorylation</div>
+                        
+                        <div class="finding-text">"negative regulation of ERK1 and ERK2 cascade; negative regulation of peptidyl-serine phosphorylation"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Positively regulates sodium ion transport</div>
+                        
+                        <div class="finding-text">"positive regulation of sodium ion transport"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the molecular mechanism by which CNKSR3 PDZ domain selectively binds ENaC subunits versus other PDZ domain ligands?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Structural biologists specializing in PDZ domain interactions, Renal physiologists studying ENaC regulation</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q6P9H4" data-a="Q: What is the molecular mechanism by which CNKSR3 PD..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How does aldosterone signaling lead to CNKSR3 upregulation and recruitment to the apical membrane?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Researchers studying mineralocorticoid receptor signaling, Epithelial cell biologists</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q6P9H4" data-a="Q: How does aldosterone signaling lead to CNKSR3 upre..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the relative importance of CNKSR3&#39;s ENaC regulatory function versus its HGF-Arf6 scaffolding function in different tissue contexts?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Renal physiologists, Cancer cell migration researchers</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q6P9H4" data-a="Q: What is the relative importance of CNKSR3&#39;s ENaC r..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does CNKSR3 have tissue-specific isoforms or splice variants with distinct functions beyond the CNK3/IPCEF1 fusion proteins?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: RNA biology researchers, Epithelial tissue specialists</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q6P9H4" data-a="Q: Does CNKSR3 have tissue-specific isoforms or splic..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Determine crystal or cryo-EM structure of CNKSR3 PDZ domain in complex with ENaC subunit C-terminal peptides to understand binding specificity</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: The PDZ domain has specific structural features that enable high-affinity binding to ENaC tails</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: Structure determination</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q6P9H4" data-a="EXPERIMENT: Determine crystal or cryo-EM structure of CNKSR3 P..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Live-cell imaging of CNKSR3 dynamics at the apical membrane in response to aldosterone treatment to understand recruitment kinetics</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Aldosterone induces rapid recruitment of CNKSR3 to apical membrane where it stabilizes ENaC</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: Cell biology/Imaging</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q6P9H4" data-a="EXPERIMENT: Live-cell imaging of CNKSR3 dynamics at the apical..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Reconstitute the complete ENaC-regulatory complex in vitro with purified CNKSR3, ENaC subunits, SGK1, RAF1, and NEDD4L to map binding interfaces and stoichiometry</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: CNKSR3 can simultaneously bind multiple complex components through distinct domains</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: Biochemistry</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q6P9H4" data-a="EXPERIMENT: Reconstitute the complete ENaC-regulatory complex ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> CNKSR3 knockout in kidney epithelial cells with rescue by domain deletion mutants to determine which domains are essential for ENaC regulation versus Arf6/migration functions</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: PDZ domain is critical for ENaC function but dispensable for Arf6 scaffolding</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: Functional genomics</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q6P9H4" data-a="EXPERIMENT: CNKSR3 knockout in kidney epithelial cells with re..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Generate CNKSR3 conditional knockout mice and assess blood pressure, sodium handling, and response to aldosterone challenge</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Loss of CNKSR3 will impair aldosterone-mediated sodium retention and blood pressure regulation</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: Physiological</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q6P9H4" data-a="EXPERIMENT: Generate CNKSR3 conditional knockout mice and asse..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Perplexity Lite</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(MAGI1-deep-research-perplexity-lite.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q6P9H4" data-a="DOC: Deep Research Perplexity Lite" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: perplexity<br />
+model: sonar-pro<br />
+cached: false<br />
+start_time: '2025-11-15T18:18:29.512840'<br />
+end_time: '2025-11-15T18:19:32.424247'<br />
+duration_seconds: 62.91<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    reasoning_effort: low<br />
+    search_domain_filter: []<br />
+    return_citations: true<br />
+    temperature: 0.0<br />
+citation_count: 12</p>
+<hr />
+<h2 id="question">Question</h2>
+<p>Research the CNKSR3 (MAGI1) gene in human, focusing on its molecular function, biological processes, and cellular localization. Include information about protein domains, known interactions, and any disease associations.</p>
+<h2 id="output">Output</h2>
+<p>The <strong>CNKSR3</strong> gene (also known as <strong>MAGI1</strong> in some contexts, though these are distinct genes/proteins—see note below) encodes a multifunctional scaffold protein involved in the regulation of key signaling pathways, ion transport, and cell adhesion. Below is a detailed research report on CNKSR3, focusing on its molecular function, biological processes, cellular localization, protein domains, interactions, and disease associations, with a brief clarification regarding MAGI1.</p>
+<hr />
+<h2 id="1-key-concepts-and-definitions">1. Key Concepts and Definitions</h2>
+<ul>
+<li><strong>CNKSR3 (Connector Enhancer of Kinase Suppressor of Ras 3)</strong> is a protein-coding gene in humans, primarily functioning as a scaffold protein that integrates and regulates multiple signaling cascades, especially in epithelial and renal cells[1][3][7].</li>
+<li><strong>MAGI1 (Membrane Associated Guanylate Kinase, WW and PDZ Domain Containing 1)</strong> is a distinct gene/protein, also a scaffold protein, mainly involved in cell junctions and tumor suppression[2][4]. Some sources conflate the two, but they are separate entities.</li>
+</ul>
+<hr />
+<h2 id="2-molecular-function">2. Molecular Function</h2>
+<ul>
+<li><strong>Scaffold Protein:</strong> CNKSR3 acts as a scaffold, coordinating the assembly of regulatory complexes at the plasma membrane, particularly those involved in sodium ion transport[1][3][7].</li>
+<li><strong>Regulation of Ion Channels:</strong> It is essential for aldosterone-induced regulation of the epithelial sodium channel (ENaC), affecting sodium reabsorption in the kidney[1][3][7].</li>
+<li><strong>Signal Transduction Modulation:</strong> CNKSR3 is involved in the negative regulation of the ERK1/2 (MAPK) signaling cascade and peptidyl-serine phosphorylation, linking membrane receptor activity to downstream effectors[1][3][8].</li>
+</ul>
+<hr />
+<h2 id="3-biological-processes">3. Biological Processes</h2>
+<ul>
+<li><strong>Sodium Ion Transport:</strong> CNKSR3 positively regulates sodium ion transmembrane transporter activity, crucial for maintaining electrolyte balance and blood pressure[1][3][7].</li>
+<li><strong>MAPK Pathway Regulation:</strong> It negatively regulates the ERK1/2 cascade, impacting cell proliferation and differentiation[1][3][8].</li>
+<li><strong>Cell Migration and Inflammatory Response:</strong> CNKSR3 (also known as IPCEF1 in some contexts) is required for growth factor–induced Arf6 activation and cell migration, processes important in hepatocyte growth and immune cell responses[1].</li>
+<li><strong>Tumor Suppression:</strong> Amplification of CNKSR3 in uveal melanoma correlates with improved patient survival, suggesting a role in limiting metastatic progression[1].</li>
+</ul>
+<hr />
+<h2 id="4-cellular-localization">4. Cellular Localization</h2>
+<ul>
+<li><strong>Apical Plasma Membrane:</strong> CNKSR3 is predominantly localized at the apical plasma membrane of epithelial cells, where it regulates ENaC[1][3][7].</li>
+<li><strong>Cytoplasm:</strong> It is also found in the cytoplasm, where it may interact with other signaling molecules[1][3][7].</li>
+</ul>
+<hr />
+<h2 id="5-protein-domains">5. Protein Domains</h2>
+<ul>
+<li><strong>Sterile Alpha Motif (SAM) Domain:</strong> CNKSR3 contains a SAM domain, which mediates protein-protein interactions and is characteristic of the CNKSR family[1].</li>
+<li><strong>Other Domains:</strong> While the full domain structure is less characterized than MAGI1, CNKSR3’s scaffold function is attributed to its ability to bind multiple partners via these domains[1][3].</li>
+</ul>
+<hr />
+<h2 id="6-known-interactions">6. Known Interactions</h2>
+<ul>
+<li><strong>ENaC Regulatory Complex:</strong> CNKSR3 coordinates the assembly of a complex including ENaC, SGK1 (serum/glucocorticoid-regulated kinase 1), and Nedd4, regulating sodium channel activity[1][3][7].</li>
+<li><strong>MAPK Pathway Components:</strong> It interacts with proteins involved in the MAPK/ERK pathway, modulating their activity[1][3][8].</li>
+<li><strong>Arf6 Activation:</strong> In the context of cell migration, CNKSR3 is required for HGF-dependent Arf6 activation[1].</li>
+</ul>
+<hr />
+<h2 id="7-disease-associations">7. Disease Associations</h2>
+<ul>
+<li><strong>Immunodeficiency 40:</strong> Mutations in CNKSR3 have been associated with this rare immunodeficiency disorder[3].</li>
+<li><strong>Xanthinuria:</strong> There is also an association with xanthinuria, a metabolic disorder[3].</li>
+<li><strong>Cancer:</strong> Amplification of CNKSR3 in uveal melanoma is linked to improved survival, suggesting a tumor-suppressive role[1].</li>
+<li><strong>Blood Pressure Regulation:</strong> Given its role in sodium transport, CNKSR3 is implicated in aldosterone signaling and may influence hypertension and related cardiovascular diseases[1][3][7].</li>
+</ul>
+<hr />
+<h2 id="8-recent-developments-and-latest-research-20232024">8. Recent Developments and Latest Research (2023–2024)</h2>
+<ul>
+<li><strong>MicroRNA Regulation:</strong> Recent studies highlight that CNKSR3 expression is regulated by specific microRNAs, suggesting a role as a molecular marker in cancer and possibly other diseases[1].</li>
+<li><strong>Clinical Implications:</strong> Ongoing research is exploring CNKSR3 as a potential therapeutic target in cancer and as a biomarker for disease progression, particularly in uveal melanoma[1].</li>
+</ul>
+<hr />
+<h2 id="9-expert-opinions-and-analysis">9. Expert Opinions and Analysis</h2>
+<ul>
+<li><strong>Central Regulator:</strong> Experts consider CNKSR3 a central regulator of signaling pathways, linking membrane receptor activity to downstream processes such as ion transport, MAPK modulation, and cell motility[1].</li>
+<li><strong>Therapeutic Potential:</strong> Its role in sodium transport and cancer progression makes it a promising target for therapeutic intervention in hypertension and oncology[1][3].</li>
+</ul>
+<hr />
+<h2 id="10-relevant-statistics-and-data">10. Relevant Statistics and Data</h2>
+<ul>
+<li><strong>Expression:</strong> CNKSR3 is highly expressed in epithelial and renal tissues, consistent with its role in sodium transport[1][3][7].</li>
+<li><strong>Survival Correlation:</strong> In uveal melanoma, CNKSR3 amplification is statistically correlated with improved patient survival, though precise figures vary by study[1].</li>
+</ul>
+<hr />
+<h3 id="note-on-magi1">Note on MAGI1</h3>
+<ul>
+<li><strong>MAGI1</strong> is a separate gene encoding a multidomain scaffolding protein involved in cell junctions, tumor suppression, and vascular biology[2][4]. It contains five PDZ domains, two WW domains, and a GUK domain, and is localized at tight and adherens junctions in epithelial and neural cells[2][4][6]. MAGI1 is implicated in the regulation of PI3K/AKT and Wnt/β-catenin pathways and is downregulated in several cancers[2][4].</li>
+</ul>
+<hr />
+<p><strong>Key References:</strong><br />
+- [1] Ma’ayan Lab Harmonizome, CNKSR3 Gene (2025)<br />
+- [2] PMC8231924, MAGI1 review (2021)<br />
+- [3] GeneCards, CNKSR3 (2025)<br />
+- [4] Ma’ayan Lab Harmonizome, MAGI1 Gene (2025)<br />
+- [7] UniProt, CNKSR3 (2025)<br />
+- [8] Wikipedia, CNKSR3 (2025)</p>
+<p>For further details, see the cited sources above.</p>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>https://maayanlab.cloud/Harmonizome/gene/CNKSR3</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC8231924/</li>
+<li>https://www.genecards.org/cgi-bin/carddisp.pl?gene=CNKSR3</li>
+<li>https://maayanlab.cloud/Harmonizome/gene/MAGI1</li>
+<li>https://www.ncbi.nlm.nih.gov/gene?Db=gene&amp;Cmd=DetailsSearch&amp;Term=154043</li>
+<li>https://www.proteinatlas.org/search/MAGI1</li>
+<li>https://www.uniprot.org/uniprotkb/Q6P9H4/entry</li>
+<li>https://en.wikipedia.org/wiki/CNKSR3</li>
+<li>https://www.ncbi.nlm.nih.gov/gene/154043</li>
+<li>https://www.proteinatlas.org/ENSG00000153721-CNKSR3</li>
+<li>https://www.deciphergenomics.org/gene/CNKSR3/overview/clinical-info</li>
+<li>http://biogps.org/gene/154043/</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q6P9H4
+gene_symbol: CNKSR3
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: Connector enhancer of kinase suppressor of Ras 3 (CNKSR3) is a multi-domain
+  scaffold protein that coordinates signaling complexes at the apical plasma membrane
+  of epithelial cells. Its primary characterized function is regulation of the epithelial
+  sodium channel (ENaC), where it acts as a central organizing platform for aldosterone-induced
+  sodium transport. CNKSR3 also regulates cell migration through Arf6 activation and
+  modulates MAPK signaling. NOTE - This gene was formerly called MAGI1, but that name
+  is now assigned to the unrelated membrane-associated guanylate kinase Q96QZ7.
+existing_annotations:
+- term:
+    id: GO:0007167
+    label: enzyme-linked receptor protein signaling pathway
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: IBA annotation based on phylogenetic inference. CNKSR3 is a scaffold
+      protein involved in multiple signaling pathways including HGF-induced Arf6 activation
+      and aldosterone-ENaC signaling. While the protein participates in signaling
+      downstream of receptors, the specific connection to enzyme-linked receptors
+      is indirect and the term is too general for this scaffold protein&#39;s core functions.
+    action: MODIFY
+    reason: The term &#39;enzyme-linked receptor protein signaling pathway&#39; is overly
+      broad. CNKSR3&#39;s best-characterized role is in aldosterone signaling (which acts
+      through nuclear receptors, not enzyme-linked receptors) and HGF signaling (which
+      does involve receptor tyrosine kinases). A more specific term reflecting the
+      scaffold/regulatory function would be more appropriate.
+    proposed_replacement_terms:
+    - id: GO:0009966
+      label: regulation of signal transduction
+    supported_by:
+    - reference_id: PMID:22085542
+      supporting_text: Knockdown of this protein impairs HGF-induced Arf6 activation
+        and migration in response to HGF treatment
+    - reference_id: file:human/MAGI1/MAGI1-uniprot.txt
+      supporting_text: Acts as a scaffold protein coordinating the assembly of an
+        ENaC-regulatory complex
+- term:
+    id: GO:0030674
+    label: protein-macromolecule adaptor activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: IBA annotation for adaptor/scaffold function. This is well-supported
+      and represents a core molecular function of CNKSR3. The protein coordinates
+      assembly of the ENaC-regulatory complex by binding multiple partners including
+      SCNN1A, SCNN1B, NEDD4L, RAF1, and SGK1. It also scaffolds HGF-Arf6 signaling
+      components.
+    action: ACCEPT
+    reason: This accurately captures CNKSR3&#39;s primary molecular function as a scaffold/adaptor
+      protein that brings together multiple signaling components. Well-supported by
+      experimental evidence.
+    supported_by:
+    - reference_id: file:human/MAGI1/MAGI1-uniprot.txt
+      supporting_text: Acts as a scaffold protein coordinating the assembly of an
+        ENaC-regulatory complex (ERC). Interacts directly with SCNN1A (ENaC subunit
+        alpha) and SCNN1B (ENaC subunit beta) C-terminal tails. Interacts with ENaC
+        regulatory proteins NEDD4L, RAF1 and SGK1.
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: IEA annotation based on InterPro domains and UniProtKB subcellular location.
+      CNKSR3 is indeed found in cytoplasm, though its most functionally important
+      localization is at the apical plasma membrane where it regulates ENaC. Cytoplasmic
+      localization is confirmed but represents a secondary or transit location.
+    action: ACCEPT
+    reason: Accurate but not the most informative localization. CNKSR3 is present
+      in cytoplasm as stated in UniProt, though apical plasma membrane is the more
+      functionally relevant location.
+    supported_by:
+    - reference_id: file:human/MAGI1/MAGI1-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Cytoplasm. Apical cell membrane; Peripheral
+        membrane protein.&#39;
+- term:
+    id: GO:0009966
+    label: regulation of signal transduction
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: IEA annotation from InterPro domain IPR010599 (CNK2/3 domain). This
+      is appropriate - CNKSR3 regulates multiple signal transduction pathways including
+      MAPK/ERK signaling (negative regulation) and aldosterone-ENaC signaling (positive
+      regulation of sodium transport).
+    action: ACCEPT
+    reason: Accurate representation of CNKSR3&#39;s biological role as a regulator of
+      signaling pathways. The protein negatively regulates ERK1/2 cascade and peptidyl-serine
+      phosphorylation while positively regulating ENaC-mediated sodium transport.
+    supported_by:
+    - reference_id: file:human/MAGI1/MAGI1-uniprot.txt
+      supporting_text: negative regulation of ERK1 and ERK2 cascade; ISS:UniProtKB.
+        negative regulation of peptidyl-serine phosphorylation; ISS:UniProtKB. positive
+        regulation of sodium ion transport; ISS:UniProtKB.
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: IEA annotation from InterPro. While CNKSR3 is a peripheral membrane protein
+      at the apical plasma membrane, this extremely general term provides minimal
+      information. More specific membrane localization terms are more appropriate.
+    action: MODIFY
+    reason: The term &#39;membrane&#39; is too general. CNKSR3 specifically localizes to
+      the apical plasma membrane where it functions in ENaC regulation. A more specific
+      term is warranted.
+    proposed_replacement_terms:
+    - id: GO:0016324
+      label: apical plasma membrane
+    supported_by:
+    - reference_id: file:human/MAGI1/MAGI1-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Apical cell membrane; Peripheral membrane
+        protein&#39;
+- term:
+    id: GO:0016324
+    label: apical plasma membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: IEA annotation from UniProtKB subcellular location vocabulary. This is
+      accurate and functionally important - CNKSR3 localizes to the apical plasma
+      membrane of epithelial cells where it coordinates the ENaC-regulatory complex.
+    action: ACCEPT
+    reason: This is the most functionally relevant subcellular location for CNKSR3.
+      The protein is specifically targeted to the apical membrane where it regulates
+      ENaC.
+    supported_by:
+    - reference_id: file:human/MAGI1/MAGI1-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Cytoplasm. Apical cell membrane; Peripheral
+        membrane protein. Acts as a scaffold protein coordinating the assembly of
+        an ENaC-regulatory complex (ERC).&#39;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:25416956
+  review:
+    summary: IPI evidence from proteome-scale interactome study identifying interaction
+      with NMI (Q13287). While protein binding is technically correct, it is uninformative
+      as a molecular function annotation. CNKSR3&#39;s specific function is as a protein-macromolecule
+      adaptor, which is already captured by GO:0030674.
+    action: REMOVE
+    reason: The term &#39;protein binding&#39; is uninformative per curation guidelines. The
+      specific adaptor function is better captured by GO:0030674 (protein-macromolecule
+      adaptor activity). Large-scale interactome studies often identify interactions
+      that may not be functionally relevant to core gene function.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  review:
+    summary: IPI evidence from binary protein interactome reference map identifying
+      multiple interactions. While protein binding is correct, it is redundant and
+      uninformative given the more specific GO:0030674 annotation.
+    action: REMOVE
+    reason: Uninformative and redundant with the more specific adaptor activity term.
+      This is from a large-scale binary interactome study.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:40205054
+  review:
+    summary: IPI evidence from multimodal cell atlas study. Another protein binding
+      annotation that is uninformative compared to the specific adaptor function already
+      annotated.
+    action: REMOVE
+    reason: Uninformative and redundant. Large-scale proteomics study. The specific
+      molecular function is better captured by GO:0030674.
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000052
+  review:
+    summary: IDA evidence from immunofluorescence data (HPA project). Cytosol is a
+      more specific cytoplasmic compartment and represents where CNKSR3 is found when
+      not at the membrane. This is consistent with the protein&#39;s peripheral membrane
+      association - it can be in cytosol and recruited to apical membrane.
+    action: ACCEPT
+    reason: Supported by direct experimental evidence from immunofluorescence. Cytosol
+      localization is consistent with CNKSR3 being a peripheral (not integral) membrane
+      protein that can shuttle between cytosol and membrane.
+    supported_by:
+    - reference_id: GO_REF:0000052
+      supporting_text: Gene Ontology annotation based on curation of immunofluorescence
+        data from Human Protein Atlas project
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:22085542
+  review:
+    summary: IPI evidence from the CNK3/IPCEF1 study showing interactions relevant
+      to HGF-Arf6 signaling. While this paper provides important functional context,
+      the protein binding annotation itself is uninformative.
+    action: REMOVE
+    reason: Although PMID:22085542 is a key functional paper showing CNKSR3 interacts
+      with cytohesin 2 and is required for Arf6 activation, the generic &#34;protein binding&#34;
+      annotation is uninformative. The specific adaptor function (GO:0030674) is more
+      appropriate.
+- term:
+    id: GO:0010765
+    label: positive regulation of sodium ion transport
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  review:
+    summary: ISS annotation based on mouse ortholog Q8BMA3. This represents a core
+      function of CNKSR3 - it positively regulates ENaC-mediated sodium transport
+      in response to aldosterone. This is the protein&#39;s best-characterized biological
+      role in kidney epithelial cells.
+    action: ACCEPT
+    reason: This is a core biological function of CNKSR3. The protein regulates aldosterone-induced
+      ENaC-mediated sodium transport through coordinating the assembly of the ENaC-regulatory
+      complex. Well-supported by multiple studies.
+    supported_by:
+    - reference_id: file:human/MAGI1/MAGI1-uniprot.txt
+      supporting_text: &#39;FUNCTION: Involved in transepithelial sodium transport. Regulates
+        aldosterone-induced and epithelial sodium channel (ENaC)-mediated sodium transport
+        through regulation of ENaC cell surface expression. Acts as a scaffold protein
+        coordinating the assembly of an ENaC-regulatory complex (ERC).&#39;
+- term:
+    id: GO:0033137
+    label: negative regulation of peptidyl-serine phosphorylation
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  review:
+    summary: ISS annotation based on mouse ortholog. CNKSR3 scaffold proteins regulate
+      kinase signaling cascades and this annotation likely reflects regulation of
+      SGK1 or other serine kinases in the ENaC regulatory complex, or broader effects
+      on MAPK pathway serine phosphorylation.
+    action: ACCEPT
+    reason: This is consistent with CNKSR3&#39;s role as a scaffold regulating kinase
+      signaling. The protein interacts with SGK1 and RAF1 kinases and modulates their
+      activity in the context of ENaC regulation and MAPK signaling.
+    supported_by:
+    - reference_id: file:human/MAGI1/MAGI1-uniprot.txt
+      supporting_text: Interacts with ENaC regulatory proteins NEDD4L, RAF1 and SGK1.
+        The PDZ domain is required for interaction with ENaC and SGK1, but not for
+        interaction with NEDDL4 and RAF1.
+- term:
+    id: GO:0070373
+    label: negative regulation of ERK1 and ERK2 cascade
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  review:
+    summary: ISS annotation based on mouse ortholog. CNKSR3 negatively regulates MAPK/ERK
+      signaling. CNK family proteins are known scaffold proteins in Ras/MAPK pathways,
+      and CNKSR3 specifically acts as a negative regulator of the ERK1/2 cascade.
+    action: ACCEPT
+    reason: Represents an important regulatory function of CNKSR3 beyond its ENaC
+      role. CNK proteins are scaffolds in Ras/MAPK signaling pathways, and CNKSR3
+      negatively regulates ERK1/2. This is consistent with the protein&#39;s domain structure
+      and family membership.
+    supported_by:
+    - reference_id: file:human/MAGI1/MAGI1-uniprot.txt
+      supporting_text: negative regulation of ERK1 and ERK2 cascade; ISS:UniProtKB.
+        SIMILARITY - Belongs to the CNKSR family.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms.
+  findings: []
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs
+    by curator judgment of sequence similarity.
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt.
+  findings: []
+- id: GO_REF:0000052
+  title: Gene Ontology annotation based on curation of immunofluorescence data
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods.
+  findings: []
+- id: PMID:22085542
+  title: CNK3 and IPCEF1 produce a single protein that is required for HGF dependent
+    Arf6 activation and migration.
+  findings:
+  - statement: CNKSR3 (CNK3/IPCEF1 fusion) is required for HGF-induced Arf6 activation
+      and cell migration
+    supporting_text: Knockdown of this protein impairs HGF-induced Arf6 activation
+      and migration in response to HGF treatment
+  - statement: The protein acts as a scaffold binding to cytohesin 2 (Arf6 GEF)
+    supporting_text: IPCEF1, a scaffold that binds to cytohesin 2, is required for
+      cytohesin-induced scattering
+  - statement: IPCEF1 is actually the C-terminal half of CNK3
+    supporting_text: We report here that IPCEF1 is actually the C-terminal half of
+      CNK3
+- id: PMID:25416956
+  title: A proteome-scale map of the human interactome network.
+  findings:
+  - statement: Large-scale systematic binary protein-protein interaction mapping study
+    supporting_text: systematically screening half of the interactome space with
+      minimal inspection bias, we more than doubled the number of high-quality binary
+      PPIs available from the literature
+- id: PMID:32296183
+  title: A reference map of the human binary protein interactome.
+  findings:
+  - statement: Systematic binary interactome reference map
+    supporting_text: reference map of the human binary protein interactome
+- id: PMID:40205054
+  title: Multimodal cell maps as a foundation for structural and functional genomics.
+  findings:
+  - statement: Multimodal proteomics atlas study
+    supporting_text: Multimodal cell maps as a foundation for structural and functional
+      genomics
+- id: file:human/MAGI1/MAGI1-uniprot.txt
+  title: UniProt entry for CNKSR3 (Connector enhancer of kinase suppressor of ras
+    3)
+  findings:
+  - statement: Scaffold protein coordinating ENaC-regulatory complex assembly
+    supporting_text: Acts as a scaffold protein coordinating the assembly of an ENaC-regulatory
+      complex (ERC)
+  - statement: Regulates aldosterone-induced sodium transport via ENaC
+    supporting_text: Regulates aldosterone-induced and epithelial sodium channel (ENaC)-mediated
+      sodium transport through regulation of ENaC cell surface expression
+  - statement: Localizes to apical plasma membrane and cytoplasm
+    supporting_text: &#39;SUBCELLULAR LOCATION: Cytoplasm. Apical cell membrane; Peripheral
+      membrane protein&#39;
+  - statement: Contains SAM, CRIC, PDZ, and DUF1170 domains
+    supporting_text: DOMAIN 7..72 SAM...DOMAIN 80..174 CRIC...DOMAIN 211..293 PDZ...DOMAIN
+      325..546 DUF1170
+  - statement: PDZ domain required for ENaC and SGK1 interaction
+    supporting_text: The PDZ domain is required for interaction with ENaC and SGK1,
+      but not for interaction with NEDDL4 and RAF1
+  - statement: Interacts with SCNN1A, SCNN1B, NEDD4L, RAF1, SGK1
+    supporting_text: Interacts directly with SCNN1A (ENaC subunit alpha) and SCNN1B
+      (ENaC subunit beta) C-terminal tails. Interacts with ENaC regulatory proteins
+      NEDD4L, RAF1 and SGK1
+  - statement: Up-regulated by aldosterone
+    supporting_text: &#39;INDUCTION: Up-regulated by aldosterone (at protein level)&#39;
+  - statement: Negatively regulates ERK1/2 cascade and peptidyl-serine phosphorylation
+    supporting_text: negative regulation of ERK1 and ERK2 cascade; negative regulation
+      of peptidyl-serine phosphorylation
+  - statement: Positively regulates sodium ion transport
+    supporting_text: positive regulation of sodium ion transport
+core_functions:
+- description: Assembling and coordinating ENaC regulatory complex to control aldosterone-induced
+    sodium transport at apical epithelial membranes
+  molecular_function:
+    id: GO:0030674
+    label: protein-macromolecule adaptor activity
+  directly_involved_in:
+  - id: GO:0010765
+    label: positive regulation of sodium ion transport
+  locations:
+  - id: GO:0016324
+    label: apical plasma membrane
+  - id: GO:0005829
+    label: cytosol
+  substrates:
+  - id: UniProtKB:P37088
+    label: SCNN1A (ENaC alpha subunit)
+  - id: UniProtKB:P51168
+    label: SCNN1B (ENaC beta subunit)
+  - id: UniProtKB:Q96PU5
+    label: NEDD4L
+  - id: UniProtKB:P04049
+    label: RAF1
+  - id: UniProtKB:O00141
+    label: SGK1
+  supported_by:
+  - reference_id: file:human/MAGI1/MAGI1-uniprot.txt
+    supporting_text: Acts as a scaffold protein coordinating the assembly of an ENaC-regulatory
+      complex (ERC). Regulates aldosterone-induced and epithelial sodium channel (ENaC)-mediated
+      sodium transport through regulation of ENaC cell surface expression. Interacts
+      directly with SCNN1A and SCNN1B C-terminal tails. Interacts with ENaC regulatory
+      proteins NEDD4L, RAF1 and SGK1.
+  - reference_id: PMID:22851176
+    supporting_text: Scaffold protein connector enhancer of kinase suppressor of
+      Ras isoform 3 (CNK3) coordinates assembly of a multiprotein epithelial sodium
+      channel (ENaC)-regulatory complex
+- description: Negatively regulating ERK1/2 cascade through scaffold-mediated modulation
+    of MAPK signaling components
+  molecular_function:
+    id: GO:0030674
+    label: protein-macromolecule adaptor activity
+  directly_involved_in:
+  - id: GO:0070373
+    label: negative regulation of ERK1 and ERK2 cascade
+  - id: GO:0033137
+    label: negative regulation of peptidyl-serine phosphorylation
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  supported_by:
+  - reference_id: file:human/MAGI1/MAGI1-uniprot.txt
+    supporting_text: negative regulation of ERK1 and ERK2 cascade; negative regulation
+      of peptidyl-serine phosphorylation. Belongs to the CNKSR family
+proposed_new_terms: []
+suggested_questions:
+- question: What is the molecular mechanism by which CNKSR3 PDZ domain selectively
+    binds ENaC subunits versus other PDZ domain ligands?
+  experts:
+  - Structural biologists specializing in PDZ domain interactions
+  - Renal physiologists studying ENaC regulation
+- question: How does aldosterone signaling lead to CNKSR3 upregulation and recruitment
+    to the apical membrane?
+  experts:
+  - Researchers studying mineralocorticoid receptor signaling
+  - Epithelial cell biologists
+- question: What is the relative importance of CNKSR3&#39;s ENaC regulatory function versus
+    its HGF-Arf6 scaffolding function in different tissue contexts?
+  experts:
+  - Renal physiologists
+  - Cancer cell migration researchers
+- question: Does CNKSR3 have tissue-specific isoforms or splice variants with distinct
+    functions beyond the CNK3/IPCEF1 fusion proteins?
+  experts:
+  - RNA biology researchers
+  - Epithelial tissue specialists
+suggested_experiments:
+- experiment_type: Structure determination
+  description: Determine crystal or cryo-EM structure of CNKSR3 PDZ domain in complex
+    with ENaC subunit C-terminal peptides to understand binding specificity
+  hypothesis: The PDZ domain has specific structural features that enable high-affinity
+    binding to ENaC tails
+- experiment_type: Cell biology/Imaging
+  description: Live-cell imaging of CNKSR3 dynamics at the apical membrane in response
+    to aldosterone treatment to understand recruitment kinetics
+  hypothesis: Aldosterone induces rapid recruitment of CNKSR3 to apical membrane where
+    it stabilizes ENaC
+- experiment_type: Biochemistry
+  description: Reconstitute the complete ENaC-regulatory complex in vitro with purified
+    CNKSR3, ENaC subunits, SGK1, RAF1, and NEDD4L to map binding interfaces and stoichiometry
+  hypothesis: CNKSR3 can simultaneously bind multiple complex components through distinct
+    domains
+- experiment_type: Functional genomics
+  description: CNKSR3 knockout in kidney epithelial cells with rescue by domain deletion
+    mutants to determine which domains are essential for ENaC regulation versus Arf6/migration
+    functions
+  hypothesis: PDZ domain is critical for ENaC function but dispensable for Arf6 scaffolding
+- experiment_type: Physiological
+  description: Generate CNKSR3 conditional knockout mice and assess blood pressure,
+    sodium handling, and response to aldosterone challenge
+  hypothesis: Loss of CNKSR3 will impair aldosterone-mediated sodium retention and
+    blood pressure regulation
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

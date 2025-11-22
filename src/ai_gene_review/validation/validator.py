@@ -32,7 +32,10 @@ from ai_gene_review.validation.validation_report import (
 from ai_gene_review.validation.term_validator import TermValidator
 from ai_gene_review.validation.publication_validator import PublicationValidator
 from ai_gene_review.validation.goa_validator import GOAValidator
-from ai_gene_review.validation.supporting_text_validator import SupportingTextValidator
+from ai_gene_review.validation.supporting_text_validator import (
+    SupportingTextValidator,
+    SupportingTextSubstringValidator,
+)
 
 
 @contextmanager
@@ -108,7 +111,8 @@ def validate_gene_review(
         >>> with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
         ...     yaml.dump(data, f)
         ...     test_file = Path(f.name)
-        >>> report = validate_gene_review(test_file)
+        >>> report = validate_gene_review(test_file)  # doctest: +ELLIPSIS
+        ...
         >>> print("Valid!" if report.is_valid else f"Errors: {report.error_count}")
         Valid!
         >>> test_file.unlink()  # Clean up
@@ -468,8 +472,30 @@ def check_best_practices_rules(
                 # Get unique actions for this term (excluding PENDING which are already filtered out)
                 unique_actions = set(action for _, action, _ in actions_list)
 
-                # If there are different actions for the same term, report a warning
+                # If there are different actions for the same term, check if it's a valid case
                 if len(unique_actions) > 1:
+                    # Special case: NEW annotations with supported_by are allowed to coexist
+                    # with existing annotations (ACCEPT/MODIFY/REMOVE/etc.)
+                    # This is because NEW represents novel curator-proposed annotations, not existing GOA annotations
+                    if "NEW" in unique_actions:
+                        # Check if all NEW annotations have supporting evidence
+                        new_annotations_valid = True
+                        for idx, action, _ in actions_list:
+                            if action == "NEW":
+                                annotation = data["existing_annotations"][idx]
+                                review = annotation.get("review", {})
+                                supported_by = review.get("supported_by", [])
+                                if not supported_by or len(supported_by) == 0:
+                                    new_annotations_valid = False
+                                    break
+
+                        # If all NEW annotations have supporting evidence, exclude them from inconsistency check
+                        if new_annotations_valid:
+                            # Filter out NEW actions and recheck
+                            non_new_actions = set(action for _, action, _ in actions_list if action != "NEW")
+                            if len(non_new_actions) <= 1:
+                                # No inconsistency among non-NEW annotations
+                                continue
                     # Get the term label for better error messages
                     term_label = None
                     for annotation in data["existing_annotations"]:
@@ -881,18 +907,18 @@ def check_best_practices_rules(
             if goa_result.missing_in_yaml:
                 # Show first few missing annotations for debugging
                 missing_count = len(goa_result.missing_in_yaml)
-                examples = []
+                missing_examples: List[str] = []
                 for ann in goa_result.missing_in_yaml[:5]:  # Show first 5
-                    examples.append(
+                    missing_examples.append(
                         f"{ann.go_id} ({ann.go_term}) - {ann.evidence_code} - {ann.reference}"
                     )
 
                 if missing_count <= 5:
-                    detail = ": " + "; ".join(examples)
+                    detail = ": " + "; ".join(missing_examples)
                 else:
                     detail = (
                         " (showing first 5): "
-                        + "; ".join(examples)
+                        + "; ".join(missing_examples)
                         + f" ... and {missing_count - 5} more"
                     )
 
@@ -906,21 +932,21 @@ def check_best_practices_rules(
             if goa_result.missing_in_goa:
                 # Show first few annotations not in GOA for debugging
                 missing_count = len(goa_result.missing_in_goa)
-                examples = []
+                extra_examples: List[str] = []
                 for ann_dict in goa_result.missing_in_goa[:5]:  # Show first 5
                     # ann_dict is a Dict from the YAML, not a GOAAnnotation
                     go_id = ann_dict.get("term", {}).get("id", "unknown")
                     go_label = ann_dict.get("term", {}).get("label", "unknown")
                     evidence = ann_dict.get("evidence_type", "unknown")
                     ref = ann_dict.get("original_reference_id", "unknown")
-                    examples.append(f"{go_id} ({go_label}) - {evidence} - {ref}")
+                    extra_examples.append(f"{go_id} ({go_label}) - {evidence} - {ref}")
 
                 if missing_count <= 5:
-                    detail = ": " + "; ".join(examples)
+                    detail = ": " + "; ".join(extra_examples)
                 else:
                     detail = (
                         " (showing first 5): "
-                        + "; ".join(examples)
+                        + "; ".join(extra_examples)
                         + f" ... and {missing_count - 5} more"
                     )
 
@@ -943,50 +969,91 @@ def check_best_practices_rules(
                     suggestion="Consider updating evidence types to match GOA file",
                 )
 
-    # Validate supporting_text against cached publications if enabled
+    # DEPRECATED: Validate supporting_text using fuzzy matching (kept for comparison)
+    # This validator has false positives - use SupportingTextSubstringValidator instead
+    # DISABLED: No longer run by default as it's slower and less accurate than substring matching
+    # To re-enable, uncomment the code below
+    # if check_supporting_text and "existing_annotations" in data:
+    #     if progress_callback:
+    #         progress_callback("Validating supporting text (fuzzy - deprecated)")
+    #     st_validator = SupportingTextValidator()
+    #     st_report = st_validator.validate_data(data)
+    #
+    #     if not st_report.is_valid:
+    #         # Report invalid supporting texts
+    #         for st_result in st_report.results:
+    #             if not st_result.is_valid:
+    #                 severity = ValidationSeverity.WARNING
+    #
+    #                 # Check if this is a PMID finding without supporting_text
+    #                 if "PMID reference" in (
+    #                     st_result.error_message or ""
+    #                 ) and "without supporting_text" in (st_result.error_message or ""):
+    #                     # Always WARNING for missing supporting_text in PMID findings
+    #                     severity = ValidationSeverity.WARNING
+    #                 elif st_result.similarity_score < 0.5:
+    #                     # Very low similarity suggests incorrect reference
+    #                     severity = ValidationSeverity.ERROR
+    #
+    #                 report.add_issue(
+    #                     severity,
+    #                     st_result.error_message
+    #                     or "Supporting text not found in referenced publication",
+    #                     path=st_result.annotation_path,
+    #                     suggestion=st_result.suggested_fix,
+    #                     validation_category="SupportingTextValidator",
+    #                     check_type="supporting_text_not_found"
+    #                 )
+
+    # Validate supporting_text using deterministic substring matching
     if check_supporting_text and "existing_annotations" in data:
         if progress_callback:
-            progress_callback("Validating supporting text")
-        st_validator = SupportingTextValidator()
-        st_report = st_validator.validate_data(data)
+            progress_callback("Validating supporting text (substring matching)")
+        substring_validator = SupportingTextSubstringValidator()
+        substring_report = substring_validator.validate_data(data)
 
-        if not st_report.is_valid:
-            # Report invalid supporting texts
-            for st_result in st_report.results:
+        if not substring_report.is_valid:
+            # Report invalid supporting texts using substring validation
+            for st_result in substring_report.results:
                 if not st_result.is_valid:
-                    severity = ValidationSeverity.WARNING
+                    # Use ERROR severity for substring validator
+                    severity = ValidationSeverity.ERROR
 
-                    # Check if this is a PMID finding without supporting_text
-                    if "PMID reference" in (
-                        st_result.error_message or ""
-                    ) and "without supporting_text" in (st_result.error_message or ""):
-                        # Always WARNING for missing supporting_text in PMID findings
-                        severity = ValidationSeverity.WARNING
-                    elif st_result.similarity_score < 0.5:
-                        # Very low similarity suggests incorrect reference
-                        severity = ValidationSeverity.ERROR
+                    # Add a prefix to distinguish from fuzzy validator
+                    error_msg = st_result.error_message or "Supporting text not found in referenced publication"
 
                     report.add_issue(
                         severity,
-                        st_result.error_message
-                        or "Supporting text not found in referenced publication",
+                        f"[Substring] {error_msg}",
                         path=st_result.annotation_path,
                         suggestion=st_result.suggested_fix,
-                        validation_category="SupportingTextValidator",
-                        check_type="supporting_text_not_found"
+                        validation_category="SupportingTextSubstringValidator",
+                        check_type="supporting_text_substring_not_found"
                     )
 
-        # Report coverage statistics as info
-        if st_report.total_annotations > 0:
-            coverage = st_report.validation_rate
-            if coverage < 50:
+        # Report coverage statistics separately for findings and annotations
+        if substring_report.total_findings > 0:
+            findings_coverage = substring_report.findings_coverage_rate
+            if findings_coverage < 50:
                 report.add_issue(
                     ValidationSeverity.INFO,
-                    f"Only {coverage:.1f}% of annotations have supporting_text",
+                    f"Only {findings_coverage:.1f}% of reference findings have supporting_text",
+                    path="references",
+                    suggestion="Consider adding supporting_text to more findings for better documentation",
+                    validation_category="SupportingTextSubstringValidator",
+                    check_type="low_findings_supporting_text_coverage"
+                )
+
+        if substring_report.total_annotations > 0:
+            annotations_coverage = substring_report.annotations_coverage_rate
+            if annotations_coverage < 50:
+                report.add_issue(
+                    ValidationSeverity.INFO,
+                    f"Only {annotations_coverage:.1f}% of existing annotations have supporting_text",
                     path="existing_annotations",
                     suggestion="Consider adding supporting_text to more annotations for better documentation",
-                    validation_category="SupportingTextValidator",
-                    check_type="low_supporting_text_coverage"
+                    validation_category="SupportingTextSubstringValidator",
+                    check_type="low_annotations_supporting_text_coverage"
                 )
 
 
@@ -1026,7 +1093,8 @@ def validate_multiple_files(
         ...     with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
         ...         yaml.dump(data, f)
         ...         files.append(Path(f.name))
-        >>> batch_report = validate_multiple_files(files)
+        >>> batch_report = validate_multiple_files(files)  # doctest: +ELLIPSIS
+        ...
         >>> print(f"Valid: {batch_report.valid_files}, Invalid: {batch_report.invalid_files}")
         Valid: 2, Invalid: 0
         >>> for f in files:

@@ -261,16 +261,18 @@ def test_cache_behavior():
     assert validator._label_cache["GO:0005515"] == "protein binding"
 
     # Test with a new term not in cache - mock the adapter call
+    # Use a fake GO term that won't be in any cache file
+    fake_term = "GO:9999999"
     with patch.object(validator, "_get_ontology_adapter") as mock_get_adapter:
         mock_adapter = Mock()
-        mock_adapter.label.return_value = "cytoplasm"
+        mock_adapter.label.return_value = "fake term"
         mock_get_adapter.return_value = mock_adapter
 
         # This should call the adapter since it's not cached
-        label3 = validator._get_term_label("GO:0005737")
-        assert label3 == "cytoplasm"
+        label3 = validator._get_term_label(fake_term)
+        assert label3 == "fake term"
         assert mock_adapter.label.call_count == 1
 
         # Now it should be cached
-        assert "GO:0005737" in validator._label_cache
-        assert validator._label_cache["GO:0005737"] == "cytoplasm"
+        assert fake_term in validator._label_cache
+        assert validator._label_cache[fake_term] == "fake term"
