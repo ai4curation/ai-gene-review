@@ -559,9 +559,9 @@ ISG15 conjugation may play an important regulatory role in IFN-mediated antivira
         report = validator.validate_file(yaml_file)
 
         # Should find 2 findings with supporting_text
-        assert report.annotations_with_supporting_text == 2
-        assert report.valid_supporting_texts == 1  # First finding is valid
-        assert report.invalid_supporting_texts == 1  # Second finding is invalid
+        assert report.findings_with_supporting_text == 2
+        assert report.valid_finding_supporting_texts == 1  # First finding is valid
+        assert report.invalid_finding_supporting_texts == 1  # Second finding is invalid
 
         # Check specific results
         valid_results = [r for r in report.results if r.is_valid]
@@ -619,11 +619,15 @@ ISG15 conjugation may play an important regulatory role in IFN-mediated antivira
         validator = SupportingTextValidator(publications_dir=temp_publications_dir)
         report = validator.validate_file(yaml_file)
 
-        # Should have 2 total (1 finding + 1 annotation)
-        assert report.total_annotations == 2
-        assert report.annotations_with_supporting_text == 2
-        assert report.valid_supporting_texts == 2  # Both should be valid
-        assert report.invalid_supporting_texts == 0
+        # Should have 1 finding + 1 annotation
+        assert report.total_findings == 1
+        assert report.total_annotations == 1
+        assert report.findings_with_supporting_text == 1
+        assert report.annotations_with_supporting_text == 1
+        assert report.valid_finding_supporting_texts == 1
+        assert report.valid_annotation_supporting_texts == 1
+        assert report.invalid_finding_supporting_texts == 0
+        assert report.invalid_annotation_supporting_texts == 0
 
 
     def test_uniprot_supporting_text_validation(self, temp_publications_dir):
@@ -695,15 +699,15 @@ CC       Rule:MF_01717}.
         report = validator.validate_file(yaml_file)
         
         # Check results
-        assert report.total_annotations == 4
-        assert report.annotations_with_supporting_text == 4
+        assert report.total_findings == 4
+        assert report.findings_with_supporting_text == 4
         # With stricter validation, short texts require exact matches
         # "EC=7.5.2.11 (D-galactose transport) and EC=7.5.2.7 (D-ribose transport)" - not found exactly
-        # "SUBCELLULAR LOCATION: Cell inner membrane; Peripheral membrane protein" - not found exactly  
+        # "SUBCELLULAR LOCATION: Cell inner membrane; Peripheral membrane protein" - not found exactly
         # "Belongs to the ABC transporter superfamily. Carbohydrate importer 2 (CUT2) (TC 3.A.1.2) family" - found
         # "TEMPORARY TEST SUPPORTING TEXT" - not found
-        assert report.valid_supporting_texts == 1  # Only the third one is valid
-        assert report.invalid_supporting_texts == 3  # Three are invalid due to strict matching
+        assert report.valid_finding_supporting_texts == 1  # Only the third one is valid
+        assert report.invalid_finding_supporting_texts == 3  # Three are invalid due to strict matching
         assert not report.is_valid  # Overall should be invalid
         
         # Check specific error messages

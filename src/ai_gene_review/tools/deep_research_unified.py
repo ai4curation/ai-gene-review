@@ -7,8 +7,8 @@ from pathlib import Path
 from typing import Optional
 
 import click
-from deep_research_client import DeepResearchClient
-from deep_research_client.templates import TemplateManager
+from deep_research_client import DeepResearchClient  # type: ignore[import-untyped]
+from deep_research_client.templates import TemplateManager  # type: ignore[import-untyped]
 
 from ai_gene_review.etl.gene import expand_organism_name, fetch_uniprot_data, resolve_gene_to_uniprot
 
@@ -271,7 +271,7 @@ def research_gene_unified(
         sys.exit(1)
 
     # Initialize deep research client with cache configuration
-    from deep_research_client.models import CacheConfig
+    from deep_research_client.models import CacheConfig  # type: ignore[import-untyped]
     cache_config = CacheConfig(enabled=not no_cache)
     client = DeepResearchClient(cache_config=cache_config)
 

@@ -1,0 +1,3677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UCK2 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>UCK2</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q9BZX2" target="_blank" class="term-link">
+                        Q9BZX2
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-in-progress">
+                    IN PROGRESS
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "UCK2";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q9BZX2" data-a="DESCRIPTION: Uridine-cytidine kinase 2 (UCK2) is a cytosolic py..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Uridine-cytidine kinase 2 (UCK2) is a cytosolic pyrimidine ribonucleoside kinase that catalyzes the phosphorylation of uridine and cytidine to their respective monophosphates (UMP and CMP) using ATP or GTP as phosphate donors. UCK2 is a key enzyme in the pyrimidine salvage pathway, essential for nucleotide metabolism and RNA/DNA synthesis. The enzyme functions as a homotetramer and exhibits substrate specificity for ribonucleosides, not deoxyribonucleosides. UCK2 also activates cytotoxic nucleoside analogs used in cancer chemotherapy. Expression is tissue-specific, with high levels in placenta and various cancers.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BZX2" data-a="GO:0005737" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA annotation correctly places UCK2 in the cytoplasm. Multiple lines of evidence confirm cytoplasmic localization, including Reactome annotation as cytosolic enzyme and experimental data showing cytosol localization in transfected cells.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Consistent with experimental evidence from multiple sources confirming cytoplasmic/cytosolic localization. UniProt CC line states function occurs in cytoplasm, Reactome describes enzyme as cytosolic, and direct fluorescence microscopy shows cytosol localization.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27239701" target="_blank" class="term-link">
+                                        PMID:27239701
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Subcellular localization studies showed that UCK1-GFP and UCK2-GFP were localized in the cell nucleus and cytosol, respectively.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    Reactome:R-HSA-109903
+                                    
+                                </span>
+                                
+                                <div class="support-text">Cytosolic uridine-cytidine kinase 2 (UCK2) catalyzes the reactions of cytidine or uridine with ATP to form CMP or UMP and ADP</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004849" target="_blank" class="term-link">
+                                    GO:0004849
+                                </a>
+                            </span>
+                            <span class="term-label">uridine kinase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BZX2" data-a="GO:0004849" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA annotation for uridine kinase activity is well-supported. UCK2 catalyzes phosphorylation of uridine to UMP using ATP. This is one of the two core catalytic activities of UCK2.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This represents a core molecular function of UCK2, supported by direct experimental evidence and multiple independent studies. UniProt catalytic activity annotation confirms this function with EC 2.7.1.48.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11306702" target="_blank" class="term-link">
+                                        PMID:11306702
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The enzymes did not phosphorylate deoxyribonucleosides or purine ribonucleosides. UCK1 mRNA was detected as two isoforms... The enzymes phosphorylated several of the analogs, such as 6-azauridine, 5-fluorouridine</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27239701" target="_blank" class="term-link">
+                                        PMID:27239701
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Uridine-cytidine kinase (UCK) catalyzes the phosphorylation of uridine and cytidine</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009224" target="_blank" class="term-link">
+                                    GO:0009224
+                                </a>
+                            </span>
+                            <span class="term-label">CMP biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000108
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BZX2" data-a="GO:0009224" data-r="GO_REF:0000108" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation for CMP biosynthetic process based on logical inference from cytidine kinase activity. While technically correct (UCK2 does synthesize CMP from cytidine), this term is overly general as it does not distinguish between de novo and salvage pathways. The more specific term GO:0044211 (CTP salvage) better captures UCK2&#39;s specific role in the salvage pathway.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The term is too general and does not accurately reflect that UCK2 functions specifically in the salvage pathway, not de novo biosynthesis. UCK2 catalyzes cytidine + ATP to CMP + ADP, which is the first step of CTP salvage. The annotation should use GO:0044211 (CTP salvage) which is already present with IDA evidence.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044211" target="_blank" class="term-link">
+                                    CTP salvage
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11306702" target="_blank" class="term-link">
+                                        PMID:11306702
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">shown to catalyze the phosphorylation of Urd and Cyd</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/UCK2/UCK2-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Pyrimidine metabolism; CTP biosynthesis via salvage pathway; CTP from cytidine: step 1/3</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000166" target="_blank" class="term-link">
+                                    GO:0000166
+                                </a>
+                            </span>
+                            <span class="term-label">nucleotide binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BZX2" data-a="GO:0000166" data-r="GO_REF:0000043" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is a very general molecular function term. While UCK2 does bind nucleotides (ATP/GTP as phosphate donors, and uridine/cytidine substrates), this annotation is too non-specific to be informative. The more specific ATP binding term (GO:0005524) is already present.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This term is too general and does not provide meaningful information about UCK2 specific function. The GO:0005524 (ATP binding) annotation is more informative and specific. Nucleotide binding is implied by the kinase activity annotations.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11306702" target="_blank" class="term-link">
+                                        PMID:11306702
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">named UCK1 and UCK2, were expressed in Escherichia coli and shown to catalyze the phosphorylation of Urd and Cyd</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004849" target="_blank" class="term-link">
+                                    GO:0004849
+                                </a>
+                            </span>
+                            <span class="term-label">uridine kinase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BZX2" data-a="GO:0004849" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Duplicate annotation of uridine kinase activity with different evidence code. This IEA annotation is redundant with the IBA and IDA annotations for the same term.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While redundant, computational annotations can coexist with experimental ones. The annotation is correct and represents a core function of UCK2.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11306702" target="_blank" class="term-link">
+                                        PMID:11306702
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The enzymes did not phosphorylate deoxyribonucleosides or purine ribonucleosides... catalyze the phosphorylation of Urd and Cyd</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005524" target="_blank" class="term-link">
+                                    GO:0005524
+                                </a>
+                            </span>
+                            <span class="term-label">ATP binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BZX2" data-a="GO:0005524" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> UCK2 uses ATP (or GTP) as a phosphate donor in its kinase reactions. Crystal structures show ATP binding sites. This is an essential component of UCK2 catalytic mechanism.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> ATP binding is a core molecular function required for UCK2 kinase activity. Supported by structural data showing ATP binding sites and biochemical evidence that ATP serves as phosphate donor.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    Reactome:R-HSA-109903
+                                    
+                                </span>
+                                
+                                <div class="support-text">cytidine or uridine with ATP to form CMP or UMP and ADP</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016301" target="_blank" class="term-link">
+                                    GO:0016301
+                                </a>
+                            </span>
+                            <span class="term-label">kinase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BZX2" data-a="GO:0016301" data-r="GO_REF:0000120" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> General kinase activity term that is less specific than the actual uridine kinase and cytidine kinase activities already annotated. While technically correct, it provides little additional information.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a parent term of the more specific uridine kinase and cytidine kinase activities. The specific terms (GO:0004849, GO:0043771) provide more informative annotations. General parent terms like this are often automatically inferred but do not add functional specificity.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11306702" target="_blank" class="term-link">
+                                        PMID:11306702
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">shown to catalyze the phosphorylation of Urd and Cyd</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016740" target="_blank" class="term-link">
+                                    GO:0016740
+                                </a>
+                            </span>
+                            <span class="term-label">transferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BZX2" data-a="GO:0016740" data-r="GO_REF:0000043" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Extremely general molecular function term. Kinases are indeed transferases (transferring phosphate groups), but this term is far too broad to be informative about UCK2 specific function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a very high-level parent term that provides minimal functional information. The specific kinase activity terms are far more informative. Such general terms are typically auto-generated but do not contribute meaningful biological insight.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11306702" target="_blank" class="term-link">
+                                        PMID:11306702
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">catalyze the phosphorylation of Urd and Cyd</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043771" target="_blank" class="term-link">
+                                    GO:0043771
+                                </a>
+                            </span>
+                            <span class="term-label">cytidine kinase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BZX2" data-a="GO:0043771" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytidine kinase activity is one of the two core catalytic activities of UCK2, converting cytidine to CMP. This is well-documented experimentally.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This represents a core molecular function of UCK2, equally important as its uridine kinase activity. Both activities are confirmed by direct biochemical assays and structural studies.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11306702" target="_blank" class="term-link">
+                                        PMID:11306702
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">catalyze the phosphorylation of Urd and Cyd. The enzymes did not phosphorylate deoxyribonucleosides or purine ribonucleosides</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007631" target="_blank" class="term-link">
+                                    GO:0007631
+                                </a>
+                            </span>
+                            <span class="term-label">feeding behavior</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000107
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BZX2" data-a="GO:0007631" data-r="GO_REF:0000107" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation appears to be a computational transfer from orthologs and is likely spurious for UCK2. There is no literature evidence connecting UCK2 to feeding behavior, and this seems implausible for a cytosolic nucleoside kinase involved in nucleotide metabolism.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> No supporting evidence for UCK2 involvement in feeding behavior. This appears to be an incorrect orthology-based inference. The deep research and all publications focus on nucleotide metabolism, cancer biology, and drug activation, with no mention of feeding behavior. Likely a false positive from automated annotation transfer.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0048678" target="_blank" class="term-link">
+                                    GO:0048678
+                                </a>
+                            </span>
+                            <span class="term-label">response to axon injury</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000107
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BZX2" data-a="GO:0048678" data-r="GO_REF:0000107" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is based on automated ortholog transfer. While UCK2 is expressed in neural tissues and has been studied in neuroblastoma, there is no direct evidence linking it to axon injury response. This may be an overly specific inference from expression data.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> No direct experimental evidence in the available literature for UCK2 role in axon injury response. The neuroblastoma study focuses on UCK2 role in pyrimidine metabolism and drug sensitivity, not axon injury. Would need access to the original ortholog study (GO_REF:0000107) to evaluate this claim properly.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071453" target="_blank" class="term-link">
+                                    GO:0071453
+                                </a>
+                            </span>
+                            <span class="term-label">cellular response to oxygen levels</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000107
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BZX2" data-a="GO:0071453" data-r="GO_REF:0000107" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation comes from automated ortholog transfer. There is no direct evidence in the available literature connecting UCK2 to oxygen level response. While UCK2 is overexpressed in various cancers which may involve hypoxic conditions, this is not the same as having a specific role in oxygen level response.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> No direct experimental evidence in available publications for UCK2 role in cellular response to oxygen levels. Would need to access the original reference and any supporting ortholog data to properly evaluate this annotation. The cancer association does not necessarily imply a direct oxygen response function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042802" target="_blank" class="term-link">
+                                    GO:0042802
+                                </a>
+                            </span>
+                            <span class="term-label">identical protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BZX2" data-a="GO:0042802" data-r="PMID:32296183" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This IPI annotation comes from the HuRI human reference interactome study, a large-scale yeast two-hybrid screen that detected UCK2 self-interaction. This is fully consistent with crystallographic data showing UCK2 functions as a homotetramer in its active form.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> UCK2 forms homotetramers, which necessarily involves identical protein binding. This is strongly supported by X-ray crystallographic structures (PDB entries 1UDW, 1UEI, 1UEJ, 1UFQ, etc.) showing the tetrameric assembly and the HuRI binary interaction data confirming self-interaction. The functional oligomerization state is well-established as essential for enzymatic activity.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                                        PMID:32296183
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Global insights into cellular organization and genome function require comprehensive understanding of the interactome networks that mediate genotype-phenotype relationships [HuRI interactome study showing UCK2-UCK2 interaction]</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/UCK2/UCK2-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBUNIT: Homotetramer</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044206" target="_blank" class="term-link">
+                                    GO:0044206
+                                </a>
+                            </span>
+                            <span class="term-label">UMP salvage</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BZX2" data-a="GO:0044206" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> UMP salvage is a core biological process function of UCK2. The enzyme catalyzes the first and only step in converting uridine to UMP in the salvage pathway.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a core biological process for UCK2, converting uridine to UMP in the salvage pathway. Well-supported by experimental data and pathway annotations. This is redundant with IDA annotations below but represents accurate function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11306702" target="_blank" class="term-link">
+                                        PMID:11306702
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">catalyze the phosphorylation of Urd and Cyd</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    Reactome:R-HSA-109903
+                                    
+                                </span>
+                                
+                                <div class="support-text">cytidine or uridine with ATP to form CMP or UMP and ADP</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044211" target="_blank" class="term-link">
+                                    GO:0044211
+                                </a>
+                            </span>
+                            <span class="term-label">CTP salvage</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BZX2" data-a="GO:0044211" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> CTP salvage is a core biological process function of UCK2. UCK2 catalyzes the first step (cytidine to CMP) in the three-step salvage pathway converting cytidine to CTP.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a core biological process for UCK2. The enzyme performs the first step in the salvage pathway that recycles cytidine into CTP. Well-supported by experimental evidence and pathway databases. Redundant with IDA annotation below but accurate.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11306702" target="_blank" class="term-link">
+                                        PMID:11306702
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">catalyze the phosphorylation of Urd and Cyd</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    Reactome:R-HSA-109903
+                                    
+                                </span>
+                                
+                                <div class="support-text">cytidine or uridine with ATP to form CMP or UMP and ADP</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004849" target="_blank" class="term-link">
+                                    GO:0004849
+                                </a>
+                            </span>
+                            <span class="term-label">uridine kinase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27239701" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27239701
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The pivotal role of uridine-cytidine kinases in pyrimidine m...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BZX2" data-a="GO:0004849" data-r="PMID:27239701" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental evidence for uridine kinase activity from neuroblastoma study. This IDA annotation provides strong experimental support for this core function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Excellent experimental support from direct assay. This is a core molecular function of UCK2. The IDA evidence code indicates direct biochemical demonstration of this activity.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27239701" target="_blank" class="term-link">
+                                        PMID:27239701
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Uridine-cytidine kinase (UCK) catalyzes the phosphorylation of uridine and cytidine as well as the pharmacological activation of several cytotoxic pyrimidine ribonucleoside analogues</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044206" target="_blank" class="term-link">
+                                    GO:0044206
+                                </a>
+                            </span>
+                            <span class="term-label">UMP salvage</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27239701" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27239701
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The pivotal role of uridine-cytidine kinases in pyrimidine m...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BZX2" data-a="GO:0044206" data-r="PMID:27239701" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental evidence for UMP salvage from neuroblastoma study showing UCK2 metabolizes uridine. Strong experimental support for this core biological process.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Excellent experimental support from direct functional assays in neuroblastoma cells. The study directly measured uridine metabolism via UCK2, demonstrating its role in UMP salvage. This is a core biological process for UCK2.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27239701" target="_blank" class="term-link">
+                                        PMID:27239701
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Transient and stable overexpression of UCK2 in neuroblastoma cells increased the metabolism of uridine and cytidine</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004849" target="_blank" class="term-link">
+                                    GO:0004849
+                                </a>
+                            </span>
+                            <span class="term-label">uridine kinase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11306702" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11306702
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Phosphorylation of uridine and cytidine nucleoside analogs b...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BZX2" data-a="GO:0004849" data-r="PMID:11306702" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental evidence from the original cloning and characterization study. This is the foundational paper demonstrating UCK2 uridine kinase activity.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the primary experimental characterization of UCK2 uridine kinase activity from the original cloning study. Direct biochemical demonstration of this core molecular function with recombinant enzyme.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11306702" target="_blank" class="term-link">
+                                        PMID:11306702
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The approximately 30-kDa proteins, named UCK1 and UCK2, were expressed in Escherichia coli and shown to catalyze the phosphorylation of Urd and Cyd. The enzymes did not phosphorylate deoxyribonucleosides or purine ribonucleosides</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043771" target="_blank" class="term-link">
+                                    GO:0043771
+                                </a>
+                            </span>
+                            <span class="term-label">cytidine kinase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11306702" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11306702
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Phosphorylation of uridine and cytidine nucleoside analogs b...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BZX2" data-a="GO:0043771" data-r="PMID:11306702" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental evidence from the original characterization study. This established cytidine kinase as one of the two core activities of UCK2.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Foundational experimental demonstration of UCK2 cytidine kinase activity from the original cloning and characterization study. Direct biochemical evidence with recombinant enzyme. This is a core molecular function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11306702" target="_blank" class="term-link">
+                                        PMID:11306702
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">shown to catalyze the phosphorylation of Urd and Cyd. The enzymes did not phosphorylate deoxyribonucleosides or purine ribonucleosides</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044206" target="_blank" class="term-link">
+                                    GO:0044206
+                                </a>
+                            </span>
+                            <span class="term-label">UMP salvage</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11306702" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11306702
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Phosphorylation of uridine and cytidine nucleoside analogs b...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BZX2" data-a="GO:0044206" data-r="PMID:11306702" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental evidence for UMP salvage function from the original characterization showing uridine phosphorylation. This demonstrated UCK2 role in the salvage pathway.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Excellent experimental support from the foundational study. Direct demonstration that UCK2 phosphorylates uridine to UMP, which is the salvage pathway for UMP biosynthesis. This is a core biological process.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11306702" target="_blank" class="term-link">
+                                        PMID:11306702
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">catalyze the phosphorylation of Urd and Cyd. The enzymes did not phosphorylate deoxyribonucleosides or purine ribonucleosides</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044211" target="_blank" class="term-link">
+                                    GO:0044211
+                                </a>
+                            </span>
+                            <span class="term-label">CTP salvage</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11306702" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11306702
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Phosphorylation of uridine and cytidine nucleoside analogs b...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BZX2" data-a="GO:0044211" data-r="PMID:11306702" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental evidence for CTP salvage from the original study showing cytidine phosphorylation. UCK2 performs the first step in the CTP salvage pathway.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Strong experimental support from the foundational characterization study. Direct demonstration that UCK2 phosphorylates cytidine to CMP, the first step in CTP salvage pathway. This is a core biological process.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11306702" target="_blank" class="term-link">
+                                        PMID:11306702
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">catalyze the phosphorylation of Urd and Cyd</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            Reactome:R-HSA-109903
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BZX2" data-a="GO:0005829" data-r="Reactome:R-HSA-109903" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TAS (Traceable Author Statement) annotation based on Reactome pathway annotation. Reactome describes UCK2 as cytosolic. This is consistent with experimental localization data.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Cytosol localization is well-supported by Reactome annotation and experimental evidence. While cytosol is a more specific term than cytoplasm (GO:0005737), both are appropriate. The TAS evidence from Reactome is reliable for subcellular localization.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    Reactome:R-HSA-109903
+                                    
+                                </span>
+                                
+                                <div class="support-text">Cytosolic uridine-cytidine kinase 2 (UCK2) catalyzes the reactions of cytidine or uridine with ATP to form CMP or UMP and ADP</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27239701" target="_blank" class="term-link">
+                                        PMID:27239701
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Subcellular localization studies showed that UCK1-GFP and UCK2-GFP were localized in the cell nucleus and cytosol, respectively</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005525" target="_blank" class="term-link">
+                                    GO:0005525
+                                </a>
+                            </span>
+                            <span class="term-label">GTP binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11306702" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11306702
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Phosphorylation of uridine and cytidine nucleoside analogs b...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BZX2" data-a="GO:0005525" data-r="PMID:11306702" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> UCK2 can use GTP as an alternative phosphate donor in addition to ATP. This is documented in the original characterization study and in UniProt. While ATP is the primary phosphate donor, GTP binding represents an additional molecular function that provides metabolic flexibility.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This represents a documented molecular function that is not currently annotated. The ability to use GTP as a phosphate donor is explicitly stated in UniProt and the original characterization paper. While less prominent than ATP binding, it represents a genuine alternative cofactor usage that should be annotated.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/UCK2/UCK2-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Can use ATP or GTP as a phosphate donor</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11306702" target="_blank" class="term-link">
+                                        PMID:11306702
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">shown to catalyze the phosphorylation of Urd and Cyd</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>ATP-dependent phosphorylation of uridine to UMP in pyrimidine salvage pathway</h3>
+                <span class="vote-buttons" data-g="Q9BZX2" data-a="FUNCTION: ATP-dependent phosphorylation of uridine to UMP in..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004849" target="_blank" class="term-link">
+                            uridine kinase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044206" target="_blank" class="term-link">
+                                UMP salvage
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Substrates:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:16704" target="_blank" class="term-link">
+                                uridine
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:30616" target="_blank" class="term-link">
+                                ATP(4-)
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11306702" target="_blank" class="term-link">
+                                PMID:11306702
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">UCK2 was expressed in Escherichia coli and shown to catalyze the phosphorylation of Urd and Cyd. The enzymes did not phosphorylate deoxyribonucleosides or purine ribonucleosides</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27239701" target="_blank" class="term-link">
+                                PMID:27239701
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Uridine-cytidine kinase (UCK) catalyzes the phosphorylation of uridine and cytidine as well as the pharmacological activation of several cytotoxic pyrimidine ribonucleoside analogues</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            Reactome:R-HSA-109903
+                            
+                        </span>
+                        
+                        <div class="finding-text">Cytosolic uridine-cytidine kinase 2 (UCK2) catalyzes the reactions of cytidine or uridine with ATP to form CMP or UMP and ADP</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>ATP-dependent phosphorylation of cytidine to CMP in pyrimidine salvage pathway</h3>
+                <span class="vote-buttons" data-g="Q9BZX2" data-a="FUNCTION: ATP-dependent phosphorylation of cytidine to CMP i..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043771" target="_blank" class="term-link">
+                            cytidine kinase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044211" target="_blank" class="term-link">
+                                CTP salvage
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Substrates:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:17562" target="_blank" class="term-link">
+                                cytidine
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:30616" target="_blank" class="term-link">
+                                ATP(4-)
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11306702" target="_blank" class="term-link">
+                                PMID:11306702
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">shown to catalyze the phosphorylation of Urd and Cyd. The enzymes did not phosphorylate deoxyribonucleosides or purine ribonucleosides</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27239701" target="_blank" class="term-link">
+                                PMID:27239701
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Transient and stable overexpression of UCK2 in neuroblastoma cells increased the metabolism of uridine and cytidine</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            Reactome:R-HSA-109903
+                            
+                        </span>
+                        
+                        <div class="finding-text">Cytosolic uridine-cytidine kinase 2 (UCK2) catalyzes the reactions of cytidine or uridine with ATP to form CMP or UMP and ADP</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000107.md" target="_blank" class="term-link">
+                            GO_REF:0000107
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Automatic transfer of experimentally verified manual GO annotation data to orthologs using Ensembl Compara.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000108.md" target="_blank" class="term-link">
+                            GO_REF:0000108
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Automatic assignment of GO terms using logical inference, based on on inter-ontology links.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11306702" target="_blank" class="term-link">
+                            PMID:11306702
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Phosphorylation of uridine and cytidine nucleoside analogs by two human uridine-cytidine kinases.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/27239701" target="_blank" class="term-link">
+                            PMID:27239701
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The pivotal role of uridine-cytidine kinases in pyrimidine metabolism and activation of cytotoxic nucleoside analogues in neuroblastoma.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                            PMID:32296183
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A reference map of the human binary protein interactome.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        Reactome:R-HSA-109903
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">cytidine or uridine + ATP =&gt; CMP or UMP + ADP [UCK2]</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Perplexity Lite</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(UCK2-deep-research-perplexity-lite.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9BZX2" data-a="DOC: Deep Research Perplexity Lite" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: perplexity<br />
+model: sonar-pro<br />
+cached: false<br />
+start_time: '2025-11-15T18:18:29.512838'<br />
+end_time: '2025-11-15T18:18:43.409617'<br />
+duration_seconds: 13.9<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    reasoning_effort: low<br />
+    search_domain_filter: []<br />
+    return_citations: true<br />
+    temperature: 0.0<br />
+citation_count: 11</p>
+<hr />
+<h2 id="question">Question</h2>
+<p>Research the UCK2 (UCK2) gene in human, focusing on its molecular function, biological processes, and cellular localization. Include information about protein domains, known interactions, and any disease associations.</p>
+<h2 id="output">Output</h2>
+<p><strong>Uridine-Cytidine Kinase 2 (UCK2)</strong> is a human gene encoding a key enzyme in the pyrimidine salvage pathway, with important roles in nucleotide metabolism, cancer biology, and cellular signaling.</p>
+<hr />
+<h3 id="1-key-concepts-and-definitions">1. Key Concepts and Definitions</h3>
+<ul>
+<li><strong>Molecular Function:</strong><br />
+  UCK2 encodes a <strong>pyrimidine ribonucleoside kinase</strong> that catalyzes the phosphorylation of <strong>uridine and cytidine</strong> to <strong>uridine monophosphate (UMP)</strong> and <strong>cytidine monophosphate (CMP)</strong>, respectively, using ATP or GTP as phosphate donors[1][5][8][10].  </li>
+<li><strong>Enzyme Commission (EC) number:</strong> 2.7.1.48[1][5].</li>
+<li>
+<p><strong>Gene Ontology (GO) annotations:</strong> Cytidine kinase activity, uridine kinase activity, and identical protein binding activity[11].</p>
+</li>
+<li>
+<p><strong>Biological Processes:</strong><br />
+  UCK2 is central to the <strong>pyrimidine salvage pathway</strong>, which recycles nucleosides for RNA and DNA synthesis[1][2][3][8].  </p>
+</li>
+<li>Involved in <strong>CTP salvage</strong> and <strong>UMP salvage</strong>[11].</li>
+<li>
+<p>Plays a role in <strong>ribosomal biogenesis</strong> and cellular response to nucleolar stress[2][3].</p>
+</li>
+<li>
+<p><strong>Cellular Localization:</strong><br />
+  UCK2 is primarily <strong>cytoplasmic</strong>[5].  </p>
+</li>
+<li>Expression is <strong>tissue-specific</strong>: highly expressed in <strong>placenta</strong> and <strong>various cancers</strong>, but not in most normal adult tissues[2][3][7].</li>
+</ul>
+<hr />
+<h3 id="2-protein-domains-and-structure">2. Protein Domains and Structure</h3>
+<ul>
+<li><strong>Structural Features:</strong><br />
+  UCK2 is a <strong>tetramer</strong> (~112 kDa total)[3].  </li>
+<li>Each monomer contains:<ul>
+<li>A <strong>five-stranded parallel β-sheet</strong> (core)</li>
+<li><strong>Five α-helices</strong></li>
+<li>A <strong>large β-hairpin loop</strong> forming a deep substrate binding pocket[2][3]</li>
+</ul>
+</li>
+<li><strong>Active site residues:</strong>  <ul>
+<li><strong>Asp-62</strong>: Catalytic activity, deprotonates the 5’-hydroxyl group of the substrate[3].</li>
+<li><strong>His117 and Tyr112</strong>: Determine nucleoside binding specificity via hydrogen bonds[2].</li>
+</ul>
+</li>
+<li><strong>Substrate specificity:</strong>  <ul>
+<li>UCK2 is specific for <strong>ribonucleosides</strong> (uridine, cytidine), not 2’-deoxyribonucleosides[3].</li>
+</ul>
+</li>
+</ul>
+<hr />
+<h3 id="3-known-interactions">3. Known Interactions</h3>
+<ul>
+<li><strong>Protein-Protein Interactions:</strong>  </li>
+<li>UCK2 interacts with <strong>EGFR (Epidermal Growth Factor Receptor)</strong>, blocking EGF-induced EGFR ubiquitination and degradation, thereby activating the <strong>EGFR-AKT signaling pathway</strong>[2].</li>
+<li>
+<p>UCK2 inhibition leads to <strong>nucleolar stress</strong>, releasing ribosomal proteins that bind <strong>MDM2</strong>, blocking p53 ubiquitination and activating p53-mediated apoptosis[2][3].</p>
+</li>
+<li>
+<p><strong>Pathways:</strong>  </p>
+</li>
+<li><strong>Nucleotide salvage</strong></li>
+<li><strong>Fluoropyrimidine activity</strong> (activation of nucleoside analog drugs)[1][3]</li>
+</ul>
+<hr />
+<h3 id="4-disease-associations">4. Disease Associations</h3>
+<ul>
+<li><strong>Cancer:</strong>  </li>
+<li><strong>Overexpression</strong> of UCK2 is observed in multiple cancers, including:<ul>
+<li><strong>Lung cancer</strong> (especially small cell lung carcinoma)[1][4]</li>
+<li><strong>Hepatocellular carcinoma (HCC)</strong>[1][2][4]</li>
+<li><strong>Esophageal, liver, pancreatic, gastric, renal, nasopharyngeal, colorectal cancers, and pediatric T-cell acute lymphatic leukemia</strong>[4]</li>
+</ul>
+</li>
+<li><strong>Prognostic marker:</strong> High UCK2 expression correlates with <strong>poor prognosis</strong> and <strong>reduced survival rates</strong> in several cancers[4].</li>
+<li><strong>Functional role:</strong> Promotes <strong>cell proliferation</strong>, <strong>migration</strong>, and <strong>metastasis</strong> via activation of oncogenic pathways (e.g., <strong>STAT3</strong>, <strong>MMP2</strong>, <strong>MMP9</strong>)[3][4].</li>
+<li>
+<p><strong>Therapeutic target:</strong> UCK2 is being explored as a target for anti-cancer therapies, either by inhibiting its activity or exploiting its role in activating nucleoside analog drugs[2][3].</p>
+</li>
+<li>
+<p><strong>Other Associations:</strong>  </p>
+</li>
+<li>An allele of UCK2 may play a role in <strong>nonhumoral immunity</strong> to <em>Haemophilus influenzae</em> type B[3].</li>
+</ul>
+<hr />
+<h3 id="5-recent-developments-and-latest-research-20222024">5. Recent Developments and Latest Research (2022–2024)</h3>
+<ul>
+<li><strong>Non-metabolic roles:</strong>  </li>
+<li>UCK2 has <strong>non-metabolic functions</strong> in tumor progression, such as interacting with EGFR and modulating signaling pathways[2].</li>
+<li>
+<p>UCK2 can generate <strong>circular RNAs</strong> with potential tumor-suppressive roles[2].</p>
+</li>
+<li>
+<p><strong>Biomarker potential:</strong>  </p>
+</li>
+<li>
+<p>UCK2 is being investigated as an <strong>early diagnostic and prognostic biomarker</strong> for lung cancer and other malignancies[4].</p>
+</li>
+<li>
+<p><strong>Therapeutic implications:</strong>  </p>
+</li>
+<li>Inhibition of UCK2 can induce <strong>nucleolar stress</strong> and <strong>p53-mediated apoptosis</strong> in cancer cells, suggesting a strategy for cancer therapy[2][3].</li>
+</ul>
+<hr />
+<h3 id="6-relevant-statistics-and-data">6. Relevant Statistics and Data</h3>
+<ul>
+<li><strong>Sequence identity:</strong>  </li>
+<li>UCK2 shares <strong>72% sequence identity</strong> with UCK1[2][3].</li>
+<li><strong>Catalytic efficiency:</strong> UCK2 is <strong>15–20 times higher</strong> than UCK1[2].</li>
+<li><strong>Genomic location:</strong>  </li>
+<li>Chromosome <strong>1q22-23.2</strong> (positions 165,827,586–165,911,618, forward strand)[4][9].</li>
+</ul>
+<hr />
+<h3 id="7-authoritative-sources-and-urls">7. Authoritative Sources and URLs</h3>
+<ul>
+<li><a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=UCK2">GeneCards UCK2 summary (2024)</a>  </li>
+<li><a href="https://www.frontiersin.org/journals/oncology/articles/10.3389/fonc.2022.904887/full">Frontiers in Oncology review (2022)</a>  </li>
+<li><a href="https://en.wikipedia.org/wiki/UCK2">Wikipedia UCK2 (2024)</a>  </li>
+<li><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6726693/">PMC: UCK2 as a biomarker (2019)</a>  </li>
+<li><a href="https://www.uniprot.org/uniprotkb/Q9BZX2/entry">UniProt UCK2 entry (2024)</a>  </li>
+<li><a href="https://www.proteinatlas.org/ENSG00000143179-UCK2">Human Protein Atlas UCK2</a>  </li>
+<li><a href="https://www.ensembl.org/id/ENSG00000143179.16">Ensembl UCK2 gene summary</a>  </li>
+</ul>
+<hr />
+<p><strong>Summary:</strong><br />
+UCK2 is a cytoplasmic kinase essential for pyrimidine salvage, with a unique structure and high catalytic efficiency. It is overexpressed in many cancers, where it promotes tumor progression through both metabolic and non-metabolic mechanisms, making it a promising biomarker and therapeutic target[1][2][3][4][5].</p>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>https://www.genecards.org/cgi-bin/carddisp.pl?gene=UCK2</li>
+<li>https://www.frontiersin.org/journals/oncology/articles/10.3389/fonc.2022.904887/full</li>
+<li>https://en.wikipedia.org/wiki/UCK2</li>
+<li>https://pmc.ncbi.nlm.nih.gov/articles/PMC6726693/</li>
+<li>https://www.uniprot.org/uniprotkb/Q9BZX2/entry</li>
+<li>https://www.proteinatlas.org/ENSG00000143179-UCK2</li>
+<li>https://www.proteinatlas.org/ENSG00000143179-UCK2/tissue</li>
+<li>https://maayanlab.cloud/Harmonizome/gene/UCK2</li>
+<li>https://www.ensembl.org/id/ENSG00000143179.16</li>
+<li>http://biogps.org/gene/7371/</li>
+<li>https://www.alliancegenome.org/gene/HGNC:12562</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q9BZX2
+gene_symbol: UCK2
+product_type: PROTEIN
+status: IN_PROGRESS
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &#39;Uridine-cytidine kinase 2 (UCK2) is a cytosolic pyrimidine ribonucleoside
+  kinase that catalyzes the phosphorylation of uridine and cytidine to their respective
+  monophosphates (UMP and CMP) using ATP or GTP as phosphate donors. UCK2 is a key
+  enzyme in the pyrimidine salvage pathway, essential for nucleotide metabolism and
+  RNA/DNA synthesis. The enzyme functions as a homotetramer and exhibits substrate
+  specificity for ribonucleosides, not deoxyribonucleosides. UCK2 also activates
+  cytotoxic nucleoside analogs used in cancer chemotherapy. Expression is tissue-specific,
+  with high levels in placenta and various cancers.&#39;
+existing_annotations:
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: IBA annotation correctly places UCK2 in the cytoplasm. Multiple lines
+      of evidence confirm cytoplasmic localization, including Reactome annotation
+      as cytosolic enzyme and experimental data showing cytosol localization in transfected
+      cells.
+    action: ACCEPT
+    reason: Consistent with experimental evidence from multiple sources confirming
+      cytoplasmic/cytosolic localization. UniProt CC line states function occurs in
+      cytoplasm, Reactome describes enzyme as cytosolic, and direct fluorescence microscopy
+      shows cytosol localization.
+    supported_by:
+    - reference_id: PMID:27239701
+      supporting_text: Subcellular localization studies showed that UCK1-GFP and UCK2-GFP
+        were localized in the cell nucleus and cytosol, respectively.
+    - reference_id: Reactome:R-HSA-109903
+      supporting_text: Cytosolic uridine-cytidine kinase 2 (UCK2) catalyzes the reactions
+        of cytidine or uridine with ATP to form CMP or UMP and ADP
+- term:
+    id: GO:0004849
+    label: uridine kinase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: IBA annotation for uridine kinase activity is well-supported. UCK2 catalyzes
+      phosphorylation of uridine to UMP using ATP. This is one of the two core catalytic
+      activities of UCK2.
+    action: ACCEPT
+    reason: This represents a core molecular function of UCK2, supported by direct
+      experimental evidence and multiple independent studies. UniProt catalytic activity
+      annotation confirms this function with EC 2.7.1.48.
+    supported_by:
+    - reference_id: PMID:11306702
+      supporting_text: The enzymes did not phosphorylate deoxyribonucleosides or purine
+        ribonucleosides. UCK1 mRNA was detected as two isoforms... The enzymes phosphorylated
+        several of the analogs, such as 6-azauridine, 5-fluorouridine
+    - reference_id: PMID:27239701
+      supporting_text: Uridine-cytidine kinase (UCK) catalyzes the phosphorylation
+        of uridine and cytidine
+- term:
+    id: GO:0009224
+    label: CMP biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000108
+  review:
+    summary: IEA annotation for CMP biosynthetic process based on logical inference
+      from cytidine kinase activity. While technically correct (UCK2 does synthesize
+      CMP from cytidine), this term is overly general as it does not distinguish
+      between de novo and salvage pathways. The more specific term GO:0044211 (CTP
+      salvage) better captures UCK2&#39;s specific role in the salvage pathway.
+    action: MODIFY
+    reason: The term is too general and does not accurately reflect that UCK2 functions
+      specifically in the salvage pathway, not de novo biosynthesis. UCK2 catalyzes
+      cytidine + ATP to CMP + ADP, which is the first step of CTP salvage. The annotation
+      should use GO:0044211 (CTP salvage) which is already present with IDA evidence.
+    proposed_replacement_terms:
+    - id: GO:0044211
+      label: CTP salvage
+    supported_by:
+    - reference_id: PMID:11306702
+      supporting_text: shown to catalyze the phosphorylation of Urd and Cyd
+    - reference_id: file:human/UCK2/UCK2-uniprot.txt
+      supporting_text: &#39;Pyrimidine metabolism; CTP biosynthesis via salvage pathway;
+        CTP from cytidine: step 1/3&#39;
+- term:
+    id: GO:0000166
+    label: nucleotide binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: This is a very general molecular function term. While UCK2 does bind
+      nucleotides (ATP/GTP as phosphate donors, and uridine/cytidine substrates),
+      this annotation is too non-specific to be informative. The more specific ATP
+      binding term (GO:0005524) is already present.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: This term is too general and does not provide meaningful information about
+      UCK2 specific function. The GO:0005524 (ATP binding) annotation is more informative
+      and specific. Nucleotide binding is implied by the kinase activity annotations.
+    supported_by:
+    - reference_id: PMID:11306702
+      supporting_text: named UCK1 and UCK2, were expressed in Escherichia coli and
+        shown to catalyze the phosphorylation of Urd and Cyd
+- term:
+    id: GO:0004849
+    label: uridine kinase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: Duplicate annotation of uridine kinase activity with different evidence
+      code. This IEA annotation is redundant with the IBA and IDA annotations for
+      the same term.
+    action: ACCEPT
+    reason: While redundant, computational annotations can coexist with experimental
+      ones. The annotation is correct and represents a core function of UCK2.
+    supported_by:
+    - reference_id: PMID:11306702
+      supporting_text: The enzymes did not phosphorylate deoxyribonucleosides or purine
+        ribonucleosides... catalyze the phosphorylation of Urd and Cyd
+- term:
+    id: GO:0005524
+    label: ATP binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: UCK2 uses ATP (or GTP) as a phosphate donor in its kinase reactions.
+      Crystal structures show ATP binding sites. This is an essential component of
+      UCK2 catalytic mechanism.
+    action: ACCEPT
+    reason: ATP binding is a core molecular function required for UCK2 kinase activity.
+      Supported by structural data showing ATP binding sites and biochemical evidence
+      that ATP serves as phosphate donor.
+    supported_by:
+    - reference_id: Reactome:R-HSA-109903
+      supporting_text: cytidine or uridine with ATP to form CMP or UMP and ADP
+- term:
+    id: GO:0016301
+    label: kinase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: General kinase activity term that is less specific than the actual uridine
+      kinase and cytidine kinase activities already annotated. While technically correct,
+      it provides little additional information.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: This is a parent term of the more specific uridine kinase and cytidine
+      kinase activities. The specific terms (GO:0004849, GO:0043771) provide more
+      informative annotations. General parent terms like this are often automatically
+      inferred but do not add functional specificity.
+    supported_by:
+    - reference_id: PMID:11306702
+      supporting_text: shown to catalyze the phosphorylation of Urd and Cyd
+- term:
+    id: GO:0016740
+    label: transferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: Extremely general molecular function term. Kinases are indeed transferases
+      (transferring phosphate groups), but this term is far too broad to be informative
+      about UCK2 specific function.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: This is a very high-level parent term that provides minimal functional
+      information. The specific kinase activity terms are far more informative. Such
+      general terms are typically auto-generated but do not contribute meaningful
+      biological insight.
+    supported_by:
+    - reference_id: PMID:11306702
+      supporting_text: catalyze the phosphorylation of Urd and Cyd
+- term:
+    id: GO:0043771
+    label: cytidine kinase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: Cytidine kinase activity is one of the two core catalytic activities
+      of UCK2, converting cytidine to CMP. This is well-documented experimentally.
+    action: ACCEPT
+    reason: This represents a core molecular function of UCK2, equally important as
+      its uridine kinase activity. Both activities are confirmed by direct biochemical
+      assays and structural studies.
+    supported_by:
+    - reference_id: PMID:11306702
+      supporting_text: catalyze the phosphorylation of Urd and Cyd. The enzymes did
+        not phosphorylate deoxyribonucleosides or purine ribonucleosides
+- term:
+    id: GO:0007631
+    label: feeding behavior
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  review:
+    summary: This annotation appears to be a computational transfer from orthologs
+      and is likely spurious for UCK2. There is no literature evidence connecting
+      UCK2 to feeding behavior, and this seems implausible for a cytosolic nucleoside
+      kinase involved in nucleotide metabolism.
+    action: REMOVE
+    reason: No supporting evidence for UCK2 involvement in feeding behavior. This
+      appears to be an incorrect orthology-based inference. The deep research and
+      all publications focus on nucleotide metabolism, cancer biology, and drug activation,
+      with no mention of feeding behavior. Likely a false positive from automated
+      annotation transfer.
+- term:
+    id: GO:0048678
+    label: response to axon injury
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  review:
+    summary: This annotation is based on automated ortholog transfer. While UCK2 is
+      expressed in neural tissues and has been studied in neuroblastoma, there is
+      no direct evidence linking it to axon injury response. This may be an overly
+      specific inference from expression data.
+    action: UNDECIDED
+    reason: No direct experimental evidence in the available literature for UCK2 role
+      in axon injury response. The neuroblastoma study focuses on UCK2 role in pyrimidine
+      metabolism and drug sensitivity, not axon injury. Would need access to the original
+      ortholog study (GO_REF:0000107) to evaluate this claim properly.
+- term:
+    id: GO:0071453
+    label: cellular response to oxygen levels
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  review:
+    summary: This annotation comes from automated ortholog transfer. There is no direct
+      evidence in the available literature connecting UCK2 to oxygen level response.
+      While UCK2 is overexpressed in various cancers which may involve hypoxic conditions,
+      this is not the same as having a specific role in oxygen level response.
+    action: UNDECIDED
+    reason: No direct experimental evidence in available publications for UCK2 role
+      in cellular response to oxygen levels. Would need to access the original reference
+      and any supporting ortholog data to properly evaluate this annotation. The cancer
+      association does not necessarily imply a direct oxygen response function.
+- term:
+    id: GO:0042802
+    label: identical protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  review:
+    summary: This IPI annotation comes from the HuRI human reference interactome
+      study, a large-scale yeast two-hybrid screen that detected UCK2 self-interaction.
+      This is fully consistent with crystallographic data showing UCK2 functions
+      as a homotetramer in its active form.
+    action: ACCEPT
+    reason: UCK2 forms homotetramers, which necessarily involves identical protein
+      binding. This is strongly supported by X-ray crystallographic structures (PDB
+      entries 1UDW, 1UEI, 1UEJ, 1UFQ, etc.) showing the tetrameric assembly and the
+      HuRI binary interaction data confirming self-interaction. The functional oligomerization
+      state is well-established as essential for enzymatic activity.
+    supported_by:
+    - reference_id: PMID:32296183
+      supporting_text: Global insights into cellular organization and genome function
+        require comprehensive understanding of the interactome networks that mediate
+        genotype-phenotype relationships [HuRI interactome study showing UCK2-UCK2
+        interaction]
+    - reference_id: file:human/UCK2/UCK2-uniprot.txt
+      supporting_text: &#39;SUBUNIT: Homotetramer&#39;
+    additional_reference_ids:
+    - PMID:15130468
+    - PMID:15735337
+- term:
+    id: GO:0044206
+    label: UMP salvage
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: UMP salvage is a core biological process function of UCK2. The enzyme
+      catalyzes the first and only step in converting uridine to UMP in the salvage
+      pathway.
+    action: ACCEPT
+    reason: This is a core biological process for UCK2, converting uridine to UMP
+      in the salvage pathway. Well-supported by experimental data and pathway annotations.
+      This is redundant with IDA annotations below but represents accurate function.
+    supported_by:
+    - reference_id: PMID:11306702
+      supporting_text: catalyze the phosphorylation of Urd and Cyd
+    - reference_id: Reactome:R-HSA-109903
+      supporting_text: cytidine or uridine with ATP to form CMP or UMP and ADP
+- term:
+    id: GO:0044211
+    label: CTP salvage
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: CTP salvage is a core biological process function of UCK2. UCK2 catalyzes
+      the first step (cytidine to CMP) in the three-step salvage pathway converting
+      cytidine to CTP.
+    action: ACCEPT
+    reason: This is a core biological process for UCK2. The enzyme performs the first
+      step in the salvage pathway that recycles cytidine into CTP. Well-supported
+      by experimental evidence and pathway databases. Redundant with IDA annotation
+      below but accurate.
+    supported_by:
+    - reference_id: PMID:11306702
+      supporting_text: catalyze the phosphorylation of Urd and Cyd
+    - reference_id: Reactome:R-HSA-109903
+      supporting_text: cytidine or uridine with ATP to form CMP or UMP and ADP
+- term:
+    id: GO:0004849
+    label: uridine kinase activity
+  evidence_type: IDA
+  original_reference_id: PMID:27239701
+  review:
+    summary: Direct experimental evidence for uridine kinase activity from neuroblastoma
+      study. This IDA annotation provides strong experimental support for this core
+      function.
+    action: ACCEPT
+    reason: Excellent experimental support from direct assay. This is a core molecular
+      function of UCK2. The IDA evidence code indicates direct biochemical demonstration
+      of this activity.
+    supported_by:
+    - reference_id: PMID:27239701
+      supporting_text: Uridine-cytidine kinase (UCK) catalyzes the phosphorylation
+        of uridine and cytidine as well as the pharmacological activation of several
+        cytotoxic pyrimidine ribonucleoside analogues
+- term:
+    id: GO:0044206
+    label: UMP salvage
+  evidence_type: IDA
+  original_reference_id: PMID:27239701
+  review:
+    summary: Direct experimental evidence for UMP salvage from neuroblastoma study
+      showing UCK2 metabolizes uridine. Strong experimental support for this core
+      biological process.
+    action: ACCEPT
+    reason: Excellent experimental support from direct functional assays in neuroblastoma
+      cells. The study directly measured uridine metabolism via UCK2, demonstrating
+      its role in UMP salvage. This is a core biological process for UCK2.
+    supported_by:
+    - reference_id: PMID:27239701
+      supporting_text: Transient and stable overexpression of UCK2 in neuroblastoma
+        cells increased the metabolism of uridine and cytidine
+- term:
+    id: GO:0004849
+    label: uridine kinase activity
+  evidence_type: IDA
+  original_reference_id: PMID:11306702
+  review:
+    summary: Direct experimental evidence from the original cloning and characterization
+      study. This is the foundational paper demonstrating UCK2 uridine kinase activity.
+    action: ACCEPT
+    reason: This is the primary experimental characterization of UCK2 uridine kinase
+      activity from the original cloning study. Direct biochemical demonstration of
+      this core molecular function with recombinant enzyme.
+    supported_by:
+    - reference_id: PMID:11306702
+      supporting_text: The approximately 30-kDa proteins, named UCK1 and UCK2, were
+        expressed in Escherichia coli and shown to catalyze the phosphorylation of
+        Urd and Cyd. The enzymes did not phosphorylate deoxyribonucleosides or purine
+        ribonucleosides
+- term:
+    id: GO:0043771
+    label: cytidine kinase activity
+  evidence_type: IDA
+  original_reference_id: PMID:11306702
+  review:
+    summary: Direct experimental evidence from the original characterization study.
+      This established cytidine kinase as one of the two core activities of UCK2.
+    action: ACCEPT
+    reason: Foundational experimental demonstration of UCK2 cytidine kinase activity
+      from the original cloning and characterization study. Direct biochemical evidence
+      with recombinant enzyme. This is a core molecular function.
+    supported_by:
+    - reference_id: PMID:11306702
+      supporting_text: shown to catalyze the phosphorylation of Urd and Cyd. The enzymes
+        did not phosphorylate deoxyribonucleosides or purine ribonucleosides
+- term:
+    id: GO:0044206
+    label: UMP salvage
+  evidence_type: IDA
+  original_reference_id: PMID:11306702
+  review:
+    summary: Direct experimental evidence for UMP salvage function from the original
+      characterization showing uridine phosphorylation. This demonstrated UCK2 role
+      in the salvage pathway.
+    action: ACCEPT
+    reason: Excellent experimental support from the foundational study. Direct demonstration
+      that UCK2 phosphorylates uridine to UMP, which is the salvage pathway for UMP
+      biosynthesis. This is a core biological process.
+    supported_by:
+    - reference_id: PMID:11306702
+      supporting_text: catalyze the phosphorylation of Urd and Cyd. The enzymes did
+        not phosphorylate deoxyribonucleosides or purine ribonucleosides
+- term:
+    id: GO:0044211
+    label: CTP salvage
+  evidence_type: IDA
+  original_reference_id: PMID:11306702
+  review:
+    summary: Direct experimental evidence for CTP salvage from the original study
+      showing cytidine phosphorylation. UCK2 performs the first step in the CTP salvage
+      pathway.
+    action: ACCEPT
+    reason: Strong experimental support from the foundational characterization study.
+      Direct demonstration that UCK2 phosphorylates cytidine to CMP, the first step
+      in CTP salvage pathway. This is a core biological process.
+    supported_by:
+    - reference_id: PMID:11306702
+      supporting_text: catalyze the phosphorylation of Urd and Cyd
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-109903
+  review:
+    summary: TAS (Traceable Author Statement) annotation based on Reactome pathway
+      annotation. Reactome describes UCK2 as cytosolic. This is consistent with experimental
+      localization data.
+    action: ACCEPT
+    reason: Cytosol localization is well-supported by Reactome annotation and experimental
+      evidence. While cytosol is a more specific term than cytoplasm (GO:0005737),
+      both are appropriate. The TAS evidence from Reactome is reliable for subcellular
+      localization.
+    supported_by:
+    - reference_id: Reactome:R-HSA-109903
+      supporting_text: Cytosolic uridine-cytidine kinase 2 (UCK2) catalyzes the reactions
+        of cytidine or uridine with ATP to form CMP or UMP and ADP
+    - reference_id: PMID:27239701
+      supporting_text: Subcellular localization studies showed that UCK1-GFP and UCK2-GFP
+        were localized in the cell nucleus and cytosol, respectively
+- term:
+    id: GO:0005525
+    label: GTP binding
+  evidence_type: IDA
+  original_reference_id: PMID:11306702
+  review:
+    summary: UCK2 can use GTP as an alternative phosphate donor in addition to ATP.
+      This is documented in the original characterization study and in UniProt. While
+      ATP is the primary phosphate donor, GTP binding represents an additional molecular
+      function that provides metabolic flexibility.
+    action: NEW
+    reason: This represents a documented molecular function that is not currently
+      annotated. The ability to use GTP as a phosphate donor is explicitly stated
+      in UniProt and the original characterization paper. While less prominent than
+      ATP binding, it represents a genuine alternative cofactor usage that should
+      be annotated.
+    supported_by:
+    - reference_id: file:human/UCK2/UCK2-uniprot.txt
+      supporting_text: Can use ATP or GTP as a phosphate donor
+    - reference_id: PMID:11306702
+      supporting_text: shown to catalyze the phosphorylation of Urd and Cyd
+core_functions:
+- description: ATP-dependent phosphorylation of uridine to UMP in pyrimidine salvage pathway
+  molecular_function:
+    id: GO:0004849
+    label: uridine kinase activity
+  directly_involved_in:
+  - id: GO:0044206
+    label: UMP salvage
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  substrates:
+  - id: CHEBI:16704
+    label: uridine
+  - id: CHEBI:30616
+    label: ATP(4-)
+  supported_by:
+  - reference_id: PMID:11306702
+    supporting_text: UCK2 was expressed in Escherichia coli and shown to catalyze
+      the phosphorylation of Urd and Cyd. The enzymes did not phosphorylate deoxyribonucleosides
+      or purine ribonucleosides
+  - reference_id: PMID:27239701
+    supporting_text: Uridine-cytidine kinase (UCK) catalyzes the phosphorylation
+      of uridine and cytidine as well as the pharmacological activation of several
+      cytotoxic pyrimidine ribonucleoside analogues
+  - reference_id: Reactome:R-HSA-109903
+    supporting_text: Cytosolic uridine-cytidine kinase 2 (UCK2) catalyzes the reactions
+      of cytidine or uridine with ATP to form CMP or UMP and ADP
+- description: ATP-dependent phosphorylation of cytidine to CMP in pyrimidine salvage pathway
+  molecular_function:
+    id: GO:0043771
+    label: cytidine kinase activity
+  directly_involved_in:
+  - id: GO:0044211
+    label: CTP salvage
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  substrates:
+  - id: CHEBI:17562
+    label: cytidine
+  - id: CHEBI:30616
+    label: ATP(4-)
+  supported_by:
+  - reference_id: PMID:11306702
+    supporting_text: shown to catalyze the phosphorylation of Urd and Cyd. The enzymes
+      did not phosphorylate deoxyribonucleosides or purine ribonucleosides
+  - reference_id: PMID:27239701
+    supporting_text: Transient and stable overexpression of UCK2 in neuroblastoma
+      cells increased the metabolism of uridine and cytidine
+  - reference_id: Reactome:R-HSA-109903
+    supporting_text: Cytosolic uridine-cytidine kinase 2 (UCK2) catalyzes the reactions
+      of cytidine or uridine with ATP to form CMP or UMP and ADP
+references:
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+- id: GO_REF:0000107
+  title: Automatic transfer of experimentally verified manual GO annotation data to
+    orthologs using Ensembl Compara.
+  findings: []
+- id: GO_REF:0000108
+  title: Automatic assignment of GO terms using logical inference, based on on inter-ontology
+    links.
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods.
+  findings: []
+- id: PMID:11306702
+  title: Phosphorylation of uridine and cytidine nucleoside analogs by two human uridine-cytidine
+    kinases.
+  findings: []
+- id: PMID:27239701
+  title: The pivotal role of uridine-cytidine kinases in pyrimidine metabolism and
+    activation of cytotoxic nucleoside analogues in neuroblastoma.
+  findings: []
+- id: PMID:32296183
+  title: A reference map of the human binary protein interactome.
+  findings: []
+- id: Reactome:R-HSA-109903
+  title: cytidine or uridine + ATP =&gt; CMP or UMP + ADP [UCK2]
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

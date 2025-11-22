@@ -172,7 +172,7 @@ def fetch_gene_data(
     goa_differs = _compare_file_content(goa_file, goa_data)
 
     # Initialize result status
-    result = {
+    result: Dict[str, Any] = {
         "yaml_created": False,
         "yaml_existed": False,
         "annotations_added": 0,
@@ -971,7 +971,7 @@ def fetch_rnacentral_data(gene_symbol: str, organism: str) -> str:
     }
 
     try:
-        response = requests.get(search_url, params=params, headers=headers, timeout=30)
+        response = requests.get(search_url, params=params, headers=headers, timeout=30)  # type: ignore[arg-type]
         response.raise_for_status()
 
         data = response.json()
@@ -990,7 +990,7 @@ def fetch_rnacentral_data(gene_symbol: str, organism: str) -> str:
             if gene_symbol:
                 alt_params["description"] = f"*{gene_symbol}*"
 
-            alt_response = requests.get(search_url, params=alt_params, headers=headers, timeout=30)
+            alt_response = requests.get(search_url, params=alt_params, headers=headers, timeout=30)  # type: ignore[arg-type]
             alt_response.raise_for_status()
             alt_data = alt_response.json()
 

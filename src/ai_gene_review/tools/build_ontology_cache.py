@@ -11,11 +11,11 @@ from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Set
+from typing import Any, Dict, List, Optional, Set
 
 import pandas as pd
 import yaml
-from oaklib import get_adapter
+from oaklib import get_adapter  # type: ignore[import-untyped]
 
 
 @dataclass
@@ -53,7 +53,7 @@ class OntologyCacheBuilder:
         Returns:
             Set of term IDs found
         """
-        term_ids = set()
+        term_ids: Set[str] = set()
         prefix_pattern = f"{ontology_prefix}:"
 
         # Scan YAML files
@@ -104,7 +104,7 @@ class OntologyCacheBuilder:
         Returns:
             Dictionary mapping term_id to {label, is_obsolete, fetched_date}
         """
-        results = {}
+        results: Dict[str, Dict[str, Any]] = {}
 
         try:
             print(f"Loading {ontology_id} ontology via OAK...")

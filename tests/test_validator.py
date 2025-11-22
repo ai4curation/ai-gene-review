@@ -86,6 +86,7 @@ def test_validate_multiple_files():
             "id": "Q123",
             "gene_symbol": "GENE1",
             "description": "Test gene 1",
+            "taxon": {"id": "NCBITaxon:9606", "label": "Homo sapiens"},
         }
         yaml.dump(valid_data, f)
         test_files.append(Path(f.name))
@@ -97,6 +98,7 @@ def test_validate_multiple_files():
         invalid_data = {
             "id": "Q456",
             # Missing gene_symbol
+            "taxon": {"id": "NCBITaxon:9606", "label": "Homo sapiens"},
         }
         yaml.dump(invalid_data, f)
         test_files.append(Path(f.name))
@@ -148,7 +150,15 @@ def test_validation_summary():
     "gene_data,should_be_valid",
     [
         # Valid minimal structure
-        ({"id": "Q123", "gene_symbol": "GENE1", "description": "Test gene"}, True),
+        (
+            {
+                "id": "Q123",
+                "gene_symbol": "GENE1",
+                "description": "Test gene",
+                "taxon": {"id": "NCBITaxon:9606", "label": "Homo sapiens"},
+            },
+            True,
+        ),
         # Valid with taxon
         (
             {
@@ -165,6 +175,7 @@ def test_validation_summary():
                 "id": "Q789",
                 "gene_symbol": "GENE3",
                 "description": "Test gene",
+                "taxon": {"id": "NCBITaxon:9606", "label": "Homo sapiens"},
                 "references": [{"id": "PMID:12345", "title": "Test paper"}],
             },
             True,
