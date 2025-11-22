@@ -1,0 +1,2897 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SPOCK3 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>SPOCK3</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q9BQ16" target="_blank" class="term-link">
+                        Q9BQ16
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-in-progress">
+                    IN PROGRESS
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "SPOCK3";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q9BQ16" data-a="DESCRIPTION: SPOCK3 (testican-3) is a secreted extracellular ma..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>SPOCK3 (testican-3) is a secreted extracellular matrix proteoglycan that functions as a tumor-suppressive metalloendopeptidase inhibitor. It inhibits membrane-type matrix metalloproteinases (MT1-MMP and MT3-MMP), thereby preventing pro-MMP-2 activation and blocking tumor invasion. The protein contains a modular architecture including follistatin-like domain, acidic region, EC calcium-binding domains, Kazal-like protease inhibitor domain, and thyroglobulin type-1 domain. SPOCK3 carries chondroitin sulfate and heparan sulfate glycosaminoglycan chains and is highly expressed in normal brain, with expression decreasing in gliomas. A splice variant (N-Tes, isoform 2) lacks the thyroglobulin domain but retains MMP inhibitory activity. Unlike testican-2 (SPOCK2), which counteracts MMP inhibition, SPOCK3 shares with testican-1 (SPOCK1) the key function of suppressing MT-MMP-mediated tumor invasion and cell motility through direct interaction with MT-MMPs.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031012" target="_blank" class="term-link">
+                                    GO:0031012
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular matrix</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BQ16" data-a="GO:0031012" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SPOCK3 is a secreted extracellular matrix proteoglycan. UniProt states &#34;Secreted, extracellular space, extracellular matrix&#34; and this is consistent with its function as an ECM-localized MMP inhibitor.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a core cellular component annotation for SPOCK3. The protein is secreted into the ECM where it carries out its primary function of inhibiting membrane-type MMPs. This localization is essential for its tumor-suppressive role and is supported by phylogenetic inference (IBA) as well as experimental evidence from PMID:11751414 showing SPOCK3/N-Tes is deposited on collagen and from PMID:12810672 demonstrating ECM deposition. The annotation is further supported by high-throughput proteomics studies (PMID:32055794, PMID:33266304) identifying SPOCK3 in ECM fractions.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11751414" target="_blank" class="term-link">
+                                        PMID:11751414
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Expression of N-Tes and testican 3 was detected in normal brain but down-regulated in glioma tissues. Transfection of either the N-Tes or testican 3 gene into U251 glioma cells or Madin-Darby canine kidney cells transformed by erbB2 suppressed their invasive growth in collagen gel.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12810672" target="_blank" class="term-link">
+                                        PMID:12810672
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Testican 2 was not incorporated into collagen by itself, and was deposited only in the presence of N-Tes, suggesting that testican 2 binds to N-Tes deposited on collagen.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008191" target="_blank" class="term-link">
+                                    GO:0008191
+                                </a>
+                            </span>
+                            <span class="term-label">metalloendopeptidase inhibitor activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BQ16" data-a="GO:0008191" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is THE core molecular function of SPOCK3. Experimentally demonstrated to inhibit MT1-MMP and MT3-MMP, preventing pro-MMP-2 activation. This is the key tumor-suppressive function of SPOCK3.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is absolutely a core function annotation that must be retained. SPOCK3 was originally characterized as an inhibitor of membrane-type matrix metalloproteinases (PMID:11751414). The paper demonstrates direct interaction of SPOCK3/N-Tes with MT1-MMP and MT3-MMP, inhibiting their ability to activate pro-MMP-2. PMID:12810672 confirms this function is common among testican family members except testican-2. UniProt states &#34;Inhibits the processing of pro-matrix metalloproteinase 2 (MMP-2) by MT1-MMP and MT3-MMP.&#34; This metalloendopeptidase inhibitor activity is the mechanistic basis for SPOCK3&#39;s tumor suppression and represents its primary molecular function. The IBA annotation is well-supported by experimental evidence.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11751414" target="_blank" class="term-link">
+                                        PMID:11751414
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Pro-MMP-2 activation by MT3-MMP was also inhibited by the coexpression of N-Tes. Immunoprecipitation analysis demonstrated direct interaction of N-Tes with either MT1-MMP or MT3-MMP.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12810672" target="_blank" class="term-link">
+                                        PMID:12810672
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The inhibitory function is common among testican family members except for testican 2, which was shown to uniquely abolish inhibition of MT1-MMP- or MT3-MMP-mediated pro-MMP-2 activation by other testican family members.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010810" target="_blank" class="term-link">
+                                    GO:0010810
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of cell-substrate adhesion</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BQ16" data-a="GO:0010810" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SPOCK3 regulates cell-substrate adhesion through its interactions with ECM components and its MMP inhibitory activity. The IBA annotation appears to be based on SPOCK1/testican-1 data.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation is reasonable and supported by the biology of SPOCK3. While the direct experimental evidence for SPOCK3 focuses more on cell motility (see GO:2000146), cell-substrate adhesion and cell motility are mechanistically linked processes. PMID:12810672 shows that &#34;Migration of U251 cells on collagen, which was dependent on MT1-MMP activity under serum-free condition, was inhibited by N-Tes or N-Tes-Delta 122 deposited on collagen.&#34; This demonstrates SPOCK3 affects cell-substrate interactions on collagen. The IBA annotation likely reflects conserved function across testican family members, particularly with SPOCK1 (testican-1), which has similar ECM and MMP-regulatory functions. Given SPOCK3&#39;s role as an ECM proteoglycan that binds collagen and regulates MT-MMP activity, it is reasonable that it regulates cell-substrate adhesion as part of its biological role.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12810672" target="_blank" class="term-link">
+                                        PMID:12810672
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Migration of U251 cells on collagen, which was dependent on MT1-MMP activity under serum-free condition, was inhibited by N-Tes or N-Tes-Delta 122 deposited on collagen.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005615" target="_blank" class="term-link">
+                                    GO:0005615
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular space</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BQ16" data-a="GO:0005615" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SPOCK3 is a secreted protein located in the extracellular space. UniProt annotation confirms &#34;Secreted, extracellular space, extracellular matrix.&#34;
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is an accurate cellular component annotation. SPOCK3 has a signal peptide (residues 1-21) and is secreted into the extracellular space where it localizes to the extracellular matrix. This annotation (GO:0005615 extracellular space) is the parent term of GO:0031012 (extracellular matrix), so both annotations are correct and complementary. The IBA annotation is supported by phylogenetic inference across testican family members, all of which are secreted ECM proteins. UniProt explicitly states the protein is &#34;Secreted, extracellular space, extracellular matrix.&#34;
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/SPOCK3/SPOCK3-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Secreted, extracellular space, extracellular matrix.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005509" target="_blank" class="term-link">
+                                    GO:0005509
+                                </a>
+                            </span>
+                            <span class="term-label">calcium ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BQ16" data-a="GO:0005509" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SPOCK3 contains EC (extracellular) calcium-binding domains. The protein is described in PMID:11751414 as a &#34;calcium-binding proteoglycan&#34; and the N-Tes variant includes the Ca2+-binding domain.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a well-supported molecular function annotation. SPOCK3 is explicitly described as a &#34;calcium-binding proteoglycan&#34; in PMID:11751414. The UniProt entry indicates SPOCK3 contains EC calcium-binding domains (InterPro:IPR019577), which are characteristic of the SPARC/testican family. The protein structure includes EF-hand calcium-binding motifs. PMID:12810672 demonstrates that testican-2 inactivates N-Tes &#34;by binding to the COOH-terminal extracellular calcium-binding domain of N-Tes,&#34; confirming this domain is present and functionally important. The IBA annotation reflects the conserved calcium-binding capability across all testican family members.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11751414" target="_blank" class="term-link">
+                                        PMID:11751414
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">It encodes the NH(2)-terminal 313-amino acid region of a calcium-binding proteoglycan, testican 3, with a 3-amino acid substitution at the COOH terminus and thus was named N-Tes. N-Tes comprises a signal peptide, a unique domain, a follistatin-like domain, and a Ca(2+)-binding domain</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12810672" target="_blank" class="term-link">
+                                        PMID:12810672
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Testican 2 inactivates N-Tes by binding to the COOH-terminal extracellular calcium-binding domain of N-Tes through its NH(2)-terminal unique domain</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004857" target="_blank" class="term-link">
+                                    GO:0004857
+                                </a>
+                            </span>
+                            <span class="term-label">enzyme inhibitor activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BQ16" data-a="GO:0004857" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is a broad parent term of the more specific GO:0008191 (metalloendopeptidase inhibitor activity). SPOCK3 does have enzyme inhibitor activity via its MMP inhibition.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This IEA annotation from UniProtKB keyword mapping is correct but very general. GO:0004857 (enzyme inhibitor activity) is a broad molecular function term that encompasses GO:0008191 (metalloendopeptidase inhibitor activity) and GO:0030414 (peptidase inhibitor activity). Since SPOCK3 is experimentally confirmed to inhibit metalloendopeptidases (MT1-MMP, MT3-MMP), this parent term is accurate. The annotation is less informative than the more specific child terms, but it is not incorrect. It&#39;s acceptable to retain both general and specific terms in GO annotation to capture the full hierarchy.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11751414" target="_blank" class="term-link">
+                                        PMID:11751414
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Using expression cloning to screen a human fetal kidney cDNA library for regulator(s) of pro-matrix metalloproteinase (MMP)-2 processing mediated by membrane-type (MT) 1 MMP, we isolated a cDNA whose product interfered with pro-MMP-2 activation.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005509" target="_blank" class="term-link">
+                                    GO:0005509
+                                </a>
+                            </span>
+                            <span class="term-label">calcium ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BQ16" data-a="GO:0005509" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Duplicate annotation of GO:0005509 but from InterPro domain mapping (IPR019577 SPARC/Testican Ca-binding domain). Same function, different evidence source.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a duplicate GO ID annotation but from a different evidence pipeline (IEA from InterPro vs IBA from phylogenetic inference). Both are correct. The IEA annotation is based on the presence of InterPro domain IPR019577 (SPARC/Testican_Ca-bd-dom), which maps to calcium ion binding function. Having multiple evidence codes for the same function from independent sources (domain-based inference and phylogenetic inference) strengthens confidence in the annotation. This is standard practice in GO annotation - duplicates with different evidence codes are acceptable and informative.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/SPOCK3/SPOCK3-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">InterPro IPR019577 SPARC/Testican_Ca-bd-dom</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008191" target="_blank" class="term-link">
+                                    GO:0008191
+                                </a>
+                            </span>
+                            <span class="term-label">metalloendopeptidase inhibitor activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BQ16" data-a="GO:0008191" data-r="GO_REF:0000117" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Another duplicate of GO:0008191, this time from ARBA machine learning models. Same core function annotation as the IBA version reviewed above.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a duplicate annotation of GO:0008191 (metalloendopeptidase inhibitor activity) but from ARBA (Association Rule-Based Annotator) machine learning models. The same GO term appears with IBA evidence code (phylogenetic) reviewed earlier. Having multiple independent evidence sources (IBA phylogenetic inference, IEA from ARBA machine learning, and TAS experimental from PMID:12810672) all converging on the same core function provides very strong support for this annotation. This metalloendopeptidase inhibitor activity is THE defining molecular function of SPOCK3. Multiple evidence codes for the same critical function are valuable and appropriate.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11751414" target="_blank" class="term-link">
+                                        PMID:11751414
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Pro-MMP-2 activation by MT3-MMP was also inhibited by the coexpression of N-Tes. Immunoprecipitation analysis demonstrated direct interaction of N-Tes with either MT1-MMP or MT3-MMP.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030414" target="_blank" class="term-link">
+                                    GO:0030414
+                                </a>
+                            </span>
+                            <span class="term-label">peptidase inhibitor activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BQ16" data-a="GO:0030414" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Parent term of metalloendopeptidase inhibitor activity. SPOCK3 contains Kazal-like and thyroglobulin type-1 domains which are protease inhibitor domains.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is an accurate annotation based on UniProtKB keyword mapping to &#34;Protease inhibitor&#34; and &#34;Metalloprotease inhibitor&#34; keywords. GO:0030414 (peptidase inhibitor activity) is the parent term of GO:0008191 (metalloendopeptidase inhibitor activity), which is more specific. Since SPOCK3 inhibits metallopeptidases (a subclass of peptidases), the broader peptidase inhibitor activity term is also correct. Additionally, SPOCK3 contains a Kazal-like domain (residues 133-185) and a thyroglobulin type-1 domain (residues 314-380), both of which are protease inhibitor domains found in the MEROPS database (I01.980 and I31.007). This structural evidence supports the general peptidase inhibitor activity annotation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/SPOCK3/SPOCK3-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">DOMAIN 133..185 Kazal-like [PROSITE-ProRule:PRU00798]; DOMAIN 314..380 Thyroglobulin type-1 [PROSITE-ProRule:PRU00500]; MEROPS I01.980 [Kazal]; MEROPS I31.007 [thyroglobulin]</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005539" target="_blank" class="term-link">
+                                    GO:0005539
+                                </a>
+                            </span>
+                            <span class="term-label">glycosaminoglycan binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000107
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BQ16" data-a="GO:0005539" data-r="GO_REF:0000107" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SPOCK3 is a proteoglycan that carries chondroitin sulfate and heparan sulfate GAG chains. The annotation is inferred from mouse ortholog.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation is correct based on SPOCK3&#39;s nature as a proteoglycan. UniProt states &#34;Contains chondroitin sulfate and heparan sulfate O-linked oligosaccharides&#34; and indicates putative GAG attachment sites at Ser387 and Ser392. As a proteoglycan, SPOCK3 has glycosaminoglycan (GAG) chains covalently attached to its protein core. These GAG chains can interact with other molecules, giving the protein glycosaminoglycan binding capability. The IEA annotation is transferred from the mouse ortholog (Spock3, UniProtKB:Q8BKV0) via Ensembl Compara. While this is computational inference, it is well-supported by SPOCK3&#39;s biochemical nature as a heparan/chondroitin sulfate proteoglycan, which is consistent across species.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/SPOCK3/SPOCK3-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">PTM: Contains chondroitin sulfate and heparan sulfate O-linked oligosaccharides. [ECO:0000250]; CARBOHYD 387 O-linked (Xyl...) (glycosaminoglycan) serine [ECO:0000255]; CARBOHYD 392 O-linked (Xyl...) (glycosaminoglycan) serine [ECO:0000255]</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031012" target="_blank" class="term-link">
+                                    GO:0031012
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular matrix</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32055794" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32055794
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    3D mapping of native extracellular matrix reveals cellular r...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BQ16" data-a="GO:0031012" data-r="PMID:32055794" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Third annotation of GO:0031012 ECM localization, this time from high-throughput proteomics study mapping native ECM in 3D.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is another duplicate of GO:0031012 (extracellular matrix) but with HDA (High-throughput Direct Assay) evidence from a proteomics study. PMID:32055794 is a large-scale study titled &#34;3D mapping of native extracellular matrix reveals cellular responses to the microenvironment&#34; that systematically identifies ECM proteins in their native context. The identification of SPOCK3 in this high-throughput ECM proteomics dataset provides independent experimental support for ECM localization beyond the phylogenetic (IBA) inference. Having IBA, HDA, and literature evidence all supporting ECM localization strengthens confidence in this core cellular component annotation for SPOCK3.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/32055794" target="_blank" class="term-link">
+                                        PMID:32055794
+                                    </a>
+                                    
+                                </span>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031012" target="_blank" class="term-link">
+                                    GO:0031012
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular matrix</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/33266304" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:33266304
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Divide-and-Conquer Matrisome Protein (DC-MaP) Strategy: An M...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BQ16" data-a="GO:0031012" data-r="PMID:33266304" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Fourth annotation of GO:0031012 ECM localization, from another high-throughput proteomics study using divide-and-conquer approach for matrisome characterization.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is yet another duplicate of GO:0031012 (extracellular matrix) with HDA evidence from a different proteomics study. PMID:33266304 titled &#34;Divide-and-Conquer Matrisome Protein (DC-MaP) Strategy - An MS-Friendly Approach to Proteomic Matrisome Characterization&#34; describes a systematic approach to characterize the complete matrisome (all ECM and ECM-associated proteins). SPOCK3&#39;s identification in this independent high-throughput matrisome study provides additional experimental validation of its ECM localization. Multiple HDA annotations from different proteomics studies (PMID:32055794 and PMID:33266304) plus phylogenetic inference (IBA) provide very strong, convergent evidence for SPOCK3&#39;s ECM localization.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/33266304" target="_blank" class="term-link">
+                                        PMID:33266304
+                                    </a>
+                                    
+                                </span>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008191" target="_blank" class="term-link">
+                                    GO:0008191
+                                </a>
+                            </span>
+                            <span class="term-label">metalloendopeptidase inhibitor activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12810672" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12810672
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Testican 2 abrogates inhibition of membrane-type matrix meta...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BQ16" data-a="GO:0008191" data-r="PMID:12810672" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Third annotation of GO:0008191 metalloendopeptidase inhibitor activity, this time with TAS (Traceable Author Statement) evidence from key experimental paper.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the third annotation of GO:0008191 (metalloendopeptidase inhibitor activity), now with TAS evidence code citing PMID:12810672. This is one of the key experimental papers characterizing SPOCK3&#39;s MMP inhibitory function. The paper states &#34;The inhibitory function is common among testican family members except for testican 2&#34; and demonstrates that SPOCK3 (along with testican-1 and N-Tes) inhibits MT1-MMP and MT3-MMP mediated pro-MMP-2 activation. Having TAS experimental evidence in addition to IBA (phylogenetic) and IEA (computational) annotations provides the strongest possible support for this core molecular function. This is THE defining activity of SPOCK3 and is crucial for its tumor-suppressive role.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12810672" target="_blank" class="term-link">
+                                        PMID:12810672
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The inhibitory function is common among testican family members except for testican 2, which was shown to uniquely abolish inhibition of MT1-MMP- or MT3-MMP-mediated pro-MMP-2 activation by other testican family members.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:2000146" target="_blank" class="term-link">
+                                    GO:2000146
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of cell motility</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12810672" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12810672
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Testican 2 abrogates inhibition of membrane-type matrix meta...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BQ16" data-a="GO:2000146" data-r="PMID:12810672" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SPOCK3 negatively regulates cell motility through its MMP inhibitory activity. This is a key tumor-suppressive biological process.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is an important biological process annotation with TAS experimental evidence from PMID:12810672. The paper demonstrates that &#34;Migration of U251 cells on collagen, which was dependent on MT1-MMP activity under serum-free condition, was inhibited by N-Tes or N-Tes-Delta 122 deposited on collagen.&#34; PMID:11751414 also shows that &#34;Transfection of either the N-Tes or testican 3 gene into U251 glioma cells or Madin-Darby canine kidney cells transformed by erbB2 suppressed their invasive growth in collagen gel.&#34; These data clearly demonstrate SPOCK3&#39;s role in negatively regulating cell motility, which is mechanistically linked to its metalloendopeptidase inhibitor activity. By inhibiting MT-MMPs, SPOCK3 prevents cells from degrading ECM components necessary for migration, thereby blocking cell motility and tumor invasion. This is a core biological process function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12810672" target="_blank" class="term-link">
+                                        PMID:12810672
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Migration of U251 cells on collagen, which was dependent on MT1-MMP activity under serum-free condition, was inhibited by N-Tes or N-Tes-Delta 122 deposited on collagen.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11751414" target="_blank" class="term-link">
+                                        PMID:11751414
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Transfection of either the N-Tes or testican 3 gene into U251 glioma cells or Madin-Darby canine kidney cells transformed by erbB2 suppressed their invasive growth in collagen gel.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005518" target="_blank" class="term-link">
+                                    GO:0005518
+                                </a>
+                            </span>
+                            <span class="term-label">collagen binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BQ16" data-a="GO:0005518" data-r="GO_REF:0000033" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SPOCK3 binds to collagen in the ECM. This annotation is present in UniProt GO lines but missing from the GOA file reviewed above.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation is present in the UniProt entry (line 284 - &#34;GO:0005518 F:collagen binding; IBA:GO_Central&#34;) but was not included in the GOA file provided for review. SPOCK3&#39;s collagen binding is experimentally supported by PMID:12810672, which demonstrates that N-Tes is &#34;deposited on collagen&#34; and that cells can migrate on &#34;collagen&#34; where N-Tes is present. PMID:11751414 shows that SPOCK3 expression &#34;suppressed their invasive growth in collagen gel,&#34; indicating interaction with collagen. As an ECM proteoglycan, SPOCK3 binds to collagen fibers where it exerts its MMP inhibitory activity to regulate cell motility. This is a core molecular function that should be included in the annotation set.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12810672" target="_blank" class="term-link">
+                                        PMID:12810672
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Testican 2 was not incorporated into collagen by itself, and was deposited only in the presence of N-Tes, suggesting that testican 2 binds to N-Tes deposited on collagen. Binding of testican 2 to N-Tes deposited on collagen allowed migration of cells expressing MT1-MMP.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11751414" target="_blank" class="term-link">
+                                        PMID:11751414
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Transfection of either the N-Tes or testican 3 gene into U251 glioma cells or Madin-Darby canine kidney cells transformed by erbB2 suppressed their invasive growth in collagen gel.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050840" target="_blank" class="term-link">
+                                    GO:0050840
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular matrix binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BQ16" data-a="GO:0050840" data-r="GO_REF:0000033" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SPOCK3 binds to ECM components. This annotation is present in UniProt GO lines but missing from the GOA file reviewed above.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation is present in the UniProt entry (line 285 - &#34;GO:0050840 F:extracellular matrix binding; IBA:GO_Central&#34;) but was not in the GOA file. As an ECM proteoglycan, SPOCK3 binds to various ECM components including collagen (GO:0005518). GO:0050840 (extracellular matrix binding) is the parent term of collagen binding and represents SPOCK3&#39;s broader capacity to interact with ECM molecules. The experimental evidence shows SPOCK3 is deposited on and interacts with collagen matrices (PMID:12810672, PMID:11751414). This ECM binding function is essential for SPOCK3 to localize properly and exert its MMP inhibitory and cell motility regulatory functions in the extracellular space.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12810672" target="_blank" class="term-link">
+                                        PMID:12810672
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">N-Tes deposited on collagen</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11751414" target="_blank" class="term-link">
+                                        PMID:11751414
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">suppressed their invasive growth in collagen gel</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010951" target="_blank" class="term-link">
+                                    GO:0010951
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of endopeptidase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11751414" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11751414
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Suppression of membrane-type 1 matrix metalloproteinase (MMP...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BQ16" data-a="GO:0010951" data-r="PMID:11751414" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SPOCK3 negatively regulates endopeptidase activity by inhibiting MT-MMPs. This annotation is present in UniProt GO lines but missing from the GOA file.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation is present in the UniProt entry (line 289 - &#34;GO:0010951 P:negative regulation of endopeptidase activity; IDA:UniProtKB&#34;) but was not in the GOA file. This is a biological process term describing the regulatory role of SPOCK3&#39;s molecular function (metalloendopeptidase inhibitor activity). PMID:11751414 provides direct experimental evidence that SPOCK3/N-Tes &#34;interfered with pro-MMP-2 activation&#34; by inhibiting the endopeptidase activity of MT1-MMP and MT3-MMP. This is a more specific biological process term than just &#34;negative regulation of cell motility&#34; and directly describes the mechanistic process by which SPOCK3 acts as an MMP inhibitor. This should be included as it captures the regulatory aspect of SPOCK3&#39;s core function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11751414" target="_blank" class="term-link">
+                                        PMID:11751414
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Using expression cloning to screen a human fetal kidney cDNA library for regulator(s) of pro-matrix metalloproteinase (MMP)-2 processing mediated by membrane-type (MT) 1 MMP, we isolated a cDNA whose product interfered with pro-MMP-2 activation. [...] Pro-MMP-2 activation by MT3-MMP was also inhibited by the coexpression of N-Tes.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>SPOCK3 functions as a tumor-suppressive metalloendopeptidase inhibitor in the extracellular matrix. It directly interacts with and inhibits MT1-MMP and MT3-MMP, preventing pro-MMP-2 activation, which blocks cell motility and tumor invasion. This MMP inhibitory activity is mediated through its modular domain architecture and calcium-binding domains.</h3>
+                <span class="vote-buttons" data-g="Q9BQ16" data-a="FUNCTION: SPOCK3 functions as a tumor-suppressive metalloend..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008191" target="_blank" class="term-link">
+                            metalloendopeptidase inhibitor activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:2000146" target="_blank" class="term-link">
+                                negative regulation of cell motility
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010951" target="_blank" class="term-link">
+                                negative regulation of endopeptidase activity
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031012" target="_blank" class="term-link">
+                                extracellular matrix
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005615" target="_blank" class="term-link">
+                                extracellular space
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11751414" target="_blank" class="term-link">
+                                PMID:11751414
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Pro-MMP-2 activation by MT3-MMP was also inhibited by the coexpression of N-Tes. Immunoprecipitation analysis demonstrated direct interaction of N-Tes with either MT1-MMP or MT3-MMP.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12810672" target="_blank" class="term-link">
+                                PMID:12810672
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">The inhibitory function is common among testican family members except for testican 2</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11751414" target="_blank" class="term-link">
+                                PMID:11751414
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Transfection of either the N-Tes or testican 3 gene into U251 glioma cells or Madin-Darby canine kidney cells transformed by erbB2 suppressed their invasive growth in collagen gel.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000107.md" target="_blank" class="term-link">
+                            GO_REF:0000107
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Automatic transfer of experimentally verified manual GO annotation data to orthologs using Ensembl Compara.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11751414" target="_blank" class="term-link">
+                            PMID:11751414
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Suppression of membrane-type 1 matrix metalloproteinase (MMP)-mediated MMP-2 activation and tumor invasion by testican 3 and its splicing variant gene product, N-Tes.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12810672" target="_blank" class="term-link">
+                            PMID:12810672
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Testican 2 abrogates inhibition of membrane-type matrix metalloproteinases by other testican family proteins.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32055794" target="_blank" class="term-link">
+                            PMID:32055794
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">3D mapping of native extracellular matrix reveals cellular responses to the microenvironment.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/33266304" target="_blank" class="term-link">
+                            PMID:33266304
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Divide-and-Conquer Matrisome Protein (DC-MaP) Strategy: An MS-Friendly Approach to Proteomic Matrisome Characterization.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:human/SPOCK3/SPOCK3-uniprot.txt
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">UniProt entry for SPOCK3 (Q9BQ16)</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Curation Summary</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(SPOCK3-curation-summary.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9BQ16" data-a="DOC: Curation Summary" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="spock3-testican-3-go-annotation-review-summary">SPOCK3 (Testican-3) GO Annotation Review Summary</h1>
+<h2 id="gene-information">Gene Information</h2>
+<ul>
+<li><strong>UniProt ID</strong>: Q9BQ16</li>
+<li><strong>Gene Symbol</strong>: SPOCK3</li>
+<li><strong>Protein Name</strong>: Testican-3 (SPARC/osteonectin, CWCV, and Kazal-like domains proteoglycan 3)</li>
+<li><strong>Organism</strong>: Homo sapiens</li>
+<li><strong>Size</strong>: 436 amino acids</li>
+<li><strong>Localization</strong>: Secreted, extracellular matrix</li>
+</ul>
+<h2 id="overview">Overview</h2>
+<p>SPOCK3 is a secreted extracellular matrix proteoglycan with experimentally validated tumor-suppressive metalloendopeptidase inhibitor activity. It was originally identified through expression cloning as an inhibitor of membrane-type matrix metalloproteinases (MT1-MMP and MT3-MMP), distinguishing it from testican-2 (SPOCK2), which lacks this inhibitory activity and instead counteracts it.</p>
+<h2 id="core-molecular-functions">Core Molecular Functions</h2>
+<h3 id="primary-function-metalloendopeptidase-inhibitor">Primary Function: Metalloendopeptidase Inhibitor</h3>
+<ul>
+<li><strong>GO:0008191</strong> - metalloendopeptidase inhibitor activity</li>
+<li>Directly interacts with and inhibits MT1-MMP and MT3-MMP</li>
+<li>Prevents pro-MMP-2 activation</li>
+<li>Experimentally validated by PMID:11751414, PMID:12810672</li>
+</ul>
+<h3 id="supporting-functions">Supporting Functions:</h3>
+<ul>
+<li><strong>GO:0005509</strong> - calcium ion binding (EC calcium-binding domains)</li>
+<li><strong>GO:0005518</strong> - collagen binding (deposited on collagen)</li>
+<li><strong>GO:0050840</strong> - extracellular matrix binding</li>
+<li><strong>GO:0005539</strong> - glycosaminoglycan binding (proteoglycan with GAG chains)</li>
+<li><strong>GO:0030414</strong> - peptidase inhibitor activity (parent term)</li>
+<li><strong>GO:0004857</strong> - enzyme inhibitor activity (parent term)</li>
+</ul>
+<h3 id="biological-processes">Biological Processes:</h3>
+<ul>
+<li><strong>GO:2000146</strong> - negative regulation of cell motility (tumor suppression)</li>
+<li><strong>GO:0010951</strong> - negative regulation of endopeptidase activity</li>
+<li><strong>GO:0010810</strong> - regulation of cell-substrate adhesion</li>
+</ul>
+<h3 id="cellular-localization">Cellular Localization:</h3>
+<ul>
+<li><strong>GO:0031012</strong> - extracellular matrix (core localization)</li>
+<li><strong>GO:0005615</strong> - extracellular space (parent term)</li>
+</ul>
+<h2 id="annotation-review-results">Annotation Review Results</h2>
+<p><strong>Total Annotations Reviewed</strong>: 14 (from GOA file)<br />
+<strong>Additional Annotations Added</strong>: 3 (from UniProt, missing in GOA)</p>
+<h3 id="action-summary">Action Summary:</h3>
+<ul>
+<li><strong>ACCEPT</strong>: 14/14 existing annotations (100%)</li>
+<li><strong>NEW</strong>: 3 annotations (collagen binding, ECM binding, negative regulation of endopeptidase activity)</li>
+<li><strong>REMOVE</strong>: 0</li>
+<li><strong>MODIFY</strong>: 0</li>
+<li><strong>UNDECIDED</strong>: 0</li>
+</ul>
+<h3 id="key-findings">Key Findings:</h3>
+<ol>
+<li><strong>All existing annotations are correct and well-supported</strong></li>
+<li>Multiple evidence codes converge on core functions (IBA, IEA, TAS, HDA, IDA)</li>
+<li>Experimental validation from key papers (PMID:11751414, PMID:12810672)</li>
+<li>
+<p>High-throughput proteomics support (PMID:32055794, PMID:33266304)</p>
+</li>
+<li>
+<p><strong>Multiple duplicate annotations strengthen confidence</strong></p>
+</li>
+<li>GO:0031012 (extracellular matrix): 4 annotations (IBA, HDA×2)</li>
+<li>GO:0008191 (metalloendopeptidase inhibitor): 3 annotations (IBA, IEA, TAS)</li>
+<li>
+<p>GO:0005509 (calcium ion binding): 2 annotations (IBA, IEA)</p>
+</li>
+<li>
+<p><strong>Functional distinction from SPOCK2</strong></p>
+</li>
+<li>SPOCK3 HAS MMP inhibitory activity (like SPOCK1)</li>
+<li>SPOCK2 LACKS this activity and counteracts inhibition by SPOCK3</li>
+<li>
+<p>This is a key functional difference in the testican family</p>
+</li>
+<li>
+<p><strong>Missing annotations identified and added</strong></p>
+</li>
+<li>GO:0005518 (collagen binding) - present in UniProt, missing from GOA</li>
+<li>GO:0050840 (ECM binding) - present in UniProt, missing from GOA</li>
+<li>GO:0010951 (negative regulation of endopeptidase activity) - IDA evidence from PMID:11751414</li>
+</ol>
+<h2 id="key-publications">Key Publications</h2>
+<ol>
+<li><strong>PMID:11751414</strong> - Nakada et al. (2001)</li>
+<li>Original characterization of SPOCK3/N-Tes as MT-MMP inhibitor</li>
+<li>Demonstrates suppression of tumor invasion</li>
+<li>
+<p>Expression cloning identified SPOCK3 as pro-MMP-2 activation regulator</p>
+</li>
+<li>
+<p><strong>PMID:12810672</strong> - Nakada et al. (2003)</p>
+</li>
+<li>Comparative analysis of testican family members</li>
+<li>Shows SPOCK3 inhibits MT-MMPs (unlike SPOCK2)</li>
+<li>
+<p>Demonstrates N-Tes deposition on collagen and cell motility inhibition</p>
+</li>
+<li>
+<p><strong>PMID:32055794</strong> - 3D ECM mapping proteomics</p>
+</li>
+<li>
+<p>High-throughput identification of SPOCK3 in native ECM</p>
+</li>
+<li>
+<p><strong>PMID:33266304</strong> - Matrisome characterization</p>
+</li>
+<li>Independent validation of SPOCK3 as ECM component</li>
+</ol>
+<h2 id="structural-features">Structural Features</h2>
+<ul>
+<li>Signal peptide (1-21)</li>
+<li>Follistatin-like domain</li>
+<li>Acidic region</li>
+<li>EC calcium-binding domains (EF-hand motifs)</li>
+<li>Kazal-like protease inhibitor domain (133-185)</li>
+<li>Thyroglobulin type-1 domain (314-380)</li>
+<li>GAG attachment sites (Ser387, Ser392)</li>
+</ul>
+<h2 id="alternative-splicing">Alternative Splicing</h2>
+<ul>
+<li>9 isoforms</li>
+<li><strong>Isoform 2 (N-Tes)</strong>: Lacks thyroglobulin domain but retains MMP inhibitory activity</li>
+<li>N-Tes is resistant to testican-2 inactivation when calcium-binding domain is deleted</li>
+</ul>
+<h2 id="expression-and-disease">Expression and Disease</h2>
+<ul>
+<li>Highly expressed in normal brain</li>
+<li>Down-regulated in gliomas (correlates with tumor grade)</li>
+<li>Expression loss associated with increased tumor invasion</li>
+</ul>
+<h2 id="curation-confidence">Curation Confidence</h2>
+<p><strong>HIGH</strong> - All core functions are experimentally validated with multiple independent lines of evidence. The annotation set is comprehensive and accurate.</p>
+<h2 id="recommendations">Recommendations</h2>
+<ol>
+<li>Retain all existing annotations</li>
+<li>Add the three missing annotations identified from UniProt</li>
+<li>No modifications needed - current annotations are at appropriate specificity</li>
+<li>Consider adding disease annotations for glioma progression</li>
+</ol>
+<hr />
+<p><em>Review completed: 2025-01-11</em><br />
+<em>Curator: AI-assisted systematic review</em></p>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q9BQ16
+gene_symbol: SPOCK3
+product_type: PROTEIN
+status: IN_PROGRESS
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &#39;SPOCK3 (testican-3) is a secreted extracellular matrix proteoglycan that functions as a tumor-suppressive metalloendopeptidase inhibitor. It inhibits membrane-type matrix metalloproteinases (MT1-MMP and MT3-MMP), thereby preventing pro-MMP-2 activation and blocking tumor invasion. The protein contains a modular architecture including follistatin-like domain, acidic region, EC calcium-binding domains, Kazal-like protease inhibitor domain, and thyroglobulin type-1 domain. SPOCK3 carries chondroitin sulfate and heparan sulfate glycosaminoglycan chains and is highly expressed in normal brain, with expression decreasing in gliomas. A splice variant (N-Tes, isoform 2) lacks the thyroglobulin domain but retains MMP inhibitory activity. Unlike testican-2 (SPOCK2), which counteracts MMP inhibition, SPOCK3 shares with testican-1 (SPOCK1) the key function of suppressing MT-MMP-mediated tumor invasion and cell motility through direct interaction with MT-MMPs.&#39;
+existing_annotations:
+- term:
+    id: GO:0031012
+    label: extracellular matrix
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: SPOCK3 is a secreted extracellular matrix proteoglycan. UniProt states &#34;Secreted, extracellular space, extracellular matrix&#34; and this is consistent with its function as an ECM-localized MMP inhibitor.
+    action: ACCEPT
+    reason: This is a core cellular component annotation for SPOCK3. The protein is secreted into the ECM where it carries out its primary function of inhibiting membrane-type MMPs. This localization is essential for its tumor-suppressive role and is supported by phylogenetic inference (IBA) as well as experimental evidence from PMID:11751414 showing SPOCK3/N-Tes is deposited on collagen and from PMID:12810672 demonstrating ECM deposition. The annotation is further supported by high-throughput proteomics studies (PMID:32055794, PMID:33266304) identifying SPOCK3 in ECM fractions.
+    supported_by:
+      - reference_id: PMID:11751414
+        supporting_text: &#34;Expression of N-Tes and testican 3 was detected in normal brain but down-regulated in glioma tissues. Transfection of either the N-Tes or testican 3 gene into U251 glioma cells or Madin-Darby canine kidney cells transformed by erbB2 suppressed their invasive growth in collagen gel.&#34;
+      - reference_id: PMID:12810672
+        supporting_text: &#34;Testican 2 was not incorporated into collagen by itself, and was deposited only in the presence of N-Tes, suggesting that testican 2 binds to N-Tes deposited on collagen.&#34;
+- term:
+    id: GO:0008191
+    label: metalloendopeptidase inhibitor activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: This is THE core molecular function of SPOCK3. Experimentally demonstrated to inhibit MT1-MMP and MT3-MMP, preventing pro-MMP-2 activation. This is the key tumor-suppressive function of SPOCK3.
+    action: ACCEPT
+    reason: This is absolutely a core function annotation that must be retained. SPOCK3 was originally characterized as an inhibitor of membrane-type matrix metalloproteinases (PMID:11751414). The paper demonstrates direct interaction of SPOCK3/N-Tes with MT1-MMP and MT3-MMP, inhibiting their ability to activate pro-MMP-2. PMID:12810672 confirms this function is common among testican family members except testican-2. UniProt states &#34;Inhibits the processing of pro-matrix metalloproteinase 2 (MMP-2) by MT1-MMP and MT3-MMP.&#34; This metalloendopeptidase inhibitor activity is the mechanistic basis for SPOCK3&#39;s tumor suppression and represents its primary molecular function. The IBA annotation is well-supported by experimental evidence.
+    supported_by:
+      - reference_id: PMID:11751414
+        supporting_text: &#34;Pro-MMP-2 activation by MT3-MMP was also inhibited by the coexpression of N-Tes. Immunoprecipitation analysis demonstrated direct interaction of N-Tes with either MT1-MMP or MT3-MMP.&#34;
+      - reference_id: PMID:12810672
+        supporting_text: &#34;The inhibitory function is common among testican family members except for testican 2, which was shown to uniquely abolish inhibition of MT1-MMP- or MT3-MMP-mediated pro-MMP-2 activation by other testican family members.&#34;
+- term:
+    id: GO:0010810
+    label: regulation of cell-substrate adhesion
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: SPOCK3 regulates cell-substrate adhesion through its interactions with ECM components and its MMP inhibitory activity. The IBA annotation appears to be based on SPOCK1/testican-1 data.
+    action: ACCEPT
+    reason: This annotation is reasonable and supported by the biology of SPOCK3. While the direct experimental evidence for SPOCK3 focuses more on cell motility (see GO:2000146), cell-substrate adhesion and cell motility are mechanistically linked processes. PMID:12810672 shows that &#34;Migration of U251 cells on collagen, which was dependent on MT1-MMP activity under serum-free condition, was inhibited by N-Tes or N-Tes-Delta 122 deposited on collagen.&#34; This demonstrates SPOCK3 affects cell-substrate interactions on collagen. The IBA annotation likely reflects conserved function across testican family members, particularly with SPOCK1 (testican-1), which has similar ECM and MMP-regulatory functions. Given SPOCK3&#39;s role as an ECM proteoglycan that binds collagen and regulates MT-MMP activity, it is reasonable that it regulates cell-substrate adhesion as part of its biological role.
+    supported_by:
+      - reference_id: PMID:12810672
+        supporting_text: &#34;Migration of U251 cells on collagen, which was dependent on MT1-MMP activity under serum-free condition, was inhibited by N-Tes or N-Tes-Delta 122 deposited on collagen.&#34;
+- term:
+    id: GO:0005615
+    label: extracellular space
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: SPOCK3 is a secreted protein located in the extracellular space. UniProt annotation confirms &#34;Secreted, extracellular space, extracellular matrix.&#34;
+    action: ACCEPT
+    reason: This is an accurate cellular component annotation. SPOCK3 has a signal peptide (residues 1-21) and is secreted into the extracellular space where it localizes to the extracellular matrix. This annotation (GO:0005615 extracellular space) is the parent term of GO:0031012 (extracellular matrix), so both annotations are correct and complementary. The IBA annotation is supported by phylogenetic inference across testican family members, all of which are secreted ECM proteins. UniProt explicitly states the protein is &#34;Secreted, extracellular space, extracellular matrix.&#34;
+    supported_by:
+      - reference_id: file:human/SPOCK3/SPOCK3-uniprot.txt
+        supporting_text: &#34;SUBCELLULAR LOCATION: Secreted, extracellular space, extracellular matrix.&#34;
+- term:
+    id: GO:0005509
+    label: calcium ion binding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: SPOCK3 contains EC (extracellular) calcium-binding domains. The protein is described in PMID:11751414 as a &#34;calcium-binding proteoglycan&#34; and the N-Tes variant includes the Ca2+-binding domain.
+    action: ACCEPT
+    reason: This is a well-supported molecular function annotation. SPOCK3 is explicitly described as a &#34;calcium-binding proteoglycan&#34; in PMID:11751414. The UniProt entry indicates SPOCK3 contains EC calcium-binding domains (InterPro:IPR019577), which are characteristic of the SPARC/testican family. The protein structure includes EF-hand calcium-binding motifs. PMID:12810672 demonstrates that testican-2 inactivates N-Tes &#34;by binding to the COOH-terminal extracellular calcium-binding domain of N-Tes,&#34; confirming this domain is present and functionally important. The IBA annotation reflects the conserved calcium-binding capability across all testican family members.
+    supported_by:
+      - reference_id: PMID:11751414
+        supporting_text: &#34;It encodes the NH(2)-terminal 313-amino acid region of a calcium-binding proteoglycan, testican 3, with a 3-amino acid substitution at the COOH terminus and thus was named N-Tes. N-Tes comprises a signal peptide, a unique domain, a follistatin-like domain, and a Ca(2+)-binding domain&#34;
+      - reference_id: PMID:12810672
+        supporting_text: &#34;Testican 2 inactivates N-Tes by binding to the COOH-terminal extracellular calcium-binding domain of N-Tes through its NH(2)-terminal unique domain&#34;
+- term:
+    id: GO:0004857
+    label: enzyme inhibitor activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: This is a broad parent term of the more specific GO:0008191 (metalloendopeptidase inhibitor activity). SPOCK3 does have enzyme inhibitor activity via its MMP inhibition.
+    action: ACCEPT
+    reason: This IEA annotation from UniProtKB keyword mapping is correct but very general. GO:0004857 (enzyme inhibitor activity) is a broad molecular function term that encompasses GO:0008191 (metalloendopeptidase inhibitor activity) and GO:0030414 (peptidase inhibitor activity). Since SPOCK3 is experimentally confirmed to inhibit metalloendopeptidases (MT1-MMP, MT3-MMP), this parent term is accurate. The annotation is less informative than the more specific child terms, but it is not incorrect. It&#39;s acceptable to retain both general and specific terms in GO annotation to capture the full hierarchy.
+    supported_by:
+      - reference_id: PMID:11751414
+        supporting_text: &#34;Using expression cloning to screen a human fetal kidney cDNA library for regulator(s) of pro-matrix metalloproteinase (MMP)-2 processing mediated by membrane-type (MT) 1 MMP, we isolated a cDNA whose product interfered with pro-MMP-2 activation.&#34;
+- term:
+    id: GO:0005509
+    label: calcium ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: Duplicate annotation of GO:0005509 but from InterPro domain mapping (IPR019577 SPARC/Testican Ca-binding domain). Same function, different evidence source.
+    action: ACCEPT
+    reason: This is a duplicate GO ID annotation but from a different evidence pipeline (IEA from InterPro vs IBA from phylogenetic inference). Both are correct. The IEA annotation is based on the presence of InterPro domain IPR019577 (SPARC/Testican_Ca-bd-dom), which maps to calcium ion binding function. Having multiple evidence codes for the same function from independent sources (domain-based inference and phylogenetic inference) strengthens confidence in the annotation. This is standard practice in GO annotation - duplicates with different evidence codes are acceptable and informative.
+    supported_by:
+      - reference_id: file:human/SPOCK3/SPOCK3-uniprot.txt
+        supporting_text: &#34;InterPro IPR019577 SPARC/Testican_Ca-bd-dom&#34;
+- term:
+    id: GO:0008191
+    label: metalloendopeptidase inhibitor activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  review:
+    summary: Another duplicate of GO:0008191, this time from ARBA machine learning models. Same core function annotation as the IBA version reviewed above.
+    action: ACCEPT
+    reason: This is a duplicate annotation of GO:0008191 (metalloendopeptidase inhibitor activity) but from ARBA (Association Rule-Based Annotator) machine learning models. The same GO term appears with IBA evidence code (phylogenetic) reviewed earlier. Having multiple independent evidence sources (IBA phylogenetic inference, IEA from ARBA machine learning, and TAS experimental from PMID:12810672) all converging on the same core function provides very strong support for this annotation. This metalloendopeptidase inhibitor activity is THE defining molecular function of SPOCK3. Multiple evidence codes for the same critical function are valuable and appropriate.
+    supported_by:
+      - reference_id: PMID:11751414
+        supporting_text: &#34;Pro-MMP-2 activation by MT3-MMP was also inhibited by the coexpression of N-Tes. Immunoprecipitation analysis demonstrated direct interaction of N-Tes with either MT1-MMP or MT3-MMP.&#34;
+- term:
+    id: GO:0030414
+    label: peptidase inhibitor activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: Parent term of metalloendopeptidase inhibitor activity. SPOCK3 contains Kazal-like and thyroglobulin type-1 domains which are protease inhibitor domains.
+    action: ACCEPT
+    reason: This is an accurate annotation based on UniProtKB keyword mapping to &#34;Protease inhibitor&#34; and &#34;Metalloprotease inhibitor&#34; keywords. GO:0030414 (peptidase inhibitor activity) is the parent term of GO:0008191 (metalloendopeptidase inhibitor activity), which is more specific. Since SPOCK3 inhibits metallopeptidases (a subclass of peptidases), the broader peptidase inhibitor activity term is also correct. Additionally, SPOCK3 contains a Kazal-like domain (residues 133-185) and a thyroglobulin type-1 domain (residues 314-380), both of which are protease inhibitor domains found in the MEROPS database (I01.980 and I31.007). This structural evidence supports the general peptidase inhibitor activity annotation.
+    supported_by:
+      - reference_id: file:human/SPOCK3/SPOCK3-uniprot.txt
+        supporting_text: &#34;DOMAIN 133..185 Kazal-like [PROSITE-ProRule:PRU00798]; DOMAIN 314..380 Thyroglobulin type-1 [PROSITE-ProRule:PRU00500]; MEROPS I01.980 [Kazal]; MEROPS I31.007 [thyroglobulin]&#34;
+- term:
+    id: GO:0005539
+    label: glycosaminoglycan binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  review:
+    summary: SPOCK3 is a proteoglycan that carries chondroitin sulfate and heparan sulfate GAG chains. The annotation is inferred from mouse ortholog.
+    action: ACCEPT
+    reason: This annotation is correct based on SPOCK3&#39;s nature as a proteoglycan. UniProt states &#34;Contains chondroitin sulfate and heparan sulfate O-linked oligosaccharides&#34; and indicates putative GAG attachment sites at Ser387 and Ser392. As a proteoglycan, SPOCK3 has glycosaminoglycan (GAG) chains covalently attached to its protein core. These GAG chains can interact with other molecules, giving the protein glycosaminoglycan binding capability. The IEA annotation is transferred from the mouse ortholog (Spock3, UniProtKB:Q8BKV0) via Ensembl Compara. While this is computational inference, it is well-supported by SPOCK3&#39;s biochemical nature as a heparan/chondroitin sulfate proteoglycan, which is consistent across species.
+    supported_by:
+      - reference_id: file:human/SPOCK3/SPOCK3-uniprot.txt
+        supporting_text: &#34;PTM: Contains chondroitin sulfate and heparan sulfate O-linked oligosaccharides. [ECO:0000250]; CARBOHYD 387 O-linked (Xyl...) (glycosaminoglycan) serine [ECO:0000255]; CARBOHYD 392 O-linked (Xyl...) (glycosaminoglycan) serine [ECO:0000255]&#34;
+- term:
+    id: GO:0031012
+    label: extracellular matrix
+  evidence_type: HDA
+  original_reference_id: PMID:32055794
+  review:
+    summary: Third annotation of GO:0031012 ECM localization, this time from high-throughput proteomics study mapping native ECM in 3D.
+    action: ACCEPT
+    reason: This is another duplicate of GO:0031012 (extracellular matrix) but with HDA (High-throughput Direct Assay) evidence from a proteomics study. PMID:32055794 is a large-scale study titled &#34;3D mapping of native extracellular matrix reveals cellular responses to the microenvironment&#34; that systematically identifies ECM proteins in their native context. The identification of SPOCK3 in this high-throughput ECM proteomics dataset provides independent experimental support for ECM localization beyond the phylogenetic (IBA) inference. Having IBA, HDA, and literature evidence all supporting ECM localization strengthens confidence in this core cellular component annotation for SPOCK3.
+    supported_by:
+      - reference_id: PMID:32055794
+- term:
+    id: GO:0031012
+    label: extracellular matrix
+  evidence_type: HDA
+  original_reference_id: PMID:33266304
+  review:
+    summary: Fourth annotation of GO:0031012 ECM localization, from another high-throughput proteomics study using divide-and-conquer approach for matrisome characterization.
+    action: ACCEPT
+    reason: This is yet another duplicate of GO:0031012 (extracellular matrix) with HDA evidence from a different proteomics study. PMID:33266304 titled &#34;Divide-and-Conquer Matrisome Protein (DC-MaP) Strategy - An MS-Friendly Approach to Proteomic Matrisome Characterization&#34; describes a systematic approach to characterize the complete matrisome (all ECM and ECM-associated proteins). SPOCK3&#39;s identification in this independent high-throughput matrisome study provides additional experimental validation of its ECM localization. Multiple HDA annotations from different proteomics studies (PMID:32055794 and PMID:33266304) plus phylogenetic inference (IBA) provide very strong, convergent evidence for SPOCK3&#39;s ECM localization.
+    supported_by:
+      - reference_id: PMID:33266304
+- term:
+    id: GO:0008191
+    label: metalloendopeptidase inhibitor activity
+  evidence_type: TAS
+  original_reference_id: PMID:12810672
+  review:
+    summary: Third annotation of GO:0008191 metalloendopeptidase inhibitor activity, this time with TAS (Traceable Author Statement) evidence from key experimental paper.
+    action: ACCEPT
+    reason: This is the third annotation of GO:0008191 (metalloendopeptidase inhibitor activity), now with TAS evidence code citing PMID:12810672. This is one of the key experimental papers characterizing SPOCK3&#39;s MMP inhibitory function. The paper states &#34;The inhibitory function is common among testican family members except for testican 2&#34; and demonstrates that SPOCK3 (along with testican-1 and N-Tes) inhibits MT1-MMP and MT3-MMP mediated pro-MMP-2 activation. Having TAS experimental evidence in addition to IBA (phylogenetic) and IEA (computational) annotations provides the strongest possible support for this core molecular function. This is THE defining activity of SPOCK3 and is crucial for its tumor-suppressive role.
+    supported_by:
+      - reference_id: PMID:12810672
+        supporting_text: &#34;The inhibitory function is common among testican family members except for testican 2, which was shown to uniquely abolish inhibition of MT1-MMP- or MT3-MMP-mediated pro-MMP-2 activation by other testican family members.&#34;
+- term:
+    id: GO:2000146
+    label: negative regulation of cell motility
+  evidence_type: TAS
+  original_reference_id: PMID:12810672
+  review:
+    summary: SPOCK3 negatively regulates cell motility through its MMP inhibitory activity. This is a key tumor-suppressive biological process.
+    action: ACCEPT
+    reason: This is an important biological process annotation with TAS experimental evidence from PMID:12810672. The paper demonstrates that &#34;Migration of U251 cells on collagen, which was dependent on MT1-MMP activity under serum-free condition, was inhibited by N-Tes or N-Tes-Delta 122 deposited on collagen.&#34; PMID:11751414 also shows that &#34;Transfection of either the N-Tes or testican 3 gene into U251 glioma cells or Madin-Darby canine kidney cells transformed by erbB2 suppressed their invasive growth in collagen gel.&#34; These data clearly demonstrate SPOCK3&#39;s role in negatively regulating cell motility, which is mechanistically linked to its metalloendopeptidase inhibitor activity. By inhibiting MT-MMPs, SPOCK3 prevents cells from degrading ECM components necessary for migration, thereby blocking cell motility and tumor invasion. This is a core biological process function.
+    supported_by:
+      - reference_id: PMID:12810672
+        supporting_text: &#34;Migration of U251 cells on collagen, which was dependent on MT1-MMP activity under serum-free condition, was inhibited by N-Tes or N-Tes-Delta 122 deposited on collagen.&#34;
+      - reference_id: PMID:11751414
+        supporting_text: &#34;Transfection of either the N-Tes or testican 3 gene into U251 glioma cells or Madin-Darby canine kidney cells transformed by erbB2 suppressed their invasive growth in collagen gel.&#34;
+- term:
+    id: GO:0005518
+    label: collagen binding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: SPOCK3 binds to collagen in the ECM. This annotation is present in UniProt GO lines but missing from the GOA file reviewed above.
+    action: NEW
+    reason: This annotation is present in the UniProt entry (line 284 - &#34;GO:0005518 F:collagen binding; IBA:GO_Central&#34;) but was not included in the GOA file provided for review. SPOCK3&#39;s collagen binding is experimentally supported by PMID:12810672, which demonstrates that N-Tes is &#34;deposited on collagen&#34; and that cells can migrate on &#34;collagen&#34; where N-Tes is present. PMID:11751414 shows that SPOCK3 expression &#34;suppressed their invasive growth in collagen gel,&#34; indicating interaction with collagen. As an ECM proteoglycan, SPOCK3 binds to collagen fibers where it exerts its MMP inhibitory activity to regulate cell motility. This is a core molecular function that should be included in the annotation set.
+    supported_by:
+      - reference_id: PMID:12810672
+        supporting_text: &#34;Testican 2 was not incorporated into collagen by itself, and was deposited only in the presence of N-Tes, suggesting that testican 2 binds to N-Tes deposited on collagen. Binding of testican 2 to N-Tes deposited on collagen allowed migration of cells expressing MT1-MMP.&#34;
+      - reference_id: PMID:11751414
+        supporting_text: &#34;Transfection of either the N-Tes or testican 3 gene into U251 glioma cells or Madin-Darby canine kidney cells transformed by erbB2 suppressed their invasive growth in collagen gel.&#34;
+- term:
+    id: GO:0050840
+    label: extracellular matrix binding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: SPOCK3 binds to ECM components. This annotation is present in UniProt GO lines but missing from the GOA file reviewed above.
+    action: NEW
+    reason: This annotation is present in the UniProt entry (line 285 - &#34;GO:0050840 F:extracellular matrix binding; IBA:GO_Central&#34;) but was not in the GOA file. As an ECM proteoglycan, SPOCK3 binds to various ECM components including collagen (GO:0005518). GO:0050840 (extracellular matrix binding) is the parent term of collagen binding and represents SPOCK3&#39;s broader capacity to interact with ECM molecules. The experimental evidence shows SPOCK3 is deposited on and interacts with collagen matrices (PMID:12810672, PMID:11751414). This ECM binding function is essential for SPOCK3 to localize properly and exert its MMP inhibitory and cell motility regulatory functions in the extracellular space.
+    supported_by:
+      - reference_id: PMID:12810672
+        supporting_text: &#34;N-Tes deposited on collagen&#34;
+      - reference_id: PMID:11751414
+        supporting_text: &#34;suppressed their invasive growth in collagen gel&#34;
+- term:
+    id: GO:0010951
+    label: negative regulation of endopeptidase activity
+  evidence_type: IDA
+  original_reference_id: PMID:11751414
+  review:
+    summary: SPOCK3 negatively regulates endopeptidase activity by inhibiting MT-MMPs. This annotation is present in UniProt GO lines but missing from the GOA file.
+    action: NEW
+    reason: This annotation is present in the UniProt entry (line 289 - &#34;GO:0010951 P:negative regulation of endopeptidase activity; IDA:UniProtKB&#34;) but was not in the GOA file. This is a biological process term describing the regulatory role of SPOCK3&#39;s molecular function (metalloendopeptidase inhibitor activity). PMID:11751414 provides direct experimental evidence that SPOCK3/N-Tes &#34;interfered with pro-MMP-2 activation&#34; by inhibiting the endopeptidase activity of MT1-MMP and MT3-MMP. This is a more specific biological process term than just &#34;negative regulation of cell motility&#34; and directly describes the mechanistic process by which SPOCK3 acts as an MMP inhibitor. This should be included as it captures the regulatory aspect of SPOCK3&#39;s core function.
+    supported_by:
+      - reference_id: PMID:11751414
+        supporting_text: &#34;Using expression cloning to screen a human fetal kidney cDNA library for regulator(s) of pro-matrix metalloproteinase (MMP)-2 processing mediated by membrane-type (MT) 1 MMP, we isolated a cDNA whose product interfered with pro-MMP-2 activation. [...] Pro-MMP-2 activation by MT3-MMP was also inhibited by the coexpression of N-Tes.&#34;
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms.
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+- id: GO_REF:0000107
+  title: Automatic transfer of experimentally verified manual GO annotation data to
+    orthologs using Ensembl Compara.
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: PMID:11751414
+  title: Suppression of membrane-type 1 matrix metalloproteinase (MMP)-mediated MMP-2
+    activation and tumor invasion by testican 3 and its splicing variant gene product,
+    N-Tes.
+  findings: []
+- id: PMID:12810672
+  title: Testican 2 abrogates inhibition of membrane-type matrix metalloproteinases
+    by other testican family proteins.
+  findings: []
+- id: PMID:32055794
+  title: 3D mapping of native extracellular matrix reveals cellular responses to the
+    microenvironment.
+  findings: []
+- id: PMID:33266304
+  title: &#39;Divide-and-Conquer Matrisome Protein (DC-MaP) Strategy: An MS-Friendly Approach
+    to Proteomic Matrisome Characterization.&#39;
+  findings: []
+- id: file:human/SPOCK3/SPOCK3-uniprot.txt
+  title: UniProt entry for SPOCK3 (Q9BQ16)
+  findings: []
+core_functions:
+- description: SPOCK3 functions as a tumor-suppressive metalloendopeptidase inhibitor in the extracellular matrix. It directly interacts with and inhibits MT1-MMP and MT3-MMP, preventing pro-MMP-2 activation, which blocks cell motility and tumor invasion. This MMP inhibitory activity is mediated through its modular domain architecture and calcium-binding domains.
+  molecular_function:
+    id: GO:0008191
+    label: metalloendopeptidase inhibitor activity
+  directly_involved_in:
+  - id: GO:2000146
+    label: negative regulation of cell motility
+  - id: GO:0010951
+    label: negative regulation of endopeptidase activity
+  locations:
+  - id: GO:0031012
+    label: extracellular matrix
+  - id: GO:0005615
+    label: extracellular space
+  supported_by:
+  - reference_id: PMID:11751414
+    supporting_text: &#34;Pro-MMP-2 activation by MT3-MMP was also inhibited by the coexpression of N-Tes. Immunoprecipitation analysis demonstrated direct interaction of N-Tes with either MT1-MMP or MT3-MMP.&#34;
+  - reference_id: PMID:12810672
+    supporting_text: &#34;The inhibitory function is common among testican family members except for testican 2&#34;
+  - reference_id: PMID:11751414
+    supporting_text: &#34;Transfection of either the N-Tes or testican 3 gene into U251 glioma cells or Madin-Darby canine kidney cells transformed by erbB2 suppressed their invasive growth in collagen gel.&#34;
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

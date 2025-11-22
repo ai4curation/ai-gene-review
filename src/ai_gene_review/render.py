@@ -400,7 +400,7 @@ def render_all_reviews(
     Returns:
         List of generated HTML file paths
     """
-    output_files = []
+    output_files: List[Path] = []
     yaml_files = list(directory.rglob(pattern))
 
     if not yaml_files:

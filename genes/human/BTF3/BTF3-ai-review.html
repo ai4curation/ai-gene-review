@@ -1,0 +1,2738 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BTF3 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>BTF3</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/O00478" target="_blank" class="term-link">
+                        O00478
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-in-progress">
+                    IN PROGRESS
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "BTF3";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="O00478" data-a="DESCRIPTION: Butyrophilin subfamily 3 member A3 (BTN3A3, also k..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Butyrophilin subfamily 3 member A3 (BTN3A3, also known as BTF3) is a type I transmembrane protein belonging to the extended B7 family of immune regulatory molecules. It contains two extracellular immunoglobulin domains and an intracellular B30.2 (PRYSPRY) domain. BTN3A3 plays a role in T cell-mediated immunity, particularly in the regulation of Vgamma9Vdelta2 T cells, though it is less functionally active than its close paralog BTN3A1. The protein forms homodimers and can heterodimerize with BTN3A1, regulating immune responses and potentially contributing to cancer biology.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001817" target="_blank" class="term-link">
+                                    GO:0001817
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of cytokine production</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O00478" data-a="GO:0001817" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA annotation for regulation of cytokine production. This is a general biological process annotation that may apply more to BTN3A1 than BTN3A3. The deep research suggests BTN3A3 has roles in immune regulation but does not provide specific evidence that BTN3A3 directly regulates cytokine production.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While BTN3A3 is involved in immune responses and T cell-mediated immunity, the specific evidence for regulation of cytokine production is limited for BTN3A3 specifically. This annotation likely derives from phylogenetic inference based on BTN3A1, which has more direct experimental evidence for this function. BTN3A3 appears to have a supporting rather than primary role in T cell activation, which may indirectly affect cytokine production. Marking as non-core pending more specific experimental evidence.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/BTF3/BTF3-deep-research-perplexity-lite.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">BTN3A3 functions as a signaling receptor and is involved in immune regulation, particularly in T-cell responses. Its molecular functions include: Signaling receptor binding, Regulation of cytokine production, T cell-mediated immunity</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005102" target="_blank" class="term-link">
+                                    GO:0005102
+                                </a>
+                            </span>
+                            <span class="term-label">signaling receptor binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="O00478" data-a="GO:0005102" data-r="GO_REF:0000033" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA annotation for signaling receptor binding. BTN3A3 can bind to other BTN3A family members and potentially to receptors on T cells, consistent with its role in immune signaling.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The term &#34;signaling receptor binding&#34; (GO:0005102) is too vague and does not capture the specific molecular function of BTN3A3. The protein has more specific functions related to immune receptor activity and protein heterodimerization. BTN3A3 acts as an immune regulatory molecule that can interact with BTN3A1 and BTN3A2 through its IgC domain to form heterodimers. A more informative term would be immune receptor activity or protein heterodimerization activity.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0140375" target="_blank" class="term-link">
+                                    immune receptor activity
+                                </a>
+                            </span>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046982" target="_blank" class="term-link">
+                                    protein heterodimerization activity
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/29339503" target="_blank" class="term-link">
+                                        PMID:29339503
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">BTN3A3 could also be coimmunoprecipitated with BTN3A1 (Fig. S3A), consistent with its potential to functionally collaborate with BTN3A1 in the absence of BTN3A2 (Fig. 1D).</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009897" target="_blank" class="term-link">
+                                    GO:0009897
+                                </a>
+                            </span>
+                            <span class="term-label">external side of plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O00478" data-a="GO:0009897" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA annotation for external side of plasma membrane. BTN3A3 is a type I transmembrane protein with extracellular immunoglobulin domains that face the external side of the membrane.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation is correct and well-supported. BTN3A3 is a type I transmembrane protein with two extracellular Ig domains (IgV and IgC) that extend to the external side of the plasma membrane. UniProt confirms this topology with extracellular domain from residues 30-248. This is consistent with its function as an immune regulatory molecule that interacts with other cell surface proteins and potentially with T cell receptors.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/BTF3/BTF3-deep-research-perplexity-lite.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">BTN3A3 is a type I membrane protein, meaning it is anchored in the plasma membrane with its N-terminus extracellular and C-terminus intracellular</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050852" target="_blank" class="term-link">
+                                    GO:0050852
+                                </a>
+                            </span>
+                            <span class="term-label">T cell receptor signaling pathway</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O00478" data-a="GO:0050852" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA annotation for T cell receptor signaling pathway. BTN3A3 has been shown to play a role in T cell responses, though the experimental evidence is stronger for BTN3A1.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> BTN3A3 is involved in T cell-mediated immunity and can modulate T cell responses, but the primary functional molecule in this pathway is BTN3A1. BTN3A3 appears to play a supporting role, potentially through heterodimerization with BTN3A1. PMID:22767497 demonstrated the key role of CD277/BTN3A in T cell responses, but focused primarily on the BTN3A1 isoform for PAg sensing. BTN3A3 may contribute to TCR signaling indirectly through its interactions with BTN3A1.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22767497" target="_blank" class="term-link">
+                                        PMID:22767497
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Vγ9Vδ2 T-cell activation by agonist anti-CD277 mAbs was restored after re-expression of any of the 3 CD277 isoforms, responses to PAg or NBP were obtained after re-expression of BTN3A1 only.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/BTF3/BTF3-deep-research-perplexity-lite.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">T cell receptor signaling pathway</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0002250" target="_blank" class="term-link">
+                                    GO:0002250
+                                </a>
+                            </span>
+                            <span class="term-label">adaptive immune response</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O00478" data-a="GO:0002250" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation based on UniProtKB keyword mapping for adaptive immune response. This is appropriately general for BTN3A3 role in immunity.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation is correct at an appropriate level of generality. BTN3A3 plays a role in adaptive immunity through its involvement in T cell-mediated immune responses. As a member of the butyrophilin family within the extended B7 superfamily, it contributes to immune regulation. The annotation is supported by UniProt function annotation stating it plays a role in T-cell responses in the adaptive immune response.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/BTF3/BTF3-deep-research-perplexity-lite.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Adaptive immune response</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0002376" target="_blank" class="term-link">
+                                    GO:0002376
+                                </a>
+                            </span>
+                            <span class="term-label">immune system process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O00478" data-a="GO:0002376" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation for immune system process. This is a very general parent term that is clearly correct for BTN3A3.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is an appropriately general annotation for BTN3A3, which is clearly involved in immune system processes through its role in T cell regulation and adaptive immunity. While this term is very broad, it accurately captures the biological context of BTN3A3 function. The term is a parent of more specific terms like adaptive immune response and T cell mediated immunity.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/BTF3/BTF3-deep-research-perplexity-lite.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">BTN3A3 is involved in several critical biological processes: T cell-mediated immunity, Regulation of cytokine production, Immune response modulation</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O00478" data-a="GO:0005886" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation based on UniProtKB subcellular location mapping. BTN3A3 is correctly annotated to plasma membrane.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation is correct. BTN3A3 is a type I transmembrane protein that localizes to the plasma membrane as confirmed by UniProt and multiple experimental studies. The protein has a signal peptide (residues 1-29), extracellular domain (30-248), transmembrane helix (249-269), and cytoplasmic domain (270-584). Cell membrane localization was confirmed experimentally by PMID:22767497.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/BTF3/BTF3-deep-research-perplexity-lite.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Plasma membrane</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/29339503" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:29339503
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Heteromeric interactions regulate butyrophilin (BTN) and BTN...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="O00478" data-a="GO:0005515" data-r="PMID:29339503" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI annotation for protein binding based on BTN3A1 interaction. This term is too vague per curation guidelines.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While the evidence from PMID:29339503 clearly demonstrates that BTN3A3 binds to BTN3A1, the term &#34;protein binding&#34; (GO:0005515) is explicitly discouraged in the curation guidelines as it does not provide informative functional information. The specific interaction demonstrated is protein heterodimerization, which is a more informative molecular function term. BTN3A3 forms heterodimers with BTN3A1 to regulate immune responses.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046982" target="_blank" class="term-link">
+                                    protein heterodimerization activity
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/29339503" target="_blank" class="term-link">
+                                        PMID:29339503
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">BTN3A3 could also be coimmunoprecipitated with BTN3A1 (Fig. S3A), consistent with its potential to functionally collaborate with BTN3A1 in the absence of BTN3A2 (Fig. 1D).</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:33961781
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Dual proteome-scale networks reveal cell-specific remodeling...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="O00478" data-a="GO:0005515" data-r="PMID:33961781" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI annotation for protein binding from a proteome-scale interactome study. This term is too vague per curation guidelines.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> PMID:33961781 is a large-scale proteomics study mapping cell-specific protein-protein interactions. While it likely identified BTN3A3 interactions, the generic term &#34;protein binding&#34; does not provide useful functional information per curation guidelines. Without access to the specific interaction partners identified in this study, and given that we have better characterized interactions with BTN3A1 from PMID:29339503, this annotation should be replaced with the more specific protein heterodimerization activity term.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046982" target="_blank" class="term-link">
+                                    protein heterodimerization activity
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            Reactome:R-HSA-8851038
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O00478" data-a="GO:0005886" data-r="Reactome:R-HSA-8851038" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TAS annotation from Reactome pathway for BTN3A1 binding prenylated phosphoantigens. This pathway primarily describes BTN3A1, not BTN3A3.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While the Reactome pathway R-HSA-8851038 focuses on BTN3A1 binding to prenylated phosphoantigens, BTN3A3 is also a plasma membrane protein as established by multiple lines of evidence. The localization annotation is correct even if the specific Reactome pathway is more relevant to BTN3A1. BTN3A3 is present at the plasma membrane as a type I transmembrane protein.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/BTF3/BTF3-deep-research-perplexity-lite.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Plasma membrane</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19946888" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19946888
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Defining the membrane proteome of NK cells.
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O00478" data-a="GO:0016020" data-r="PMID:19946888" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HDA annotation from high-throughput detection study of NK cell membrane proteome. This is a very general parent term.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> PMID:19946888 is a proteomics study defining the membrane proteome of NK cells, which detected BTN3A3. The annotation to the general term &#34;membrane&#34; (GO:0016020) is correct, though less specific than plasma membrane. BTN3A3 is indeed an integral membrane protein. This annotation can coexist with the more specific plasma membrane annotations.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/BTF3/BTF3-deep-research-perplexity-lite.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Integral component of the membrane</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0002456" target="_blank" class="term-link">
+                                    GO:0002456
+                                </a>
+                            </span>
+                            <span class="term-label">T cell mediated immunity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22767497" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22767497
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Key implication of CD277/butyrophilin-3 (BTN3A) in cellular ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O00478" data-a="GO:0002456" data-r="PMID:22767497" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP annotation for T cell mediated immunity from key experimental study. This is a core function, though primarily demonstrated for BTN3A1.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> PMID:22767497 is the key study demonstrating the role of CD277/BTN3A molecules in Vγ9Vδ2 T cell activation by phosphoantigens. The study showed that CD277 knockdown and domain-shuffling approaches confirmed the implication of BTN3A1 in PAg sensing, and that antibody 20.1 against CD277 (which recognizes all three BTN3A isoforms) can activate T cells. While BTN3A1 is the primary functional isoform, BTN3A3 contributes to T cell-mediated immunity through its expression and potential collaborative functions with BTN3A1. The IMP evidence code indicates this was demonstrated by mutant phenotype analysis.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22767497" target="_blank" class="term-link">
+                                        PMID:22767497
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">This study demonstrates a novel role played by B7-like molecules in human γδ T-cell antigenic activation</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/BTF3/BTF3-deep-research-perplexity-lite.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">T cell-mediated immunity</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22767497" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22767497
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Key implication of CD277/butyrophilin-3 (BTN3A) in cellular ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O00478" data-a="GO:0005886" data-r="PMID:22767497" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation for plasma membrane with direct experimental evidence from PMID:22767497.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> PMID:22767497 provides direct experimental evidence (IDA) for plasma membrane localization of BTN3A proteins including BTN3A3. The study included confocal microscopy and flow cytometry demonstrating cell surface expression. UniProt also confirms that BTN3A3 subcellular location was determined in this study. This is strong experimental evidence for plasma membrane localization.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/BTF3/BTF3-deep-research-perplexity-lite.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Plasma membrane</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Heterodimerizing with BTN3A1 at the plasma membrane to regulate T cell mediated immunity</h3>
+                <span class="vote-buttons" data-g="O00478" data-a="FUNCTION: Heterodimerizing with BTN3A1 at the plasma membran..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046982" target="_blank" class="term-link">
+                            protein heterodimerization activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0002456" target="_blank" class="term-link">
+                                T cell mediated immunity
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0002250" target="_blank" class="term-link">
+                                adaptive immune response
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                plasma membrane
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009897" target="_blank" class="term-link">
+                                external side of plasma membrane
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/29339503" target="_blank" class="term-link">
+                                PMID:29339503
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">BTN3A3 could also be coimmunoprecipitated with BTN3A1 (Fig. S3A), consistent with its potential to functionally collaborate with BTN3A1 in the absence of BTN3A2 (Fig. 1D).</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22767497" target="_blank" class="term-link">
+                                PMID:22767497
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">This study demonstrates a novel role played by B7-like molecules in human γδ T-cell antigenic activation</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:human/BTF3/BTF3-deep-research-perplexity-lite.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">BTN3A3 is a member of the butyrophilin (BTN) family, which is part of the extended B7 family of immune regulatory molecules</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Functioning as an immune receptor to support T cell responses in adaptive immunity</h3>
+                <span class="vote-buttons" data-g="O00478" data-a="FUNCTION: Functioning as an immune receptor to support T cel..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0140375" target="_blank" class="term-link">
+                            immune receptor activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0002456" target="_blank" class="term-link">
+                                T cell mediated immunity
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0002250" target="_blank" class="term-link">
+                                adaptive immune response
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                plasma membrane
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009897" target="_blank" class="term-link">
+                                external side of plasma membrane
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:human/BTF3/BTF3-deep-research-perplexity-lite.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">BTN3A3 functions as a signaling receptor and is involved in immune regulation, particularly in T-cell responses</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22767497" target="_blank" class="term-link">
+                                PMID:22767497
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Plays a role in T-cell responses in the adaptive immune response</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:human/BTF3/BTF3-deep-research-perplexity-lite.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep research synthesis of BTN3A3 literature</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19946888" target="_blank" class="term-link">
+                            PMID:19946888
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Defining the membrane proteome of NK cells.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22767497" target="_blank" class="term-link">
+                            PMID:22767497
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Key implication of CD277/butyrophilin-3 (BTN3A) in cellular stress sensing by a major human γδ T-cell subset.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/29339503" target="_blank" class="term-link">
+                            PMID:29339503
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Heteromeric interactions regulate butyrophilin (BTN) and BTN-like molecules governing γδ T cell biology.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link">
+                            PMID:33961781
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Dual proteome-scale networks reveal cell-specific remodeling of the human interactome.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        Reactome:R-HSA-8851038
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">BTN3A1 binds prenylated phosphoantigens</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Perplexity Lite</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(BTF3-deep-research-perplexity-lite.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="O00478" data-a="DOC: Deep Research Perplexity Lite" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: perplexity<br />
+model: sonar-pro<br />
+cached: false<br />
+start_time: '2025-11-15T18:33:36.457510'<br />
+end_time: '2025-11-15T18:33:59.128799'<br />
+duration_seconds: 22.67<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    reasoning_effort: low<br />
+    search_domain_filter: []<br />
+    return_citations: true<br />
+    temperature: 0.0<br />
+citation_count: 12</p>
+<hr />
+<h2 id="question">Question</h2>
+<p>Research the BTN3A3 (BTF3) gene in human, focusing on its molecular function, biological processes, and cellular localization. Include information about protein domains, known interactions, and any disease associations.</p>
+<h2 id="output">Output</h2>
+<h3 id="comprehensive-research-report-btn3a3-btf3-gene-in-human">Comprehensive Research Report: BTN3A3 (BTF3) Gene in Human</h3>
+<hr />
+<h4 id="1-gene-and-protein-overview"><strong>1. Gene and Protein Overview</strong></h4>
+<p><strong>Gene Name:</strong> BTN3A3 (Butyrophilin Subfamily 3 Member A3)<br />
+<strong>Synonyms:</strong> BTF3, BTN3.3<br />
+<strong>NCBI Gene ID:</strong> 10384<br />
+<strong>UniProt ID:</strong> O00478<br />
+<strong>Protein Name:</strong> BT3A3_HUMAN<br />
+<strong>Gene Type:</strong> Protein-coding gene</p>
+<p>BTN3A3 is a member of the butyrophilin (BTN) family, which is part of the extended B7 family of immune regulatory molecules. The BTN genes are located within or near the major histocompatibility complex (MHC) region and encode type I transmembrane proteins with two extracellular immunoglobulin (Ig) domains and an intracellular B30.2 (PRYSPRY) domain (Ma’ayan Lab, Harmonizome; GeneCards; NCBI Gene; Protein Atlas) [1, 5, 8, 3].</p>
+<hr />
+<h4 id="2-molecular-function"><strong>2. Molecular Function</strong></h4>
+<p>BTN3A3 functions as a <strong>signaling receptor</strong> and is involved in immune regulation, particularly in T-cell responses. Its molecular functions include:</p>
+<ul>
+<li><strong>Signaling receptor binding</strong> (Wikipedia; GeneGlobe) [10, 12]</li>
+<li><strong>Regulation of cytokine production</strong> (GeneGlobe) [12]</li>
+<li><strong>T cell-mediated immunity</strong> (GeneGlobe) [12]</li>
+<li><strong>Phosphoantigen sensing</strong> (via its intracellular B30.2 domain, which is critical for Vγ9Vδ2 T cell activation) [1]</li>
+</ul>
+<p>The <strong>intracellular B30.2 (PRYSPRY) domain</strong> is a key functional region that allows BTN3A3 to bind phosphoantigens and mediate immune cell activation, although BTN3A3 is less stimulatory than BTN3A1 under normal conditions. However, gain-of-function mutations in this domain can confer phosphoantigen binding and T-cell activation capacity [1].</p>
+<hr />
+<h4 id="3-biological-processes"><strong>3. Biological Processes</strong></h4>
+<p>BTN3A3 is involved in several critical biological processes:</p>
+<ul>
+<li><strong>T cell-mediated immunity</strong>  </li>
+<li><strong>Regulation of cytokine production</strong>  </li>
+<li><strong>Immune response modulation</strong>  </li>
+<li><strong>Cancer stemness and tumor progression</strong>  </li>
+<li><strong>Adaptive immune response</strong> (UniProt; GeneCards; Ma’ayan Lab) [5, 1]</li>
+</ul>
+<p>Recent studies highlight its role in <strong>cancer biology</strong>, where BTN3A3 acts as a receptor for LSECtin on breast cancer cells, promoting cancer stemness and tumor progression. Downregulation of BTN3A3 in non-small cell lung cancer is associated with advanced clinical stage, increased proliferation, and poorer survival [1].</p>
+<p>BTN3A3 expression is also modulated by the interplay between <strong>BLIMP1 and interferon regulatory factors</strong>, integrating it into immune-regulatory networks [1].</p>
+<hr />
+<h4 id="4-cellular-localization"><strong>4. Cellular Localization</strong></h4>
+<p>BTN3A3 is a <strong>type I membrane protein</strong>, meaning it is anchored in the plasma membrane with its N-terminus extracellular and C-terminus intracellular. Its cellular localization includes:</p>
+<ul>
+<li><strong>Integral component of the membrane</strong>  </li>
+<li><strong>Plasma membrane</strong>  </li>
+<li><strong>External side of the plasma membrane</strong> (Wikipedia; GeneGlobe) [10, 12]</li>
+</ul>
+<p>BTN3A3 is detected in peripheral blood mononuclear cells, T-cells, spleen, and lymphocytes, supporting its role in immune cell function [7].</p>
+<hr />
+<h4 id="5-protein-domains"><strong>5. Protein Domains</strong></h4>
+<p>BTN3A3 contains the following structural domains:</p>
+<ul>
+<li><strong>Two extracellular immunoglobulin (Ig) domains</strong>  </li>
+<li><strong>Transmembrane domain</strong>  </li>
+<li><strong>Intracellular B30.2 (PRYSPRY) domain</strong> (Ma’ayan Lab; GeneCards; NCBI Gene) [1, 5, 8]</li>
+</ul>
+<p>The B30.2 domain is crucial for phosphoantigen binding and immune cell activation. The extracellular Ig domains mediate receptor-ligand interactions, such as with LSECtin in cancer contexts [1].</p>
+<hr />
+<h4 id="6-known-protein-interactions"><strong>6. Known Protein Interactions</strong></h4>
+<p>BTN3A3 interacts with several key molecules:</p>
+<ul>
+<li><strong>LSECtin (C-type lectin domain family 4 member G, CLEC4G):</strong> BTN3A3 serves as a receptor for LSECtin on breast cancer cells, promoting cancer stemness and tumor progression [1].</li>
+<li><strong>Phosphoantigens:</strong> The intracellular B30.2 domain binds phosphoantigens, which can activate Vγ9Vδ2 T cells, especially in the context of gain-of-function mutations [1].</li>
+<li><strong>Other butyrophilin family members:</strong> BTN3A3 shares high homology with BTN3A1, but displays distinct functional properties in immunity and cancer [1].</li>
+</ul>
+<hr />
+<h4 id="7-disease-associations"><strong>7. Disease Associations</strong></h4>
+<p>BTN3A3 is implicated in several diseases, particularly cancer:</p>
+<ul>
+<li><strong>Breast Cancer:</strong> BTN3A3-LSECtin interaction promotes cancer stemness and tumor progression [1].</li>
+<li><strong>Non-Small Cell Lung Cancer (NSCLC):</strong> Downregulation of BTN3A3 correlates with advanced clinical stage, increased proliferation, and poorer overall survival [1].</li>
+<li><strong>Hepatocellular Carcinoma:</strong> BTN3A3 expression is part of prognostic risk models, indicating its potential utility as a biomarker for tumor progression and patient outcome [1].</li>
+<li><strong>Influenza A Virus:</strong> BTN3A3 evasion may promote the zoonotic potential of influenza A viruses [6].</li>
+</ul>
+<p>BTN3A3 is also involved in immune regulation and may play a role in autoimmune and inflammatory diseases, though this area requires further research [1, 5].</p>
+<hr />
+<h4 id="8-summary-table"><strong>8. Summary Table</strong></h4>
+<table>
+<thead>
+<tr>
+<th><strong>Aspect</strong></th>
+<th><strong>Details</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Gene Name</strong></td>
+<td>BTN3A3 (BTF3, BTN3.3)</td>
+</tr>
+<tr>
+<td><strong>Protein</strong></td>
+<td>BT3A3_HUMAN</td>
+</tr>
+<tr>
+<td><strong>Molecular Function</strong></td>
+<td>Signaling receptor binding, regulation of cytokine production, T cell-mediated immunity</td>
+</tr>
+<tr>
+<td><strong>Biological Processes</strong></td>
+<td>T cell-mediated immunity, regulation of cytokine production, cancer stemness, tumor progression</td>
+</tr>
+<tr>
+<td><strong>Cellular Localization</strong></td>
+<td>Integral component of membrane, plasma membrane, external side of plasma membrane</td>
+</tr>
+<tr>
+<td><strong>Protein Domains</strong></td>
+<td>Two extracellular Ig domains, transmembrane domain, intracellular B30.2 (PRYSPRY) domain</td>
+</tr>
+<tr>
+<td><strong>Interactions</strong></td>
+<td>LSECtin, phosphoantigens, other butyrophilin family members</td>
+</tr>
+<tr>
+<td><strong>Disease Associations</strong></td>
+<td>Breast cancer, NSCLC, hepatocellular carcinoma, influenza A virus, immune regulation</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h4 id="references"><strong>References</strong></h4>
+<ol>
+<li>Ma’ayan Lab, Harmonizome: <a href="https://maayanlab.cloud/Harmonizome/gene/BTN3A3">https://maayanlab.cloud/Harmonizome/gene/BTN3A3</a></li>
+<li>GeneCards: <a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=BTN3A3">https://www.genecards.org/cgi-bin/carddisp.pl?gene=BTN3A3</a></li>
+<li>The Human Protein Atlas: <a href="https://www.proteinatlas.org/ENSG00000111801-BTN3A3">https://www.proteinatlas.org/ENSG00000111801-BTN3A3</a></li>
+<li>NCBI Gene: <a href="https://www.ncbi.nlm.nih.gov/gene/10384">https://www.ncbi.nlm.nih.gov/gene/10384</a></li>
+<li>Wikipedia: <a href="https://en.wikipedia.org/wiki/BTN3A3">https://en.wikipedia.org/wiki/BTN3A3</a></li>
+<li>GeneGlobe: <a href="https://geneglobe.qiagen.com/us/knowledge/gene/ENSG00000111801">https://geneglobe.qiagen.com/us/knowledge/gene/ENSG00000111801</a></li>
+<li>ACROBiosystems: <a href="https://www.acrobiosystems.com/P1612-Human-BTN3A3--BTF3-Protein-His-Tag.html">https://www.acrobiosystems.com/P1612-Human-BTN3A3--BTF3-Protein-His-Tag.html</a></li>
+</ol>
+<hr />
+<p>This report synthesizes the latest available information on BTN3A3 (BTF3) as of November 2025, focusing on its molecular function, biological processes, cellular localization, protein domains, interactions, and disease associations.</p>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>https://maayanlab.cloud/Harmonizome/gene/BTN3A3</li>
+<li>https://maayanlab.cloud/Harmonizome/gene/BTF3</li>
+<li>https://www.proteinatlas.org/ENSG00000111801-BTN3A3</li>
+<li>https://www.frontiersin.org/journals/cell-and-developmental-biology/articles/10.3389/fcell.2020.601502/full</li>
+<li>https://www.genecards.org/cgi-bin/carddisp.pl?gene=BTN3A3</li>
+<li>https://www.ncbi.nlm.nih.gov/gene?Db=gene&amp;Cmd=DetailsSearch&amp;Term=10384</li>
+<li>https://www.acrobiosystems.com/P1612-Human-BTN3A3--BTF3-Protein-His-Tag.html</li>
+<li>https://www.ncbi.nlm.nih.gov/gene/10384</li>
+<li>https://www.genscript.com/protein/Z05099-BTN3A3_BTF3_His_Human.html</li>
+<li>https://en.wikipedia.org/wiki/BTN3A3</li>
+<li>https://kactusbio.com/products/human-btn3a3-btf3-protein-bnt-hm1a3</li>
+<li>https://geneglobe.qiagen.com/us/knowledge/gene/ENSG00000111801</li>
+</ol>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(BTF3-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="O00478" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="btf3-btn3a3-gene-review-notes">BTF3 (BTN3A3) Gene Review Notes</h1>
+<h2 id="review-completed-2025-11-16">Review Completed: 2025-11-16</h2>
+<h3 id="key-findings">Key Findings</h3>
+<p><strong>Gene Identity Issue:</strong><br />
+- The gene symbol BTF3 is actually a synonym for BTN3A3 (Butyrophilin subfamily 3 member A3)<br />
+- UniProt ID: O00478<br />
+- The primary gene symbol should be BTN3A3, not BTF3</p>
+<h3 id="annotation-review-summary">Annotation Review Summary</h3>
+<p>Reviewed all 13 existing GO annotations for BTN3A3:</p>
+<p><strong>ACCEPT (7 annotations):</strong><br />
+1. GO:0009897 (external side of plasma membrane) - IBA - Well-supported by protein topology<br />
+2. GO:0002250 (adaptive immune response) - IEA - Appropriate general term<br />
+3. GO:0002376 (immune system process) - IEA - Correct broad term<br />
+4. GO:0005886 (plasma membrane) - IEA, TAS, IDA - Multiple lines of evidence<br />
+5. GO:0016020 (membrane) - HDA - General but correct<br />
+6. GO:0002456 (T cell mediated immunity) - IMP - Core function from PMID:22767497</p>
+<p><strong>KEEP_AS_NON_CORE (2 annotations):</strong><br />
+1. GO:0001817 (regulation of cytokine production) - IBA - Limited specific evidence for BTN3A3<br />
+2. GO:0050852 (T cell receptor signaling pathway) - IBA - BTN3A1 is primary, BTN3A3 supporting</p>
+<p><strong>MODIFY (4 annotations):</strong><br />
+1. GO:0005102 (signaling receptor binding) - IBA - Too vague, should be immune receptor activity or protein heterodimerization activity<br />
+2. GO:0005515 (protein binding) x2 - IPI - Per guidelines, should be protein heterodimerization activity</p>
+<h3 id="critical-literature">Critical Literature</h3>
+<ol>
+<li><strong>PMID:22767497</strong> - Key study demonstrating CD277/BTN3A role in Vγ9Vδ2 T cell activation</li>
+<li>Showed BTN3A1 is primary functional isoform</li>
+<li>
+<p>BTN3A3 can activate T cells with agonist antibody but doesn't respond to phosphoantigens alone</p>
+</li>
+<li>
+<p><strong>PMID:29339503</strong> - Demonstrated heteromeric interactions</p>
+</li>
+<li>BTN3A3 can heterodimerize with BTN3A1</li>
+<li>BTN3A3 has potential to functionally collaborate with BTN3A1</li>
+</ol>
+<h3 id="core-vs-non-core-functions">Core vs. Non-Core Functions</h3>
+<p><strong>Core Functions:</strong><br />
+- Type I transmembrane protein localized to plasma membrane<br />
+- Protein heterodimerization (with BTN3A1)<br />
+- T cell mediated immunity (supporting role)</p>
+<p><strong>Non-Core/Supporting:</strong><br />
+- Regulation of cytokine production (indirect)<br />
+- T cell receptor signaling (via collaboration with BTN3A1)</p>
+<h3 id="proposed-improvements">Proposed Improvements</h3>
+<ol>
+<li>Replace vague "protein binding" and "signaling receptor binding" terms with:</li>
+<li>GO:0140375 (immune receptor activity)</li>
+<li>
+<p>GO:0046982 (protein heterodimerization activity)</p>
+</li>
+<li>
+<p>Consider adding new annotations for:</p>
+</li>
+<li>Protein homodimerization activity (BTN3A3 can homodimerize)</li>
+<li>B30.2/SPRY domain function</li>
+</ol>
+<h3 id="notes">Notes</h3>
+<ul>
+<li>BTN3A3 is less functionally active than BTN3A1 but can complement/support BTN3A1 function</li>
+<li>The protein structure includes: 2 extracellular Ig domains (IgV, IgC), transmembrane domain, intracellular B30.2 (PRYSPRY) domain</li>
+<li>Expression detected in peripheral blood mononuclear cells, T-cells, spleen, lymphocytes</li>
+<li>Potential roles in cancer biology (breast cancer, NSCLC) per deep research</li>
+</ul>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: O00478
+gene_symbol: BTF3
+product_type: PROTEIN
+status: IN_PROGRESS
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &#39;Butyrophilin subfamily 3 member A3 (BTN3A3, also known as BTF3) is a type I transmembrane protein belonging to the extended B7 family of immune regulatory molecules. It contains two extracellular immunoglobulin domains and an intracellular B30.2 (PRYSPRY) domain. BTN3A3 plays a role in T cell-mediated immunity, particularly in the regulation of Vgamma9Vdelta2 T cells, though it is less functionally active than its close paralog BTN3A1. The protein forms homodimers and can heterodimerize with BTN3A1, regulating immune responses and potentially contributing to cancer biology.&#39;
+existing_annotations:
+- term:
+    id: GO:0001817
+    label: regulation of cytokine production
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &#39;IBA annotation for regulation of cytokine production. This is a general biological process annotation that may apply more to BTN3A1 than BTN3A3. The deep research suggests BTN3A3 has roles in immune regulation but does not provide specific evidence that BTN3A3 directly regulates cytokine production.&#39;
+    action: KEEP_AS_NON_CORE
+    reason: &#39;While BTN3A3 is involved in immune responses and T cell-mediated immunity, the specific evidence for regulation of cytokine production is limited for BTN3A3 specifically. This annotation likely derives from phylogenetic inference based on BTN3A1, which has more direct experimental evidence for this function. BTN3A3 appears to have a supporting rather than primary role in T cell activation, which may indirectly affect cytokine production. Marking as non-core pending more specific experimental evidence.&#39;
+    supported_by:
+      - reference_id: file:human/BTF3/BTF3-deep-research-perplexity-lite.md
+        supporting_text: &#34;BTN3A3 functions as a signaling receptor and is involved in immune regulation, particularly in T-cell responses. Its molecular functions include: Signaling receptor binding, Regulation of cytokine production, T cell-mediated immunity&#34;
+- term:
+    id: GO:0005102
+    label: signaling receptor binding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &#39;IBA annotation for signaling receptor binding. BTN3A3 can bind to other BTN3A family members and potentially to receptors on T cells, consistent with its role in immune signaling.&#39;
+    action: MODIFY
+    reason: &#39;The term &#34;signaling receptor binding&#34; (GO:0005102) is too vague and does not capture the specific molecular function of BTN3A3. The protein has more specific functions related to immune receptor activity and protein heterodimerization. BTN3A3 acts as an immune regulatory molecule that can interact with BTN3A1 and BTN3A2 through its IgC domain to form heterodimers. A more informative term would be immune receptor activity or protein heterodimerization activity.&#39;
+    proposed_replacement_terms:
+      - id: GO:0140375
+        label: immune receptor activity
+      - id: GO:0046982
+        label: protein heterodimerization activity
+    supported_by:
+      - reference_id: PMID:29339503
+        supporting_text: &#34;BTN3A3 could also be coimmunoprecipitated with BTN3A1 (Fig. S3A), consistent with its potential to functionally collaborate with BTN3A1 in the absence of BTN3A2 (Fig. 1D).&#34;
+- term:
+    id: GO:0009897
+    label: external side of plasma membrane
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &#39;IBA annotation for external side of plasma membrane. BTN3A3 is a type I transmembrane protein with extracellular immunoglobulin domains that face the external side of the membrane.&#39;
+    action: ACCEPT
+    reason: &#39;This annotation is correct and well-supported. BTN3A3 is a type I transmembrane protein with two extracellular Ig domains (IgV and IgC) that extend to the external side of the plasma membrane. UniProt confirms this topology with extracellular domain from residues 30-248. This is consistent with its function as an immune regulatory molecule that interacts with other cell surface proteins and potentially with T cell receptors.&#39;
+    supported_by:
+      - reference_id: file:human/BTF3/BTF3-deep-research-perplexity-lite.md
+        supporting_text: &#34;BTN3A3 is a type I membrane protein, meaning it is anchored in the plasma membrane with its N-terminus extracellular and C-terminus intracellular&#34;
+- term:
+    id: GO:0050852
+    label: T cell receptor signaling pathway
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &#39;IBA annotation for T cell receptor signaling pathway. BTN3A3 has been shown to play a role in T cell responses, though the experimental evidence is stronger for BTN3A1.&#39;
+    action: KEEP_AS_NON_CORE
+    reason: &#39;BTN3A3 is involved in T cell-mediated immunity and can modulate T cell responses, but the primary functional molecule in this pathway is BTN3A1. BTN3A3 appears to play a supporting role, potentially through heterodimerization with BTN3A1. PMID:22767497 demonstrated the key role of CD277/BTN3A in T cell responses, but focused primarily on the BTN3A1 isoform for PAg sensing. BTN3A3 may contribute to TCR signaling indirectly through its interactions with BTN3A1.&#39;
+    supported_by:
+      - reference_id: PMID:22767497
+        supporting_text: &#34;Vγ9Vδ2 T-cell activation by agonist anti-CD277 mAbs was restored after re-expression of any of the 3 CD277 isoforms, responses to PAg or NBP were obtained after re-expression of BTN3A1 only.&#34;
+      - reference_id: file:human/BTF3/BTF3-deep-research-perplexity-lite.md
+        supporting_text: &#34;T cell receptor signaling pathway&#34;
+- term:
+    id: GO:0002250
+    label: adaptive immune response
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;IEA annotation based on UniProtKB keyword mapping for adaptive immune response. This is appropriately general for BTN3A3 role in immunity.&#39;
+    action: ACCEPT
+    reason: &#39;This annotation is correct at an appropriate level of generality. BTN3A3 plays a role in adaptive immunity through its involvement in T cell-mediated immune responses. As a member of the butyrophilin family within the extended B7 superfamily, it contributes to immune regulation. The annotation is supported by UniProt function annotation stating it plays a role in T-cell responses in the adaptive immune response.&#39;
+    supported_by:
+      - reference_id: file:human/BTF3/BTF3-deep-research-perplexity-lite.md
+        supporting_text: &#34;Adaptive immune response&#34;
+- term:
+    id: GO:0002376
+    label: immune system process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;IEA annotation for immune system process. This is a very general parent term that is clearly correct for BTN3A3.&#39;
+    action: ACCEPT
+    reason: &#39;This is an appropriately general annotation for BTN3A3, which is clearly involved in immune system processes through its role in T cell regulation and adaptive immunity. While this term is very broad, it accurately captures the biological context of BTN3A3 function. The term is a parent of more specific terms like adaptive immune response and T cell mediated immunity.&#39;
+    supported_by:
+      - reference_id: file:human/BTF3/BTF3-deep-research-perplexity-lite.md
+        supporting_text: &#34;BTN3A3 is involved in several critical biological processes: T cell-mediated immunity, Regulation of cytokine production, Immune response modulation&#34;
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: &#39;IEA annotation based on UniProtKB subcellular location mapping. BTN3A3 is correctly annotated to plasma membrane.&#39;
+    action: ACCEPT
+    reason: &#39;This annotation is correct. BTN3A3 is a type I transmembrane protein that localizes to the plasma membrane as confirmed by UniProt and multiple experimental studies. The protein has a signal peptide (residues 1-29), extracellular domain (30-248), transmembrane helix (249-269), and cytoplasmic domain (270-584). Cell membrane localization was confirmed experimentally by PMID:22767497.&#39;
+    supported_by:
+      - reference_id: file:human/BTF3/BTF3-deep-research-perplexity-lite.md
+        supporting_text: &#34;Plasma membrane&#34;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:29339503
+  review:
+    summary: &#39;IPI annotation for protein binding based on BTN3A1 interaction. This term is too vague per curation guidelines.&#39;
+    action: MODIFY
+    reason: &#39;While the evidence from PMID:29339503 clearly demonstrates that BTN3A3 binds to BTN3A1, the term &#34;protein binding&#34; (GO:0005515) is explicitly discouraged in the curation guidelines as it does not provide informative functional information. The specific interaction demonstrated is protein heterodimerization, which is a more informative molecular function term. BTN3A3 forms heterodimers with BTN3A1 to regulate immune responses.&#39;
+    proposed_replacement_terms:
+      - id: GO:0046982
+        label: protein heterodimerization activity
+    supported_by:
+      - reference_id: PMID:29339503
+        supporting_text: &#34;BTN3A3 could also be coimmunoprecipitated with BTN3A1 (Fig. S3A), consistent with its potential to functionally collaborate with BTN3A1 in the absence of BTN3A2 (Fig. 1D).&#34;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:33961781
+  review:
+    summary: &#39;IPI annotation for protein binding from a proteome-scale interactome study. This term is too vague per curation guidelines.&#39;
+    action: MODIFY
+    reason: &#39;PMID:33961781 is a large-scale proteomics study mapping cell-specific protein-protein interactions. While it likely identified BTN3A3 interactions, the generic term &#34;protein binding&#34; does not provide useful functional information per curation guidelines. Without access to the specific interaction partners identified in this study, and given that we have better characterized interactions with BTN3A1 from PMID:29339503, this annotation should be replaced with the more specific protein heterodimerization activity term.&#39;
+    proposed_replacement_terms:
+      - id: GO:0046982
+        label: protein heterodimerization activity
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-8851038
+  review:
+    summary: &#39;TAS annotation from Reactome pathway for BTN3A1 binding prenylated phosphoantigens. This pathway primarily describes BTN3A1, not BTN3A3.&#39;
+    action: ACCEPT
+    reason: &#39;While the Reactome pathway R-HSA-8851038 focuses on BTN3A1 binding to prenylated phosphoantigens, BTN3A3 is also a plasma membrane protein as established by multiple lines of evidence. The localization annotation is correct even if the specific Reactome pathway is more relevant to BTN3A1. BTN3A3 is present at the plasma membrane as a type I transmembrane protein.&#39;
+    supported_by:
+      - reference_id: file:human/BTF3/BTF3-deep-research-perplexity-lite.md
+        supporting_text: &#34;Plasma membrane&#34;
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: HDA
+  original_reference_id: PMID:19946888
+  review:
+    summary: &#39;HDA annotation from high-throughput detection study of NK cell membrane proteome. This is a very general parent term.&#39;
+    action: ACCEPT
+    reason: &#39;PMID:19946888 is a proteomics study defining the membrane proteome of NK cells, which detected BTN3A3. The annotation to the general term &#34;membrane&#34; (GO:0016020) is correct, though less specific than plasma membrane. BTN3A3 is indeed an integral membrane protein. This annotation can coexist with the more specific plasma membrane annotations.&#39;
+    supported_by:
+      - reference_id: file:human/BTF3/BTF3-deep-research-perplexity-lite.md
+        supporting_text: &#34;Integral component of the membrane&#34;
+- term:
+    id: GO:0002456
+    label: T cell mediated immunity
+  evidence_type: IMP
+  original_reference_id: PMID:22767497
+  review:
+    summary: &#39;IMP annotation for T cell mediated immunity from key experimental study. This is a core function, though primarily demonstrated for BTN3A1.&#39;
+    action: ACCEPT
+    reason: &#39;PMID:22767497 is the key study demonstrating the role of CD277/BTN3A molecules in Vγ9Vδ2 T cell activation by phosphoantigens. The study showed that CD277 knockdown and domain-shuffling approaches confirmed the implication of BTN3A1 in PAg sensing, and that antibody 20.1 against CD277 (which recognizes all three BTN3A isoforms) can activate T cells. While BTN3A1 is the primary functional isoform, BTN3A3 contributes to T cell-mediated immunity through its expression and potential collaborative functions with BTN3A1. The IMP evidence code indicates this was demonstrated by mutant phenotype analysis.&#39;
+    supported_by:
+      - reference_id: PMID:22767497
+        supporting_text: &#34;This study demonstrates a novel role played by B7-like molecules in human γδ T-cell antigenic activation&#34;
+      - reference_id: file:human/BTF3/BTF3-deep-research-perplexity-lite.md
+        supporting_text: &#34;T cell-mediated immunity&#34;
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IDA
+  original_reference_id: PMID:22767497
+  review:
+    summary: &#39;IDA annotation for plasma membrane with direct experimental evidence from PMID:22767497.&#39;
+    action: ACCEPT
+    reason: &#39;PMID:22767497 provides direct experimental evidence (IDA) for plasma membrane localization of BTN3A proteins including BTN3A3. The study included confocal microscopy and flow cytometry demonstrating cell surface expression. UniProt also confirms that BTN3A3 subcellular location was determined in this study. This is strong experimental evidence for plasma membrane localization.&#39;
+    supported_by:
+      - reference_id: file:human/BTF3/BTF3-deep-research-perplexity-lite.md
+        supporting_text: &#34;Plasma membrane&#34;
+references:
+- id: file:human/BTF3/BTF3-deep-research-perplexity-lite.md
+  title: Deep research synthesis of BTN3A3 literature
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt.
+  findings: []
+- id: PMID:19946888
+  title: Defining the membrane proteome of NK cells.
+  findings: []
+- id: PMID:22767497
+  title: Key implication of CD277/butyrophilin-3 (BTN3A) in cellular stress sensing
+    by a major human γδ T-cell subset.
+  findings: []
+- id: PMID:29339503
+  title: Heteromeric interactions regulate butyrophilin (BTN) and BTN-like molecules
+    governing γδ T cell biology.
+  findings: []
+- id: PMID:33961781
+  title: Dual proteome-scale networks reveal cell-specific remodeling of the human
+    interactome.
+  findings: []
+- id: Reactome:R-HSA-8851038
+  title: BTN3A1 binds prenylated phosphoantigens
+  findings: []
+core_functions:
+- description: Heterodimerizing with BTN3A1 at the plasma membrane to regulate T cell mediated immunity
+  molecular_function:
+    id: GO:0046982
+    label: protein heterodimerization activity
+  directly_involved_in:
+  - id: GO:0002456
+    label: T cell mediated immunity
+  - id: GO:0002250
+    label: adaptive immune response
+  locations:
+  - id: GO:0005886
+    label: plasma membrane
+  - id: GO:0009897
+    label: external side of plasma membrane
+  supported_by:
+  - reference_id: PMID:29339503
+    supporting_text: &#34;BTN3A3 could also be coimmunoprecipitated with BTN3A1 (Fig. S3A), consistent with its potential to functionally collaborate with BTN3A1 in the absence of BTN3A2 (Fig. 1D).&#34;
+  - reference_id: PMID:22767497
+    supporting_text: &#34;This study demonstrates a novel role played by B7-like molecules in human γδ T-cell antigenic activation&#34;
+  - reference_id: file:human/BTF3/BTF3-deep-research-perplexity-lite.md
+    supporting_text: &#34;BTN3A3 is a member of the butyrophilin (BTN) family, which is part of the extended B7 family of immune regulatory molecules&#34;
+- description: Functioning as an immune receptor to support T cell responses in adaptive immunity
+  molecular_function:
+    id: GO:0140375
+    label: immune receptor activity
+  directly_involved_in:
+  - id: GO:0002456
+    label: T cell mediated immunity
+  - id: GO:0002250
+    label: adaptive immune response
+  locations:
+  - id: GO:0005886
+    label: plasma membrane
+  - id: GO:0009897
+    label: external side of plasma membrane
+  supported_by:
+  - reference_id: file:human/BTF3/BTF3-deep-research-perplexity-lite.md
+    supporting_text: &#34;BTN3A3 functions as a signaling receptor and is involved in immune regulation, particularly in T-cell responses&#34;
+  - reference_id: PMID:22767497
+    supporting_text: &#34;Plays a role in T-cell responses in the adaptive immune response&#34;
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
