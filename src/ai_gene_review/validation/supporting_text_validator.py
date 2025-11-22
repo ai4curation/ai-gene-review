@@ -10,6 +10,7 @@ import re
 from dataclasses import dataclass, field
 from difflib import SequenceMatcher
 import yaml
+from ai_gene_review.validation.fuzzy_text_utils import find_fuzzy_match_in_text
 
 DEFAULT_SIMILARITY_THRESHOLD = 0.85
 
@@ -35,26 +36,86 @@ class SupportingTextValidationReport:
 
     is_valid: bool = True
     results: List[SupportingTextValidationResult] = field(default_factory=list)
+
+    # Separate tracking for findings vs annotations
+    total_findings: int = 0
+    findings_with_supporting_text: int = 0
+    valid_finding_supporting_texts: int = 0
+    invalid_finding_supporting_texts: int = 0
+
     total_annotations: int = 0
     annotations_with_supporting_text: int = 0
-    valid_supporting_texts: int = 0
-    invalid_supporting_texts: int = 0
+    valid_annotation_supporting_texts: int = 0
+    invalid_annotation_supporting_texts: int = 0
 
     @property
-    def validation_rate(self) -> float:
+    def findings_coverage_rate(self) -> float:
+        """Percentage of findings that have supporting_text."""
+        if self.total_findings == 0:
+            return 0.0
+        return (self.findings_with_supporting_text / self.total_findings) * 100
+
+    @property
+    def annotations_coverage_rate(self) -> float:
         """Percentage of annotations that have supporting_text."""
         if self.total_annotations == 0:
             return 0.0
         return (self.annotations_with_supporting_text / self.total_annotations) * 100
 
     @property
-    def accuracy_rate(self) -> float:
-        """Percentage of supporting_texts that are valid."""
+    def findings_accuracy_rate(self) -> float:
+        """Percentage of finding supporting_texts that are valid."""
+        if self.findings_with_supporting_text == 0:
+            return 0.0
+        return (self.valid_finding_supporting_texts / self.findings_with_supporting_text) * 100
+
+    @property
+    def annotations_accuracy_rate(self) -> float:
+        """Percentage of annotation supporting_texts that are valid."""
         if self.annotations_with_supporting_text == 0:
             return 0.0
-        return (
-            self.valid_supporting_texts / self.annotations_with_supporting_text
-        ) * 100
+        return (self.valid_annotation_supporting_texts / self.annotations_with_supporting_text) * 100
+
+    # Legacy properties for backward compatibility
+    @property
+    def validation_rate(self) -> float:
+        """Percentage of all items (findings + annotations) that have supporting_text.
+
+        DEPRECATED: Use findings_coverage_rate and annotations_coverage_rate instead.
+        """
+        total = self.total_findings + self.total_annotations
+        if total == 0:
+            return 0.0
+        total_with_text = self.findings_with_supporting_text + self.annotations_with_supporting_text
+        return (total_with_text / total) * 100
+
+    @property
+    def accuracy_rate(self) -> float:
+        """Percentage of all supporting_texts that are valid.
+
+        DEPRECATED: Use findings_accuracy_rate and annotations_accuracy_rate instead.
+        """
+        total_with_text = self.findings_with_supporting_text + self.annotations_with_supporting_text
+        if total_with_text == 0:
+            return 0.0
+        total_valid = self.valid_finding_supporting_texts + self.valid_annotation_supporting_texts
+        return (total_valid / total_with_text) * 100
+
+    @property
+    def valid_supporting_texts(self) -> int:
+        """Total valid supporting texts (findings + annotations).
+
+        DEPRECATED: Use valid_finding_supporting_texts and valid_annotation_supporting_texts instead.
+        """
+        return self.valid_finding_supporting_texts + self.valid_annotation_supporting_texts
+
+    @property
+    def invalid_supporting_texts(self) -> int:
+        """Total invalid supporting texts (findings + annotations).
+
+        DEPRECATED: Use invalid_finding_supporting_texts and invalid_annotation_supporting_texts instead.
+        """
+        return self.invalid_finding_supporting_texts + self.invalid_annotation_supporting_texts
 
 
 class SupportingTextValidator:
@@ -994,14 +1055,14 @@ class SupportingTextValidator:
                     if not isinstance(finding, dict):
                         continue
 
-                    # Count as an annotation for reporting purposes
-                    report.total_annotations += 1
+                    # Count as a finding
+                    report.total_findings += 1
 
-                    # NEW: Add warning if PMID, UniProt or Reactome reference has findings without supporting_text
+                    # Add warning if PMID, UniProt or Reactome reference has findings without supporting_text
                     if (ref_id.startswith("PMID:") or ref_id.lower().startswith("uniprot:") or ref_id.upper().startswith("REACTOME:")) and findings:
                         supporting_text = finding.get("supporting_text", "").strip()
                         if not supporting_text:
-                            # Create a warning result for PMID findings without supporting_text
+                            # Create a warning result for findings without supporting_text
                             warning_result = SupportingTextValidationResult(
                                 is_valid=False,  # Mark as invalid to trigger warning
                                 annotation_path=f"references[{ref_idx}].findings[{finding_idx}]",
@@ -1012,7 +1073,7 @@ class SupportingTextValidator:
                                 similarity_score=0.0,
                             )
                             report.results.append(warning_result)
-                            report.invalid_supporting_texts += 1
+                            report.invalid_finding_supporting_texts += 1
                             report.is_valid = False
                             continue
 
@@ -1021,24 +1082,24 @@ class SupportingTextValidator:
                     )
 
                     if result:
-                        report.annotations_with_supporting_text += 1
+                        report.findings_with_supporting_text += 1
                         report.results.append(result)
 
                         if result.is_valid:
-                            report.valid_supporting_texts += 1
+                            report.valid_finding_supporting_texts += 1
                         else:
-                            report.invalid_supporting_texts += 1
+                            report.invalid_finding_supporting_texts += 1
                             report.is_valid = False
 
         # Check existing_annotations
         annotations = data.get("existing_annotations", [])
-        report.total_annotations += len(annotations)
+        report.total_annotations = len(annotations)
 
         for i, annotation in enumerate(annotations):
             if not isinstance(annotation, dict):
                 continue
 
-            # Check the new supported_by field
+            # Check the supported_by field
             supported_by_results = self.validate_annotation_supported_by(
                 annotation, i, data
             )
@@ -1047,9 +1108,9 @@ class SupportingTextValidator:
                 report.results.append(sb_result)
 
                 if sb_result.is_valid:
-                    report.valid_supporting_texts += 1
+                    report.valid_annotation_supporting_texts += 1
                 else:
-                    report.invalid_supporting_texts += 1
+                    report.invalid_annotation_supporting_texts += 1
                     report.is_valid = False
 
         return report
@@ -1088,6 +1149,773 @@ class SupportingTextValidator:
             )
             report.results.append(result)
             return report
+
+
+class SupportingTextSubstringValidator(SupportingTextValidator):
+    """Validates supporting_text using deterministic substring matching.
+
+    This validator uses a stricter, more deterministic approach than the fuzzy
+    matching in SupportingTextValidator:
+
+    1. Whitespace is normalized (all whitespace collapsed to single spaces)
+    2. Text within [square brackets] is ignored as editorial notes
+    3. Remaining text spans must be 100% substrings of the source
+    4. Total length of non-bracketed spans must be > 20 chars
+    5. Total length of non-bracketed spans must be > length of bracketed content
+
+    This avoids false positives from fuzzy matching while still allowing for
+    editorial clarifications in brackets.
+    """
+
+    MIN_SPAN_LENGTH = 20  # Minimum total length of query spans
+
+    def normalize_whitespace(self, text: str) -> str:
+        """Normalize all whitespace to single spaces and lowercase.
+
+        Also normalizes various unicode dash characters to standard ASCII hyphen-minus
+        and unicode quote characters to standard ASCII quotes to prevent false positives
+        from character mismatches.
+
+        Args:
+            text: Text to normalize
+
+        Returns:
+            Text with all whitespace collapsed to single spaces, dashes normalized,
+            quotes normalized, and lowercased
+
+        Examples:
+            >>> validator = SupportingTextSubstringValidator()
+            >>> validator.normalize_whitespace("text  with\\nmultiple   spaces")
+            'text with multiple spaces'
+            >>> validator.normalize_whitespace("  leading and trailing  ")
+            'leading and trailing'
+            >>> validator.normalize_whitespace("MixedCase TEXT")
+            'mixedcase text'
+            >>> validator.normalize_whitespace("gene–protein")  # en-dash
+            'gene-protein'
+            >>> validator.normalize_whitespace("gene—protein")  # em-dash
+            'gene-protein'
+            >>> validator.normalize_whitespace("gene−protein")  # minus sign
+            'gene-protein'
+            >>> validator.normalize_whitespace('"shuttled"')  # curly quotes
+            '"shuttled"'
+            >>> validator.normalize_whitespace("'gene'")  # curly single quotes
+            "'gene'"
+            >>> validator.normalize_whitespace("IIα protein")  # Greek alpha
+            'iialpha protein'
+            >>> validator.normalize_whitespace("TNFα")  # Greek alpha in gene name
+            'tnfalpha'
+        """
+        # Normalize various unicode dashes to ASCII hyphen-minus
+        # This prevents false positives from dash character mismatches
+        # U+2013: en-dash (–)
+        # U+2014: em-dash (—)
+        # U+2212: minus sign (−)
+        # U+2010: hyphen (‐)
+        text = text.replace('–', '-')  # en-dash
+        text = text.replace('—', '-')  # em-dash
+        text = text.replace('−', '-')  # minus sign
+        text = text.replace('‐', '-')  # unicode hyphen
+
+        # Normalize various unicode quotes to ASCII quotes
+        # This prevents false positives from quote character mismatches
+        # U+201C: left double quotation mark (")
+        # U+201D: right double quotation mark (")
+        # U+2018: left single quotation mark (')
+        # U+2019: right single quotation mark (')
+        # U+201A: single low-9 quotation mark (‚)
+        # U+201E: double low-9 quotation mark („)
+        text = text.replace('\u201c', '"')  # left double quote
+        text = text.replace('\u201d', '"')  # right double quote
+        text = text.replace('\u2018', "'")  # left single quote
+        text = text.replace('\u2019', "'")  # right single quote
+        text = text.replace('\u201a', "'")  # single low-9 quote
+        text = text.replace('\u201e', '"')  # double low-9 quote
+
+        # Normalize Greek letters to their spelled-out equivalents
+        # This prevents false positives from Greek letter vs spelled-out mismatches
+        # Common in gene/protein names (e.g., IIα vs IIalpha, TNFα vs TNFalpha)
+        greek_to_latin = {
+            'α': 'alpha',
+            'β': 'beta',
+            'γ': 'gamma',
+            'δ': 'delta',
+            'ε': 'epsilon',
+            'ζ': 'zeta',
+            'η': 'eta',
+            'θ': 'theta',
+            'ι': 'iota',
+            'κ': 'kappa',
+            'λ': 'lambda',
+            'μ': 'mu',
+            'ν': 'nu',
+            'ξ': 'xi',
+            'ο': 'omicron',
+            'π': 'pi',
+            'ρ': 'rho',
+            'σ': 'sigma',
+            'ς': 'sigma',  # final sigma
+            'τ': 'tau',
+            'υ': 'upsilon',
+            'φ': 'phi',
+            'χ': 'chi',
+            'ψ': 'psi',
+            'ω': 'omega',
+            # Uppercase variants (less common but included for completeness)
+            'Α': 'Alpha',
+            'Β': 'Beta',
+            'Γ': 'Gamma',
+            'Δ': 'Delta',
+            'Ε': 'Epsilon',
+            'Ζ': 'Zeta',
+            'Η': 'Eta',
+            'Θ': 'Theta',
+            'Ι': 'Iota',
+            'Κ': 'Kappa',
+            'Λ': 'Lambda',
+            'Μ': 'Mu',
+            'Ν': 'Nu',
+            'Ξ': 'Xi',
+            'Ο': 'Omicron',
+            'Π': 'Pi',
+            'Ρ': 'Rho',
+            'Σ': 'Sigma',
+            'Τ': 'Tau',
+            'Υ': 'Upsilon',
+            'Φ': 'Phi',
+            'Χ': 'Chi',
+            'Ψ': 'Psi',
+            'Ω': 'Omega',
+        }
+        for greek, latin in greek_to_latin.items():
+            text = text.replace(greek, latin)
+
+        # Normalize whitespace and lowercase
+        return re.sub(r'\s+', ' ', text).strip().lower()
+
+    def is_editorial_bracket(self, content: str) -> bool:
+        """Determine if bracketed content is editorial vs scientific notation.
+
+        Distinguishes between editorial notes (e.g., [important], [The protein])
+        and scientific notation (e.g., [+21], [14], [G19]) to avoid false positives.
+
+        Editorial brackets are removed during validation, while scientific notation
+        brackets are kept as part of the quotation.
+
+        Args:
+            content: The content inside brackets (without the brackets themselves)
+
+        Returns:
+            True if content appears to be editorial, False if scientific notation
+
+        Examples:
+            >>> validator = SupportingTextSubstringValidator()
+            >>> validator.is_editorial_bracket("+21")  # Nucleotide position
+            False
+            >>> validator.is_editorial_bracket("14")  # Residue number
+            False
+            >>> validator.is_editorial_bracket("A")  # Single letter identifier
+            False
+            >>> validator.is_editorial_bracket("G19")  # Gene coordinate
+            False
+            >>> validator.is_editorial_bracket("important")  # Editorial adjective
+            True
+            >>> validator.is_editorial_bracket("The protein")  # Editorial phrase
+            True
+            >>> validator.is_editorial_bracket("according to studies")  # Editorial clause
+            True
+            >>> validator.is_editorial_bracket("...")  # Explicit editorial ellipsis
+            True
+            >>> validator.is_editorial_bracket("unclear mechanism ...")  # Editorial with ellipsis
+            True
+            >>> validator.is_editorial_bracket("-3")  # Negative position
+            False
+            >>> validator.is_editorial_bracket("U+21")  # Nucleotide with position
+            False
+            >>> validator.is_editorial_bracket("Ca 2+ ")  # Calcium ion
+            False
+            >>> validator.is_editorial_bracket("Mg2+")  # Magnesium ion (no spaces)
+            False
+            >>> validator.is_editorial_bracket("Na+")  # Sodium ion
+            False
+            >>> validator.is_editorial_bracket("OH-")  # Hydroxide ion
+            False
+            >>> validator.is_editorial_bracket("NH4+")  # Ammonium ion (complex)
+            False
+        """
+        content = content.strip()
+
+        # Empty - not editorial (shouldn't happen, but handle gracefully)
+        if not content:
+            return False
+
+        # Explicit editorial marker: contains "..."
+        if "..." in content:
+            return True
+
+        # Very short content (1-2 chars) - likely scientific
+        if len(content) <= 2:
+            return False
+
+        # Pure numbers (positive or negative): [14], [123], [-3]
+        if re.match(r'^[+-]?\d+$', content):
+            return False
+
+        # Single uppercase letter: [A], [B], [C]
+        if re.match(r'^[A-Z]$', content):
+            return False
+
+        # Position notation: [+21], [-3]
+        if re.match(r'^[+-]\d+$', content):
+            return False
+
+        # Scientific notation patterns:
+        # - Letter followed by number: [G14], [U21]
+        # - Letter with +/- and number: [U+21], [G-3]
+        if re.match(r'^[A-Za-z][+-]?\d+$', content):
+            return False
+
+        # Multiple dash-separated numbers or letters: [Cas7.4], [7.5]
+        if re.match(r'^[A-Za-z0-9]+\.[\d]+$', content):
+            return False
+
+        # Chemical/ion notation: [Ca 2+ ], [Mg2+], [Na+], [OH-]
+        # Pattern: Element symbol (1-2 letters, case-insensitive) + optional spaces/digits + charge
+        # Case-insensitive because normalization happens before bracket detection
+        if re.match(r'^[A-Za-z][a-z]?\s*\d*\s*[+-]+\s*$', content, re.IGNORECASE):
+            return False
+
+        # Complex ions: [NH4+], [SO4 2-], [PO4 3-]
+        # Pattern: Element symbols with optional digits + charge
+        if re.match(r'^[A-Za-z][a-z]?\d*[A-Za-z]?\d*\s*\d*\s*[+-]+\s*$', content, re.IGNORECASE):
+            return False
+
+        # Multi-word content - definitely editorial
+        if len(content.split()) > 1:
+            return True
+
+        # Single word longer than 3 characters that's mostly alphabetic - likely editorial
+        # Examples: [important], [cytoplasmic], [directly]
+        if len(content) > 3 and re.match(r'^[A-Za-z]+$', content):
+            return True
+
+        # Default: treat as scientific notation (conservative approach to avoid false positives)
+        return False
+
+    def parse_bracketed_text(self, text: str) -> tuple[List[str], List[str]]:
+        """Parse text into query spans (outside brackets) and ignored spans (inside brackets).
+
+        Uses smart detection to distinguish editorial brackets from scientific notation.
+        Only removes editorial brackets; scientific notation like [+21] or [G14] is kept.
+
+        Handles nested brackets by removing them iteratively from innermost to outermost.
+        All non-bracketed text is joined together into a single normalized query span.
+
+        Args:
+            text: Text containing potential [bracketed] content
+
+        Returns:
+            Tuple of (query_spans, ignored_spans) where:
+            - query_spans: List with single normalized text segment (all non-bracketed text joined)
+            - ignored_spans: List of editorial text segments inside brackets (including the brackets)
+
+        Examples:
+            >>> validator = SupportingTextSubstringValidator()
+            >>> query, ignored = validator.parse_bracketed_text("text [editorial] more text")
+            >>> query
+            ['text more text']
+            >>> ignored
+            ['[editorial]']
+
+            >>> # Scientific notation is NOT removed
+            >>> query, ignored = validator.parse_bracketed_text("nucleotide U[+21] and G[14]")
+            >>> query
+            ['nucleotide U[+21] and G[14]']
+            >>> ignored
+            []
+
+            >>> # Mixed: editorial removed, scientific kept
+            >>> query, ignored = validator.parse_bracketed_text("The [important] protein at position G[14]")
+            >>> query
+            ['The protein at position G[14]']
+            >>> ignored
+            ['[important]']
+
+            >>> # Explicit editorial with ...
+            >>> query, ignored = validator.parse_bracketed_text("protein [unclear mechanism ...] binds")
+            >>> query
+            ['protein binds']
+            >>> ignored
+            ['[unclear mechanism ...]']
+        """
+        query_spans = []
+        ignored_spans = []
+
+        # Iteratively process brackets from innermost to outermost
+        working_text = text
+        while '[' in working_text:
+            # Find innermost bracket pair
+            match = re.search(r'\[([^\[\]]*)\]', working_text)
+            if not match:
+                break
+
+            content = match.group(1)  # Content without brackets
+
+            # Use smart detection to determine if this is editorial
+            if self.is_editorial_bracket(content):
+                # Editorial bracket - remove it
+                ignored_spans.append(match.group(0))
+                # Replace with space to maintain word boundaries
+                working_text = working_text[:match.start()] + ' ' + working_text[match.end():]
+            else:
+                # Scientific notation - keep it as part of the text
+                # Mark it with a temporary placeholder to prevent re-processing
+                # Use a marker that won't interfere with text matching
+                placeholder = f"⟦{content}⟧"  # Use different brackets that won't be in source
+                working_text = working_text[:match.start()] + placeholder + working_text[match.end():]
+
+        # Restore scientific notation brackets
+        working_text = working_text.replace('⟦', '[').replace('⟧', ']')
+
+        # Split remaining text on whitespace, filter empty strings
+        # This gives us the query spans
+        parts = working_text.split()
+        if parts:
+            # Rejoin to get normalized query text
+            query_text = ' '.join(parts)
+            query_spans = [query_text] if query_text else []
+
+        return query_spans, ignored_spans
+
+    def validate_substring_match(
+        self,
+        supporting_text: str,
+        source_text: str
+    ) -> tuple[bool, Optional[str]]:
+        """Validate that supporting_text spans are substrings of source_text.
+
+        Uses strict substring matching with the following rules:
+        1. Whitespace is normalized in both texts
+        2. Content in [brackets] is ignored
+        3. All remaining text spans must be found as substrings
+        4. Total query span length must be > 20 chars
+        5. Total query span length must be > ignored span length
+
+        Args:
+            supporting_text: The quoted text with potential [editorial notes]
+            source_text: The source document text
+
+        Returns:
+            Tuple of (is_valid, error_message)
+            - is_valid: True if validation passes
+            - error_message: None if valid, otherwise describes why validation failed
+
+        Examples:
+            >>> validator = SupportingTextSubstringValidator()
+            >>> valid, err = validator.validate_substring_match(
+            ...     "The protein functions in the cytoplasm",
+            ...     "Research shows that the protein functions in the cytoplasm and nucleus."
+            ... )
+            >>> valid
+            True
+            >>> err is None
+            True
+
+            >>> valid, err = validator.validate_substring_match(
+            ...     "The [important] protein functions in the cytoplasm",
+            ...     "Research shows that the protein functions in the cytoplasm."
+            ... )
+            >>> valid
+            True
+
+            >>> valid, err = validator.validate_substring_match(
+            ...     "protein does not exist",
+            ...     "The protein functions in the cytoplasm."
+            ... )
+            >>> valid
+            False
+            >>> "not found" in err
+            True
+
+            >>> # Test minimum length requirement
+            >>> valid, err = validator.validate_substring_match(
+            ...     "short",
+            ...     "This is a short text."
+            ... )
+            >>> valid
+            False
+            >>> "must be at least 20" in err
+            True
+
+            >>> # Test that query spans must be longer than bracketed content
+            >>> valid, err = validator.validate_substring_match(
+            ...     "This is a longer query text [but with even more bracketed content that makes the brackets longer]",
+            ...     "Some text here."
+            ... )
+            >>> valid
+            False
+            >>> "must be greater than" in err or "must be at least" in err
+            True
+
+            >>> # Test that all-bracketed text fails with clear error message
+            >>> valid, err = validator.validate_substring_match(
+            ...     "[Proteomics study detecting HSP90.1 in cytosol fraction]",
+            ...     "Some publication text here."
+            ... )
+            >>> valid
+            False
+            >>> "no quotable text" in err
+            True
+        """
+        # Normalize whitespace in both texts
+        supporting_normalized = self.normalize_whitespace(supporting_text)
+        source_normalized = self.normalize_whitespace(source_text)
+
+        # Parse supporting text into query and ignored spans
+        query_spans, ignored_spans = self.parse_bracketed_text(supporting_normalized)
+
+        # Calculate total lengths
+        total_query_length = sum(len(span) for span in query_spans)
+        total_ignored_length = sum(len(span) for span in ignored_spans)
+
+        # Validation 0: Must have actual text to match (not all in brackets)
+        if total_query_length == 0:
+            return (
+                False,
+                "Supporting text contains no quotable text - all content is in [brackets]. "
+                "Supporting text must contain actual quoted text from the source."
+            )
+
+        # Validation 1: Query spans must be at least MIN_SPAN_LENGTH chars
+        if total_query_length < self.MIN_SPAN_LENGTH:
+            return (
+                False,
+                f"Query text length ({total_query_length} chars) must be at least {self.MIN_SPAN_LENGTH} chars"
+            )
+
+        # Validation 2: Query spans must be longer than ignored spans
+        if total_query_length <= total_ignored_length:
+            return (
+                False,
+                f"Query text length ({total_query_length} chars) must be greater than "
+                f"bracketed content length ({total_ignored_length} chars)"
+            )
+
+        # Validation 3: All query spans must be substrings of source
+        for span in query_spans:
+            if span not in source_normalized:
+                # Truncate span for error message
+                span_preview = (span[:50] + "...") if len(span) > 50 else span
+                return (
+                    False,
+                    f'Query text "{span_preview}" not found in source'
+                )
+
+        return (True, None)
+
+    def find_text_in_publication(
+        self, text: str, publication_content: str
+    ) -> tuple[bool, float, Optional[str]]:
+        """Override parent method to use substring matching.
+
+        This maintains the same interface as the parent class but uses
+        deterministic substring matching instead of fuzzy matching.
+
+        Supports multi-part quotes with ellipses:
+        - Both ` ... ` (space-ellipsis-space) and ` [...] ` (bracketed ellipsis) work identically
+        - Text is split on ellipsis markers and each part validated separately
+
+        Returns a similarity score of 1.0 for valid matches and 0.0 for
+        invalid matches to maintain compatibility with the parent interface.
+
+        Examples:
+            >>> validator = SupportingTextSubstringValidator()
+            >>> pub = "The protein functions in the cytoplasm. Later it moves to the nucleus."
+
+            >>> # Test with ... (no brackets)
+            >>> found, score, _ = validator.find_text_in_publication(
+            ...     "protein functions in the cytoplasm ... moves to the nucleus",
+            ...     pub
+            ... )
+            >>> found
+            True
+
+            >>> # Test with [...] (bracketed ellipsis) - works identically
+            >>> found, score, _ = validator.find_text_in_publication(
+            ...     "protein functions in the cytoplasm [...] moves to the nucleus",
+            ...     pub
+            ... )
+            >>> found
+            True
+        """
+        # First, convert [...] to ... to handle ellipsis markers
+        # Both [...] and ... are supported and work identically
+        text_normalized = re.sub(r'\[\.\.\.\]', '...', text)
+
+        # Handle multi-part quotes separated by "..."
+        if "..." in text_normalized:
+            # Split on ... and validate each part separately
+            # First remove brackets from the entire text (but not [...] which we already converted)
+            text_without_brackets = text_normalized
+            while "[" in text_without_brackets:
+                text_without_brackets = re.sub(r"\[[^\[\]]*\]", "", text_without_brackets)
+
+            parts = [p.strip() for p in text_without_brackets.split("...") if p.strip()]
+
+            # Each part is validated separately
+            for part in parts:
+                # Create a temporary supporting text for this part
+                is_valid, error_msg = self.validate_substring_match(part, publication_content)
+                if not is_valid:
+                    # Return error message in the best_match field for detailed reporting
+                    return (False, 0.0, error_msg)
+
+            return (True, 1.0, " ... ".join(parts))
+        else:
+            # Single text segment
+            is_valid, error_msg = self.validate_substring_match(text_normalized, publication_content)
+            if is_valid:
+                return (True, 1.0, text_normalized)
+            else:
+                # Return error message in the best_match field for detailed reporting
+                return (False, 0.0, error_msg)
+
+    def generate_suggested_fix(
+        self,
+        supporting_text: str,
+        reference_id: str,
+        publication_content: str,
+        error_message: Optional[str] = None
+    ) -> Optional[str]:
+        """Generate actionable fix suggestion when substring validation fails.
+
+        NOTE: This method uses fuzzy matching from the parent class ONLY for generating
+        suggestions, NOT for validation. The validation itself uses strict substring matching.
+        This helps users quickly find the correct text while maintaining validation rigor.
+
+        Args:
+            supporting_text: The text that failed strict validation
+            reference_id: PMID/Reactome/UniProt ID
+            publication_content: Full publication text
+            error_message: Detailed error from substring validation
+
+        Returns:
+            Suggested fix string or None
+        """
+        suggestions = []
+
+        # Always include the reference ID for context
+        suggestions.append(f"In {reference_id}")
+
+        # Check for common issues in the supporting_text itself
+        non_bracket_text = re.sub(r'\[.*?\]', '', supporting_text).strip()
+
+        # Issue 1: Contains ellipsis (non-contiguous text not allowed)
+        if "..." in supporting_text:
+            first_part = supporting_text.split("...")[0].strip()
+            # Remove trailing brackets from first part
+            first_part = re.sub(r'\s*\[.*?\]\s*$', '', first_part).strip()
+            if len(first_part) >= self.MIN_SPAN_LENGTH:
+                # Don't truncate - user needs full text to copy/paste
+                suggestions.append(f"Remove '...' - use only first part: \"{first_part}\"")
+
+        # Issue 2: Text too short (< 20 chars after removing brackets)
+        if len(non_bracket_text) < self.MIN_SPAN_LENGTH:
+            if len(non_bracket_text) == 0:
+                suggestions.append("All bracketed content - use publication title or excerpt instead")
+            else:
+                suggestions.append(f"Too short ({len(non_bracket_text)} chars) - extend with context from source")
+
+        # Issue 3: More bracketed content than actual quoted text
+        bracket_content = ''.join(re.findall(r'\[.*?\]', supporting_text))
+        if len(bracket_content) > len(non_bracket_text):
+            suggestions.append("More brackets than quotes - reduce editorial additions")
+
+        # Use efficient fuzzy matching ONLY for suggestions (not validation!)
+        # This finds close matches to help users locate the correct text
+        # Using the optimized RapidFuzz-based matcher instead of slow sliding window
+        try:
+            # Use optimized fuzzy matching utility
+            # This is much faster than the parent class's sliding window approach
+            is_fuzzy_match, similarity, best_match = find_fuzzy_match_in_text(
+                supporting_text, publication_content, threshold=70.0
+            )
+
+            # Issue 4: Found a close fuzzy match (likely capitalization or minor wording)
+            if best_match and similarity > 70:
+                if similarity > 90:
+                    # Very close match - likely just capitalization
+                    # Don't truncate - user needs full text to copy/paste
+                    if supporting_text.lower() == best_match.lower():
+                        suggestions.append(f"Capitalization differs - try: \"{best_match}\"")
+                    else:
+                        suggestions.append(f"Very close match ({similarity:.0f}%) - try: \"{best_match}\"")
+                elif similarity > 70:
+                    # Moderate match - show it as an option
+                    # Don't truncate - user needs full text to copy/paste
+                    suggestions.append(f"Partial match found ({similarity:.0f}%): \"{best_match}\"")
+        except Exception as e:
+            # If fuzzy matching fails, don't let it break suggestion generation
+            pass
+
+        # If we found specific issues, return them
+        if len(suggestions) > 1:  # More than just the reference ID
+            return " | ".join(suggestions)
+
+        return None
+
+    def validate_supporting_text_against_reference(
+        self,
+        supporting_text: str,
+        reference_id: str,
+        annotation_path: str,
+        yaml_data: Optional[Dict[str, Any]] = None,
+    ) -> Optional[SupportingTextValidationResult]:
+        """Override parent to use detailed error messages from substring matching.
+
+        This method is the same as the parent but uses the error message returned
+        in the best_match field when substring validation fails.
+        """
+        # Try PMID first
+        pmid = self.extract_pmid_from_reference(reference_id)
+        if pmid:
+            result = SupportingTextValidationResult(
+                annotation_path=annotation_path,
+                supporting_text=supporting_text,
+                reference_id=reference_id,
+            )
+
+            publication_content = self.load_publication(pmid)
+            if not publication_content:
+                result.error_message = f"Publication {reference_id} not found in cache"
+                result.is_valid = False
+                return result
+
+            is_found, similarity, error_or_match = self.find_text_in_publication(
+                supporting_text, publication_content
+            )
+
+            result.found_in_publication = is_found
+            result.similarity_score = similarity
+            result.is_valid = is_found
+            result.best_match = error_or_match if is_found else None
+
+            if not is_found:
+                # Use detailed error message if available (from substring validation)
+                if error_or_match and isinstance(error_or_match, str) and len(error_or_match) < 200:
+                    result.error_message = error_or_match
+                else:
+                    # Fallback to generic message
+                    text_preview = (
+                        (supporting_text[:80] + "...")
+                        if len(supporting_text) > 80
+                        else supporting_text
+                    )
+                    result.error_message = f'Supporting text "{text_preview}" not found in {reference_id}'
+
+                # Generate suggested fix using fuzzy matching (for suggestions only, not validation)
+                result.suggested_fix = self.generate_suggested_fix(
+                    supporting_text=supporting_text,
+                    reference_id=reference_id,
+                    publication_content=publication_content,
+                    error_message=result.error_message
+                )
+
+            return result
+
+        # Try UniProt (similar logic)
+        uniprot_id = self.extract_uniprot_from_reference(reference_id)
+        if uniprot_id:
+            result = SupportingTextValidationResult(
+                annotation_path=annotation_path,
+                supporting_text=supporting_text,
+                reference_id=reference_id,
+            )
+
+            uniprot_content = self.load_uniprot_file(uniprot_id, yaml_data)
+            if not uniprot_content:
+                result.error_message = f"UniProt file for {reference_id} not found"
+                result.is_valid = False
+                return result
+
+            processed_content = self.preprocess_uniprot_content(uniprot_content)
+            is_found, similarity, error_or_match = self.find_text_in_publication(
+                supporting_text, processed_content
+            )
+
+            result.found_in_publication = is_found
+            result.similarity_score = similarity
+            result.is_valid = is_found
+            result.best_match = error_or_match if is_found else None
+
+            if not is_found:
+                if error_or_match and isinstance(error_or_match, str) and len(error_or_match) < 200:
+                    result.error_message = error_or_match
+                else:
+                    text_preview = (
+                        (supporting_text[:80] + "...")
+                        if len(supporting_text) > 80
+                        else supporting_text
+                    )
+                    result.error_message = f'Supporting text "{text_preview}" not found in {reference_id}'
+
+                # Generate suggested fix using fuzzy matching (for suggestions only, not validation)
+                result.suggested_fix = self.generate_suggested_fix(
+                    supporting_text=supporting_text,
+                    reference_id=reference_id,
+                    publication_content=processed_content,
+                    error_message=result.error_message
+                )
+
+            return result
+
+        # Try Reactome (similar logic)
+        reactome_id = self.extract_reactome_from_reference(reference_id)
+        if reactome_id:
+            result = SupportingTextValidationResult(
+                annotation_path=annotation_path,
+                supporting_text=supporting_text,
+                reference_id=reference_id,
+            )
+
+            reactome_content = self.load_reactome_file(reactome_id)
+            if not reactome_content:
+                result.error_message = f"Reactome pathway file for {reference_id} not found"
+                result.is_valid = False
+                return result
+
+            is_found, similarity, error_or_match = self.find_text_in_publication(
+                supporting_text, reactome_content
+            )
+
+            result.found_in_publication = is_found
+            result.similarity_score = similarity
+            result.is_valid = is_found
+            result.best_match = error_or_match if is_found else None
+
+            if not is_found:
+                if error_or_match and isinstance(error_or_match, str) and len(error_or_match) < 200:
+                    result.error_message = error_or_match
+                else:
+                    text_preview = (
+                        (supporting_text[:80] + "...")
+                        if len(supporting_text) > 80
+                        else supporting_text
+                    )
+                    result.error_message = f'Supporting text "{text_preview}" not found in {reference_id}'
+
+                # Generate suggested fix using fuzzy matching (for suggestions only, not validation)
+                result.suggested_fix = self.generate_suggested_fix(
+                    supporting_text=supporting_text,
+                    reference_id=reference_id,
+                    publication_content=reactome_content,
+                    error_message=result.error_message
+                )
+
+            return result
+
+        # Not a validatable reference
+        return None
 
 
 def validate_supporting_text_in_file(

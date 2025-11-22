@@ -309,7 +309,7 @@ class TermValidator:
                             "label": row["label"],
                             "is_obsolete": row["is_obsolete"] == "true",
                         }
-                    print(f"Loaded {len(df)} terms from {ontology_id} cache")
+                    # print(f"Loaded {len(df)} terms from {ontology_id} cache")
                 except Exception as e:
                     print(f"Warning: Could not load cache from {cache_file}: {e}")
 

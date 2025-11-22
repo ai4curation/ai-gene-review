@@ -5,8 +5,9 @@ import json
 
 PROTECTED_PATH_FRAGMENTS = [
     "publications",
-    #"deep-research.md",
+    "deep-research.md",
     "ai-review.md",
+    "ai-review.html",
     "goa.tsv",
     ".uniprot.txt",
 ]
