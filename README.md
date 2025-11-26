@@ -268,11 +268,90 @@ The validator supports 10+ major ontologies:
 
 This validation system represents a **novel approach to preventing ontological hallucination** in AI curation workflows and could serve as a model for other AI applications working with structured biological knowledge.
 
+## Annotation Rule Review
+
+In addition to reviewing individual gene annotations, the AI Gene Review system supports **systematic review of automated annotation rules** used by UniProt (ARBA and UniRule systems). These rules generate millions of GO annotations across protein databases, making their quality critical for downstream research.
+
+### What are ARBA Rules?
+
+ARBA (Association-Rule-Based Annotator) rules use combinations of:
+- **InterPro domains**: Protein family signatures
+- **PANTHER families**: Evolutionary classifications
+- **CATH FunFams**: Functional families based on structure
+- **Taxonomic restrictions**: Organism-specific constraints
+
+When a protein matches all conditions in a rule, it receives the predicted GO annotation.
+
+### Why Review Rules?
+
+Automated rules can produce systematic errors affecting thousands of proteins:
+- **Taxonomic over-annotation**: Mammalian functions applied to fungi/plants
+- **GO term breadth**: Using vague parent terms instead of specific functions
+- **Domain promiscuity**: Structural domains with multiple functional contexts
+- **Catabolic/biosynthetic confusion**: Grouping enzymes with opposite activities
+
+### Rule Review Workflow
+
+```bash
+# 1. Fetch rule data
+just rules-fetch ARBA00089174
+
+# 2. Run deep research (multiple providers)
+just rules-deep-research-perplexity ARBA00089174
+just rules-deep-research-falcon ARBA00089174
+
+# 3. Create/update review YAML
+# Reviews are stored in rules/arba/RULE_ID/RULE_ID-review.yaml
+
+# 4. Validate the review
+just rules-validate ARBA00089174
+
+# 5. Validate all reviews
+just rules-validate --all
+```
+
+### Rule Review Structure
+
+Each rule review evaluates:
+
+| Assessment | Valid Values | Description |
+|------------|--------------|-------------|
+| **parsimony** | PARSIMONIOUS, ACCEPTABLE, REDUNDANT, OVERLY_COMPLEX | Rule complexity vs necessity |
+| **literature_support** | STRONG, MODERATE, WEAK, NONE, CONTRADICTED | Experimental evidence quality |
+| **condition_overlap** | NONE, MINOR, SIGNIFICANT, COMPLETE | Redundancy between condition sets |
+| **go_specificity** | TOO_BROAD, APPROPRIATE, TOO_NARROW, MISMATCHED | GO term choice appropriateness |
+| **taxonomic_scope** | TOO_BROAD, APPROPRIATE, TOO_NARROW, MISSING, UNNECESSARY | Taxonomic restriction accuracy |
+
+### Example Finding: False Positive Detection
+
+When reviewing ARBA00089174 (adaptive thermogenesis), the system identified that S. pombe gene cps1 (a fungal carboxypeptidase) received this annotation despite adaptive thermogenesis being a mammalian-specific physiological process. This revealed the rule's Eukaryota scope was too broad and should be restricted to Mammalia.
+
+### Rule Review Files
+
+```
+rules/
+  arba/
+    ARBA00089174/
+      ARBA00089174.enriched.json     # Raw rule data from UniProt
+      ARBA00089174-review.yaml        # Comprehensive review
+      ARBA00089174-deep-research-perplexity.md   # Literature research
+      ARBA00089174-deep-research-falcon.md       # Additional research
+```
+
+### Actions for Rules
+
+- **ACCEPT**: Rule produces accurate annotations, no changes needed
+- **MODIFY**: Rule has correct biological basis but needs refinement (taxonomic scope, GO term specificity, condition consolidation)
+- **REMOVE**: Rule produces more false positives than valid annotations
+
 ## Repository Structure
 
 * **[genes/](genes/)** - Gene review data organized by organism
   * `human/`, `mouse/`, `worm/` - Species-specific gene directories
   * Each gene folder contains: YAML review, UniProt data, GO annotations, notes
+* **[rules/](rules/)** - Annotation rule reviews
+  * `arba/` - ARBA rule reviews organized by rule ID
+  * Each rule folder contains: enriched JSON, review YAML, deep research files
 * **[docs/](docs/)** - MkDocs-managed documentation
 * **[src/ai_gene_review/](src/ai_gene_review/)** - Core Python package
   * `cli.py` - Command-line interface
