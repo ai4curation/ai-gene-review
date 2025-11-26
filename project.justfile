@@ -644,3 +644,97 @@ clean-imodulondb-cache:
     @echo "Cleaning iModulonDB cache..."
     rm -rf .cache/imodulondb
     @echo "✓ Cache cleaned"
+
+# ============== UniProt Rules (ARBA, UniRule) ==============
+
+# Sync ARBA rules with GO annotations from UniProt (stores in rules/arba/)
+# By default only syncs rules that have GO term annotations
+# Examples:
+#   just arba-sync                     # Sync GO-annotated rules only (default)
+#   just arba-sync --all               # Sync ALL rules (~80k)
+#   just arba-sync --limit 10          # Test with small batch
+arba-sync *args="":
+    uv run ai-gene-review arba-sync {{args}}
+
+# Sync UniRules with GO annotations from UniProt (stores in rules/unirule/)
+# By default only syncs rules that have GO term annotations
+# Examples:
+#   just unirule-sync                  # Sync GO-annotated rules only (default)
+#   just unirule-sync --all            # Sync ALL rules (~9.5k)
+#   just unirule-sync --limit 10       # Test with small batch
+unirule-sync *args="":
+    uv run ai-gene-review unirule-sync {{args}}
+
+# Sync all UniProt rules (ARBA + UniRule) with GO annotations
+rules-sync:
+    @echo "Syncing ARBA rules..."
+    uv run ai-gene-review arba-sync
+    @echo ""
+    @echo "Syncing UniRules..."
+    uv run ai-gene-review unirule-sync
+    @echo ""
+    @echo "✓ All rules synced"
+
+# Enrich cached rules with labels (GO, InterPro, FunFam, taxa)
+rules-enrich *args="":
+    uv run ai-gene-review rules-enrich {{args}}
+
+# Export rules to CSV (one row per condition set)
+rules-export *args="":
+    uv run ai-gene-review rules-export {{args}}
+
+# Validate rule review YAML files
+# Examples:
+#   just rules-validate rules/arba/ARBA00026249/ARBA00026249-review.yaml
+#   just rules-validate --all
+#   just rules-validate --all -v
+rules-validate *args="":
+    uv run ai-gene-review rules-validate {{args}}
+
+# Deep research for rules using Perplexity
+# Example: just rules-deep-research-perplexity ARBA00026249
+rules-deep-research-perplexity rule_id *args="":
+    uv run python scripts/rules_deep_research_wrapper.py {{rule_id}} perplexity {{args}}
+
+# Deep research for rules using Perplexity-lite (faster, cheaper)
+# Example: just rules-deep-research-perplexity-lite UR000000070
+rules-deep-research-perplexity-lite rule_id *args="":
+    uv run python scripts/rules_deep_research_wrapper.py {{rule_id}} perplexity-lite {{args}}
+
+# Deep research for rules using OpenAI
+# Example: just rules-deep-research-openai ARBA00026249
+rules-deep-research-openai rule_id *args="":
+    uv run python scripts/rules_deep_research_wrapper.py {{rule_id}} openai {{args}}
+
+# Deep research for rules using Falcon
+# Example: just rules-deep-research-falcon ARBA00026249
+rules-deep-research-falcon rule_id *args="":
+    uv run python scripts/rules_deep_research_wrapper.py {{rule_id}} falcon {{args}}
+
+# Deep research for rules using Cyberian
+# Example: just rules-deep-research-cyberian ARBA00026249
+rules-deep-research-cyberian rule_id *args="":
+    uv run python scripts/rules_deep_research_wrapper.py {{rule_id}} cyberian {{args}}
+
+# ============== AI4CUI Dashboard ==============
+
+# Launch the AI4CUI API server (required for V2 dashboard)
+ui-api port="5124":
+    @echo "Launching AI4CUI API server on port {{port}}..."
+    @echo "This provides fast HTTP endpoints for job status queries"
+    @echo "Dashboard can connect to http://localhost:{{port}}"
+    uv run python -m ai4cui --api-only --api-port {{port}}
+
+# Launch the V2 AI4CUI dashboard (requires API server running)
+ui port="5123" api_port="5124":
+    @echo "Launching AI4CUI V2 Dashboard on port {{port}}..."
+    @echo "Connecting to API server at http://localhost:{{api_port}}"
+    @echo "NOTE: Make sure API server is running: just ui-api"
+    uv run python -m ai4cui --use-api --port {{port}} --api-port {{api_port}}
+
+# Launch the legacy AI4CUI dashboard (direct file I/O, slower)
+ui-legacy port="5123":
+    @echo "Launching AI4CUI Legacy Dashboard on port {{port}}..."
+    @echo "Using direct file I/O (may be slow for 343+ genes)"
+    @echo "For better performance, use 'just ui' with API server"
+    uv run python -m ai4cui --legacy --port {{port}}

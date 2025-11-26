@@ -1280,32 +1280,55 @@ def validate_rule_review(
                         check_type="publication_title_mismatch"
                     )
 
-        # Validate supporting_text in supported_by field
-        if check_publications and not report.has_errors and "supported_by" in data:
+        # Validate supporting_text in supported_by field (top-level and nested in assessments)
+        if check_publications and not report.has_errors:
             if progress_callback:
                 progress_callback("Validating supporting text")
 
             st_validator = SupportingTextSubstringValidator()
-            for i, item in enumerate(data.get("supported_by", [])):
-                ref_id = item.get("reference_id", "")
-                supporting_text = item.get("supporting_text", "")
 
-                if supporting_text and ref_id:
-                    st_result = st_validator.validate_supporting_text_against_reference(
-                        supporting_text=supporting_text,
-                        reference_id=ref_id,
-                        annotation_path=f"supported_by[{i}]",
-                        yaml_data=data
-                    )
+            # Helper to validate a supported_by list
+            def validate_supported_by_list(items: list, path_prefix: str):
+                for i, item in enumerate(items):
+                    if not isinstance(item, dict):
+                        continue
+                    ref_id = item.get("reference_id", "")
+                    supporting_text = item.get("supporting_text", "")
 
-                    if st_result and not st_result.is_valid:
-                        report.add_issue(
-                            ValidationSeverity.ERROR,
-                            st_result.error_message or f"Supporting text not found in {ref_id}",
-                            path=f"supported_by[{i}].supporting_text",
-                            suggestion=st_result.suggested_fix,
-                            validation_category="SupportingTextSubstringValidator",
-                            check_type="supporting_text_substring_not_found"
+                    if supporting_text and ref_id:
+                        st_result = st_validator.validate_supporting_text_against_reference(
+                            supporting_text=supporting_text,
+                            reference_id=ref_id,
+                            annotation_path=f"{path_prefix}[{i}]",
+                            yaml_data=data
+                        )
+
+                        if st_result and not st_result.is_valid:
+                            report.add_issue(
+                                ValidationSeverity.ERROR,
+                                st_result.error_message or f"Supporting text not found in {ref_id}",
+                                path=f"{path_prefix}[{i}].supporting_text",
+                                suggestion=st_result.suggested_fix,
+                                validation_category="SupportingTextSubstringValidator",
+                                check_type="supporting_text_substring_not_found"
+                            )
+
+            # Validate top-level supported_by
+            if "supported_by" in data:
+                validate_supported_by_list(data.get("supported_by", []), "supported_by")
+
+            # Validate nested supported_by in assessment objects
+            assessment_fields = [
+                "parsimony", "literature_support", "condition_overlap",
+                "go_specificity", "taxonomic_scope"
+            ]
+            for field in assessment_fields:
+                if field in data and isinstance(data[field], dict):
+                    assessment = data[field]
+                    if "supported_by" in assessment:
+                        validate_supported_by_list(
+                            assessment.get("supported_by", []),
+                            f"{field}.supported_by"
                         )
 
         return report
