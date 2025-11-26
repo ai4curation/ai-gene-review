@@ -1168,3 +1168,160 @@ def get_validation_summary(results: Dict[str, Tuple[bool, List[str]]]) -> str:
         batch_report.reports.append(report)
 
     return batch_report.summary()
+
+
+def validate_rule_review(
+    yaml_file: Path | str,
+    schema_path: Optional[Path | str] = None,
+    check_publications: bool = True,
+    progress_callback: Optional[Callable] = None,
+) -> ValidationReport:
+    """Validate a rule review YAML file against the LinkML schema.
+
+    Args:
+        yaml_file: Path to the YAML file to validate
+        schema_path: Optional path to schema file (uses default if not provided)
+        check_publications: Whether to validate PMID titles
+        progress_callback: Optional callback function to report progress steps
+
+    Returns:
+        ValidationReport with detailed validation results
+
+    Example:
+        >>> # Example: validate_rule_review(Path("rules/reviews/ARBA00026249-review.yaml"))
+    """
+    yaml_file_path: Path = Path(yaml_file)
+    report = ValidationReport(file_path=yaml_file_path, is_valid=True)
+
+    if progress_callback:
+        progress_callback("Checking file existence")
+
+    # Check if file exists
+    if not yaml_file_path.exists():
+        report.add_issue(
+            ValidationSeverity.ERROR, f"File not found: {yaml_file_path}", path=None
+        )
+        return report
+
+    try:
+        if progress_callback:
+            progress_callback("Loading schema")
+
+        # Load schema
+        if schema_path:
+            schema_path_obj = Path(schema_path)
+            if not schema_path_obj.exists():
+                report.add_issue(
+                    ValidationSeverity.ERROR,
+                    f"Schema file not found: {schema_path_obj}",
+                    path=None,
+                )
+                return report
+            SchemaView(str(schema_path_obj))
+            schema_path = schema_path_obj
+        else:
+            load_schema()
+
+        if progress_callback:
+            progress_callback("Parsing YAML")
+
+        # Load YAML data
+        with open(yaml_file_path, "r") as f:
+            data = yaml.safe_load(f)
+
+        if progress_callback:
+            progress_callback("Schema validation")
+
+        # Create validator
+        validator = JsonSchemaDataValidator(str(schema_path or get_schema_path()))
+
+        # Validate against schema - use RuleReview class
+        linkml_report = validator.validate_dict(data, target_class="RuleReview")
+
+        # Process LinkML validation results
+        if linkml_report and linkml_report.results:
+            for result in linkml_report.results:
+                message = result.message if hasattr(result, "message") else str(result)
+                path_match = re.search(r"in \$\.(.+)$", message)
+                path = path_match.group(1) if path_match else None
+
+                report.add_issue(
+                    ValidationSeverity.ERROR,
+                    message,
+                    path=path,
+                    validation_category="SchemaValidator",
+                    check_type="schema_validation"
+                )
+
+        # Validate publications if enabled and no hard schema errors
+        if check_publications and not report.has_errors:
+            if progress_callback:
+                progress_callback("Validating publications")
+
+            pub_validator = PublicationValidator()
+            pub_results = pub_validator.validate_publications_in_data(data)
+
+            for pub_result in pub_results:
+                if not pub_result.is_valid:
+                    if pub_result.correct_title is None:
+                        severity = ValidationSeverity.WARNING
+                        suggestion = "Check if PMID is correct or fetch the publication"
+                    else:
+                        severity = ValidationSeverity.ERROR
+                        suggestion = f"Use correct title: '{pub_result.correct_title}'"
+
+                    report.add_issue(
+                        severity,
+                        pub_result.error_message
+                        or f"Invalid publication: PMID:{pub_result.pmid}",
+                        path=pub_result.path,
+                        suggestion=suggestion,
+                        validation_category="PublicationValidator",
+                        check_type="publication_title_mismatch"
+                    )
+
+        # Validate supporting_text in supported_by field
+        if check_publications and not report.has_errors and "supported_by" in data:
+            if progress_callback:
+                progress_callback("Validating supporting text")
+
+            st_validator = SupportingTextSubstringValidator()
+            for i, item in enumerate(data.get("supported_by", [])):
+                ref_id = item.get("reference_id", "")
+                supporting_text = item.get("supporting_text", "")
+
+                if supporting_text and ref_id:
+                    st_result = st_validator.validate_supporting_text_against_reference(
+                        supporting_text=supporting_text,
+                        reference_id=ref_id,
+                        annotation_path=f"supported_by[{i}]",
+                        yaml_data=data
+                    )
+
+                    if st_result and not st_result.is_valid:
+                        report.add_issue(
+                            ValidationSeverity.ERROR,
+                            st_result.error_message or f"Supporting text not found in {ref_id}",
+                            path=f"supported_by[{i}].supporting_text",
+                            suggestion=st_result.suggested_fix,
+                            validation_category="SupportingTextSubstringValidator",
+                            check_type="supporting_text_substring_not_found"
+                        )
+
+        return report
+
+    except yaml.YAMLError as e:
+        report.add_issue(
+            ValidationSeverity.ERROR, f"YAML parsing error: {str(e)}", path=None
+        )
+        return report
+    except Exception as e:
+        error_type = type(e).__name__
+        tb = traceback.format_exc()
+        last_tb_line = tb.strip().split("\n")[-1] if tb else ""
+        report.add_issue(
+            ValidationSeverity.ERROR,
+            f"Validation error ({error_type}): {str(e)} - {last_tb_line}",
+            path=None,
+        )
+        return report
