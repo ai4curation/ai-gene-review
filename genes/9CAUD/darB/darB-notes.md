@@ -1,71 +1,48 @@
 # darB Gene Review Notes
 
-## Colleague Question
-**Contact**: phage@mit.edu
-**Key Interest**: Novel phage DNA modification system
+## IMPORTANT: Nomenclature Clarification
+**WARNING**: The DarB protein from bacteriophage P1 (Q9XJG2) described here is DIFFERENT from the DarB proteins in the 7-deazaguanine DNA modification pathway found in other phages. These are homonymous proteins with completely different functions. Previous notes confused these two systems.
 
-## Key Findings
+## Phage P1 DarB - Antirestriction Protein
 
-### DNA Hypermodification System
-- **7-deazaguanine modifications**: Replaces guanine in phage DNA
-- Creates hypermodified DNA resistant to restriction enzymes
-- Essential for evading bacterial defense systems
-- Part of queuosine-like modification pathway
+### Core Function
+- **Antirestriction activity**: Protects phage DNA from host Type I restriction-modification systems
+- **Specific protection**: Required for protection against EcoB and EcoK restriction systems
+- **Mechanism**: Incorporated into phage virion and ejected into host cell during infection
+- **Acts in cis**: Protects DNA packaged with it in the same phage head
 
-### Molecular Function
-1. **Amidotransferase activity**:
-   - Transfers ammonia to deazaguanine precursor
-   - Uses glutamine as nitrogen donor
-   - Coupled to GTP hydrolysis
+### Molecular Architecture
+- **Size**: 251 kDa (512 amino acids in UniProt Q9XJG2 is fragment)
+- **N-terminal methyltransferase domain**: Type II methyltransferase M.TaqI-like domain
+- **Central DExD-like helicase domain**: Suggests potential DNA unwinding activity
+- **SAM-dependent methyltransferase fold**: Uses S-adenosyl methionine as cofactor
 
-2. **Biosynthetic pathway**:
-   - Works with DarA (7-cyano-7-deazaguanine synthase)
-   - Produces preQ0-like intermediate
-   - Modified base incorporated during replication
+### Biological Context
+- Part of multicomponent P1 antirestriction system
+- Works alongside other proteins: DarA, DdrA, DdrB, Hdf, Ulx
+- Ejected into host cytoplasm during infection initiation
+- Protects both phage DNA and transduced chromosomal DNA
 
-3. **Host evasion strategy**:
-   - Modified DNA invisible to restriction enzymes
-   - Escapes CRISPR targeting
-   - Resistant to host nucleases
-
-### Evolutionary Significance
-- Found in diverse bacteriophages
-- Convergent evolution with archaeal modifications
-- Related to queuosine tRNA modification
-- Arms race with bacterial immunity
-
-## GO Annotation Review
-- Added amidotransferase activity
-- Added viral DNA modification process
-- Emphasized defense evasion function
-- Created new terms for hypermodification
-
-## Structural Biology
-- Similar to tunneling-fold enzymes
-- Glutaminase and synthase domains
-- Ammonia channeling mechanism
-- Conserved active site architecture
+### Mechanism of Action (Predicted)
+- Likely modifies phage DNA to evade restriction recognition
+- May use methyltransferase activity to add protective modifications
+- Could use helicase activity to facilitate DNA protection
+- Exact molecular mechanism remains unclear
 
 ## Key Publications
-- [PMID:31932164] - Discovery of DarA/DarB system
-- [PMID:33037431] - Mechanism of DNA hypermodification
-- [PMID:35477756] - Structural basis of function
-- [PMID:36656978] - Evolution of DNA modifications
-
-## Biotechnology Applications
-- Novel restriction enzyme inhibitor
-- Synthetic biology tool
-- DNA protection strategy
-- Phage therapy enhancement
+- PMID:3029954 - Original characterization of darA/darB antirestriction systems
+- PMID:28509398 - Multicomponent antirestriction system linked to capsid morphogenesis
+- PMID:29024508 - Structure and assembly of bacteriophage P1
 
 ## Remaining Questions
-- How is modified DNA replicated?
-- What determines modification density?
-- Can bacteria evolve recognition of modified DNA?
-- Are there other undiscovered modifications?
+- What is the precise enzymatic activity of the methyltransferase domain?
+- Does DarB directly methylate DNA or act through other mechanisms?
+- What is the role of the helicase domain in antirestriction?
+- What DNA sequences or modifications does DarB recognize/create?
+- How do the multiple antirestriction proteins coordinate?
 
-## Clinical Relevance
-- Phage therapy optimization
-- Overcoming bacterial resistance
+## Biotechnology Applications
+- Understanding phage-host interactions
 - Engineering phage host range
-- Novel antimicrobial strategies
+- Overcoming bacterial restriction barriers for phage therapy
+- Synthetic biology applications for DNA protection

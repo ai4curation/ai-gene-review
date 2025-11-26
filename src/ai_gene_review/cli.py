@@ -1304,6 +1304,688 @@ def update_status(
         raise typer.Exit(code=1)
 
 
+@app.command()
+def arba_sync(
+    query: Annotated[
+        str,
+        typer.Option("--query", "-q", help="Search query (default: all rules)"),
+    ] = "*",
+    batch_size: Annotated[
+        int,
+        typer.Option("--batch-size", "-b", help="Number of rules per API request"),
+    ] = 500,
+    force: Annotated[
+        bool,
+        typer.Option("--force", "-f", help="Force re-download even if cached"),
+    ] = False,
+    cache_dir: Annotated[
+        Path,
+        typer.Option("--cache-dir", "-d", help="Cache directory for ARBA rules"),
+    ] = Path("rules/arba"),
+    limit: Annotated[
+        Optional[int],
+        typer.Option("--limit", "-l", help="Maximum number of rules to fetch (for testing)"),
+    ] = None,
+    go_only: Annotated[
+        bool,
+        typer.Option("--go-only/--all", help="Only sync rules with GO annotations (default: GO only)"),
+    ] = True,
+):
+    """Sync ARBA (Association-Rule-Based Annotator) rules from UniProt.
+
+    Downloads and caches ARBA rules locally for offline access and analysis.
+    By default, only syncs rules that have GO term annotations.
+
+    Examples:
+        # Sync ARBA rules with GO annotations (default)
+        ai-gene-review arba-sync
+
+        # Sync ALL ARBA rules (about 80,000 rules)
+        ai-gene-review arba-sync --all
+
+        # Sync rules for a specific EC number
+        ai-gene-review arba-sync --query "ec:2.3.2.5"
+
+        # Force re-download all rules
+        ai-gene-review arba-sync --force
+
+        # Test with a small batch
+        ai-gene-review arba-sync --limit 100
+    """
+    from ai_gene_review.etl.arba import ARBAClient
+
+    client = ARBAClient(cache_dir=cache_dir)
+
+    # Get total count
+    total = client.get_total_count()
+    typer.echo(f"Total ARBA rules available: {total}")
+
+    if go_only:
+        typer.echo("Filtering for rules with GO annotations only")
+
+    if limit:
+        typer.echo(f"Limiting to {limit} matched rules (for testing)")
+
+    # Progress callback
+    def progress(fetched: int, total_available: int, matched: int) -> None:
+        pct = (fetched / total_available) * 100 if total_available > 0 else 0
+        typer.echo(f"  Scanned: {fetched}/{total_available} ({pct:.1f}%) | Matched: {matched}", nl=False)
+        typer.echo("\r", nl=False)
+
+    typer.echo(f"Syncing ARBA rules to {cache_dir}...")
+
+    # Iterate and sync
+    count = 0
+    for rule in client.iter_all_rules(
+        query=query,
+        batch_size=batch_size,
+        cache=True,
+        go_only=go_only,
+        progress_callback=progress
+    ):
+        count += 1
+        if limit and count >= limit:
+            break
+
+    typer.echo(f"\n✓ Synced {count} ARBA rules to {cache_dir}")
+
+
+@app.command()
+def arba_stats(
+    cache_dir: Annotated[
+        Path,
+        typer.Option("--cache-dir", "-d", help="Cache directory for ARBA rules"),
+    ] = Path("rules/arba"),
+):
+    """Show statistics about the local ARBA cache.
+
+    Examples:
+        ai-gene-review arba-stats
+        ai-gene-review arba-stats --cache-dir ./my-arba-cache
+    """
+    from ai_gene_review.etl.arba import ARBAClient
+
+    client = ARBAClient(cache_dir=cache_dir)
+
+    # Check if cache exists
+    if not cache_dir.exists():
+        typer.echo(f"No ARBA cache found at {cache_dir}")
+        typer.echo("Run 'ai-gene-review arba-sync' to download rules")
+        return
+
+    stats = client.get_cache_stats()
+
+    typer.echo(f"ARBA Cache Statistics ({cache_dir}):")
+    typer.echo(f"  Cached rules: {stats['cached_rules']}")
+    typer.echo(f"  Cache size: {stats['cache_size_mb']} MB")
+
+    # Show metadata if available
+    meta_file = cache_dir / "_metadata.json"
+    if meta_file.exists():
+        import json
+        metadata = json.loads(meta_file.read_text())
+        typer.echo(f"  Last sync: {metadata.get('last_sync', 'unknown')}")
+
+
+@app.command()
+def arba_lookup(
+    rule_id: Annotated[
+        str,
+        typer.Argument(help="ARBA rule ID (e.g., ARBA00000001)"),
+    ],
+    cache_dir: Annotated[
+        Path,
+        typer.Option("--cache-dir", "-d", help="Cache directory for ARBA rules"),
+    ] = Path("rules/arba"),
+    json_output: Annotated[
+        bool,
+        typer.Option("--json", "-j", help="Output as JSON"),
+    ] = False,
+):
+    """Look up a specific ARBA rule by ID.
+
+    Examples:
+        ai-gene-review arba-lookup ARBA00000001
+        ai-gene-review arba-lookup ARBA00000001 --json
+    """
+    from ai_gene_review.etl.arba import ARBAClient
+    import json
+
+    client = ARBAClient(cache_dir=cache_dir)
+
+    # Fetch the rule
+    rule = client.fetch_rule(rule_id)
+
+    if not rule:
+        typer.echo(f"Rule {rule_id} not found", err=True)
+        raise typer.Exit(code=1)
+
+    if json_output:
+        typer.echo(json.dumps(rule.to_json(), indent=2))
+    else:
+        typer.echo(f"Rule: {rule.uni_rule_id}")
+        typer.echo(f"Version: {rule.version}")
+        typer.echo(f"Created: {rule.created_date}")
+        typer.echo(f"Modified: {rule.modified_date}")
+        typer.echo(f"Statistics:")
+        typer.echo(f"  Reviewed proteins: {rule.statistics.reviewed_count}")
+        typer.echo(f"  Unreviewed proteins: {rule.statistics.unreviewed_count}")
+
+        # Show conditions
+        typer.echo(f"\nConditions ({len(rule.condition_sets)} sets):")
+        for i, cs in enumerate(rule.condition_sets, 1):
+            typer.echo(f"  Set {i}:")
+            for cond in cs.conditions:
+                neg = "NOT " if cond.is_negative else ""
+                values = ", ".join(cv.value for cv in cond.values)
+                typer.echo(f"    {neg}{cond.condition_type}: {values}")
+
+        # Show annotations
+        typer.echo(f"\nAnnotations ({len(rule.annotations)}):")
+        for ann in rule.annotations:
+            if ann.keyword:
+                typer.echo(f"  Keyword: {ann.keyword.name} ({ann.keyword.kw_id})")
+            elif ann.db_reference:
+                typer.echo(f"  {ann.db_reference.database}: {ann.db_reference.ref_id}")
+            elif ann.reaction:
+                typer.echo(f"  Catalytic activity: {ann.reaction.name}")
+                if ann.reaction.ec_number:
+                    typer.echo(f"    EC: {ann.reaction.ec_number}")
+            elif ann.subcellular_location:
+                typer.echo(f"  Subcellular location: {ann.subcellular_location.location}")
+            elif ann.pathway:
+                typer.echo(f"  Pathway: {ann.pathway}")
+            elif ann.text:
+                typer.echo(f"  {ann.comment_type}: {ann.text}")
+
+
+@app.command()
+def arba_search(
+    query: Annotated[
+        str,
+        typer.Argument(help="Search query (e.g., 'ec:2.3.2.5', 'keyword:transport')"),
+    ],
+    limit: Annotated[
+        int,
+        typer.Option("--limit", "-l", help="Maximum number of results"),
+    ] = 25,
+    cache_dir: Annotated[
+        Path,
+        typer.Option("--cache-dir", "-d", help="Cache directory for ARBA rules"),
+    ] = Path("rules/arba"),
+):
+    """Search ARBA rules using the UniProt API.
+
+    Examples:
+        ai-gene-review arba-search "ec:2.3.2.5"
+        ai-gene-review arba-search "keyword:transport" --limit 50
+        ai-gene-review arba-search "cc_subcellular_location:membrane"
+    """
+    from ai_gene_review.etl.arba import ARBAClient
+
+    client = ARBAClient(cache_dir=cache_dir)
+
+    typer.echo(f"Searching ARBA rules for: {query}")
+
+    rules, next_cursor = client.search(query=query, size=limit)
+
+    if not rules:
+        typer.echo("No rules found matching query")
+        return
+
+    typer.echo(f"\nFound {len(rules)} rules:")
+    for rule in rules:
+        # Get first annotation summary
+        ann_summary = ""
+        if rule.annotations:
+            ann = rule.annotations[0]
+            if ann.keyword:
+                ann_summary = f"Keyword: {ann.keyword.name}"
+            elif ann.reaction:
+                ec = f" (EC {ann.reaction.ec_number})" if ann.reaction.ec_number else ""
+                ann_summary = f"Catalytic activity{ec}"
+            elif ann.subcellular_location:
+                ann_summary = f"Location: {ann.subcellular_location.location}"
+
+        typer.echo(f"  {rule.uni_rule_id}: {ann_summary} [{rule.statistics.total_count} proteins]")
+
+    if next_cursor:
+        typer.echo(f"\n(More results available, increase --limit to see more)")
+
+
+# ============== UniRule Commands ==============
+
+
+@app.command()
+def unirule_sync(
+    query: Annotated[
+        str,
+        typer.Option("--query", "-q", help="Search query (default: all rules)"),
+    ] = "*",
+    batch_size: Annotated[
+        int,
+        typer.Option("--batch-size", "-b", help="Number of rules per API request"),
+    ] = 500,
+    cache_dir: Annotated[
+        Path,
+        typer.Option("--cache-dir", "-d", help="Cache directory for UniRule rules"),
+    ] = Path("rules/unirule"),
+    limit: Annotated[
+        Optional[int],
+        typer.Option("--limit", "-l", help="Maximum number of rules to fetch (for testing)"),
+    ] = None,
+    go_only: Annotated[
+        bool,
+        typer.Option("--go-only/--all", help="Only sync rules with GO annotations (default: GO only)"),
+    ] = True,
+):
+    """Sync UniRule (expert-curated annotation rules) from UniProt.
+
+    Downloads and caches UniRules locally for offline access and analysis.
+    By default, only syncs rules that have GO term annotations.
+
+    Examples:
+        # Sync UniRules with GO annotations (default)
+        ai-gene-review unirule-sync
+
+        # Sync ALL UniRules (about 9,500 rules)
+        ai-gene-review unirule-sync --all
+
+        # Test with a small batch
+        ai-gene-review unirule-sync --limit 10
+    """
+    from ai_gene_review.etl.unirule import UniRuleClient
+
+    client = UniRuleClient(cache_dir=cache_dir)
+
+    total = client.get_total_count()
+    typer.echo(f"Total UniRules available: {total}")
+
+    if go_only:
+        typer.echo("Filtering for rules with GO annotations only")
+
+    if limit:
+        typer.echo(f"Limiting to {limit} matched rules (for testing)")
+
+    def progress(fetched: int, total_available: int, matched: int) -> None:
+        pct = (fetched / total_available) * 100 if total_available > 0 else 0
+        typer.echo(f"  Scanned: {fetched}/{total_available} ({pct:.1f}%) | Matched: {matched}", nl=False)
+        typer.echo("\r", nl=False)
+
+    typer.echo(f"Syncing UniRules to {cache_dir}...")
+
+    count = 0
+    for rule in client.iter_all_rules(
+        query=query,
+        batch_size=batch_size,
+        cache=True,
+        go_only=go_only,
+        progress_callback=progress
+    ):
+        count += 1
+        if limit and count >= limit:
+            break
+
+    typer.echo(f"\n✓ Synced {count} UniRules to {cache_dir}")
+
+
+@app.command()
+def unirule_stats(
+    cache_dir: Annotated[
+        Path,
+        typer.Option("--cache-dir", "-d", help="Cache directory for UniRule rules"),
+    ] = Path("rules/unirule"),
+):
+    """Show statistics about the local UniRule cache."""
+    from ai_gene_review.etl.unirule import UniRuleClient
+
+    client = UniRuleClient(cache_dir=cache_dir)
+
+    if not cache_dir.exists():
+        typer.echo(f"No UniRule cache found at {cache_dir}")
+        typer.echo("Run 'ai-gene-review unirule-sync' to download rules")
+        return
+
+    stats = client.get_cache_stats()
+
+    typer.echo(f"UniRule Cache Statistics ({cache_dir}):")
+    typer.echo(f"  Cached rules: {stats['cached_rules']}")
+    typer.echo(f"  Cache size: {stats['cache_size_mb']} MB")
+
+    meta_file = cache_dir / "_metadata.json"
+    if meta_file.exists():
+        import json
+        metadata = json.loads(meta_file.read_text())
+        typer.echo(f"  Last sync: {metadata.get('last_sync', 'unknown')}")
+
+
+@app.command()
+def unirule_lookup(
+    rule_id: Annotated[
+        str,
+        typer.Argument(help="UniRule ID (e.g., UR000000070)"),
+    ],
+    cache_dir: Annotated[
+        Path,
+        typer.Option("--cache-dir", "-d", help="Cache directory for UniRule rules"),
+    ] = Path("rules/unirule"),
+    json_output: Annotated[
+        bool,
+        typer.Option("--json", "-j", help="Output as JSON"),
+    ] = False,
+):
+    """Look up a specific UniRule by ID."""
+    from ai_gene_review.etl.unirule import UniRuleClient
+    import json
+
+    client = UniRuleClient(cache_dir=cache_dir)
+    rule = client.fetch_rule(rule_id)
+
+    if not rule:
+        typer.echo(f"Rule {rule_id} not found", err=True)
+        raise typer.Exit(code=1)
+
+    if json_output:
+        typer.echo(json.dumps(rule.to_json(), indent=2))
+    else:
+        typer.echo(f"Rule: {rule.uni_rule_id}")
+        typer.echo(f"Version: {rule.info.version}")
+        if rule.info.old_rule_num:
+            typer.echo(f"Old Rule: {rule.info.old_rule_num}")
+        if rule.info.data_class:
+            typer.echo(f"Data Class: {rule.info.data_class}")
+        typer.echo(f"Created: {rule.created_date}")
+        typer.echo(f"Modified: {rule.modified_date}")
+        typer.echo(f"Statistics:")
+        typer.echo(f"  Reviewed proteins: {rule.statistics.reviewed_count}")
+        typer.echo(f"  Unreviewed proteins: {rule.statistics.unreviewed_count}")
+
+        typer.echo(f"\nConditions ({len(rule.condition_sets)} sets):")
+        for i, cs in enumerate(rule.condition_sets, 1):
+            typer.echo(f"  Set {i}:")
+            for cond in cs.conditions:
+                neg = "NOT " if cond.is_negative else ""
+                values = ", ".join(cv.value for cv in cond.values)
+                typer.echo(f"    {neg}{cond.condition_type}: {values}")
+
+        typer.echo(f"\nAnnotations ({len(rule.annotations)}):")
+        for ann in rule.annotations:
+            if ann.keyword:
+                typer.echo(f"  Keyword: {ann.keyword.name} ({ann.keyword.kw_id})")
+            elif ann.db_reference:
+                typer.echo(f"  {ann.db_reference.database}: {ann.db_reference.ref_id}")
+            elif ann.reaction:
+                typer.echo(f"  Catalytic activity: {ann.reaction.name}")
+                if ann.reaction.ec_number:
+                    typer.echo(f"    EC: {ann.reaction.ec_number}")
+            elif ann.subcellular_location:
+                typer.echo(f"  Subcellular location: {ann.subcellular_location.location}")
+            elif ann.pathway:
+                typer.echo(f"  Pathway: {ann.pathway}")
+            elif ann.text:
+                typer.echo(f"  {ann.comment_type}: {ann.text}")
+
+
+@app.command()
+def rules_enrich(
+    cache_dir: Annotated[
+        Path,
+        typer.Option("--cache-dir", "-d", help="Cache directory for rules"),
+    ] = Path("rules"),
+    rule_type: Annotated[
+        str,
+        typer.Option("--type", "-t", help="Rule type to enrich: arba, unirule, or all"),
+    ] = "all",
+    limit: Annotated[
+        Optional[int],
+        typer.Option("--limit", "-l", help="Maximum number of rules to enrich (for testing)"),
+    ] = None,
+    force: Annotated[
+        bool,
+        typer.Option("--force", "-f", help="Force re-enrich even if .enriched.json exists"),
+    ] = False,
+):
+    """Enrich cached rules with labels for GO terms, InterPro, FunFam, and taxa.
+
+    This command processes cached rules and adds human-readable labels for:
+    - GO terms (from QuickGO API)
+    - InterPro entries (from InterPro API)
+    - CATH FunFam families (from CATH API)
+    - Taxa (normalized to NCBITaxon CURIEs)
+
+    Enriched rules are saved to separate .enriched.json files, preserving originals:
+    - ARBA00001.json          (original from API)
+    - ARBA00001.enriched.json (with labels added)
+
+    Examples:
+        # Enrich all cached rules
+        ai-gene-review rules-enrich
+
+        # Enrich only ARBA rules
+        ai-gene-review rules-enrich --type arba
+
+        # Enrich only UniRules
+        ai-gene-review rules-enrich --type unirule
+
+        # Test with a few rules
+        ai-gene-review rules-enrich --limit 10
+
+        # Force re-enrich existing
+        ai-gene-review rules-enrich --force
+    """
+    import json
+    from ai_gene_review.etl.rule_enrichment import LabelEnricher, enrich_rule_json
+
+    enricher = LabelEnricher(cache_dir=cache_dir)
+
+    # Determine which directories to process
+    dirs_to_process = []
+    if rule_type in ("arba", "all"):
+        arba_dir = cache_dir / "arba"
+        if arba_dir.exists():
+            # Match original files, exclude .enriched.json
+            dirs_to_process.append(("ARBA", arba_dir, "ARBA*/ARBA*.json", ".enriched.json"))
+    if rule_type in ("unirule", "all"):
+        unirule_dir = cache_dir / "unirule"
+        if unirule_dir.exists():
+            dirs_to_process.append(("UniRule", unirule_dir, "UR*/UR*.json", ".enriched.json"))
+
+    if not dirs_to_process:
+        typer.echo(f"No rules found in {cache_dir}")
+        raise typer.Exit(1)
+
+    total_enriched = 0
+    total_skipped = 0
+
+    for name, rule_dir, pattern, enriched_suffix in dirs_to_process:
+        typer.echo(f"\nProcessing {name} rules in {rule_dir}...")
+        # Get original files (exclude .enriched.json)
+        rule_files = sorted(
+            f for f in rule_dir.glob(pattern)
+            if not f.name.endswith(enriched_suffix)
+        )
+        count = len(rule_files)
+
+        if limit:
+            rule_files = rule_files[:limit]
+            typer.echo(f"  Limiting to {limit} rules (of {count} total)")
+
+        for i, rule_file in enumerate(rule_files, 1):
+            # Determine output file path
+            enriched_file = rule_file.with_suffix(".enriched.json")
+
+            # Skip if already enriched (unless --force)
+            if enriched_file.exists() and not force:
+                total_skipped += 1
+                continue
+
+            # Load rule JSON
+            rule_json = json.loads(rule_file.read_text())
+
+            # Enrich
+            enriched = enrich_rule_json(rule_json, enricher)
+
+            # Save to separate file
+            enriched_file.write_text(json.dumps(enriched, indent=2))
+
+            if i % 100 == 0 or i == len(rule_files):
+                typer.echo(f"  Enriched {i}/{len(rule_files)} rules", nl=False)
+                typer.echo("\r", nl=False)
+
+            total_enriched += 1
+
+        typer.echo(f"\n  Completed {name}: {total_enriched} enriched, {total_skipped} skipped")
+
+    typer.echo(f"\nTotal: {total_enriched} rules enriched, {total_skipped} skipped (already exist)")
+
+    # Show cache stats
+    typer.echo(f"\nLabel cache saved to {cache_dir / '_labels.json'}")
+
+
+@app.command()
+def rules_export(
+    cache_dir: Annotated[
+        Path,
+        typer.Option("--cache-dir", "-d", help="Cache directory for rules"),
+    ] = Path("rules"),
+    output: Annotated[
+        Path,
+        typer.Option("--output", "-o", help="Output CSV file path"),
+    ] = Path("rules/rules-export.csv"),
+    rule_type: Annotated[
+        str,
+        typer.Option("--type", "-t", help="Rule type to export: arba, unirule, or all"),
+    ] = "all",
+    enriched: Annotated[
+        bool,
+        typer.Option("--enriched/--raw", help="Use enriched files with labels (default: enriched)"),
+    ] = True,
+):
+    """Export rules to CSV with one row per condition set.
+
+    Creates a flat CSV with pivoted condition columns (term1_*, term2_*, term3_*)
+    and denormalized GO annotations. Each row represents a single conjunctive
+    clause (AND of conditions) from the DNF rule structure.
+
+    Requires running `rules-enrich` first if using --enriched (default).
+
+    Examples:
+        # Export all rules to default location
+        ai-gene-review rules-export
+
+        # Export only ARBA rules
+        ai-gene-review rules-export --type arba
+
+        # Export to custom path
+        ai-gene-review rules-export -o my-export.csv
+
+        # Export raw (un-enriched) files
+        ai-gene-review rules-export --raw
+    """
+    from ai_gene_review.etl.rule_export import export_rules_to_csv
+
+    if enriched:
+        typer.echo("Using enriched files (run `just rules-enrich` first if labels are missing)")
+    else:
+        typer.echo("Using raw files (labels will be empty)")
+
+    def progress(rules: int, rows: int) -> None:
+        typer.echo(f"  Processed {rules} rules, {rows} rows written", nl=False)
+        typer.echo("\r", nl=False)
+
+    typer.echo(f"Exporting {rule_type} rules from {cache_dir} to {output}...")
+
+    rows = export_rules_to_csv(
+        cache_dir=cache_dir,
+        output_path=output,
+        rule_type=rule_type,
+        use_enriched=enriched,
+        progress_callback=progress
+    )
+
+    typer.echo(f"\n✓ Exported {rows} rows to {output}")
+
+
+@app.command()
+def rules_validate(
+    files: Annotated[
+        Optional[list[Path]],
+        typer.Argument(help="Rule review YAML file(s) to validate (or use --all)"),
+    ] = None,
+    cache_dir: Annotated[
+        Path,
+        typer.Option("--cache-dir", "-d", help="Cache directory for rules"),
+    ] = Path("rules"),
+    all_reviews: Annotated[
+        bool,
+        typer.Option("--all", "-a", help="Validate all *-review.yaml files in cache directory"),
+    ] = False,
+    verbose: Annotated[
+        bool,
+        typer.Option("--verbose", "-v", help="Show detailed messages including warnings"),
+    ] = False,
+):
+    """Validate rule review YAML files against the LinkML schema.
+
+    Validates RuleReview files including:
+    - Schema compliance (RuleReview class)
+    - PMID title verification (catches hallucinated references)
+
+    Examples:
+        # Validate a specific review
+        ai-gene-review rules-validate rules/arba/ARBA00026249/ARBA00026249-review.yaml
+
+        # Validate all reviews in the rules directory
+        ai-gene-review rules-validate --all
+
+        # Validate with verbose output
+        ai-gene-review rules-validate --all -v
+    """
+    from ai_gene_review.validation.validator import validate_rule_review
+
+    # Collect files to validate
+    all_files: list[Path] = []
+
+    if all_reviews:
+        # Find all *-review.yaml files in cache_dir
+        for review_file in cache_dir.rglob("*-review.yaml"):
+            all_files.append(review_file)
+        if not all_files:
+            typer.echo(f"No review files found in {cache_dir}", err=True)
+            raise typer.Exit(code=1)
+        typer.echo(f"Found {len(all_files)} review file(s) to validate")
+    elif files:
+        all_files = list(files)
+    else:
+        typer.echo("Please specify file(s) or use --all to validate all reviews", err=True)
+        raise typer.Exit(code=1)
+
+    # Track results
+    valid_count = 0
+    invalid_count = 0
+
+    for yaml_file in all_files:
+        report = validate_rule_review(yaml_file)
+
+        if report.is_valid:
+            valid_count += 1
+            if verbose:
+                typer.echo(f"✓ {yaml_file}")
+        else:
+            invalid_count += 1
+            typer.echo(f"✗ {yaml_file}", err=True)
+            for issue in report.issues:
+                typer.echo(f"  {issue}", err=True)
+
+    # Summary
+    typer.echo()
+    if invalid_count == 0:
+        typer.echo(f"✓ All {valid_count} review(s) valid")
+    else:
+        typer.echo(f"✗ {invalid_count} invalid, {valid_count} valid", err=True)
+        raise typer.Exit(code=1)
+
+
 def main():
     """Main entry point for the CLI."""
     app()
