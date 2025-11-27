@@ -31,6 +31,7 @@ from ai_gene_review.etl.arba import ARBARule, ConditionSet
 
 # API endpoints
 UNIPROT_SEARCH_API = "https://rest.uniprot.org/uniprotkb/search"
+UNIPROT_SPARQL_ENDPOINT = "https://sparql.uniprot.org/sparql"
 INTERPRO2GO_URL = "http://geneontology.org/external2go/interpro2go"
 
 
@@ -132,6 +133,52 @@ def get_swissprot_count_for_interpro(
     return count
 
 
+def get_swissprot_count_for_funfam(
+    funfam_id: str,
+    reviewed_only: bool = True,
+    request_delay: float = 0.1
+) -> int:
+    """Query UniProt API for protein count matching FunFam ID.
+
+    Uses UniProt text search with quoted FunFam ID (e.g., "3.50.50.60:FF:000064").
+    FunFam IDs are stored in UniProt's FunFam database cross-references and are
+    searchable via text queries but not structured xref queries.
+
+    Args:
+        funfam_id: FunFam identifier (e.g., "3.50.50.60:FF:000064")
+        reviewed_only: Only count SwissProt (reviewed) proteins
+        request_delay: Delay after request to avoid rate limiting
+
+    Returns:
+        Number of matching proteins
+
+    Example:
+        >>> count = get_swissprot_count_for_funfam("3.50.50.60:FF:000064")
+        >>> count >= 0
+        True
+    """
+    query_parts = [f'("{funfam_id}")']
+    if reviewed_only:
+        query_parts.append("(reviewed:true)")
+
+    query = " AND ".join(query_parts)
+
+    params = {
+        "query": query,
+        "size": 1  # Only need count from header
+    }
+
+    response = requests.get(UNIPROT_SEARCH_API, params=params, timeout=30)
+    response.raise_for_status()
+
+    count = int(response.headers.get("X-Total-Results", 0))
+
+    if request_delay > 0:
+        time.sleep(request_delay)
+
+    return count
+
+
 def get_swissprot_count_for_interpro_intersection(
     interpro_ids: list[str],
     reviewed_only: bool = True,
@@ -159,6 +206,65 @@ def get_swissprot_count_for_interpro_intersection(
         return 0
 
     query_parts = [f"(xref:interpro-{ipr_id})" for ipr_id in interpro_ids]
+    if reviewed_only:
+        query_parts.append("(reviewed:true)")
+
+    query = " AND ".join(query_parts)
+
+    params = {
+        "query": query,
+        "size": 1  # Only need count from header
+    }
+
+    response = requests.get(UNIPROT_SEARCH_API, params=params, timeout=30)
+    response.raise_for_status()
+
+    count = int(response.headers.get("X-Total-Results", 0))
+
+    if request_delay > 0:
+        time.sleep(request_delay)
+
+    return count
+
+
+def get_swissprot_count_for_mixed_conditions(
+    conditions: list[tuple[str, str]],
+    reviewed_only: bool = True,
+    request_delay: float = 0.1
+) -> int:
+    """Query UniProt API for protein count matching mixed domain conditions.
+
+    Supports both InterPro IDs (structured xref) and FunFam IDs (text search).
+    Each condition is a tuple of (condition_type, condition_id).
+
+    Args:
+        conditions: List of (type, id) tuples, where type is "interpro" or "funfam"
+        reviewed_only: Only count SwissProt (reviewed) proteins
+        request_delay: Delay after request to avoid rate limiting
+
+    Returns:
+        Number of proteins matching all conditions
+
+    Example:
+        >>> count = get_swissprot_count_for_mixed_conditions([
+        ...     ("interpro", "IPR005982"),
+        ...     ("funfam", "3.50.50.60:FF:000064")
+        ... ])
+        >>> count >= 0
+        True
+    """
+    if not conditions:
+        return 0
+
+    query_parts = []
+    for condition_type, condition_id in conditions:
+        if condition_type == "interpro":
+            query_parts.append(f"(xref:interpro-{condition_id})")
+        elif condition_type == "funfam":
+            query_parts.append(f'("{condition_id}")')
+        else:
+            raise ValueError(f"Unknown condition type: {condition_type}")
+
     if reviewed_only:
         query_parts.append("(reviewed:true)")
 
@@ -228,15 +334,17 @@ def analyze_interpro_overlap_in_condition_set(
     condition_set: ConditionSet,
     request_delay: float = 0.1
 ) -> dict:
-    """Analyze overlap for all InterPro pairs in a conjunctive condition set.
+    """Analyze overlap for all domain condition pairs in a conjunctive condition set.
 
-    For each pair of InterPro conditions in the set, calculate:
+    Supports both InterPro and FunFam conditions. For each pair of domain conditions
+    in the set, calculate:
     - Jaccard similarity
     - Containment ratios (A in B, B in A)
     - Intersection protein count
+    - Set differences (uniqueness metrics)
 
     Args:
-        condition_set: ConditionSet containing InterPro conditions
+        condition_set: ConditionSet containing InterPro and/or FunFam conditions
         request_delay: Delay between API requests
 
     Returns:
@@ -252,27 +360,40 @@ def analyze_interpro_overlap_in_condition_set(
         >>> "pairs" in result and "summary" in result
         True
     """
-    # Extract InterPro IDs from conditions
-    interpro_ids = []
+    # Extract domain conditions (InterPro and FunFam)
+    domain_conditions = []
     for condition in condition_set.conditions:
         if condition.condition_type == "InterPro id":
             for cv in condition.values:
-                interpro_ids.append(cv.value)
+                domain_conditions.append(("interpro", cv.value))
+        elif condition.condition_type == "FunFam id":
+            for cv in condition.values:
+                domain_conditions.append(("funfam", cv.value))
 
-    # No analysis needed if < 2 InterPro conditions
-    if len(interpro_ids) < 2:
+    # No analysis needed if < 2 domain conditions
+    if len(domain_conditions) < 2:
         return {
             "pairs": [],
-            "summary": f"Only {len(interpro_ids)} InterPro condition(s), no pairwise analysis"
+            "summary": f"Only {len(domain_conditions)} domain condition(s), no pairwise analysis"
         }
 
     # Analyze all pairwise combinations
     pairs_analysis = []
-    for interpro_a, interpro_b in combinations(interpro_ids, 2):
-        count_a = get_swissprot_count_for_interpro(interpro_a, request_delay=request_delay)
-        count_b = get_swissprot_count_for_interpro(interpro_b, request_delay=request_delay)
-        count_intersection = get_swissprot_count_for_interpro_intersection(
-            [interpro_a, interpro_b],
+    for (type_a, id_a), (type_b, id_b) in combinations(domain_conditions, 2):
+        # Get individual counts
+        if type_a == "interpro":
+            count_a = get_swissprot_count_for_interpro(id_a, request_delay=request_delay)
+        else:  # funfam
+            count_a = get_swissprot_count_for_funfam(id_a, request_delay=request_delay)
+
+        if type_b == "interpro":
+            count_b = get_swissprot_count_for_interpro(id_b, request_delay=request_delay)
+        else:  # funfam
+            count_b = get_swissprot_count_for_funfam(id_b, request_delay=request_delay)
+
+        # Get intersection count using mixed conditions
+        count_intersection = get_swissprot_count_for_mixed_conditions(
+            [(type_a, id_a), (type_b, id_b)],
             request_delay=request_delay
         )
 
@@ -300,8 +421,8 @@ def analyze_interpro_overlap_in_condition_set(
             interpretation = "LOW"
 
         pairs_analysis.append({
-            "condition_a": interpro_a,
-            "condition_b": interpro_b,
+            "condition_a": id_a,
+            "condition_b": id_b,
             "protein_database": "SWISSPROT",
             "count_a": count_a,
             "count_b": count_b,
@@ -318,7 +439,7 @@ def analyze_interpro_overlap_in_condition_set(
     avg_jaccard = sum(p["jaccard_similarity"] for p in pairs_analysis) / len(pairs_analysis) if pairs_analysis else 0.0
     high_overlap_pairs = [p for p in pairs_analysis if p["jaccard_similarity"] > 0.5]
 
-    summary = f"Analyzed {len(pairs_analysis)} InterPro pairs. "
+    summary = f"Analyzed {len(pairs_analysis)} domain pairs. "
     summary += f"Average Jaccard similarity: {avg_jaccard:.3f}. "
     summary += f"{len(high_overlap_pairs)} pairs with >50% overlap."
 
