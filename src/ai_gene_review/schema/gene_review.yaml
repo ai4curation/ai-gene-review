@@ -511,6 +511,10 @@ classes:
         multivalued: true
         inlined_as_list: true
         description: GO terms assigned by this rule
+      ipr2go_redundancy:
+        range: InterPro2GORedundancy
+        inlined: true
+        description: Analysis of redundancy with InterPro2GO mappings
       reviewed_protein_count:
         range: integer
         description: Number of reviewed (Swiss-Prot) proteins annotated by this rule
@@ -538,6 +542,14 @@ classes:
       notes:
         range: string
         description: Reviewer notes on this specific condition set
+      pairwise_overlap:
+        range: PairwiseOverlap
+        multivalued: true
+        inlined_as_list: true
+        description: >-
+          Pairwise overlap statistics for domain conditions in this set.
+          Only computed for InterPro, FunFam, PANTHER conditions.
+          Provides set difference metrics (uniqueness) and Jaccard similarity.
 
   RuleCondition:
     description: A single condition in a rule antecedent
@@ -559,6 +571,35 @@ classes:
       negated:
         range: boolean
         description: Whether this is a negative condition (NOT)
+      protein_count:
+        range: integer
+        minimum_value: 0
+        description: >-
+          Number of proteins matching this condition in specified database.
+          Only populated for domain/family conditions (InterPro, FunFam, PANTHER).
+          Null for taxon and other condition types.
+      protein_database:
+        range: ProteinDatabaseEnum
+        description: >-
+          Which protein database was queried (e.g., SWISSPROT, TREMBL).
+          Defaults to SWISSPROT (reviewed proteins only).
+          Important to specify since counts differ dramatically between databases.
+      uniqueness_score:
+        range: float
+        minimum_value: 0.0
+        maximum_value: 1.0
+        description: >-
+          Measure of domain uniqueness (0.0 to 1.0).
+          Calculated as 1.0 - mean(containment in other domains in same condition set).
+          High score = more unique/specific domain.
+          Low score = broad domain that commonly co-occurs.
+      sample_proteins:
+        range: string
+        multivalued: true
+        description: >-
+          Sample UniProt IDs matching this condition.
+          Only included when protein_count < 20 to avoid bloating files.
+          Limited to max 10 examples.
 
   RuleGOAnnotation:
     description: A GO annotation produced by the rule
@@ -573,6 +614,130 @@ classes:
       aspect:
         range: string
         description: GO aspect (F, P, or C)
+
+  # ============== Rule Analysis Classes ==============
+
+  PairwiseOverlap:
+    description: >-
+      Overlap statistics between two domain conditions (InterPro, FunFam, etc.)
+      in the same condition set. Provides set difference metrics to measure
+      uniqueness and redundancy.
+    attributes:
+      condition_a:
+        range: string
+        required: true
+        description: First condition value (e.g., IPR005982)
+      condition_b:
+        range: string
+        required: true
+        description: Second condition value (e.g., IPR008255)
+      condition_a_label:
+        range: string
+        description: Human-readable label for condition A
+      condition_b_label:
+        range: string
+        description: Human-readable label for condition B
+      protein_database:
+        range: ProteinDatabaseEnum
+        required: true
+        description: Which protein database was queried (SWISSPROT or TREMBL)
+      count_a:
+        range: integer
+        required: true
+        minimum_value: 0
+        description: Number of proteins matching condition A in specified database
+      count_b:
+        range: integer
+        required: true
+        minimum_value: 0
+        description: Number of proteins matching condition B in specified database
+      intersection_count:
+        range: integer
+        required: true
+        minimum_value: 0
+        description: Number of proteins matching BOTH A AND B (|A ∩ B|) in specified database
+      a_minus_b_count:
+        range: integer
+        required: true
+        minimum_value: 0
+        description: >-
+          Number of proteins in A but not in B (|A - B|).
+          Represents the uniqueness of A with respect to B.
+          High value = A adds unique coverage beyond B.
+          Zero value = A is completely contained in B (A ⊆ B).
+      b_minus_a_count:
+        range: integer
+        required: true
+        minimum_value: 0
+        description: >-
+          Number of proteins in B but not in A (|B - A|).
+          Represents the uniqueness of B with respect to A.
+          High value = B adds unique coverage beyond A.
+          Zero value = B is completely contained in A (B ⊆ A).
+      jaccard_similarity:
+        range: float
+        required: true
+        minimum_value: 0.0
+        maximum_value: 1.0
+        description: >-
+          Jaccard similarity coefficient: |A ∩ B| / |A ∪ B|
+          = intersection / (count_a + count_b - intersection).
+          0.0 = no overlap, 1.0 = complete overlap.
+      containment_a_in_b:
+        range: float
+        required: true
+        minimum_value: 0.0
+        maximum_value: 1.0
+        description: >-
+          Proportion of A contained in B: |A ∩ B| / |A|.
+          1.0 means A is completely contained in B (A ⊆ B).
+      containment_b_in_a:
+        range: float
+        required: true
+        minimum_value: 0.0
+        maximum_value: 1.0
+        description: >-
+          Proportion of B contained in A: |A ∩ B| / |B|.
+          1.0 means B is completely contained in A (B ⊆ A).
+      interpretation:
+        range: OverlapInterpretationEnum
+        description: Automated interpretation of overlap pattern
+
+  InterPro2GORedundancy:
+    description: >-
+      Analysis of whether rule GO annotations are redundant with
+      existing InterPro2GO mappings from the GO Consortium.
+    attributes:
+      redundant_annotations:
+        range: RedundantAnnotation
+        multivalued: true
+        inlined_as_list: true
+        description: GO annotations that already exist in InterPro2GO
+      novel_annotations:
+        range: string
+        multivalued: true
+        description: GO IDs not found in InterPro2GO for any rule condition
+      summary:
+        range: string
+        description: Human-readable summary of redundancy analysis
+
+  RedundantAnnotation:
+    description: A GO annotation that is redundant with an existing InterPro2GO mapping
+    attributes:
+      go_id:
+        range: string
+        required: true
+        description: GO term ID (e.g., GO:0004791)
+      go_label:
+        range: string
+        description: GO term label
+      interpro_source:
+        range: string
+        required: true
+        description: InterPro ID that already maps to this GO term in ipr2go
+      interpro_label:
+        range: string
+        description: InterPro domain label
 
   # ============== Rule Assessment Classes ==============
 
@@ -1105,5 +1270,31 @@ enums:
         description: Sequence length constraint
       OTHER:
         description: Other condition type
+
+  ProteinDatabaseEnum:
+    description: Protein database types for rule analysis
+    permissible_values:
+      SWISSPROT:
+        description: Swiss-Prot (reviewed, manually curated proteins)
+      TREMBL:
+        description: TrEMBL (unreviewed, automatically annotated proteins)
+      UNIPROT:
+        description: Full UniProtKB (Swiss-Prot + TrEMBL)
+
+  OverlapInterpretationEnum:
+    description: Automated interpretation of domain overlap patterns
+    permissible_values:
+      REDUNDANT:
+        description: Very high overlap (Jaccard > 0.9), conditions are nearly identical
+      SUBSET:
+        description: One condition is a subset of the other (containment > 0.95)
+      HIGH_OVERLAP:
+        description: High overlap (Jaccard > 0.5), conditions are similar
+      MODERATE:
+        description: Moderate overlap (0.2 < Jaccard <= 0.5)
+      LOW:
+        description: Low overlap (Jaccard <= 0.2), conditions are mostly distinct
+      DISJOINT:
+        description: No overlap (intersection = 0), conditions are completely distinct
 
 
