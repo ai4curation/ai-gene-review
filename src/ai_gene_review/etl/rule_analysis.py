@@ -291,6 +291,147 @@ def get_swissprot_count_for_mixed_conditions(
     return count
 
 
+def get_interpro_name(interpro_id: str, request_delay: float = 0.1) -> str:
+    """Fetch InterPro entry name from InterPro API.
+
+    Args:
+        interpro_id: InterPro identifier (e.g., "IPR005982")
+        request_delay: Delay after request to avoid rate limiting
+
+    Returns:
+        InterPro entry name, or the ID itself if fetch fails
+
+    Example:
+        >>> name = get_interpro_name("IPR005982")
+        >>> len(name) > 0
+        True
+    """
+    try:
+        url = f"https://www.ebi.ac.uk/interpro/api/entry/InterPro/{interpro_id}/"
+        response = requests.get(url, timeout=30)
+        response.raise_for_status()
+        data = response.json()
+
+        if request_delay > 0:
+            time.sleep(request_delay)
+
+        return data.get("metadata", {}).get("name", interpro_id)
+    except Exception:
+        # If fetch fails, return the ID
+        return interpro_id
+
+
+def get_funfam_name(funfam_id: str) -> str:
+    """Get a descriptive name for a FunFam ID.
+
+    FunFam IDs don't have official human-readable names in CATH database.
+    This function returns the superfamily portion as a semi-descriptive label.
+
+    Args:
+        funfam_id: FunFam identifier (e.g., "3.50.50.60:FF:000064")
+
+    Returns:
+        Superfamily ID extracted from FunFam ID
+
+    Example:
+        >>> name = get_funfam_name("3.50.50.60:FF:000064")
+        >>> name
+        'CATH 3.50.50.60'
+    """
+    # FunFam format: superfamily:FF:number
+    # Extract superfamily portion
+    if ":FF:" in funfam_id:
+        superfamily = funfam_id.split(":FF:")[0]
+        return f"CATH {superfamily}"
+    return funfam_id
+
+
+def fetch_domain_names(
+    domain_ids: list[str],
+    request_delay: float = 0.1
+) -> dict[str, str]:
+    """Fetch names for a list of domain IDs (InterPro or FunFam).
+
+    Args:
+        domain_ids: List of domain identifiers
+        request_delay: Delay between InterPro API requests
+
+    Returns:
+        Dictionary mapping domain ID to name
+
+    Example:
+        >>> names = fetch_domain_names(["IPR005982", "3.50.50.60:FF:000064"])
+        >>> len(names) == 2
+        True
+    """
+    domain_names = {}
+
+    for domain_id in domain_ids:
+        if domain_id.startswith("IPR"):
+            # InterPro ID - fetch from API
+            domain_names[domain_id] = get_interpro_name(domain_id, request_delay)
+        elif ":FF:" in domain_id:
+            # FunFam ID - generate descriptive label
+            domain_names[domain_id] = get_funfam_name(domain_id)
+        else:
+            # Unknown format
+            domain_names[domain_id] = domain_id
+
+    return domain_names
+
+
+def extract_domain_labels_from_enriched_rule(
+    rule_id: str,
+    cache_dir: Path
+) -> dict[str, str]:
+    """Extract domain labels from enriched ARBA rule JSON.
+
+    The enriched JSON contains labels for all InterPro and FunFam condition values.
+
+    Args:
+        rule_id: ARBA rule ID
+        cache_dir: Cache directory containing enriched JSON
+
+    Returns:
+        Dictionary mapping domain ID to label
+
+    Example:
+        >>> labels = extract_domain_labels_from_enriched_rule("ARBA00026249", Path("rules/arba"))
+        >>> "IPR005982" in labels
+        True
+    """
+    import json
+
+    enriched_path = cache_dir / rule_id / f"{rule_id}.enriched.json"
+
+    if not enriched_path.exists():
+        return {}
+
+    try:
+        with open(enriched_path) as f:
+            enriched_data = json.load(f)
+
+        domain_labels = {}
+
+        # Extract labels from condition sets
+        for condition_set in enriched_data.get("mainRule", {}).get("conditionSets", []):
+            for condition in condition_set.get("conditions", []):
+                # Check if this is a domain condition (InterPro or FunFam)
+                cond_type = condition.get("type", "")
+                if cond_type in ("InterPro id", "FunFam id"):
+                    for cv in condition.get("conditionValues", []):
+                        domain_id = cv.get("value")
+                        label = cv.get("label")
+                        if domain_id and label:
+                            domain_labels[domain_id] = label
+
+        return domain_labels
+
+    except Exception:
+        # If enriched file doesn't exist or is malformed, return empty dict
+        return {}
+
+
 def calculate_jaccard_similarity(
     interpro_a: str,
     interpro_b: str,
@@ -734,11 +875,15 @@ def analyze_rule_post_enrichment(
             "notes": f"Condition set {cs_idx} has {len(cs_domains)} domain condition(s), involved in {len(relevant_pairs)} pairwise comparison(s)"
         })
 
+    # Extract domain labels from enriched JSON if available
+    domain_labels = extract_domain_labels_from_enriched_rule(rule.uni_rule_id, cache_dir)
+
     return {
         "rule_id": rule.uni_rule_id,
         "domain_overlap_analysis": all_pairs_analysis,
         "condition_sets_summary": condition_sets_summary,
-        "ipr2go_redundancy": redundancy_analysis
+        "ipr2go_redundancy": redundancy_analysis,
+        "domain_labels": domain_labels
     }
 
 
@@ -832,18 +977,21 @@ def format_analysis_as_text(analysis: dict) -> str:
 def plot_domain_overlap_heatmap(
     analysis: dict,
     output_path: Optional[Path] = None,
-    figsize: tuple[float, float] = (12, 10)
+    figsize: tuple[float, float] = (18, 16),
+    domain_labels: Optional[dict[str, str]] = None
 ) -> None:
     """Generate asymmetric heatmap showing domain containment relationships.
 
     Creates a heatmap where cell (i,j) shows the containment of domain i in domain j
     (i.e., what fraction of proteins with domain i also have domain j).
-    Domains are clustered by condition set and then by similarity within each set.
+    Domains are grouped by condition set with separators.
 
     Args:
         analysis: Analysis dict from analyze_rule_post_enrichment
         output_path: Optional path to save figure (PNG format)
-        figsize: Figure size in inches (width, height)
+        figsize: Figure size in inches (width, height) - default (18, 16) for domain names
+        domain_labels: Optional dict mapping domain IDs to human-readable labels.
+            If None, domain names are automatically fetched from InterPro API
 
     Example:
         >>> from ai_gene_review.etl.arba import ARBAClient
@@ -878,6 +1026,31 @@ def plot_domain_overlap_heatmap(
 
     n_domains = len(domains)
 
+    # Use domain labels from analysis if not explicitly provided
+    if domain_labels is None:
+        domain_labels = analysis.get("domain_labels", {})
+
+    # Build a mapping of domain ID to protein count from the pairs data
+    domain_counts = {}
+    for pair in pairs:
+        if pair["condition_a"] not in domain_counts:
+            domain_counts[pair["condition_a"]] = pair["count_a"]
+        if pair["condition_b"] not in domain_counts:
+            domain_counts[pair["condition_b"]] = pair["count_b"]
+
+    # Create display labels (ID + label + count on three lines)
+    display_labels = []
+    for domain in domains:
+        if domain_labels and domain in domain_labels:
+            # Show ID, label, and protein count
+            count = domain_counts.get(domain, "?")
+            label = f"{domain}\n{domain_labels[domain]}\n(n={count})"
+        else:
+            # Fallback to ID with count if no label available
+            count = domain_counts.get(domain, "?")
+            label = f"{domain}\n(n={count})"
+        display_labels.append(label)
+
     # Build containment matrix: containment[i,j] = fraction of proteins with domain i that also have domain j
     containment_matrix = np.zeros((n_domains, n_domains))
 
@@ -900,25 +1073,7 @@ def plot_domain_overlap_heatmap(
     # Create figure
     fig, ax = plt.subplots(figsize=figsize)
 
-    # Create heatmap with asymmetric colormap (white=0, dark=1)
-    sns.heatmap(
-        containment_matrix,
-        xticklabels=domains,
-        yticklabels=domains,
-        annot=True,
-        fmt=".2f",
-        cmap="YlOrRd",
-        vmin=0,
-        vmax=1,
-        cbar_kws={"label": "Containment (fraction of row domain in column domain)"},
-        square=True,
-        linewidths=0.5,
-        linecolor='gray',
-        ax=ax
-    )
-
-    # Add condition set separators
-    # Find positions where condition set changes
+    # Calculate condition set boundaries first
     cs_boundaries = []
     prev_cs = None
     for i, domain in enumerate(domains):
@@ -927,43 +1082,69 @@ def plot_domain_overlap_heatmap(
             cs_boundaries.append(i)
         prev_cs = curr_cs
 
-    # Draw separator lines
-    for boundary in cs_boundaries:
-        ax.axhline(y=boundary, color='black', linewidth=2)
-        ax.axvline(x=boundary, color='black', linewidth=2)
-
-    # Add condition set labels on the side
+    # Calculate condition set labels and positions
     cs_labels = []
-    cs_positions = []
+    cs_positions_y = []
+    cs_positions_x = []
     prev_boundary = 0
     for boundary in cs_boundaries + [n_domains]:
-        # Find which condition set this section represents
         mid_idx = (prev_boundary + boundary) // 2
         cs_num = min(domain_to_sets[domains[mid_idx]])
         cs_labels.append(f"CS{cs_num}")
-        cs_positions.append((prev_boundary + boundary) / 2)
+        cs_positions_y.append((prev_boundary + boundary) / 2)
+        cs_positions_x.append((prev_boundary + boundary) / 2)
         prev_boundary = boundary
 
-    # Add secondary y-axis for condition set labels
-    ax2 = ax.twinx()
-    ax2.set_ylim(ax.get_ylim())
-    ax2.set_yticks(cs_positions)
-    ax2.set_yticklabels(cs_labels)
-    ax2.set_ylabel("Condition Set", rotation=270, labelpad=20)
+    # Create heatmap WITHOUT colorbar
+    sns.heatmap(
+        containment_matrix,
+        xticklabels=display_labels,
+        yticklabels=display_labels,
+        annot=True,
+        fmt=".2f",
+        cmap="YlOrRd",
+        vmin=0,
+        vmax=1,
+        cbar=False,  # Remove colorbar
+        square=True,  # Use square cells
+        linewidths=0.5,
+        linecolor='gray',
+        ax=ax,
+        annot_kws={'fontsize': 8}
+    )
 
-    # Rotate x-axis labels
-    plt.setp(ax.xaxis.get_majorticklabels(), rotation=45, ha='right')
+    # Draw separator lines between condition sets
+    for boundary in cs_boundaries:
+        ax.axhline(y=boundary, color='black', linewidth=2.5)
+        ax.axvline(x=boundary, color='black', linewidth=2.5)
+
+    # Add text annotations for condition sets on right and top
+    # Right side (Y-axis)
+    for i, (label, pos) in enumerate(zip(cs_labels, cs_positions_y)):
+        ax.text(n_domains + 0.3, pos, label,
+                ha='left', va='center', fontsize=10, fontweight='bold')
+
+    # Top (X-axis)
+    for i, (label, pos) in enumerate(zip(cs_labels, cs_positions_x)):
+        ax.text(pos, -0.3, label,
+                ha='center', va='bottom', fontsize=10, fontweight='bold')
+
+    # Rotate x-axis labels and adjust alignment
+    plt.setp(ax.xaxis.get_majorticklabels(), rotation=45, ha='right', fontsize=7)
+    plt.setp(ax.yaxis.get_majorticklabels(), fontsize=7)
 
     # Set titles and labels
-    ax.set_xlabel("Domain (Column)")
-    ax.set_ylabel("Domain (Row)")
+    ax.set_xlabel("Domain (Column)", fontsize=11)
+    ax.set_ylabel("Domain (Row)", fontsize=11)
     ax.set_title(
         f"Domain Containment Matrix: {analysis['rule_id']}\n"
         f"Cell (i,j) = fraction of proteins with domain i that also have domain j",
-        pad=20
+        pad=30,
+        fontsize=13
     )
 
-    plt.tight_layout()
+    # Use subplots_adjust to allocate more space for domain name labels
+    plt.subplots_adjust(left=0.20, right=0.90, top=0.93, bottom=0.22)
 
     if output_path:
         plt.savefig(output_path, dpi=300, bbox_inches='tight')
@@ -972,3 +1153,112 @@ def plot_domain_overlap_heatmap(
         plt.show()
 
     plt.close()
+
+
+def render_rule_review_html(
+    rule_id: str,
+    cache_dir: Path,
+    output_path: Optional[Path] = None,
+    template_path: Optional[Path] = None
+) -> Path:
+    """Render a rule review YAML file to HTML with embedded heatmap and analysis.
+
+    Args:
+        rule_id: The rule ID (e.g., ARBA00026249)
+        cache_dir: Directory containing rule files
+        output_path: Optional output path for HTML file
+        template_path: Optional path to custom Jinja2 template
+
+    Returns:
+        Path to the generated HTML file
+
+    Example:
+        >>> from pathlib import Path
+        >>> rule_id = "ARBA00026249"
+        >>> cache_dir = Path("rules/arba")
+        >>> # html_path = render_rule_review_html(rule_id, cache_dir)  # doctest: +SKIP
+    """
+    from jinja2 import Environment, FileSystemLoader, select_autoescape
+
+    # Locate the review YAML file
+    rule_dir = cache_dir / rule_id
+    review_yaml_path = rule_dir / f"{rule_id}-review.yaml"
+
+    if not review_yaml_path.exists():
+        raise FileNotFoundError(f"Rule review YAML not found: {review_yaml_path}")
+
+    # Load review YAML
+    with open(review_yaml_path, 'r') as f:
+        rule_data = yaml.safe_load(f)
+
+    # Read raw YAML content for preview
+    with open(review_yaml_path, 'r') as f:
+        yaml_content = f.read()
+
+    # Check for analysis text file (from analyze_rule_post_enrichment)
+    analysis_text_path = rule_dir / f"{rule_id}-analysis.txt"
+
+    # Generate stats from the rule data
+    stats = {}
+    if 'rule' in rule_data and 'condition_sets' in rule_data['rule']:
+        condition_sets = rule_data['rule']['condition_sets']
+        stats['condition_sets'] = len(condition_sets)
+
+        # Count total pairwise overlaps from all condition sets
+        total_pairs = 0
+        subset_count = 0
+        for cs in condition_sets:
+            if 'pairwise_overlap' in cs and cs['pairwise_overlap']:
+                total_pairs += len(cs['pairwise_overlap'])
+                for pair in cs['pairwise_overlap']:
+                    if pair.get('interpretation') == 'SUBSET':
+                        subset_count += 1
+
+        stats['total_pairs'] = total_pairs
+        stats['subset_relationships'] = subset_count
+
+    # Get redundant annotation count
+    if 'rule' in rule_data and 'ipr2go_redundancy' in rule_data['rule']:
+        redundancy_info = rule_data['rule']['ipr2go_redundancy']
+        stats['redundant_annotations'] = len(redundancy_info.get('redundant_annotations', []))
+    else:
+        stats['redundant_annotations'] = 0
+
+    rule_data['stats'] = stats
+
+    # Check for heatmap image
+    heatmap_path = rule_dir / f"{rule_id}-heatmap.png"
+    if heatmap_path.exists():
+        # Use relative path for embedding in HTML
+        rule_data['heatmap_path'] = f"{rule_id}-heatmap.png"
+    else:
+        rule_data['heatmap_path'] = None
+
+    # Set default template if not provided
+    if template_path is None:
+        module_dir = Path(__file__).parent.parent  # Go up to src/ai_gene_review
+        template_path = module_dir / "templates" / "rule_review.html.j2"
+        if not template_path.exists():
+            raise FileNotFoundError(f"Default template not found at {template_path}")
+
+    # Set default output path if not provided
+    if output_path is None:
+        output_path = rule_dir / f"{rule_id}-review.html"
+
+    # Set up Jinja2 environment
+    template_dir = template_path.parent
+    env = Environment(
+        loader=FileSystemLoader(template_dir),
+        autoescape=select_autoescape(['html', 'j2'])
+    )
+
+    # Load and render template
+    template = env.get_template(template_path.name)
+    html = template.render(rule=rule_data, yaml_content=yaml_content, stats=stats)
+
+    # Write output
+    with open(output_path, 'w', encoding='utf-8') as f:
+        f.write(html)
+
+    print(f"HTML review rendered to {output_path}")
+    return output_path
