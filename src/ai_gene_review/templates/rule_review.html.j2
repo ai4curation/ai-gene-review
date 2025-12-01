@@ -553,19 +553,6 @@
     </div>
     {% endif %}
 
-    {% if heatmap_data %}
-    <div class="section">
-        <h2>Domain Overlap Heatmap</h2>
-        <div class="visualization">
-            <img src="{{ heatmap_data }}" alt="Domain Overlap Heatmap" style="max-width: 100%; height: auto;" />
-            <p style="margin-top: 1rem; color: var(--text-muted); font-size: 0.875rem;">
-                Asymmetric containment matrix showing domain overlap relationships.
-                Cell (i,j) = fraction of proteins with domain i that also have domain j.
-            </p>
-        </div>
-    </div>
-    {% endif %}
-
     {% if heatmap_table %}
     <div class="section">
         <h2>Domain Overlap Analysis Table</h2>
@@ -577,34 +564,47 @@
             <div style="overflow-x: auto;">
                 <table class="heatmap-table">
                     <thead>
+                        <!-- Condition set row with merged cells -->
                         <tr>
-                            <th></th>
-                            {% for domain in heatmap_table.domains %}
-                            <th class="domain-header">
-                                <a href="#" onclick="window.open(buildUniProtQuery('{{ domain.id }}'), '_blank'); return false;">
-                                    {% if domain.label %}{{ domain.label }}{% else %}{{ domain.id }}{% endif %}
-                                </a>
-                                <br><small>{{ domain.id }}</small>
-                                <br><small>({{ domain.count }})</small>
-                                {% if domain.taxon_label %}
-                                <br><small style="color: var(--text-muted);">{{ domain.taxon_label }}</small>
+                            <th rowspan="2" style="border-right: 2px solid #999;"></th>
+                            {% for group in heatmap_table.cs_groups %}
+                            <th colspan="{{ group.domains|length }}" style="background-color: #e8f4f8; border-left: 2px solid #999; border-right: 2px solid #999; text-align: center; font-weight: bold;">
+                                {{ group.cs_label }}
+                                {% if group.taxon_label %}
+                                <br><small style="font-weight: normal; color: var(--text-muted);">{{ group.taxon_label }}</small>
                                 {% endif %}
                             </th>
+                            {% endfor %}
+                        </tr>
+                        <!-- Domain row -->
+                        <tr>
+                            {% set col_idx = namespace(value=0) %}
+                            {% for group in heatmap_table.cs_groups %}
+                                {% for domain in group.domains %}
+                                {% set label = domain.label if domain.label else domain.id %}
+                                {% set truncated = label[:25] + '...' if label|length > 28 else label %}
+                                <th class="domain-header" {% if loop.first %}style="border-left: 2px solid #999;"{% endif %}>
+                                    <a href="#" onclick="window.open(buildUniProtQuery('{{ domain.id }}'), '_blank'); return false;" title="{{ label }}">
+                                        {{ truncated }}
+                                    </a>
+                                    <br><small>{{ domain.id }}</small>
+                                    <br><small>({{ domain.count }})</small>
+                                </th>
+                                {% set col_idx.value = col_idx.value + 1 %}
+                                {% endfor %}
                             {% endfor %}
                         </tr>
                     </thead>
                     <tbody>
                         {% for row_domain in heatmap_table.domains %}
                         {% set i = loop.index0 %}
+                        {% set row_label = row_domain.label if row_domain.label else row_domain.id %}
                         <tr>
-                            <td class="row-header">
-                                <a href="#" onclick="window.open(buildUniProtQuery('{{ row_domain.id }}'), '_blank'); return false;">
-                                    {% if row_domain.label %}{{ row_domain.label }}{% else %}{{ row_domain.id }}{% endif %}
+                            <td class="row-header" style="border-right: 2px solid #999;">
+                                <a href="#" onclick="window.open(buildUniProtQuery('{{ row_domain.id }}'), '_blank'); return false;" title="{{ row_label }}">
+                                    {{ row_label }}
                                 </a>
                                 <br><small>{{ row_domain.id }} ({{ row_domain.count }})</small>
-                                {% if row_domain.condition_sets %}
-                                <br><small style="color: var(--text-muted);">CS: {{ row_domain.condition_sets|join(', ') }}</small>
-                                {% endif %}
                                 {% if row_domain.taxon_label %}
                                 <br><small style="color: var(--text-muted);">{{ row_domain.taxon_label }}</small>
                                 {% endif %}
@@ -612,8 +612,9 @@
                             {% for col_domain in heatmap_table.domains %}
                             {% set j = loop.index0 %}
                             {% set cell = heatmap_table.matrix[i][j] %}
+                            {% set border_style = 'border-left: 2px solid #999;' if j in heatmap_table.cs_boundary_cols else '' %}
                             {% if i == j %}
-                            <td class="heatmap-cell heatmap-cell-diag">
+                            <td class="heatmap-cell heatmap-cell-diag" {% if border_style %}style="{{ border_style }}"{% endif %}>
                                 100%
                             </td>
                             {% elif cell %}
@@ -632,7 +633,7 @@
                             {% else %}
                                 {% set color_class = 'heatmap-cell-none' %}
                             {% endif %}
-                            <td class="heatmap-cell {{ color_class }}">
+                            <td class="heatmap-cell {{ color_class }}" {% if border_style %}style="{{ border_style }}"{% endif %}>
                                 <a href="#" onclick="window.open(buildIntersectionQuery('{{ row_domain.id }}', '{{ col_domain.id }}'), '_blank'); return false;" style="color: inherit; text-decoration: none; display: block;">
                                     <div>{{ containment_pct }}%</div>
                                     <small>J:{{ jaccard_pct }}%</small>
@@ -640,7 +641,7 @@
                                 </a>
                             </td>
                             {% else %}
-                            <td class="heatmap-cell heatmap-cell-none">
+                            <td class="heatmap-cell heatmap-cell-none" {% if border_style %}style="{{ border_style }}"{% endif %}>
                                 -
                             </td>
                             {% endif %}
