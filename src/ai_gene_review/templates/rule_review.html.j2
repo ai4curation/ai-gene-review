@@ -1,5 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
+
+{# Jinja2 macro for InterPro type short codes #}
+{% macro type_code(interpro_type) -%}
+{%- if interpro_type == 'family' -%}F
+{%- elif interpro_type == 'domain' -%}D
+{%- elif interpro_type == 'active_site' -%}AS
+{%- elif interpro_type == 'binding_site' -%}BS
+{%- elif interpro_type == 'conserved_site' -%}CS
+{%- elif interpro_type == 'repeat' -%}R
+{%- elif interpro_type == 'homologous_superfamily' -%}SF
+{%- elif interpro_type == 'ptm' -%}PTM
+{%- else -%}
+{%- endif -%}
+{%- endmacro %}
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -566,7 +581,7 @@
                     <thead>
                         <!-- Condition set row with merged cells -->
                         <tr>
-                            <th rowspan="2" style="border-right: 2px solid #999;"></th>
+                            <th colspan="2" rowspan="2" style="border-right: 2px solid #999; border-bottom: 2px solid #999;"></th>
                             {% for group in heatmap_table.cs_groups %}
                             <th colspan="{{ group.domains|length }}" style="background-color: #e8f4f8; border-left: 2px solid #999; border-right: 2px solid #999; text-align: center; font-weight: bold;">
                                 {{ group.cs_label }}
@@ -587,7 +602,7 @@
                                     <a href="#" onclick="window.open(buildUniProtQuery('{{ domain.id }}'), '_blank'); return false;" title="{{ label }}">
                                         {{ truncated }}
                                     </a>
-                                    <br><small>{{ domain.id }}</small>
+                                    <br><small>{{ domain.id }}{% if domain.type %} [{{ type_code(domain.type) }}]{% endif %}</small>
                                     <br><small>({{ domain.count }})</small>
                                 </th>
                                 {% set col_idx.value = col_idx.value + 1 %}
@@ -596,23 +611,39 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for row_domain in heatmap_table.domains %}
-                        {% set i = loop.index0 %}
-                        {% set row_label = row_domain.label if row_domain.label else row_domain.id %}
-                        <tr>
-                            <td class="row-header" style="border-right: 2px solid #999;">
-                                <a href="#" onclick="window.open(buildUniProtQuery('{{ row_domain.id }}'), '_blank'); return false;" title="{{ row_label }}">
-                                    {{ row_label }}
-                                </a>
-                                <br><small>{{ row_domain.id }} ({{ row_domain.count }})</small>
-                                {% if row_domain.taxon_label %}
-                                <br><small style="color: var(--text-muted);">{{ row_domain.taxon_label }}</small>
+                        {% for group in heatmap_table.cs_groups %}
+                        {% set group_idx = loop.index0 %}
+                        {% set cs_colors = ['#fef3c7', '#dbeafe', '#d1fae5', '#fce7f3', '#e0e7ff', '#fef9c3'] %}
+                        {% set bg_color = cs_colors[group_idx % cs_colors|length] %}
+                            {% for row_domain in group.domains %}
+                            {% set i = heatmap_table.domains.index(row_domain) %}
+                            {% set row_label = row_domain.label if row_domain.label else row_domain.id %}
+                            <tr>
+                                <!-- CS label cell with rowspan for first row of each group -->
+                                {% if loop.first %}
+                                <td rowspan="{{ group.domains|length }}" style="background-color: {{ bg_color }}; border-right: 2px solid #999; border-top: 2px solid #999; border-bottom: 2px solid #999; text-align: center; font-weight: bold; vertical-align: middle; writing-mode: vertical-rl; transform: rotate(180deg); padding: 0.5rem 0.25rem;">
+                                    {{ group.cs_label }}
+                                    {% if group.taxon_label %}
+                                    <br><small style="font-weight: normal;">{{ group.taxon_label }}</small>
+                                    {% endif %}
+                                </td>
                                 {% endif %}
-                            </td>
+                                <!-- Domain name cell -->
+                                <td class="row-header" style="background-color: {{ bg_color }}; border-right: 2px solid #999; {% if loop.first %}border-top: 2px solid #999;{% endif %}">
+                                    <a href="#" onclick="window.open(buildUniProtQuery('{{ row_domain.id }}'), '_blank'); return false;" title="{{ row_label }}">
+                                        {{ row_label }}
+                                    </a>
+                                    <br><small>{{ row_domain.id }}{% if row_domain.type %} [{{ type_code(row_domain.type) }}]{% endif %} ({{ row_domain.count }})</small>
+                                    {% if row_domain.taxon_label %}
+                                    <br><small style="color: var(--text-muted);">{{ row_domain.taxon_label }}</small>
+                                    {% endif %}
+                                </td>
                             {% for col_domain in heatmap_table.domains %}
                             {% set j = loop.index0 %}
                             {% set cell = heatmap_table.matrix[i][j] %}
-                            {% set border_style = 'border-left: 2px solid #999;' if j in heatmap_table.cs_boundary_cols else '' %}
+                            {% set border_left = 'border-left: 2px solid #999;' if j in heatmap_table.cs_boundary_cols else '' %}
+                            {% set border_top = 'border-top: 2px solid #999;' if i in heatmap_table.cs_boundary_cols else '' %}
+                            {% set border_style = border_left + (' ' if border_left and border_top else '') + border_top %}
                             {% if i == j %}
                             <td class="heatmap-cell heatmap-cell-diag" {% if border_style %}style="{{ border_style }}"{% endif %}>
                                 100%
@@ -647,6 +678,7 @@
                             {% endif %}
                             {% endfor %}
                         </tr>
+                        {% endfor %}
                         {% endfor %}
                     </tbody>
                 </table>
@@ -692,6 +724,26 @@
                     - {{ ann.go_label }}
                 </div>
                 <div style="color: var(--text-muted); font-size: 0.875rem;">Aspect: {{ ann.aspect }}</div>
+
+                {# Check if this annotation is redundant with InterPro2GO #}
+                {% if rule.rule.ipr2go_redundancy and rule.rule.ipr2go_redundancy.redundant_annotations %}
+                    {% set redundant = namespace(found=false, source=none) %}
+                    {% for redund in rule.rule.ipr2go_redundancy.redundant_annotations %}
+                        {% if redund.go_id == ann.go_id %}
+                            {% set redundant.found = true %}
+                            {% set redundant.source = redund.interpro_source %}
+                        {% endif %}
+                    {% endfor %}
+                    {% if redundant.found %}
+                    <div style="margin-top: 0.5rem; padding: 0.5rem; background-color: #fef3c7; border-left: 3px solid #f59e0b; border-radius: 0.25rem; font-size: 0.875rem;">
+                        <strong style="color: #92400e;">⚠️ Redundant with InterPro2GO:</strong>
+                        <span style="color: #78350f;">{{ redundant.source }} → {{ ann.go_id }}</span>
+                        <div style="margin-top: 0.25rem; font-size: 0.8rem; color: var(--text-muted);">
+                            This annotation already exists in the manual InterPro2GO mapping file
+                        </div>
+                    </div>
+                    {% endif %}
+                {% endif %}
             </div>
             {% endfor %}
         </div>
