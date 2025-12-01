@@ -55,6 +55,31 @@ def export_rules_json(cache_dir: str = "rules/arba"):
             unreviewed_count = stats.get('unreviewedProteinCount', 0)
             total_entries = reviewed_count + unreviewed_count
 
+            # Extract condition values for faceting from enriched data
+            interpro_ids = []
+            funfam_ids = []
+            condition_types = []
+
+            if enriched:
+                main_rule = enriched.get('mainRule', {})
+                for cond_set in main_rule.get('conditionSets', []):
+                    for cond in cond_set.get('conditions', []):
+                        cond_type = cond.get('type', '')
+                        if cond_type:
+                            condition_types.append(cond_type)
+
+                        for val in cond.get('conditionValues', []):
+                            if cond_type == 'InterPro id':
+                                ipr_id = val.get('value', '')
+                                ipr_label = val.get('label', '')
+                                if ipr_id:
+                                    interpro_ids.append(f"{ipr_id} ({ipr_label})" if ipr_label else ipr_id)
+                            elif cond_type == 'FunFam id':
+                                funfam_id = val.get('value', '')
+                                funfam_label = val.get('label', '')
+                                if funfam_id:
+                                    funfam_ids.append(f"{funfam_id} ({funfam_label})" if funfam_label else funfam_id)
+
             rule_info = {
                 'id': rule_id,
                 'rule_id': rule_id,
@@ -65,8 +90,11 @@ def export_rules_json(cache_dir: str = "rules/arba"):
                 'num_condition_sets': len(rule_obj.get('condition_sets', [])),
                 'num_entries': total_entries,
                 'go_terms': go_terms,
-                'go_term_ids': [t['id'] for t in go_terms],
+                'go_term_ids': [f"{t['id']} ({t['label']})" if t.get('label') else t['id'] for t in go_terms],
                 'go_term_labels': [t['label'] for t in go_terms],
+                'interpro_ids': list(set(interpro_ids)),
+                'funfam_ids': list(set(funfam_ids)),
+                'condition_types': list(set(condition_types)),
                 'parsimony_assessment': parsimony.get('assessment', None),
                 'literature_support': literature.get('assessment', None),
                 'review_link': f"../{rule_id}/{rule_id}-review.html",
@@ -83,15 +111,19 @@ def export_rules_json(cache_dir: str = "rules/arba"):
         if any(r['rule_id'] == rule_id for r in rules_data):
             continue
 
-        rule_obj = enriched.get('rule', {})
+        # Use mainRule from enriched data, not rule_obj
+        main_rule = enriched.get('mainRule', {})
+        rule_label = enriched.get('information', {}).get('label', '')
 
-        # Get GO terms
+        # Get GO annotations
         go_terms = []
-        for go_ann in rule_obj.get('goAnnotations', []):
-            go_terms.append({
-                'id': go_ann.get('goId', ''),
-                'label': go_ann.get('goName', '')
-            })
+        go_annotations = main_rule.get('annotations', [])
+        for go_ann in go_annotations:
+            if go_ann.get('annotationType') == 'function':
+                go_id = go_ann.get('value', '')
+                go_label = go_ann.get('label', '')
+                if go_id:
+                    go_terms.append({'id': go_id, 'label': go_label})
 
         # Get protein counts
         stats = enriched.get('statistics', {})
@@ -99,18 +131,44 @@ def export_rules_json(cache_dir: str = "rules/arba"):
         unreviewed_count = stats.get('unreviewedProteinCount', 0)
         total_entries = reviewed_count + unreviewed_count
 
+        # Extract condition values for faceting
+        interpro_ids = []
+        funfam_ids = []
+        condition_types = []
+
+        for cond_set in main_rule.get('conditionSets', []):
+            for cond in cond_set.get('conditions', []):
+                cond_type = cond.get('type', '')
+                if cond_type:
+                    condition_types.append(cond_type)
+
+                for val in cond.get('conditionValues', []):
+                    if cond_type == 'InterPro id':
+                        ipr_id = val.get('value', '')
+                        ipr_label = val.get('label', '')
+                        if ipr_id:
+                            interpro_ids.append(f"{ipr_id} ({ipr_label})" if ipr_label else ipr_id)
+                    elif cond_type == 'FunFam id':
+                        funfam_id = val.get('value', '')
+                        funfam_label = val.get('label', '')
+                        if funfam_id:
+                            funfam_ids.append(f"{funfam_id} ({funfam_label})" if funfam_label else funfam_id)
+
         rule_info = {
             'id': rule_id,
             'rule_id': rule_id,
-            'description': rule_obj.get('label', ''),
+            'description': rule_label,
             'action': None,
             'status': 'NOT_REVIEWED',
             'confidence': None,
-            'num_condition_sets': len(rule_obj.get('conditionSets', [])),
+            'num_condition_sets': len(main_rule.get('conditionSets', [])),
             'num_entries': total_entries,
             'go_terms': go_terms,
-            'go_term_ids': [t['id'] for t in go_terms],
+            'go_term_ids': [f"{t['id']} ({t['label']})" if t.get('label') else t['id'] for t in go_terms],
             'go_term_labels': [t['label'] for t in go_terms],
+            'interpro_ids': list(set(interpro_ids)),  # Remove duplicates
+            'funfam_ids': list(set(funfam_ids)),
+            'condition_types': list(set(condition_types)),
             'parsimony_assessment': None,
             'literature_support': None,
             'review_link': None,
