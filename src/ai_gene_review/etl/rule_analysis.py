@@ -233,6 +233,53 @@ def get_swissprot_count_for_interpro_intersection(
     return count
 
 
+def get_swissprot_count_for_go(
+    go_id: str,
+    reviewed_only: bool = True,
+    request_delay: float = 0.1
+) -> int:
+    """Query UniProt API for protein count annotated with a GO term.
+
+    Uses UniProt query: (go:{numeric_id}) AND (reviewed:true)
+    Returns count from X-Total-Results header without fetching proteins.
+
+    Args:
+        go_id: GO identifier (e.g., "GO:0003674")
+        reviewed_only: Only count SwissProt (reviewed) proteins
+        request_delay: Delay after request to avoid rate limiting
+
+    Returns:
+        Number of matching proteins
+
+    Example:
+        >>> count = get_swissprot_count_for_go("GO:0003674")
+        >>> count > 0
+        True
+    """
+    # UniProt expects numeric ID without "GO:" prefix
+    numeric_id = go_id.replace('GO:', '') if go_id.startswith('GO:') else go_id
+    query_parts = [f"(go:{numeric_id})"]
+    if reviewed_only:
+        query_parts.append("(reviewed:true)")
+
+    query = " AND ".join(query_parts)
+
+    params = {
+        "query": query,
+        "size": 1  # Only need count from header
+    }
+
+    response = requests.get(UNIPROT_SEARCH_API, params=params, timeout=30)
+    response.raise_for_status()
+
+    count = int(response.headers.get("X-Total-Results", 0))
+
+    if request_delay > 0:
+        time.sleep(request_delay)
+
+    return count
+
+
 def get_swissprot_count_for_mixed_conditions(
     conditions: list[tuple[str, str]],
     reviewed_only: bool = True,
@@ -240,11 +287,11 @@ def get_swissprot_count_for_mixed_conditions(
 ) -> int:
     """Query UniProt API for protein count matching mixed domain conditions.
 
-    Supports both InterPro IDs (structured xref) and FunFam IDs (text search).
+    Supports InterPro IDs (structured xref), FunFam IDs (text search), and GO terms (annotation).
     Each condition is a tuple of (condition_type, condition_id).
 
     Args:
-        conditions: List of (type, id) tuples, where type is "interpro" or "funfam"
+        conditions: List of (type, id) tuples, where type is "interpro", "funfam", or "go"
         reviewed_only: Only count SwissProt (reviewed) proteins
         request_delay: Delay after request to avoid rate limiting
 
@@ -268,6 +315,10 @@ def get_swissprot_count_for_mixed_conditions(
             query_parts.append(f"(xref:interpro-{condition_id})")
         elif condition_type == "funfam":
             query_parts.append(f'("{condition_id}")')
+        elif condition_type == "go":
+            # UniProt expects numeric ID without "GO:" prefix
+            numeric_id = condition_id.replace('GO:', '') if condition_id.startswith('GO:') else condition_id
+            query_parts.append(f"(go:{numeric_id})")
         else:
             raise ValueError(f"Unknown condition type: {condition_type}")
 
@@ -779,12 +830,77 @@ def analyze_all_domain_pairs(
             "interpretation": interpretation
         })
 
+    # Add domain-GO pairs if the rule has GO annotations
+    go_ids = rule.get_go_ids()
+    if go_ids and all_domain_conditions:
+        for go_id in go_ids:
+            # Get GO term count
+            count_go = get_swissprot_count_for_go(go_id, request_delay=request_delay)
+
+            # Create pairs between each domain and the GO term
+            for type_domain, id_domain in all_domain_conditions:
+                # Get domain count (already fetched above but need to refetch for consistency)
+                if type_domain == "interpro":
+                    count_domain = get_swissprot_count_for_interpro(id_domain, request_delay=request_delay)
+                else:  # funfam
+                    count_domain = get_swissprot_count_for_funfam(id_domain, request_delay=request_delay)
+
+                # Get intersection count (domain AND GO term)
+                count_intersection = get_swissprot_count_for_mixed_conditions(
+                    [(type_domain, id_domain), ("go", go_id)],
+                    request_delay=request_delay
+                )
+
+                # Calculate metrics
+                jaccard = count_intersection / (count_domain + count_go - count_intersection) if (count_domain + count_go - count_intersection) > 0 else 0.0
+                containment_domain_in_go = count_intersection / count_domain if count_domain > 0 else 0.0
+                containment_go_in_domain = count_intersection / count_go if count_go > 0 else 0.0
+
+                # Calculate set differences
+                domain_minus_go_count = count_domain - count_intersection
+                go_minus_domain_count = count_go - count_intersection
+
+                # Determine interpretation
+                if count_intersection == 0:
+                    interpretation = "DISJOINT"
+                elif jaccard > 0.9:
+                    interpretation = "REDUNDANT"
+                elif containment_domain_in_go > 0.95 or containment_go_in_domain > 0.95:
+                    interpretation = "SUBSET"
+                elif jaccard > 0.5:
+                    interpretation = "HIGH_OVERLAP"
+                elif jaccard > 0.2:
+                    interpretation = "MODERATE"
+                else:
+                    interpretation = "LOW"
+
+                # Add pair (domain, GO term)
+                pairs_analysis.append({
+                    "condition_a": id_domain,
+                    "condition_b": go_id,
+                    "condition_a_in_sets": condition_set_membership[(type_domain, id_domain)],
+                    "condition_b_in_sets": [],  # GO terms not in condition sets
+                    "protein_database": "SWISSPROT",
+                    "count_a": count_domain,
+                    "count_b": count_go,
+                    "intersection_count": count_intersection,
+                    "a_minus_b_count": domain_minus_go_count,
+                    "b_minus_a_count": go_minus_domain_count,
+                    "jaccard_similarity": jaccard,
+                    "containment_a_in_b": containment_domain_in_go,
+                    "containment_b_in_a": containment_go_in_domain,
+                    "interpretation": interpretation
+                })
+
     # Generate summary
+    num_domain_pairs = len([p for p in pairs_analysis if not p['condition_b'].startswith('GO:')])
+    num_domain_go_pairs = len([p for p in pairs_analysis if p['condition_b'].startswith('GO:')])
+
     avg_jaccard = sum(p["jaccard_similarity"] for p in pairs_analysis) / len(pairs_analysis) if pairs_analysis else 0.0
     high_overlap_pairs = [p for p in pairs_analysis if p["jaccard_similarity"] > 0.5]
     subset_pairs = [p for p in pairs_analysis if p["interpretation"] == "SUBSET"]
 
-    summary = f"Analyzed {len(pairs_analysis)} domain pairs across entire rule. "
+    summary = f"Analyzed {num_domain_pairs} domain-domain pairs and {num_domain_go_pairs} domain-GO pairs across entire rule. "
     summary += f"Average Jaccard similarity: {avg_jaccard:.3f}. "
     summary += f"{len(high_overlap_pairs)} pairs with >50% overlap, "
     summary += f"{len(subset_pairs)} subset relationships."
@@ -1020,9 +1136,10 @@ def plot_domain_overlap_heatmap(
             domain_to_sets[domain_b] = pair["condition_b_in_sets"]
 
     # Sort domains by condition set, then alphabetically
+    # GO terms have empty sets, so they sort last (using infinity)
     domains = sorted(
         domain_to_sets.keys(),
-        key=lambda d: (min(domain_to_sets[d]), d)
+        key=lambda d: (min(domain_to_sets[d]) if domain_to_sets[d] else float('inf'), d)
     )
 
     n_domains = len(domains)
@@ -1078,7 +1195,7 @@ def plot_domain_overlap_heatmap(
     cs_boundaries = []
     prev_cs = None
     for i, domain in enumerate(domains):
-        curr_cs = min(domain_to_sets[domain])
+        curr_cs = min(domain_to_sets[domain]) if domain_to_sets[domain] else float('inf')
         if prev_cs is not None and curr_cs != prev_cs:
             cs_boundaries.append(i)
         prev_cs = curr_cs
@@ -1090,8 +1207,12 @@ def plot_domain_overlap_heatmap(
     prev_boundary = 0
     for boundary in cs_boundaries + [n_domains]:
         mid_idx = (prev_boundary + boundary) // 2
-        cs_num = min(domain_to_sets[domains[mid_idx]])
-        cs_labels.append(f"CS{cs_num}")
+        domain_sets = domain_to_sets[domains[mid_idx]]
+        if domain_sets:
+            cs_num = min(domain_sets)
+            cs_labels.append(f"CS{cs_num}")
+        else:
+            cs_labels.append("TGT")  # GO term target
         cs_positions_y.append((prev_boundary + boundary) / 2)
         cs_positions_x.append((prev_boundary + boundary) / 2)
         prev_boundary = boundary
@@ -1220,7 +1341,8 @@ def build_heatmap_table_data(
                 }
 
     # Order domains by condition set, then alphabetically
-    domain_list = sorted(domains.values(), key=lambda d: (min(d['condition_sets']), d['id']))
+    # GO terms have empty condition_sets, so they sort last (using infinity)
+    domain_list = sorted(domains.values(), key=lambda d: (min(d['condition_sets']) if d['condition_sets'] else float('inf'), d['id']))
     domain_ids = [d['id'] for d in domain_list]
 
     # Extract GO term target from enriched rule if available
@@ -1231,16 +1353,24 @@ def build_heatmap_table_data(
         if annots:
             db_ref = annots[0].get('dbReference', {})
             if db_ref.get('database') == 'GO':
+                go_id = db_ref.get('id')
+                # Get protein count for GO term from pairs if available
+                go_count = None
+                for pair in pairs:
+                    if pair['condition_b'] == go_id:
+                        go_count = pair['count_b']
+                        break
                 go_term = {
-                    'id': db_ref.get('id'),
+                    'id': go_id,
                     'label': db_ref.get('label'),
                     'type': 'GO_TERM',
                     'condition_sets': [],  # GO terms don't appear in condition sets
-                    'count': None  # Don't have protein count for GO term
+                    'count': go_count  # Get from pairs analysis
                 }
 
-    # Append GO term to domain list if found (will appear as TGT column)
-    if go_term:
+    # Append GO term to domain list if found and not already there (will appear as TGT column)
+    # The GO term may already be in the list from the pairs loop
+    if go_term and go_term['id'] not in domain_ids:
         domain_list.append(go_term)
         domain_ids.append(go_term['id'])
 
@@ -1256,6 +1386,9 @@ def build_heatmap_table_data(
     num_domains = len(domain_list) - (1 if go_term else 0)
     for idx in range(num_domains):
         domain = domain_list[idx]
+        # Skip if this domain has no condition sets (e.g., GO terms that got added from pairs)
+        if not domain['condition_sets']:
+            continue
         cs = min(domain['condition_sets'])
         if cs != current_cs:
             if current_group['domains']:
