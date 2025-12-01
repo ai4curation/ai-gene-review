@@ -529,6 +529,13 @@ classes:
         range: PairwiseOverlapThresholds
         inlined: true
         description: Threshold values used to filter global_pairwise_overlap
+      entries:
+        range: RuleReviewEntry
+        multivalued: true
+        inlined_as_list: true
+        description: >-
+          Entry-centric view of all entities in the rule (domain conditions and GO terms).
+          Each entry tracks its relationships (PREDICTS, PREDICTED_BY, EQUIV) to other entries.
       reviewed_protein_count:
         range: integer
         description: Number of reviewed (Swiss-Prot) proteins annotated by this rule
@@ -752,6 +759,75 @@ classes:
           Minimum value for containment_a_in_b to include a pair in global_pairwise_overlap.
           A pair (A, B) is included if containment_a_in_b >= threshold OR containment_b_in_a >= threshold.
           Default: 0.8
+
+  RuleReviewEntry:
+    description: >-
+      An entity in the rule - either a domain/family condition or a GO term target.
+      Each entry tracks its relationships (predictions, predicted-by, equivalence) to other entries.
+    attributes:
+      id:
+        range: string
+        required: true
+        identifier: true
+        description: Identifier (IPR005982, GO:0004791, 3.50.50.60:FF:000064, etc.)
+      label:
+        range: string
+        description: Human-readable name
+      type:
+        range: EntryTypeEnum
+        required: true
+        description: Type of entry (INTERPRO, FUNFAM, PANTHER, GO_TERM, etc.)
+      appears_in_condition_sets:
+        range: integer
+        multivalued: true
+        minimum_value: 1
+        description: Which condition sets (1-based) contain this entry (for domain conditions only)
+      protein_count:
+        range: integer
+        description: Number of proteins matching this condition (from SwissProt)
+      related_entries:
+        range: RelatedEntry
+        multivalued: true
+        inlined_as_list: true
+        description: Relationships to other entries in the rule
+
+  RelatedEntry:
+    description: >-
+      A relationship from this entry to another entry in the rule.
+      Categorized as PREDICTS (this → other), PREDICTED_BY (other → this), or EQUIV (bidirectional).
+    attributes:
+      relationship:
+        range: EntryRelationshipEnum
+        required: true
+        description: Type of relationship
+      target_id:
+        range: string
+        required: true
+        description: ID of the related entry
+      containment:
+        range: float
+        minimum_value: 0.0
+        maximum_value: 1.0
+        description: >-
+          Containment score (0-1) for the directional relationship.
+          For PREDICTS: this_in_target (how much of this is contained in target).
+          For PREDICTED_BY: target_in_this (how much of target is contained in this).
+          For EQUIV: max of both directions.
+      jaccard_similarity:
+        range: float
+        minimum_value: 0.0
+        maximum_value: 1.0
+        description: Jaccard similarity coefficient (0-1)
+      intersection_count:
+        range: integer
+        description: Number of proteins in both this and target
+      exclusive_count:
+        range: integer
+        description: >-
+          Number of proteins exclusive to the "source" of the relationship.
+          For PREDICTS: proteins in this but not target.
+          For PREDICTED_BY: proteins in target but not this.
+          For EQUIV: proteins in this but not target (A - B).
 
   InterPro2GORedundancy:
     description: >-
@@ -1366,5 +1442,33 @@ enums:
         description: Low overlap (Jaccard <= 0.2), conditions are mostly distinct
       DISJOINT:
         description: No overlap (intersection = 0), conditions are completely distinct
+
+  EntryTypeEnum:
+    description: Type of entry in a rule review (domain/family condition or GO term target)
+    permissible_values:
+      INTERPRO:
+        description: InterPro entry (domain, family, repeat, etc.)
+      FUNFAM:
+        description: CATH FunFam (functional family from CATH database)
+      PANTHER:
+        description: PANTHER family or subfamily
+      GO_TERM:
+        description: Gene Ontology term (annotation target)
+
+  EntryRelationshipEnum:
+    description: Type of relationship between entries in a rule
+    permissible_values:
+      PREDICTS:
+        description: >-
+          This entry predicts the target (this ⊆ target).
+          Selected when containment_a_in_b is highest among {jaccard+0.05, containment_a_in_b, containment_b_in_a}.
+      PREDICTED_BY:
+        description: >-
+          This entry is predicted by the target (target ⊆ this).
+          Selected when containment_b_in_a is highest among {jaccard+0.05, containment_a_in_b, containment_b_in_a}.
+      EQUIV:
+        description: >-
+          This entry is equivalent to the target (bidirectional high similarity).
+          Selected when jaccard_boosted (jaccard + 0.05) is highest among {jaccard+0.05, containment_a_in_b, containment_b_in_a}.
 
 

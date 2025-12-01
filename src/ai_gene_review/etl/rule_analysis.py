@@ -1223,14 +1223,39 @@ def build_heatmap_table_data(
     domain_list = sorted(domains.values(), key=lambda d: (min(d['condition_sets']), d['id']))
     domain_ids = [d['id'] for d in domain_list]
 
+    # Extract GO term target from enriched rule if available
+    go_term = None
+    if enriched_rule:
+        main_rule = enriched_rule.get('mainRule', enriched_rule)
+        annots = main_rule.get('annotations', [])
+        if annots:
+            db_ref = annots[0].get('dbReference', {})
+            if db_ref.get('database') == 'GO':
+                go_term = {
+                    'id': db_ref.get('id'),
+                    'label': db_ref.get('label'),
+                    'type': 'GO_TERM',
+                    'condition_sets': [],  # GO terms don't appear in condition sets
+                    'count': None  # Don't have protein count for GO term
+                }
+
+    # Append GO term to domain list if found (will appear as TGT column)
+    if go_term:
+        domain_list.append(go_term)
+        domain_ids.append(go_term['id'])
+
     # Build condition set groups for two-level headers and track CS boundary columns
     # Use 1-based indexing for CS labels (biologist-friendly)
+    # Exclude GO term from this loop (it has no condition sets and will be added separately)
     cs_groups = []
     cs_boundary_cols = set()  # Columns that start a new CS
     current_cs = None
     current_group = {'cs_label': None, 'domains': [], 'taxon_label': None}
 
-    for idx, domain in enumerate(domain_list):
+    # Only process domains (not GO term) for CS grouping
+    num_domains = len(domain_list) - (1 if go_term else 0)
+    for idx in range(num_domains):
+        domain = domain_list[idx]
         cs = min(domain['condition_sets'])
         if cs != current_cs:
             if current_group['domains']:
@@ -1248,7 +1273,17 @@ def build_heatmap_table_data(
     if current_group['domains']:
         cs_groups.append(current_group)
 
-    # Build matrix: matrix[i][j] = containment of domain i in domain j
+    # Add GO term as a separate "TGT" (target) group
+    if go_term:
+        cs_groups.append({
+            'cs_label': 'TGT',
+            'domains': [go_term],
+            'taxon_label': None
+        })
+        # Mark GO term column as a boundary
+        cs_boundary_cols.add(len(domain_list) - 1)
+
+    # Build matrix: matrix[i][j] = containment of domain i in domain j (i PREDICTS j)
     n = len(domain_ids)
     matrix = [[None for _ in range(n)] for _ in range(n)]
 
