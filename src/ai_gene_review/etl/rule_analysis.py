@@ -19,6 +19,7 @@ Example:
 
 import re
 import time
+import json
 from itertools import combinations
 from pathlib import Path
 from typing import Optional
@@ -1155,6 +1156,90 @@ def plot_domain_overlap_heatmap(
     plt.close()
 
 
+def build_heatmap_table_data(analysis: dict, rule_data: dict, enriched_rule: Optional[dict] = None) -> Optional[dict]:
+    """Build data structure for rendering heatmap as HTML table.
+
+    Args:
+        analysis: Analysis dict from analyze_rule_post_enrichment
+        rule_data: Rule review YAML data
+        enriched_rule: Enriched rule data with labels and taxon info
+
+    Returns:
+        Dict with domains, matrix data, and metadata, or None if no analysis available
+    """
+    if not analysis or 'domain_overlap_analysis' not in analysis:
+        return None
+
+    pairs = analysis['domain_overlap_analysis']['pairs']
+    if not pairs:
+        return None
+
+    # Build domain metadata map from enriched rule if available
+    domain_metadata = {}
+    if enriched_rule:
+        # Extract condition sets from enriched rule (may be at top level or in mainRule)
+        cond_sets = enriched_rule.get('conditionSets') or enriched_rule.get('mainRule', {}).get('conditionSets', [])
+        for cond_set in cond_sets:
+            for condition in cond_set.get('conditions', []):
+                for cond_val in condition.get('conditionValues', []):
+                    domain_id = cond_val.get('value')
+                    if domain_id:
+                        domain_metadata[domain_id] = {
+                            'label': cond_val.get('label'),
+                            'taxon_label': cond_val.get('taxonConstraintLabel')
+                        }
+
+    # Collect all unique domains and their metadata
+    domains = {}
+    for pair in pairs:
+        for domain_id, sets_key in [(pair['condition_a'], 'condition_a_in_sets'),
+                                     (pair['condition_b'], 'condition_b_in_sets')]:
+            if domain_id not in domains:
+                metadata = domain_metadata.get(domain_id, {})
+                domains[domain_id] = {
+                    'id': domain_id,
+                    'label': metadata.get('label'),
+                    'taxon_label': metadata.get('taxon_label'),
+                    'condition_sets': pair[sets_key],
+                    'count': pair['count_a'] if domain_id == pair['condition_a'] else pair['count_b']
+                }
+
+    # Order domains by condition set, then alphabetically
+    domain_list = sorted(domains.values(), key=lambda d: (min(d['condition_sets']), d['id']))
+    domain_ids = [d['id'] for d in domain_list]
+
+    # Build matrix: matrix[i][j] = containment of domain i in domain j
+    n = len(domain_ids)
+    matrix = [[None for _ in range(n)] for _ in range(n)]
+
+    # Fill matrix from pairs
+    for pair in pairs:
+        i = domain_ids.index(pair['condition_a'])
+        j = domain_ids.index(pair['condition_b'])
+
+        # Cell (i, j): how much of domain i is in domain j (A in B)
+        matrix[i][j] = {
+            'containment': pair['containment_a_in_b'],
+            'jaccard': pair['jaccard_similarity'],
+            'intersection': pair['intersection_count'],
+            'interpretation': pair['interpretation']
+        }
+
+        # Cell (j, i): how much of domain j is in domain i (B in A)
+        if i != j:
+            matrix[j][i] = {
+                'containment': pair['containment_b_in_a'],
+                'jaccard': pair['jaccard_similarity'],
+                'intersection': pair['intersection_count'],
+                'interpretation': pair['interpretation']
+            }
+
+    return {
+        'domains': domain_list,
+        'matrix': matrix
+    }
+
+
 def render_rule_review_html(
     rule_id: str,
     cache_dir: Path,
@@ -1195,8 +1280,19 @@ def render_rule_review_html(
     with open(review_yaml_path, 'r') as f:
         yaml_content = f.read()
 
-    # Check for analysis text file (from analyze_rule_post_enrichment)
-    analysis_text_path = rule_dir / f"{rule_id}-analysis.txt"
+    # Load analysis JSON if available (for heatmap table)
+    analysis_json_path = rule_dir / f"{rule_id}-analysis.json"
+    analysis = None
+    if analysis_json_path.exists():
+        with open(analysis_json_path, 'r') as f:
+            analysis = json.load(f)
+
+    # Load enriched rule if available (for domain labels and taxon constraints)
+    enriched_rule_path = rule_dir / f"{rule_id}.enriched.json"
+    enriched_rule = None
+    if enriched_rule_path.exists():
+        with open(enriched_rule_path, 'r') as f:
+            enriched_rule = json.load(f)
 
     # Generate stats from the rule data
     stats = {}
@@ -1226,13 +1322,16 @@ def render_rule_review_html(
 
     rule_data['stats'] = stats
 
-    # Check for heatmap image
+    # Check for heatmap image and embed as base64
+    import base64
     heatmap_path = rule_dir / f"{rule_id}-heatmap.png"
     if heatmap_path.exists():
-        # Use relative path for embedding in HTML
-        rule_data['heatmap_path'] = f"{rule_id}-heatmap.png"
+        # Read PNG and convert to base64 data URI
+        with open(heatmap_path, 'rb') as f:
+            heatmap_data = base64.b64encode(f.read()).decode('utf-8')
+        rule_data['heatmap_data'] = f"data:image/png;base64,{heatmap_data}"
     else:
-        rule_data['heatmap_path'] = None
+        rule_data['heatmap_data'] = None
 
     # Set default template if not provided
     if template_path is None:
@@ -1240,6 +1339,9 @@ def render_rule_review_html(
         template_path = module_dir / "templates" / "rule_review.html.j2"
         if not template_path.exists():
             raise FileNotFoundError(f"Default template not found at {template_path}")
+
+    # Build heatmap table data if analysis is available
+    heatmap_table = build_heatmap_table_data(analysis, rule_data, enriched_rule) if analysis else None
 
     # Set default output path if not provided
     if output_path is None:
@@ -1254,7 +1356,13 @@ def render_rule_review_html(
 
     # Load and render template
     template = env.get_template(template_path.name)
-    html = template.render(rule=rule_data, yaml_content=yaml_content, stats=stats)
+    html = template.render(
+        rule=rule_data,
+        yaml_content=yaml_content,
+        stats=stats,
+        heatmap_data=rule_data.get('heatmap_data'),
+        heatmap_table=heatmap_table
+    )
 
     # Write output
     with open(output_path, 'w', encoding='utf-8') as f:
