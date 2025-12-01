@@ -914,7 +914,8 @@ def analyze_all_domain_pairs(
 def analyze_rule_post_enrichment(
     rule: ARBARule,
     cache_dir: Path,
-    request_delay: float = 0.1
+    request_delay: float = 0.1,
+    max_condition_sets: int = 12
 ) -> dict:
     """Main analysis function - runs all steps deterministically.
 
@@ -928,9 +929,13 @@ def analyze_rule_post_enrichment(
         rule: ARBARule object to analyze
         cache_dir: Directory for caching ipr2go file
         request_delay: Delay between API requests
+        max_condition_sets: Maximum number of condition sets to analyze (default: 12)
 
     Returns:
         Complete analysis dict suitable for adding to enriched JSON
+
+    Raises:
+        ValueError: If rule has more than max_condition_sets condition sets
 
     Example:
         >>> from ai_gene_review.etl.arba import ARBAClient
@@ -941,6 +946,16 @@ def analyze_rule_post_enrichment(
         >>> "rule_id" in analysis and "ipr2go_redundancy" in analysis
         True
     """
+    # Check condition set limit
+    num_condition_sets = len(rule.condition_sets)
+    if num_condition_sets > max_condition_sets:
+        raise ValueError(
+            f"Rule {rule.uni_rule_id} has {num_condition_sets} condition sets, "
+            f"which exceeds the maximum of {max_condition_sets}. "
+            f"Analysis is skipped for rules with too many condition sets "
+            f"as they would require excessive UniProt API queries and take too long."
+        )
+
     # Fetch ipr2go mappings
     ipr2go_mappings = fetch_interpro2go_mappings(cache_dir)
 
