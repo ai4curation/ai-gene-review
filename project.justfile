@@ -710,6 +710,14 @@ rules-export *args="":
 rules-validate *args="":
     uv run ai-gene-review rules-validate {{args}}
 
+# Sync rule review YAML files with analysis data (pairwise_overlap sections)
+# Examples:
+#   just sync-rule-review rules/arba/ARBA00026249/ARBA00026249-review.yaml
+#   just sync-rule-review --all --rule-type arba
+#   just sync-rule-review --all --dry-run
+sync-rule-review *args="":
+    uv run ai-gene-review rules-sync {{args}}
+
 # Deep research for rules using Perplexity
 # Example: just rules-deep-research-perplexity ARBA00026249
 rules-deep-research-perplexity rule_id *args="":
