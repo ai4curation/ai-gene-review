@@ -1156,7 +1156,12 @@ def plot_domain_overlap_heatmap(
     plt.close()
 
 
-def build_heatmap_table_data(analysis: dict, rule_data: dict, enriched_rule: Optional[dict] = None) -> Optional[dict]:
+def build_heatmap_table_data(
+    analysis: dict,
+    rule_data: dict,
+    enriched_rule: Optional[dict] = None,
+    cache_dir: Optional[Path] = None
+) -> Optional[dict]:
     """Build data structure for rendering heatmap as HTML table.
 
     Args:
@@ -1174,20 +1179,30 @@ def build_heatmap_table_data(analysis: dict, rule_data: dict, enriched_rule: Opt
     if not pairs:
         return None
 
-    # Build domain metadata map from enriched rule if available
+    # Build domain metadata map and condition set taxon info from enriched rule if available
     domain_metadata = {}
+    cs_taxon_labels = {}  # Map from CS index to taxon label
     if enriched_rule:
         # Extract condition sets from enriched rule (may be at top level or in mainRule)
         cond_sets = enriched_rule.get('conditionSets') or enriched_rule.get('mainRule', {}).get('conditionSets', [])
-        for cond_set in cond_sets:
+        for cs_idx, cond_set in enumerate(cond_sets):
+            cs_taxon_label = None
             for condition in cond_set.get('conditions', []):
+                cond_type = condition.get('type', '')
                 for cond_val in condition.get('conditionValues', []):
+                    # Extract taxon label from taxon conditions
+                    if cond_type == 'taxon':
+                        cs_taxon_label = cond_val.get('label')
+                    # Extract domain labels and types
                     domain_id = cond_val.get('value')
-                    if domain_id:
+                    if domain_id and cond_type in ['InterPro id', 'FunFam id']:
                         domain_metadata[domain_id] = {
                             'label': cond_val.get('label'),
-                            'taxon_label': cond_val.get('taxonConstraintLabel')
+                            'type': cond_val.get('type')  # InterPro type from enriched data
                         }
+            # Store taxon label for this CS
+            if cs_taxon_label:
+                cs_taxon_labels[cs_idx] = cs_taxon_label
 
     # Collect all unique domains and their metadata
     domains = {}
@@ -1199,7 +1214,7 @@ def build_heatmap_table_data(analysis: dict, rule_data: dict, enriched_rule: Opt
                 domains[domain_id] = {
                     'id': domain_id,
                     'label': metadata.get('label'),
-                    'taxon_label': metadata.get('taxon_label'),
+                    'type': metadata.get('type'),  # InterPro type (family, domain, active_site, etc.)
                     'condition_sets': pair[sets_key],
                     'count': pair['count_a'] if domain_id == pair['condition_a'] else pair['count_b']
                 }
@@ -1209,6 +1224,7 @@ def build_heatmap_table_data(analysis: dict, rule_data: dict, enriched_rule: Opt
     domain_ids = [d['id'] for d in domain_list]
 
     # Build condition set groups for two-level headers and track CS boundary columns
+    # Use 1-based indexing for CS labels (biologist-friendly)
     cs_groups = []
     cs_boundary_cols = set()  # Columns that start a new CS
     current_cs = None
@@ -1222,9 +1238,9 @@ def build_heatmap_table_data(analysis: dict, rule_data: dict, enriched_rule: Opt
             cs_boundary_cols.add(idx)  # Mark this column as a CS boundary
             current_cs = cs
             current_group = {
-                'cs_label': f'CS {cs}',
+                'cs_label': f'CS {cs + 1}',  # 1-based indexing
                 'domains': [domain],
-                'taxon_label': domain.get('taxon_label')
+                'taxon_label': cs_taxon_labels.get(cs)  # Get taxon label for this CS
             }
         else:
             current_group['domains'].append(domain)
@@ -1367,7 +1383,7 @@ def render_rule_review_html(
             raise FileNotFoundError(f"Default template not found at {template_path}")
 
     # Build heatmap table data if analysis is available
-    heatmap_table = build_heatmap_table_data(analysis, rule_data, enriched_rule) if analysis else None
+    heatmap_table = build_heatmap_table_data(analysis, rule_data, enriched_rule, cache_dir) if analysis else None
 
     # Set default output path if not provided
     if output_path is None:

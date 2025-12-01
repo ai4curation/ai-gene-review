@@ -339,6 +339,25 @@ render-organism organism:
 render-all:
     uv run python -m ai_gene_review.render --all genes/
 
+# Render a single rule review YAML as HTML
+render-rule rule_id cache_dir="rules/arba":
+    uv run python -c "from ai_gene_review.etl.rule_analysis import render_rule_review_html; from pathlib import Path; render_rule_review_html('{{rule_id}}', Path('{{cache_dir}}'))"
+
+# Render all rule reviews as HTML (for rules with review YAML files)
+render-all-rules cache_dir="rules/arba":
+    #!/usr/bin/env bash
+    echo "Rendering all rule reviews in {{cache_dir}}..."
+    count=0
+    for review_yaml in {{cache_dir}}/*/*-review.yaml; do
+        if [ -f "$review_yaml" ]; then
+            rule_id=$(basename "$review_yaml" | sed 's/-review.yaml$//')
+            echo "  Rendering $rule_id..."
+            uv run python -c "from ai_gene_review.etl.rule_analysis import render_rule_review_html; from pathlib import Path; render_rule_review_html('$rule_id', Path('{{cache_dir}}'))"
+            count=$((count + 1))
+        fi
+    done
+    echo "✓ Rendered $count rule reviews"
+
 # ============== Visualization ==============
 
 # Visualize gene review annotations and actions as SVG
@@ -715,6 +734,53 @@ rules-deep-research-falcon rule_id *args="":
 # Example: just rules-deep-research-cyberian ARBA00026249
 rules-deep-research-cyberian rule_id *args="":
     uv run python scripts/rules_deep_research_wrapper.py {{rule_id}} cyberian {{args}}
+
+# Sync InterPro2GO mappings from GO Consortium
+# Downloads official InterPro2GO mapping file and caches it
+sync-ipr2go cache_dir="rules/arba":
+    @echo "Syncing InterPro2GO mappings to {{cache_dir}}..."
+    uv run python -c "from ai_gene_review.etl.rule_analysis import fetch_interpro2go_mappings; from pathlib import Path; mappings = fetch_interpro2go_mappings(Path('{{cache_dir}}')); print(f'✓ Cached {len(mappings)} InterPro → GO mappings')"
+
+# Analyze an ARBA rule for InterPro overlap and ipr2go redundancy
+# Outputs YAML, JSON, and text formats
+# Example: just analyze-rule ARBA00026249
+# Example: just analyze-rule ARBA00026249 --cache-dir rules/arba
+analyze-rule rule_id *args="":
+    #!/usr/bin/env bash
+    set -euo pipefail  # Fail fast on errors, undefined variables, and pipe failures
+
+    cache_dir="rules/arba"
+    if [[ "{{args}}" == *"--cache-dir"* ]]; then
+        cache_dir=$(echo "{{args}}" | sed -n 's/.*--cache-dir \([^ ]*\).*/\1/p')
+    fi
+
+    # Extract rule type from ID
+    if [[ "{{rule_id}}" == ARBA* ]]; then
+        rule_dir="$cache_dir/{{rule_id}}"
+    else
+        rule_dir="$cache_dir/{{rule_id}}"
+    fi
+
+    mkdir -p "$rule_dir"
+
+    echo "Analyzing {{rule_id}}..."
+
+    # Run analysis once and save all formats (efficient)
+    uv run python examples/rule_analysis_demo.py {{rule_id}} \
+        --cache-dir "$cache_dir" \
+        --output-dir "$rule_dir" \
+        --no-report
+
+    echo ""
+    echo "✓ Analysis complete. Files created:"
+    echo "  - $rule_dir/{{rule_id}}-analysis.yaml"
+    echo "  - $rule_dir/{{rule_id}}-analysis.json"
+    echo "  - $rule_dir/{{rule_id}}-analysis.txt"
+    echo "  - $rule_dir/{{rule_id}}-heatmap.png"
+    echo ""
+    echo "Text report:"
+    echo "----------------------------------------"
+    cat "$rule_dir/{{rule_id}}-analysis.txt"
 
 # ============== AI4CUI Dashboard ==============
 
