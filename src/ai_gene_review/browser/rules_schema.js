@@ -52,6 +52,24 @@ window.searchSchema = {
       "sortBy": "count"
     },
     {
+      "field": "interpro_ids",
+      "label": "InterPro Domain",
+      "type": "array",
+      "sortBy": "count"
+    },
+    {
+      "field": "funfam_ids",
+      "label": "FunFam",
+      "type": "array",
+      "sortBy": "count"
+    },
+    {
+      "field": "condition_types",
+      "label": "Condition Type",
+      "type": "array",
+      "sortBy": "count"
+    },
+    {
       "field": "num_condition_sets",
       "label": "Condition Sets",
       "type": "integer",
@@ -99,6 +117,16 @@ window.searchSchema = {
     {
       "field": "go_term_ids",
       "label": "GO Terms",
+      "type": "array"
+    },
+    {
+      "field": "interpro_ids",
+      "label": "InterPro Domains",
+      "type": "array"
+    },
+    {
+      "field": "funfam_ids",
+      "label": "FunFams",
       "type": "array"
     },
     {
