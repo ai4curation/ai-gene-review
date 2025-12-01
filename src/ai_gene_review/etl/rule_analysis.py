@@ -1208,6 +1208,30 @@ def build_heatmap_table_data(analysis: dict, rule_data: dict, enriched_rule: Opt
     domain_list = sorted(domains.values(), key=lambda d: (min(d['condition_sets']), d['id']))
     domain_ids = [d['id'] for d in domain_list]
 
+    # Build condition set groups for two-level headers and track CS boundary columns
+    cs_groups = []
+    cs_boundary_cols = set()  # Columns that start a new CS
+    current_cs = None
+    current_group = {'cs_label': None, 'domains': [], 'taxon_label': None}
+
+    for idx, domain in enumerate(domain_list):
+        cs = min(domain['condition_sets'])
+        if cs != current_cs:
+            if current_group['domains']:
+                cs_groups.append(current_group)
+            cs_boundary_cols.add(idx)  # Mark this column as a CS boundary
+            current_cs = cs
+            current_group = {
+                'cs_label': f'CS {cs}',
+                'domains': [domain],
+                'taxon_label': domain.get('taxon_label')
+            }
+        else:
+            current_group['domains'].append(domain)
+
+    if current_group['domains']:
+        cs_groups.append(current_group)
+
     # Build matrix: matrix[i][j] = containment of domain i in domain j
     n = len(domain_ids)
     matrix = [[None for _ in range(n)] for _ in range(n)]
@@ -1236,7 +1260,9 @@ def build_heatmap_table_data(analysis: dict, rule_data: dict, enriched_rule: Opt
 
     return {
         'domains': domain_list,
-        'matrix': matrix
+        'matrix': matrix,
+        'cs_groups': cs_groups,
+        'cs_boundary_cols': list(cs_boundary_cols)
     }
 
 
