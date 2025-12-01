@@ -1882,7 +1882,7 @@ def rules_export(
         # Export raw (un-enriched) files
         ai-gene-review rules-export --raw
     """
-    from ai_gene_review.etl.rule_export import export_rules_to_csv
+    from ai_gene_review.etl.rule_export import export_rules_to_csv, create_go_summary
 
     if enriched:
         typer.echo("Using enriched files (run `just rules-enrich` first if labels are missing)")
@@ -1904,6 +1904,11 @@ def rules_export(
     )
 
     typer.echo(f"\n✓ Exported {rows} rows to {output}")
+
+    # Create GO summary
+    typer.echo("Creating GO summary...")
+    summary_path = create_go_summary(output)
+    typer.echo(f"✓ GO summary written to {summary_path}")
 
 
 @app.command()
@@ -1983,6 +1988,93 @@ def rules_validate(
         typer.echo(f"✓ All {valid_count} review(s) valid")
     else:
         typer.echo(f"✗ {invalid_count} invalid, {valid_count} valid", err=True)
+        raise typer.Exit(code=1)
+
+
+@app.command()
+def rules_sync(
+    files: Annotated[
+        Optional[list[Path]],
+        typer.Argument(help="Rule review YAML file(s) to sync (or use --all)"),
+    ] = None,
+    cache_dir: Annotated[
+        Path,
+        typer.Option("--cache-dir", "-d", help="Cache directory for rules"),
+    ] = Path("rules"),
+    all_reviews: Annotated[
+        bool,
+        typer.Option("--all", "-a", help="Sync all *-review.yaml files in cache directory"),
+    ] = False,
+    rule_type: Annotated[
+        str,
+        typer.Option("--rule-type", "-t", help="Rule type to sync (arba, unirule, or all)"),
+    ] = "all",
+    containment_threshold: Annotated[
+        float,
+        typer.Option("--threshold", help="Minimum containment_a_in_b for global_pairwise_overlap"),
+    ] = 0.8,
+    dry_run: Annotated[
+        bool,
+        typer.Option("--dry-run", help="Show what would be updated without writing files"),
+    ] = False,
+):
+    """Sync rule review YAML files with analysis data.
+
+    Updates review YAML files with:
+    - pairwise_overlap sections for each condition set
+    - global_pairwise_overlap at rule level (filtered by containment threshold)
+
+    Examples:
+        # Sync a specific review
+        ai-gene-review rules-sync rules/arba/ARBA00026249/ARBA00026249-review.yaml
+
+        # Sync all ARBA reviews
+        ai-gene-review rules-sync --all --rule-type arba
+
+        # Dry run to preview changes
+        ai-gene-review rules-sync --all --dry-run
+    """
+    from ai_gene_review.etl.rule_review_sync import sync_review_with_analysis, sync_all_reviews
+
+    if all_reviews:
+        # Sync all reviews
+        typer.echo(f"Syncing all {rule_type} reviews in {cache_dir}...")
+        stats = sync_all_reviews(
+            cache_dir,
+            rule_type=rule_type,
+            containment_threshold=containment_threshold,
+            dry_run=dry_run
+        )
+
+        typer.echo()
+        typer.echo(f"Reviews processed: {stats['reviews_processed']}")
+        typer.echo(f"Reviews updated: {stats['reviews_updated']}")
+        typer.echo(f"Reviews skipped: {stats['reviews_skipped']}")
+        typer.echo(f"Condition sets updated: {stats['total_condition_sets_updated']}")
+        typer.echo(f"Global pairs added: {stats['total_global_pairs_added']}")
+
+        if dry_run:
+            typer.echo("\n(dry run - no files written)")
+    elif files:
+        # Sync specific files
+        for yaml_file in files:
+            typer.echo(f"Syncing {yaml_file}...")
+            stats = sync_review_with_analysis(
+                yaml_file,
+                containment_threshold=containment_threshold,
+                dry_run=dry_run
+            )
+
+            if stats['status'] == 'updated':
+                typer.echo(f"  ✓ Updated {stats['condition_sets_updated']} condition set(s)")
+                typer.echo(f"  ✓ Added {stats['global_pairs_added']} global pair(s)")
+            elif stats['status'] == 'skipped':
+                typer.echo(f"  ⊘ Skipped: {stats['reason']}")
+
+            if dry_run:
+                typer.echo("  (dry run - no files written)")
+    else:
+        typer.echo("Please specify file(s) or use --all to sync all reviews", err=True)
         raise typer.Exit(code=1)
 
 

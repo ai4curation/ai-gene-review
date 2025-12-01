@@ -1403,7 +1403,8 @@ def render_rule_review_html(
         yaml_content=yaml_content,
         stats=stats,
         heatmap_data=rule_data.get('heatmap_data'),
-        heatmap_table=heatmap_table
+        heatmap_table=heatmap_table,
+        analysis=analysis
     )
 
     # Write output
