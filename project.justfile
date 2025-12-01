@@ -339,11 +339,11 @@ render-organism organism:
 render-all:
     uv run python -m ai_gene_review.render --all genes/
 
-# Render a single rule review YAML as HTML
-render-rule rule_id cache_dir="rules/arba":
+# Render a single rule review YAML as HTML (automatically runs analysis first if needed)
+render-rule rule_id cache_dir="rules/arba": (analyze-rule rule_id)
     uv run python -c "from ai_gene_review.etl.rule_analysis import render_rule_review_html; from pathlib import Path; render_rule_review_html('{{rule_id}}', Path('{{cache_dir}}'))"
 
-# Render all rule reviews as HTML (for rules with review YAML files)
+# Render all rule reviews as HTML (automatically analyzes first if needed)
 render-all-rules cache_dir="rules/arba":
     #!/usr/bin/env bash
     echo "Rendering all rule reviews in {{cache_dir}}..."
@@ -351,12 +351,360 @@ render-all-rules cache_dir="rules/arba":
     for review_yaml in {{cache_dir}}/*/*-review.yaml; do
         if [ -f "$review_yaml" ]; then
             rule_id=$(basename "$review_yaml" | sed 's/-review.yaml$//')
-            echo "  Rendering $rule_id..."
-            uv run python -c "from ai_gene_review.etl.rule_analysis import render_rule_review_html; from pathlib import Path; render_rule_review_html('$rule_id', Path('{{cache_dir}}'))"
+            echo "  Processing $rule_id..."
+            # Use just to call render-rule which has analyze-rule as dependency
+            just render-rule "$rule_id" "{{cache_dir}}"
             count=$((count + 1))
         fi
     done
     echo "✓ Rendered $count rule reviews"
+
+# Export rule reviews to JSON for browser
+rules-data-json cache_dir="rules/arba":
+    uv run python src/ai_gene_review/tools/export_rules_json.py {{cache_dir}}
+
+# Generate HTML index of all rule reviews
+rules-index cache_dir="rules/arba":
+    #!/usr/bin/env python3
+    import yaml
+    from pathlib import Path
+    from datetime import datetime
+
+    cache_path = Path("{{cache_dir}}")
+    review_files = sorted(cache_path.glob("*/*-review.yaml"))
+
+    # Collect data from all review files
+    rules_data = []
+    for review_file in review_files:
+        try:
+            with open(review_file) as f:
+                data = yaml.safe_load(f)
+
+            rule_id = data.get('id', review_file.parent.name)
+
+            # Extract key information
+            rule_info = {
+                'rule_id': rule_id,
+                'description': data.get('description', ''),
+                'action': data.get('action', 'N/A'),
+                'status': data.get('status', 'N/A'),
+                'confidence': data.get('confidence', 0),
+                'num_condition_sets': len(data.get('rule', {}).get('condition_sets', [])),
+                'go_terms': [],
+                'parsimony': data.get('parsimony', {}).get('assessment', 'N/A'),
+                'literature_support': data.get('literature_support', {}).get('assessment', 'N/A'),
+            }
+
+            # Extract GO terms with IDs for hyperlinks
+            go_annotations = data.get('rule', {}).get('go_annotations', [])
+            for go_ann in go_annotations:
+                go_id = go_ann.get('go_id', '')
+                go_label = go_ann.get('go_label', '')
+                rule_info['go_terms'].append({'id': go_id, 'label': go_label})
+
+            rules_data.append(rule_info)
+        except Exception as e:
+            print(f"Warning: Failed to process {review_file}: {e}")
+
+    # Generate HTML
+    html = f"""<!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>ARBA Rule Reviews Index</title>
+        <style>
+            * {{{{
+                box-sizing: border-box;
+            }}}}
+            body {{{{
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+                margin: 0;
+                padding: 20px;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                min-height: 100vh;
+            }}}}
+            .container {{{{
+                max-width: 1400px;
+                margin: 0 auto;
+            }}}}
+            .header {{{{
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                padding: 40px;
+                border-radius: 12px;
+                margin-bottom: 30px;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            }}}}
+            h1 {{{{
+                margin: 0 0 10px 0;
+                font-size: 2.5em;
+                font-weight: 700;
+                text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+            }}}}
+            .summary {{{{
+                color: rgba(255,255,255,0.9);
+                font-size: 16px;
+                font-weight: 500;
+            }}}}
+            .table-container {{{{
+                background-color: #fff;
+                border-radius: 12px;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+                overflow: hidden;
+            }}}}
+            table {{{{
+                width: 100%;
+                border-collapse: collapse;
+            }}}}
+            th {{{{
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                padding: 16px 12px;
+                text-align: left;
+                font-weight: 600;
+                font-size: 13px;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                position: sticky;
+                top: 0;
+                z-index: 10;
+            }}}}
+            td {{{{
+                padding: 14px 12px;
+                border-bottom: 1px solid #e2e8f0;
+                vertical-align: top;
+            }}}}
+            tbody tr {{{{
+                transition: all 0.2s ease;
+            }}}}
+            tbody tr:hover {{{{
+                background-color: #f7fafc;
+                transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            }}}}
+            tbody tr:last-child td {{{{
+                border-bottom: none;
+            }}}}
+            .rule-id {{{{
+                font-weight: 700;
+                font-size: 14px;
+                color: #667eea;
+            }}}}
+            .rule-id a {{{{
+                color: #667eea;
+                text-decoration: none;
+                transition: color 0.2s ease;
+            }}}}
+            .rule-id a:hover {{{{
+                color: #764ba2;
+                text-decoration: none;
+            }}}}
+            .description {{{{
+                max-width: 500px;
+                font-size: 13px;
+                color: #4a5568;
+                line-height: 1.6;
+            }}}}
+            .go-term {{{{
+                font-family: 'SF Mono', Monaco, 'Courier New', monospace;
+                font-size: 12px;
+                background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+                color: #4a5568;
+                padding: 4px 8px;
+                border-radius: 6px;
+                display: inline-block;
+                margin: 2px;
+                border: 1px solid #667eea30;
+                transition: all 0.2s ease;
+            }}}}
+            .go-term:hover {{{{
+                background: linear-gradient(135deg, #667eea25 0%, #764ba225 100%);
+                border-color: #667eea;
+                transform: translateY(-1px);
+            }}}}
+            .go-term a {{{{
+                color: #667eea;
+                text-decoration: none;
+                font-weight: 600;
+            }}}}
+            .go-term a:hover {{{{
+                text-decoration: underline;
+            }}}}
+            .badge {{{{
+                display: inline-block;
+                padding: 4px 10px;
+                border-radius: 16px;
+                font-size: 11px;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                transition: transform 0.2s ease;
+            }}}}
+            .badge:hover {{{{
+                transform: scale(1.05);
+            }}}}
+            .action-ACCEPT {{{{ background: linear-gradient(135deg, #48bb78 0%, #38a169 100%); color: white; }}}}
+            .action-MODIFY {{{{ background: linear-gradient(135deg, #ecc94b 0%, #d69e2e 100%); color: #744210; }}}}
+            .action-DEPRECATE {{{{ background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%); color: white; }}}}
+            .action-UNDECIDED {{{{ background: linear-gradient(135deg, #cbd5e0 0%, #a0aec0 100%); color: #2d3748; }}}}
+            .parsimony-PARSIMONIOUS {{{{ background: linear-gradient(135deg, #48bb78 0%, #38a169 100%); color: white; }}}}
+            .parsimony-ACCEPTABLE {{{{ background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%); color: white; }}}}
+            .parsimony-REDUNDANT {{{{ background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%); color: white; }}}}
+            .parsimony-OVERLY_COMPLEX {{{{ background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%); color: white; }}}}
+            .literature-STRONG {{{{ background: linear-gradient(135deg, #48bb78 0%, #38a169 100%); color: white; }}}}
+            .literature-MODERATE {{{{ background: linear-gradient(135deg, #ecc94b 0%, #d69e2e 100%); color: #744210; }}}}
+            .literature-WEAK {{{{ background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%); color: white; }}}}
+            .confidence {{{{
+                font-weight: 700;
+                font-size: 14px;
+                padding: 4px 8px;
+                border-radius: 6px;
+                display: inline-block;
+            }}}}
+            .confidence-high {{{{ background-color: #c6f6d5; color: #22543d; }}}}
+            .confidence-medium {{{{ background-color: #fef3c7; color: #78350f; }}}}
+            .confidence-low {{{{ background-color: #fed7aa; color: #7c2d12; }}}}
+            .footer {{{{
+                margin-top: 30px;
+                padding: 20px;
+                text-align: center;
+                color: white;
+                font-size: 13px;
+                background-color: rgba(255,255,255,0.1);
+                border-radius: 12px;
+                backdrop-filter: blur(10px);
+            }}}}
+            .footer a {{{{
+                color: white;
+                font-weight: 600;
+                text-decoration: underline;
+            }}}}
+            .footer code {{{{
+                background-color: rgba(255,255,255,0.2);
+                padding: 2px 6px;
+                border-radius: 4px;
+                font-family: 'SF Mono', Monaco, monospace;
+            }}}}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>ARBA Rule Reviews Index</h1>
+                <div class="summary">
+                    <strong>{len(rules_data)}</strong> rules reviewed | Generated: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table>
+            <thead>
+                <tr>
+                    <th>Rule ID</th>
+                    <th>Description</th>
+                    <th>GO Terms</th>
+                    <th>Action</th>
+                    <th>Parsimony</th>
+                    <th>Literature</th>
+                    <th>Condition Sets</th>
+                    <th>Confidence</th>
+                </tr>
+            </thead>
+            <tbody>
+    """
+
+    for rule in rules_data:
+        # Determine confidence class
+        conf_val = rule['confidence']
+        conf_class = 'high' if conf_val >= 0.8 else ('medium' if conf_val >= 0.6 else 'low')
+
+        # Build GO terms HTML with hyperlinks
+        go_terms_html = ''
+        for term in rule['go_terms']:
+            go_id = term['id']
+            go_label = term['label']
+            # Link to QuickGO
+            go_url = f"https://www.ebi.ac.uk/QuickGO/term/{go_id}"
+            go_terms_html += f'<span class="go-term"><a href="{go_url}" target="_blank">{go_id}</a> ({go_label})</span>'
+
+        html += f"""
+                <tr>
+                    <td class="rule-id">
+                        <a href="{rule['rule_id']}/{rule['rule_id']}-review.html">{rule['rule_id']}</a>
+                    </td>
+                    <td class="description">{rule['description']}</td>
+                    <td>
+                        {go_terms_html}
+                    </td>
+                    <td>
+                        <span class="badge action-{rule['action']}">{rule['action']}</span>
+                    </td>
+                    <td>
+                        <span class="badge parsimony-{rule['parsimony']}">{rule['parsimony']}</span>
+                    </td>
+                    <td>
+                        <span class="badge literature-{rule['literature_support']}">{rule['literature_support']}</span>
+                    </td>
+                    <td style="text-align: center;">{rule['num_condition_sets']}</td>
+                    <td class="confidence confidence-{conf_class}">{conf_val:.2f}</td>
+                </tr>
+        """
+
+    html += """
+            </tbody>
+        </table>
+            </div>
+
+            <div class="footer">
+                Generated by <code>just rules-index</code> |
+                <a href="https://github.com/monarch-initiative/ai-gene-review">ai-gene-review</a>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+
+    # Write to file
+    output_file = Path("{{cache_dir}}") / "index.html"
+    with open(output_file, 'w') as f:
+        f.write(html)
+
+    print(f"✓ Generated index with {len(rules_data)} rules: {output_file}")
+
+# Deploy linkml-browser for ARBA rule reviews
+deploy-rules-browser cache_dir="rules/arba": rules-data-json
+    @echo "Deploying linkml-browser for ARBA rules..."
+    @rm -rf {{cache_dir}}/app
+    uv run linkml-browser deploy \
+        {{cache_dir}}/rules_data.json \
+        {{cache_dir}}/app \
+        --title "ARBA Rule Review Browser" \
+        --description "Browse and filter ARBA rule reviews with faceted search" \
+        --force
+    @cp app/index.html {{cache_dir}}/app/
+    @cp src/ai_gene_review/browser/rules_schema.js {{cache_dir}}/app/schema.js
+    @echo "Browser deployed to {{cache_dir}}/app/"
+    @echo "To view: open {{cache_dir}}/app/index.html or run 'just serve-rules-browser'"
+
+# Serve the rules browser locally
+serve-rules-browser cache_dir="rules/arba":
+    @echo "Starting local server for rules browser..."
+    @cd {{cache_dir}}/app && python3 -m http.server 8081
+
+# Update rules browser data without regenerating HTML
+update-rules-browser cache_dir="rules/arba": rules-data-json
+    @echo "Updating rules browser data..."
+    uv run linkml-browser deploy \
+        {{cache_dir}}/rules_data.json \
+        {{cache_dir}}/app \
+        --title "ARBA Rule Review Browser" \
+        --description "Browse and filter ARBA rule reviews with faceted search" \
+        --force
+    @cp app/index.html {{cache_dir}}/app/
+    @cp src/ai_gene_review/browser/rules_schema.js {{cache_dir}}/app/schema.js
+    @echo "Data updated in {{cache_dir}}/app/"
 
 # ============== Visualization ==============
 
@@ -710,11 +1058,17 @@ rules-export *args="":
 rules-validate *args="":
     uv run ai-gene-review rules-validate {{args}}
 
+# Sync a single rule review YAML file with analysis data (automatically analyzes first if needed)
+# Example: just sync-rule-review-single ARBA00027128
+sync-rule-review-single rule_id cache_dir="rules/arba": (analyze-rule rule_id)
+    uv run ai-gene-review rules-sync {{cache_dir}}/{{rule_id}}/{{rule_id}}-review.yaml
+
 # Sync rule review YAML files with analysis data (pairwise_overlap sections)
 # Examples:
 #   just sync-rule-review rules/arba/ARBA00026249/ARBA00026249-review.yaml
 #   just sync-rule-review --all --rule-type arba
 #   just sync-rule-review --all --dry-run
+# NOTE: For single files with auto-analysis, use sync-rule-review-single instead
 sync-rule-review *args="":
     uv run ai-gene-review rules-sync {{args}}
 
@@ -753,6 +1107,7 @@ sync-ipr2go cache_dir="rules/arba":
 # Outputs YAML, JSON, and text formats
 # Example: just analyze-rule ARBA00026249
 # Example: just analyze-rule ARBA00026249 --cache-dir rules/arba
+# NOTE: Skips analysis if enriched.json AND analysis.yaml already exist (lazy evaluation)
 analyze-rule rule_id *args="":
     #!/usr/bin/env bash
     set -euo pipefail  # Fail fast on errors, undefined variables, and pipe failures
@@ -770,6 +1125,18 @@ analyze-rule rule_id *args="":
     fi
 
     mkdir -p "$rule_dir"
+
+    # Check if analysis files already exist (lazy evaluation)
+    enriched_file="$rule_dir/{{rule_id}}.enriched.json"
+    analysis_yaml="$rule_dir/{{rule_id}}-analysis.yaml"
+
+    if [ -f "$enriched_file" ] && [ -f "$analysis_yaml" ]; then
+        echo "✓ Analysis files already exist for {{rule_id}}, skipping expensive rebuild"
+        echo "  - $enriched_file"
+        echo "  - $analysis_yaml"
+        echo "  Use --force to rebuild (add to args)"
+        exit 0
+    fi
 
     echo "Analyzing {{rule_id}}..."
 
