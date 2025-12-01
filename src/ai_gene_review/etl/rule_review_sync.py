@@ -87,6 +87,16 @@ def sync_review_with_analysis(
     condition_sets = review_data.get('rule', {}).get('condition_sets', [])
 
     for cs_idx, cs in enumerate(condition_sets, start=1):
+        # Set the condition set number at the beginning by reconstructing the dict
+        # to preserve key order (number should appear first)
+        new_cs = {'number': cs_idx}
+        new_cs.update(cs)
+
+        # Replace the old dict with the new one that has number first
+        for key in list(cs.keys()):
+            del cs[key]
+        cs.update(new_cs)
+
         if cs_idx in pairs_by_cs:
             # Format pairs for YAML
             pairwise_overlap = []

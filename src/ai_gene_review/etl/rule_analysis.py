@@ -688,9 +688,9 @@ def analyze_all_domain_pairs(
     """
     # Collect all domain conditions from all condition sets
     all_domain_conditions = []
-    condition_set_membership = {}  # Maps (type, id) -> list of condition set indices
+    condition_set_membership = {}  # Maps (type, id) -> list of 1-based condition set indices
 
-    for cs_idx, cs in enumerate(rule.condition_sets):
+    for cs_idx, cs in enumerate(rule.condition_sets, start=1):
         for condition in cs.conditions:
             if condition.condition_type == "InterPro id":
                 for cv in condition.values:
@@ -850,7 +850,7 @@ def analyze_rule_post_enrichment(
 
     # Build per-condition-set summaries (narrative only, no duplicate pair data)
     condition_sets_summary = []
-    for cs_idx, cs in enumerate(rule.condition_sets):
+    for cs_idx, cs in enumerate(rule.condition_sets, start=1):
         # Extract domain conditions in this set
         cs_domains = []
         for condition in cs.conditions:
