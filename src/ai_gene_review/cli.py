@@ -2009,10 +2009,6 @@ def rules_sync(
         str,
         typer.Option("--rule-type", "-t", help="Rule type to sync (arba, unirule, or all)"),
     ] = "all",
-    containment_threshold: Annotated[
-        float,
-        typer.Option("--threshold", help="Minimum containment_a_in_b for global_pairwise_overlap"),
-    ] = 0.8,
     dry_run: Annotated[
         bool,
         typer.Option("--dry-run", help="Show what would be updated without writing files"),
@@ -2022,7 +2018,9 @@ def rules_sync(
 
     Updates review YAML files with:
     - pairwise_overlap sections for each condition set
-    - global_pairwise_overlap at rule level (filtered by containment threshold)
+    - entries section with entry-centric view of entities and relationships
+
+    Also removes deprecated global_pairwise_overlap fields if present.
 
     Examples:
         # Sync a specific review
@@ -2042,7 +2040,6 @@ def rules_sync(
         stats = sync_all_reviews(
             cache_dir,
             rule_type=rule_type,
-            containment_threshold=containment_threshold,
             dry_run=dry_run
         )
 
@@ -2051,7 +2048,7 @@ def rules_sync(
         typer.echo(f"Reviews updated: {stats['reviews_updated']}")
         typer.echo(f"Reviews skipped: {stats['reviews_skipped']}")
         typer.echo(f"Condition sets updated: {stats['total_condition_sets_updated']}")
-        typer.echo(f"Global pairs added: {stats['total_global_pairs_added']}")
+        typer.echo(f"Entries generated: {stats['total_entries_generated']}")
 
         if dry_run:
             typer.echo("\n(dry run - no files written)")
@@ -2061,13 +2058,12 @@ def rules_sync(
             typer.echo(f"Syncing {yaml_file}...")
             stats = sync_review_with_analysis(
                 yaml_file,
-                containment_threshold=containment_threshold,
                 dry_run=dry_run
             )
 
             if stats['status'] == 'updated':
                 typer.echo(f"  ✓ Updated {stats['condition_sets_updated']} condition set(s)")
-                typer.echo(f"  ✓ Added {stats['global_pairs_added']} global pair(s)")
+                typer.echo(f"  ✓ Generated {stats.get('entries_generated', 0)} entries")
             elif stats['status'] == 'skipped':
                 typer.echo(f"  ⊘ Skipped: {stats['reason']}")
 

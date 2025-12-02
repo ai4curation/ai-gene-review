@@ -1392,7 +1392,8 @@ def build_heatmap_table_data(
     if enriched_rule:
         # Extract condition sets from enriched rule (may be at top level or in mainRule)
         cond_sets = enriched_rule.get('conditionSets') or enriched_rule.get('mainRule', {}).get('conditionSets', [])
-        for cs_idx, cond_set in enumerate(cond_sets):
+        # Use 1-based indexing to match pairs data from analyze_all_domain_pairs
+        for cs_idx, cond_set in enumerate(cond_sets, start=1):
             cs_taxon_label = None
             for condition in cond_set.get('conditions', []):
                 cond_type = condition.get('type', '')
@@ -1409,7 +1410,7 @@ def build_heatmap_table_data(
                             'type': cond_val.get('type'),  # InterPro type from enriched data
                             'condition_type': cond_type  # Store the condition type (e.g., 'PANTHER id', 'InterPro id')
                         }
-            # Store taxon label for this CS
+            # Store taxon label for this CS (1-based index)
             if cs_taxon_label:
                 cs_taxon_labels[cs_idx] = cs_taxon_label
 
@@ -1432,7 +1433,8 @@ def build_heatmap_table_data(
     # These domains won't have protein counts but should still appear in the table
     if enriched_rule:
         cond_sets = enriched_rule.get('conditionSets') or enriched_rule.get('mainRule', {}).get('conditionSets', [])
-        for cs_idx, cond_set in enumerate(cond_sets):
+        # Use 1-based indexing to match pairs data from analyze_all_domain_pairs
+        for cs_idx, cond_set in enumerate(cond_sets, start=1):
             for condition in cond_set.get('conditions', []):
                 for cond_val in condition.get('conditionValues', []):
                     domain_id = cond_val.get('value')
@@ -1441,7 +1443,7 @@ def build_heatmap_table_data(
                             'id': domain_id,
                             'label': domain_metadata[domain_id].get('label'),
                             'type': domain_metadata[domain_id].get('type'),
-                            'condition_sets': [cs_idx],  # This domain appears in this CS
+                            'condition_sets': [cs_idx],  # This domain appears in this CS (1-based)
                             'count': None  # No protein count available
                         }
 
@@ -1480,7 +1482,7 @@ def build_heatmap_table_data(
         domain_ids.append(go_term['id'])
 
     # Build condition set groups for two-level headers and track CS boundary columns
-    # Use 1-based indexing for CS labels (biologist-friendly)
+    # condition_sets values are already 1-based (from analyze_all_domain_pairs and above loops)
     # Exclude GO term from this loop (it has no condition sets and will be added separately)
     cs_groups = []
     cs_boundary_cols = set()  # Columns that start a new CS
@@ -1501,7 +1503,7 @@ def build_heatmap_table_data(
             cs_boundary_cols.add(idx)  # Mark this column as a CS boundary
             current_cs = cs
             current_group = {
-                'cs_label': f'CS {cs + 1}',  # 1-based indexing
+                'cs_label': f'CS {cs}',  # Already 1-based
                 'domains': [domain],
                 'taxon_label': cs_taxon_labels.get(cs)  # Get taxon label for this CS
             }
