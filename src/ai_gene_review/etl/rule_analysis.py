@@ -185,6 +185,52 @@ def get_swissprot_count_for_funfam(
     return count
 
 
+def get_swissprot_count_for_panther(
+    panther_id: str,
+    reviewed_only: bool = True,
+    request_delay: float = 0.1
+) -> int:
+    """Query UniProt API for protein count matching PANTHER ID.
+
+    Uses UniProt query: (xref:panther-{id}).
+    PANTHER IDs are stored in UniProt's database cross-references and are
+    searchable via xref queries.
+
+    Args:
+        panther_id: PANTHER identifier (e.g., "PTHR12714")
+        reviewed_only: Only count SwissProt (reviewed) proteins
+        request_delay: Delay after request to avoid rate limiting
+
+    Returns:
+        Number of matching proteins
+
+    Example:
+        >>> count = get_swissprot_count_for_panther("PTHR12714")
+        >>> count >= 0
+        True
+    """
+    query_parts = [f"(xref:panther-{panther_id})"]
+    if reviewed_only:
+        query_parts.append("(reviewed:true)")
+
+    query = " AND ".join(query_parts)
+
+    params = {
+        "query": query,
+        "size": 1  # Only need count from header
+    }
+
+    response = requests.get(UNIPROT_SEARCH_API, params=params, timeout=30)
+    response.raise_for_status()
+
+    count = int(response.headers.get("X-Total-Results", 0))
+
+    if request_delay > 0:
+        time.sleep(request_delay)
+
+    return count
+
+
 def get_swissprot_count_for_interpro_intersection(
     interpro_ids: list[str],
     reviewed_only: bool = True,
@@ -287,11 +333,11 @@ def get_swissprot_count_for_mixed_conditions(
 ) -> int:
     """Query UniProt API for protein count matching mixed domain conditions.
 
-    Supports InterPro IDs (structured xref), FunFam IDs (text search), and GO terms (annotation).
+    Supports InterPro IDs (structured xref), FunFam IDs (text search), PANTHER IDs (xref), and GO terms (annotation).
     Each condition is a tuple of (condition_type, condition_id).
 
     Args:
-        conditions: List of (type, id) tuples, where type is "interpro", "funfam", or "go"
+        conditions: List of (type, id) tuples, where type is "interpro", "funfam", "panther", or "go"
         reviewed_only: Only count SwissProt (reviewed) proteins
         request_delay: Delay after request to avoid rate limiting
 
@@ -315,6 +361,8 @@ def get_swissprot_count_for_mixed_conditions(
             query_parts.append(f"(xref:interpro-{condition_id})")
         elif condition_type == "funfam":
             query_parts.append(f'("{condition_id}")')
+        elif condition_type == "panther":
+            query_parts.append(f"(xref:panther-{condition_id})")
         elif condition_type == "go":
             # UniProt expects numeric ID without "GO:" prefix
             numeric_id = condition_id.replace('GO:', '') if condition_id.startswith('GO:') else condition_id
@@ -558,7 +606,7 @@ def analyze_interpro_overlap_in_condition_set(
         >>> "pairs" in result and "summary" in result
         True
     """
-    # Extract domain conditions (InterPro and FunFam)
+    # Extract domain conditions (InterPro, FunFam, and PANTHER)
     domain_conditions = []
     for condition in condition_set.conditions:
         if condition.condition_type == "InterPro id":
@@ -567,6 +615,9 @@ def analyze_interpro_overlap_in_condition_set(
         elif condition.condition_type == "FunFam id":
             for cv in condition.values:
                 domain_conditions.append(("funfam", cv.value))
+        elif condition.condition_type == "PANTHER id":
+            for cv in condition.values:
+                domain_conditions.append(("panther", cv.value))
 
     # No analysis needed if < 2 domain conditions
     if len(domain_conditions) < 2:
@@ -581,13 +632,17 @@ def analyze_interpro_overlap_in_condition_set(
         # Get individual counts
         if type_a == "interpro":
             count_a = get_swissprot_count_for_interpro(id_a, request_delay=request_delay)
-        else:  # funfam
+        elif type_a == "funfam":
             count_a = get_swissprot_count_for_funfam(id_a, request_delay=request_delay)
+        else:  # panther
+            count_a = get_swissprot_count_for_panther(id_a, request_delay=request_delay)
 
         if type_b == "interpro":
             count_b = get_swissprot_count_for_interpro(id_b, request_delay=request_delay)
-        else:  # funfam
+        elif type_b == "funfam":
             count_b = get_swissprot_count_for_funfam(id_b, request_delay=request_delay)
+        else:  # panther
+            count_b = get_swissprot_count_for_panther(id_b, request_delay=request_delay)
 
         # Get intersection count using mixed conditions
         count_intersection = get_swissprot_count_for_mixed_conditions(
@@ -717,7 +772,7 @@ def analyze_all_domain_pairs(
 ) -> dict:
     """Analyze all pairwise overlaps between domain conditions across entire rule.
 
-    Extracts all domain conditions (InterPro and FunFam) from all condition sets,
+    Extracts all domain conditions (InterPro, FunFam, and PANTHER) from all condition sets,
     then performs pairwise overlap analysis. This flattened approach catches
     redundancy anywhere in the rule's boolean structure.
 
@@ -763,6 +818,16 @@ def analyze_all_domain_pairs(
                     if cs_idx not in condition_set_membership[domain_key]:
                         condition_set_membership[domain_key].append(cs_idx)
 
+            elif condition.condition_type == "PANTHER id":
+                for cv in condition.values:
+                    domain_key = ("panther", cv.value)
+                    if domain_key not in [dc for dc in all_domain_conditions]:
+                        all_domain_conditions.append(domain_key)
+                    if domain_key not in condition_set_membership:
+                        condition_set_membership[domain_key] = []
+                    if cs_idx not in condition_set_membership[domain_key]:
+                        condition_set_membership[domain_key].append(cs_idx)
+
     # No analysis if < 2 domain conditions total
     if len(all_domain_conditions) < 2:
         return {
@@ -776,13 +841,17 @@ def analyze_all_domain_pairs(
         # Get individual counts
         if type_a == "interpro":
             count_a = get_swissprot_count_for_interpro(id_a, request_delay=request_delay)
-        else:  # funfam
+        elif type_a == "funfam":
             count_a = get_swissprot_count_for_funfam(id_a, request_delay=request_delay)
+        else:  # panther
+            count_a = get_swissprot_count_for_panther(id_a, request_delay=request_delay)
 
         if type_b == "interpro":
             count_b = get_swissprot_count_for_interpro(id_b, request_delay=request_delay)
-        else:  # funfam
+        elif type_b == "funfam":
             count_b = get_swissprot_count_for_funfam(id_b, request_delay=request_delay)
+        else:  # panther
+            count_b = get_swissprot_count_for_panther(id_b, request_delay=request_delay)
 
         # Get intersection count
         count_intersection = get_swissprot_count_for_mixed_conditions(
@@ -989,6 +1058,8 @@ def analyze_rule_post_enrichment(
                 cs_domains.extend([("interpro", cv.value) for cv in condition.values])
             elif condition.condition_type == "FunFam id":
                 cs_domains.extend([("funfam", cv.value) for cv in condition.values])
+            elif condition.condition_type == "PANTHER id":
+                cs_domains.extend([("panther", cv.value) for cv in condition.values])
 
         # Find relevant pairs involving this condition set's domains
         relevant_pairs = []
