@@ -180,7 +180,7 @@ def rule_to_rows(rule_json: dict, rule_type: str) -> list[dict]:
 
     # Process each condition set
     main_rule = rule_json.get("mainRule", {})
-    for cs_index, cs in enumerate(main_rule.get("conditionSets", [])):
+    for cs_index, cs in enumerate(main_rule.get("conditionSets", []), start=1):
         row = {
             "rule_id": rule_id,
             "rule_type": rule_type,
@@ -314,3 +314,81 @@ def export_rules_to_csv(
         progress_callback(rules_processed, rows_written)
 
     return rows_written
+
+
+def create_go_summary(
+    main_csv_path: Path,
+    summary_output_path: Optional[Path] = None
+) -> Path:
+    """Create a GO summary CSV from the main export CSV.
+
+    Creates one row per unique (rule_id, GO term) combination with the count
+    of condition sets that apply to that rule+GO combination.
+
+    Args:
+        main_csv_path: Path to the main export CSV (output from export_rules_to_csv)
+        summary_output_path: Optional output path for summary CSV
+            (defaults to {main_csv_path}-go-summary.csv)
+
+    Returns:
+        Path to the created summary CSV
+
+    Example:
+        >>> # create_go_summary(Path("rules/export.csv"))
+        >>> # Creates rules/export-go-summary.csv with columns:
+        >>> # rule_id, rule_type, go_id, go_label, condition_set_count
+    """
+    if summary_output_path is None:
+        # Default: insert "-go-summary" before .csv extension
+        stem = main_csv_path.stem
+        summary_output_path = main_csv_path.parent / f"{stem}-go-summary.csv"
+
+    # Read main CSV and aggregate
+    summary_data: dict[tuple[str, str, str], dict] = {}
+
+    with open(main_csv_path, "r", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            rule_id = row["rule_id"]
+            rule_type = row["rule_type"]
+            go_ids_str = row["go_ids"]
+            go_labels_str = row["go_labels"]
+
+            # Skip rows with no GO annotations
+            if not go_ids_str:
+                continue
+
+            # Split pipe-separated GO IDs and labels
+            go_ids = go_ids_str.split("|")
+            go_labels = go_labels_str.split("|")
+
+            # Ensure we have labels for all IDs (pad with empty strings if needed)
+            while len(go_labels) < len(go_ids):
+                go_labels.append("")
+
+            # Process each GO term
+            for go_id, go_label in zip(go_ids, go_labels):
+                key = (rule_id, rule_type, go_id)
+                if key not in summary_data:
+                    summary_data[key] = {
+                        "rule_id": rule_id,
+                        "rule_type": rule_type,
+                        "go_id": go_id,
+                        "go_label": go_label,
+                        "condition_set_count": 0
+                    }
+                summary_data[key]["condition_set_count"] += 1
+
+    # Write summary CSV
+    summary_output_path.parent.mkdir(parents=True, exist_ok=True)
+    summary_columns = ["rule_id", "rule_type", "go_id", "go_label", "condition_set_count"]
+
+    with open(summary_output_path, "w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=summary_columns)
+        writer.writeheader()
+
+        # Sort by rule_id, then go_id
+        for key in sorted(summary_data.keys()):
+            writer.writerow(summary_data[key])
+
+    return summary_output_path

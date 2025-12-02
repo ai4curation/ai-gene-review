@@ -1,0 +1,1038 @@
+<!DOCTYPE html>
+<html lang="en">
+
+{# Jinja2 macro for InterPro type short codes #}
+{% macro type_code(interpro_type) -%}
+{%- if interpro_type == 'family' -%}F
+{%- elif interpro_type == 'domain' -%}D
+{%- elif interpro_type == 'active_site' -%}AS
+{%- elif interpro_type == 'binding_site' -%}BS
+{%- elif interpro_type == 'conserved_site' -%}CS
+{%- elif interpro_type == 'repeat' -%}R
+{%- elif interpro_type == 'homologous_superfamily' -%}SF
+{%- elif interpro_type == 'ptm' -%}PTM
+{%- else -%}
+{%- endif -%}
+{%- endmacro %}
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ rule.id | default('Rule Review') }}{% if rule.rule and rule.rule.go_annotations %} {{ rule.rule.go_annotations[0].go_label }} ({{ rule.rule.go_annotations[0].go_id }}){% endif %} - ARBA Rule Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-complete: #10b981;
+            --color-in-progress: #3b82f6;
+            --color-initialized: #f59e0b;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            color: #374151;
+        }
+
+        .rule-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-COMPLETE {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .status-IN_PROGRESS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-INITIALIZED {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .action-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-ACCEPT {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-REMOVE {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-MODIFY {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            opacity: 0.9;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .visualization {
+            margin: 2rem 0;
+            text-align: center;
+        }
+
+        .visualization img {
+            max-width: 100%;
+            height: auto;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .condition-set {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .condition-set-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .condition-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .condition-item {
+            display: flex;
+            align-items: start;
+            gap: 1rem;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.375rem;
+        }
+
+        .condition-type {
+            font-weight: 600;
+            color: #8b5cf6;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+            min-width: 80px;
+        }
+
+        .condition-value {
+            flex: 1;
+        }
+
+        .go-annotation {
+            background-color: #ede9fe;
+            border-left: 4px solid #8b5cf6;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            border-radius: 0.375rem;
+        }
+
+        .go-id {
+            font-weight: 700;
+            color: #6d28d9;
+            font-family: 'Courier New', monospace;
+        }
+
+        .overlap-table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .overlap-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .overlap-table th {
+            text-align: left;
+            padding: 0.75rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .overlap-table td {
+            padding: 0.75rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .overlap-table tbody tr:hover {
+            background-color: var(--bg-light);
+        }
+
+        .interpretation-badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        /* Heatmap table styles */
+        .heatmap-table {
+            border-collapse: collapse;
+            margin: 1rem 0;
+            font-size: 0.85rem;
+        }
+
+        .heatmap-table th, .heatmap-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+
+        .heatmap-table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+        }
+
+        .heatmap-table th.domain-header {
+            writing-mode: vertical-rl;
+            transform: rotate(180deg);
+            white-space: nowrap;
+            padding: 12px 8px;
+            max-width: 40px;
+        }
+
+        .heatmap-table td.row-header {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            text-align: left;
+            white-space: nowrap;
+        }
+
+        .heatmap-table td.heatmap-cell {
+            min-width: 60px;
+            cursor: pointer;
+        }
+
+        .heatmap-cell-high { background-color: #d73027; color: white; }
+        .heatmap-cell-medh { background-color: #fc8d59; color: white; }
+        .heatmap-cell-med { background-color: #fee08b; }
+        .heatmap-cell-medl { background-color: #d9ef8b; }
+        .heatmap-cell-low { background-color: #91cf60; }
+        .heatmap-cell-none { background-color: #f0f0f0; }
+        .heatmap-cell-diag { background-color: #e0e0e0; font-weight: bold; }
+
+        .interpretation-SUBSET {
+            background-color: #dbeafe;
+            color: #1e40af;
+        }
+
+        .interpretation-HIGH_OVERLAP {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+
+        .interpretation-DISJOINT {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+
+        .assessment-badge {
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .assessment-APPROPRIATE {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+
+        .assessment-STRONG {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+
+        .assessment-POOR {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+
+        .assessment-COMPLETE {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+
+        .assessment-MINOR {
+            background-color: #dbeafe;
+            color: #1e40af;
+        }
+
+        .references-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .reference-item {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 0.375rem;
+        }
+
+        .reference-id {
+            font-weight: 600;
+            color: #3b82f6;
+            margin-bottom: 0.5rem;
+        }
+
+        .reference-title {
+            font-style: italic;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+        }
+
+        code {
+            background-color: #f3f4f6;
+            padding: 0.2rem 0.4rem;
+            border-radius: 0.25rem;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+
+        pre {
+            background-color: #1f2937;
+            color: #f9fafb;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+
+        pre code {
+            background: none;
+            color: inherit;
+            padding: 0;
+        }
+
+        a {
+            color: #3b82f6;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        .curie-link {
+            color: #3b82f6;
+            font-family: 'Courier New', monospace;
+            font-weight: 600;
+        }
+
+        .count-link {
+            color: #3b82f6;
+            cursor: pointer;
+        }
+
+        .count-link:hover {
+            text-decoration: underline;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .tab {
+            padding: 0.75rem 1.5rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--text-muted);
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+            transition: all 0.2s;
+        }
+
+        .tab:hover {
+            color: var(--text-primary);
+        }
+
+        .tab.active {
+            color: #3b82f6;
+            border-bottom-color: #3b82f6;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>{{ rule.id }}{% if rule.rule and rule.rule.go_annotations %} <span style="font-weight: 400;">{{ rule.rule.go_annotations[0].go_label }}</span> <span style="font-size: 0.7em; color: #6b7280;">({{ rule.rule.go_annotations[0].go_id }})</span>{% endif %}</h1>
+        <div class="rule-info">
+            <div class="info-item">
+                <span class="info-label">Type:</span>
+                <span class="badge">{{ rule.rule_type | default('ARBA') }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Status:</span>
+                <span class="status-badge status-{{ rule.status }}">{{ rule.status }}</span>
+            </div>
+            {% if rule.action %}
+            <div class="info-item">
+                <span class="info-label">Action:</span>
+                <span class="action-badge action-{{ rule.action }}">{{ rule.action }}</span>
+            </div>
+            {% endif %}
+            {% if rule.confidence %}
+            <div class="info-item">
+                <span class="info-label">Confidence:</span>
+                <span class="badge">{{ "%.2f"|format(rule.confidence) }}</span>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="card">
+            <h2>Description</h2>
+            <p>{{ rule.description }}</p>
+        </div>
+    </div>
+
+    {% if stats %}
+    <div class="section">
+        <h2>Analysis Summary</h2>
+        <div class="grid">
+            <div class="stat-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <div class="stat-value">{{ stats.total_pairs }}</div>
+                <div class="stat-label">Domain Pairs Analyzed</div>
+            </div>
+            <div class="stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                <div class="stat-value">{{ stats.condition_sets }}</div>
+                <div class="stat-label">Condition Sets</div>
+            </div>
+            <div class="stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                <div class="stat-value">{{ stats.subset_relationships }}</div>
+                <div class="stat-label">Subset Relationships</div>
+            </div>
+            <div class="stat-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                <div class="stat-value">{{ stats.redundant_annotations }}</div>
+                <div class="stat-label">Redundant Annotations</div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if heatmap_table %}
+    <div class="section">
+        <h2>Domain Overlap Analysis Table</h2>
+        <div class="visualization">
+            <p style="margin-bottom: 1rem; color: var(--text-muted); font-size: 0.875rem;">
+                Interactive prediction matrix showing how row entries PREDICT column entries. Cell (i,j) shows what fraction of proteins with row domain i also have column domain j.
+                Click cells to view intersection in UniProt. Click domain IDs to view proteins with that domain.
+            </p>
+            <div style="overflow-x: auto;">
+                <table class="heatmap-table">
+                    <thead>
+                        <!-- Condition set row with merged cells -->
+                        <tr>
+                            <th colspan="2" rowspan="2" style="border-right: 2px solid #999; border-bottom: 2px solid #999;"></th>
+                            {% for group in heatmap_table.cs_groups %}
+                            <th colspan="{{ group.domains|length }}" style="background-color: #e8f4f8; border-left: 2px solid #999; border-right: 2px solid #999; text-align: center; font-weight: bold;">
+                                {{ group.cs_label }}
+                                {% if group.taxon_label %}
+                                <br><small style="font-weight: normal; color: var(--text-muted);">{{ group.taxon_label }}</small>
+                                {% endif %}
+                            </th>
+                            {% endfor %}
+                        </tr>
+                        <!-- Domain row -->
+                        <tr>
+                            {% set col_idx = namespace(value=0) %}
+                            {% for group in heatmap_table.cs_groups %}
+                                {% for domain in group.domains %}
+                                {% set label = domain.label if domain.label else domain.id %}
+                                {% set truncated = label[:25] + '...' if label|length > 28 else label %}
+                                <th class="domain-header" {% if loop.first %}style="border-left: 2px solid #999;"{% endif %}>
+                                    <a href="#" onclick="window.open(buildUniProtQuery('{{ domain.id }}'), '_blank'); return false;" title="{{ label }}">
+                                        {{ truncated }}
+                                    </a>
+                                    <br><small>{{ domain.id }}{% if domain.type %} [{{ type_code(domain.type) }}]{% endif %}</small>
+                                    <br><small>({{ domain.count }})</small>
+                                </th>
+                                {% set col_idx.value = col_idx.value + 1 %}
+                                {% endfor %}
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for group in heatmap_table.cs_groups %}
+                        {% set group_idx = loop.index0 %}
+                        {% set cs_colors = ['#fef3c7', '#dbeafe', '#d1fae5', '#fce7f3', '#e0e7ff', '#fef9c3'] %}
+                        {% set bg_color = cs_colors[group_idx % cs_colors|length] %}
+                            {% for row_domain in group.domains %}
+                            {# Find index by comparing domain IDs instead of dict objects #}
+                            {% set i = namespace(value=-1) %}
+                            {% for d in heatmap_table.domains %}
+                                {% if d.id == row_domain.id %}
+                                    {% set i.value = loop.index0 %}
+                                {% endif %}
+                            {% endfor %}
+                            {% set i = i.value %}
+                            {% set row_label = row_domain.label if row_domain.label else row_domain.id %}
+                            <tr>
+                                <!-- CS label cell with rowspan for first row of each group -->
+                                {% if loop.first %}
+                                <td rowspan="{{ group.domains|length }}" style="background-color: {{ bg_color }}; border-right: 2px solid #999; border-top: 2px solid #999; border-bottom: 2px solid #999; text-align: center; font-weight: bold; vertical-align: middle; writing-mode: vertical-rl; transform: rotate(180deg); padding: 0.5rem 0.25rem;">
+                                    {{ group.cs_label }}
+                                    {% if group.taxon_label %}
+                                    <br><small style="font-weight: normal;">{{ group.taxon_label }}</small>
+                                    {% endif %}
+                                </td>
+                                {% endif %}
+                                <!-- Domain name cell -->
+                                <td class="row-header" style="background-color: {{ bg_color }}; border-right: 2px solid #999; {% if loop.first %}border-top: 2px solid #999;{% endif %}">
+                                    <a href="#" onclick="window.open(buildUniProtQuery('{{ row_domain.id }}'), '_blank'); return false;" title="{{ row_label }}">
+                                        {{ row_label }}
+                                    </a>
+                                    <br><small>{{ row_domain.id }}{% if row_domain.type %} [{{ type_code(row_domain.type) }}]{% endif %} ({{ row_domain.count }})</small>
+                                    {% if row_domain.taxon_label %}
+                                    <br><small style="color: var(--text-muted);">{{ row_domain.taxon_label }}</small>
+                                    {% endif %}
+                                </td>
+                            {% for col_domain in heatmap_table.domains %}
+                            {% set j = loop.index0 %}
+                            {% set cell = heatmap_table.matrix[i][j] %}
+                            {% set border_left = 'border-left: 2px solid #999;' if j in heatmap_table.cs_boundary_cols else '' %}
+                            {% set border_top = 'border-top: 2px solid #999;' if i in heatmap_table.cs_boundary_cols else '' %}
+                            {% set border_style = border_left + (' ' if border_left and border_top else '') + border_top %}
+                            {% if i == j %}
+                            <td class="heatmap-cell heatmap-cell-diag" {% if border_style %}style="{{ border_style }}"{% endif %}>
+                                100%
+                            </td>
+                            {% elif cell %}
+                            {% set containment_pct = (cell.containment * 100)|round(0)|int %}
+                            {% set jaccard_pct = (cell.jaccard * 100)|round(0)|int %}
+                            {% if containment_pct >= 90 %}
+                                {% set color_class = 'heatmap-cell-high' %}
+                            {% elif containment_pct >= 70 %}
+                                {% set color_class = 'heatmap-cell-medh' %}
+                            {% elif containment_pct >= 50 %}
+                                {% set color_class = 'heatmap-cell-med' %}
+                            {% elif containment_pct >= 30 %}
+                                {% set color_class = 'heatmap-cell-medl' %}
+                            {% elif containment_pct > 0 %}
+                                {% set color_class = 'heatmap-cell-low' %}
+                            {% else %}
+                                {% set color_class = 'heatmap-cell-none' %}
+                            {% endif %}
+                            <td class="heatmap-cell {{ color_class }}" {% if border_style %}style="{{ border_style }}"{% endif %}>
+                                <a href="#" onclick="window.open(buildIntersectionQuery('{{ row_domain.id }}', '{{ col_domain.id }}'), '_blank'); return false;" style="color: inherit; text-decoration: none; display: block;">
+                                    <div>{{ containment_pct }}%</div>
+                                    <small>J:{{ jaccard_pct }}%</small>
+                                    <br><small>({{ cell.intersection }})</small>
+                                </a>
+                            </td>
+                            {% else %}
+                            <td class="heatmap-cell heatmap-cell-none" {% if border_style %}style="{{ border_style }}"{% endif %}>
+                                -
+                            </td>
+                            {% endif %}
+                            {% endfor %}
+                        </tr>
+                        {% endfor %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div style="margin-top: 1rem;">
+                <p style="color: var(--text-muted); font-size: 0.875rem;">
+                    <strong>Legend:</strong> Each cell shows PREDICTS % (fraction of row entry proteins that also have column entry - row PREDICTS column),
+                    Jaccard similarity (J:%), and intersection count. CS = Condition Set(s), TGT = GO annotation target.
+                </p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if rule.review_summary %}
+    <div class="section">
+        <div class="card">
+            <h2>Review Summary</h2>
+            <p>{{ rule.review_summary }}</p>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if rule.action_rationale %}
+    <div class="section">
+        <div class="card">
+            <h2>Action Rationale</h2>
+            <p>{{ rule.action_rationale }}</p>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if rule.rule and rule.rule.go_annotations %}
+    <div class="section">
+        <h2>GO Annotations</h2>
+        {% for ann in rule.rule.go_annotations %}
+        <div class="go-annotation">
+            <div>
+                <a href="https://www.ebi.ac.uk/QuickGO/term/{{ ann.go_id }}" target="_blank" class="go-id">{{ ann.go_id }}</a>
+                - {{ ann.go_label }}
+            </div>
+            <div style="color: var(--text-muted); font-size: 0.875rem;">Aspect: {{ ann.aspect }}</div>
+
+            {# Check if this annotation is redundant with InterPro2GO #}
+            {% if analysis and analysis.ipr2go_redundancy and analysis.ipr2go_redundancy.redundant_annotations %}
+                {% set redundant = namespace(found=false, source=none) %}
+                {% for redund in analysis.ipr2go_redundancy.redundant_annotations %}
+                    {% if redund.go_id == ann.go_id %}
+                        {% set redundant.found = true %}
+                        {% set redundant.source = redund.interpro_source %}
+                    {% endif %}
+                {% endfor %}
+                {% if redundant.found %}
+                <div style="margin-top: 0.5rem; padding: 0.5rem; background-color: #fef3c7; border-left: 3px solid #f59e0b; border-radius: 0.25rem; font-size: 0.875rem;">
+                    <strong style="color: #92400e;">⚠️ Redundant with InterPro2GO:</strong>
+                    <span style="color: #78350f;">{{ redundant.source }} → {{ ann.go_id }}</span>
+                    <div style="margin-top: 0.25rem; font-size: 0.8rem; color: var(--text-muted);">
+                        This annotation already exists in the manual InterPro2GO mapping file
+                    </div>
+                </div>
+                {% endif %}
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="section">
+        <h2>Rule Definition</h2>
+
+        {% if rule.rule and rule.rule.condition_sets %}
+        <h3>Condition Sets</h3>
+        {% for cs in rule.rule.condition_sets %}
+        <div class="condition-set">
+            <div class="condition-set-header">
+                <h3 style="margin: 0;">Condition Set {{ loop.index }}</h3>
+                <span class="badge">{{ cs.conditions | length }} condition(s)</span>
+            </div>
+
+            <ul class="condition-list">
+                {% for cond in cs.conditions %}
+                <li class="condition-item">
+                    <span class="condition-type">{{ cond.condition_type | default('UNKNOWN') }}</span>
+                    <div class="condition-value">
+                        <div><strong>{{ cond.value }}</strong></div>
+                        {% if cond.label %}
+                        <div style="color: var(--text-muted); font-size: 0.875rem;">{{ cond.label }}</div>
+                        {% endif %}
+                        {% if cond.curie %}
+                        <div style="font-size: 0.875rem;">
+                            <a href="#" onclick="window.open(curieToUrl('{{ cond.curie }}')); return false;" class="curie-link">{{ cond.curie }}</a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+
+            {% if cs.notes %}
+            <div style="margin-top: 1rem; padding: 1rem; background-color: #fffbeb; border-left: 4px solid #f59e0b; border-radius: 0.375rem;">
+                <strong style="color: #92400e;">Notes:</strong>
+                <p style="margin-top: 0.5rem; color: #78350f;">{{ cs.notes }}</p>
+            </div>
+            {% endif %}
+
+            {% if cs.pairwise_overlap %}
+            <div style="margin-top: 1.5rem;">
+                <h4 style="margin-bottom: 0.75rem;">Pairwise Overlap Analysis</h4>
+                <table class="overlap-table">
+                    <thead>
+                        <tr>
+                            <th>Condition A</th>
+                            <th>Condition B</th>
+                            <th>Count A</th>
+                            <th>Count B</th>
+                            <th>Intersection</th>
+                            <th>Jaccard</th>
+                            <th>A in B</th>
+                            <th>B in A</th>
+                            <th>Interpretation</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for pair in cs.pairwise_overlap %}
+                        <tr>
+                            <td>
+                                <a href="#" onclick="window.open(buildUniProtQuery('{{ pair.condition_a }}')); return false;" class="count-link">
+                                    <code>{{ pair.condition_a }}</code>
+                                </a>
+                            </td>
+                            <td>
+                                <a href="#" onclick="window.open(buildUniProtQuery('{{ pair.condition_b }}')); return false;" class="count-link">
+                                    <code>{{ pair.condition_b }}</code>
+                                </a>
+                            </td>
+                            <td>
+                                <a href="#" onclick="window.open(buildUniProtQuery('{{ pair.condition_a }}')); return false;" class="count-link">
+                                    {{ pair.count_a }}
+                                </a>
+                            </td>
+                            <td>
+                                <a href="#" onclick="window.open(buildUniProtQuery('{{ pair.condition_b }}')); return false;" class="count-link">
+                                    {{ pair.count_b }}
+                                </a>
+                            </td>
+                            <td>
+                                <a href="#" onclick="window.open(buildIntersectionQuery('{{ pair.condition_a }}', '{{ pair.condition_b }}')); return false;" class="count-link">
+                                    {{ pair.intersection_count }}
+                                </a>
+                            </td>
+                            <td>{{ "%.3f"|format(pair.jaccard_similarity) }}</td>
+                            <td>{{ "%.3f"|format(pair.containment_a_in_b) }}</td>
+                            <td>{{ "%.3f"|format(pair.containment_b_in_a) }}</td>
+                            <td><span class="interpretation-badge interpretation-{{ pair.interpretation }}">{{ pair.interpretation }}</span></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+        {% endif %}
+    </div>
+
+    <div class="section">
+        <h2>Assessments</h2>
+
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('parsimony')">Parsimony</button>
+            <button class="tab" onclick="showTab('literature')">Literature Support</button>
+            <button class="tab" onclick="showTab('overlap')">Condition Overlap</button>
+            <button class="tab" onclick="showTab('ipr2go')">InterPro2GO</button>
+            <button class="tab" onclick="showTab('go-spec')">GO Specificity</button>
+            <button class="tab" onclick="showTab('taxonomy')">Taxonomic Scope</button>
+        </div>
+
+        <div id="parsimony" class="tab-content active">
+            {% if rule.parsimony %}
+            <div class="card">
+                <div style="margin-bottom: 1rem;">
+                    <span class="assessment-badge assessment-{{ rule.parsimony.assessment }}">{{ rule.parsimony.assessment }}</span>
+                </div>
+                <p>{{ rule.parsimony.notes }}</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <div id="literature" class="tab-content">
+            {% if rule.literature_support %}
+            <div class="card">
+                <div style="margin-bottom: 1rem;">
+                    <span class="assessment-badge assessment-{{ rule.literature_support.assessment }}">{{ rule.literature_support.assessment }}</span>
+                </div>
+                <p>{{ rule.literature_support.notes }}</p>
+                {% if rule.literature_support.supported_by %}
+                <div style="margin-top: 1rem;">
+                    <h4>Supporting Evidence:</h4>
+                    <ul>
+                        {% for support in rule.literature_support.supported_by %}
+                        <li style="margin-bottom: 0.5rem;">
+                            <strong>{{ support.reference_id }}</strong>: {{ support.supporting_text }}
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+
+        <div id="overlap" class="tab-content">
+            {% if rule.condition_overlap %}
+            <div class="card">
+                <div style="margin-bottom: 1rem;">
+                    <span class="assessment-badge assessment-{{ rule.condition_overlap.assessment }}">{{ rule.condition_overlap.assessment }}</span>
+                </div>
+                <p>{{ rule.condition_overlap.notes }}</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <div id="ipr2go" class="tab-content">
+            {% if rule.interpro2go_redundancy %}
+            <div class="card">
+                <div style="margin-bottom: 1rem;">
+                    <span class="assessment-badge assessment-{{ rule.interpro2go_redundancy.assessment }}">{{ rule.interpro2go_redundancy.assessment }}</span>
+                </div>
+                <p>{{ rule.interpro2go_redundancy.notes }}</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <div id="go-spec" class="tab-content">
+            {% if rule.go_specificity %}
+            <div class="card">
+                <div style="margin-bottom: 1rem;">
+                    <span class="assessment-badge assessment-{{ rule.go_specificity.assessment }}">{{ rule.go_specificity.assessment }}</span>
+                </div>
+                <p>{{ rule.go_specificity.notes }}</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <div id="taxonomy" class="tab-content">
+            {% if rule.taxonomic_scope %}
+            <div class="card">
+                <div style="margin-bottom: 1rem;">
+                    <span class="assessment-badge assessment-{{ rule.taxonomic_scope.assessment }}">{{ rule.taxonomic_scope.assessment }}</span>
+                </div>
+                <p>{{ rule.taxonomic_scope.notes }}</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if rule.references %}
+    <div class="section">
+        <h2>References ({{ rule.references | length }})</h2>
+        <ul class="references-list">
+            {% for ref in rule.references %}
+            <li class="reference-item">
+                <div class="reference-id">{{ ref.id }}</div>
+                {% if ref.title %}
+                <div class="reference-title">{{ ref.title }}</div>
+                {% endif %}
+                {% if ref.findings %}
+                <div style="margin-top: 0.75rem;">
+                    {% for finding in ref.findings %}
+                    <p style="margin-bottom: 0.5rem;">{{ finding.statement }}</p>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    {% if yaml_content %}
+    <div class="section">
+        <h2>Raw YAML</h2>
+        <details>
+            <summary style="cursor: pointer; font-weight: 600; margin-bottom: 1rem;">View Source YAML</summary>
+            <pre><code>{{ yaml_content }}</code></pre>
+        </details>
+    </div>
+    {% endif %}
+
+    <script>
+        function showTab(tabName) {
+            // Hide all tab contents
+            const contents = document.querySelectorAll('.tab-content');
+            contents.forEach(content => content.classList.remove('active'));
+
+            // Remove active class from all tabs
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => tab.classList.remove('active'));
+
+            // Show selected tab content
+            document.getElementById(tabName).classList.add('active');
+
+            // Add active class to clicked tab
+            event.target.classList.add('active');
+        }
+
+        // Convert CURIE to URL
+        function curieToUrl(curie) {
+            if (!curie || !curie.includes(':')) return '#';
+
+            const [prefix, id] = curie.split(':', 2);
+
+            const urlMap = {
+                'GO': `https://www.ebi.ac.uk/QuickGO/term/${curie}`,
+                'InterPro': `https://www.ebi.ac.uk/interpro/entry/InterPro/${id}/`,
+                'CATH.FunFam': `https://www.cathdb.info/version/latest/superfamily/${id.split(':')[0]}/funfam/${id}`,
+                'NCBITaxon': `https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=${id}`,
+                'PMID': `https://pubmed.ncbi.nlm.nih.gov/${id}`,
+                'UniProtKB': `https://www.uniprot.org/uniprotkb/${id}`
+            };
+
+            return urlMap[prefix] || `https://bioregistry.io/${curie}`;
+        }
+
+        // Build UniProt query URL for domain condition
+        function buildUniProtQuery(domain, database = 'SWISSPROT') {
+            // Handle InterPro domains
+            if (domain.startsWith('IPR')) {
+                return `https://www.uniprot.org/uniprotkb?query=xref:interpro-${domain}+AND+reviewed:true`;
+            }
+            // Handle CATH FunFam domains - use quoted text search
+            else if (domain.includes(':FF:')) {
+                return `https://www.uniprot.org/uniprotkb?query=("${domain}")+AND+reviewed:true`;
+            }
+            return '#';
+        }
+
+        // Build UniProt query URL for intersection of two domains
+        function buildIntersectionQuery(domainA, domainB, database = 'SWISSPROT') {
+            const queryA = domainA.startsWith('IPR') ? `xref:interpro-${domainA}` : `("${domainA}")`;
+            const queryB = domainB.startsWith('IPR') ? `xref:interpro-${domainB}` : `("${domainB}")`;
+            return `https://www.uniprot.org/uniprotkb?query=(${queryA})+AND+(${queryB})+AND+reviewed:true`;
+        }
+    </script>
+
+    <footer style="text-align: center; padding: 2rem; color: var(--text-muted); border-top: 1px solid var(--border-color); margin-top: 3rem;">
+        <small>Generated from {{ rule.id }}-review.yaml</small>
+    </footer>
+</body>
+</html>

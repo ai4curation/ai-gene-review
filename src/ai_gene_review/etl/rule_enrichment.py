@@ -53,6 +53,7 @@ class EnrichmentCache:
     """
     go_labels: dict[str, str] = field(default_factory=dict)
     interpro_labels: dict[str, str] = field(default_factory=dict)
+    interpro_types: dict[str, str] = field(default_factory=dict)
     funfam_labels: dict[str, str] = field(default_factory=dict)
     cache_file: Optional[Path] = None
 
@@ -62,6 +63,7 @@ class EnrichmentCache:
             data = json.loads(path.read_text())
             self.go_labels = data.get("go_labels", {})
             self.interpro_labels = data.get("interpro_labels", {})
+            self.interpro_types = data.get("interpro_types", {})
             self.funfam_labels = data.get("funfam_labels", {})
         self.cache_file = path
 
@@ -71,6 +73,7 @@ class EnrichmentCache:
             data = {
                 "go_labels": self.go_labels,
                 "interpro_labels": self.interpro_labels,
+                "interpro_types": self.interpro_types,
                 "funfam_labels": self.funfam_labels
             }
             self.cache_file.parent.mkdir(parents=True, exist_ok=True)
@@ -240,6 +243,8 @@ class LabelEnricher:
     def get_interpro_label(self, interpro_id: str) -> Optional[str]:
         """Get label for an InterPro entry.
 
+        Also fetches and caches the InterPro type (family, domain, active_site, etc.).
+
         Args:
             interpro_id: InterPro identifier (e.g., "IPR000001")
 
@@ -262,14 +267,21 @@ class LabelEnricher:
             response = self._session.get(url, headers=headers, timeout=30)
             if response.status_code == 200:
                 data = response.json()
-                name_field = data.get("metadata", {}).get("name")
+                metadata = data.get("metadata", {})
+                name_field = metadata.get("name")
                 # name_field can be a string or dict with 'name' key
                 if isinstance(name_field, dict):
                     label = name_field.get("name")
                 else:
                     label = name_field
+
+                # Also extract and cache the type
+                interpro_type = metadata.get("type")
+
                 if label:
                     self._cache.interpro_labels[interpro_id] = label
+                    if interpro_type:
+                        self._cache.interpro_types[interpro_id] = interpro_type
                     self._cache.save()
                     return label
         except Exception:
@@ -484,6 +496,9 @@ def enrich_rule_json(rule_json: dict, enricher: Optional[LabelEnricher] = None) 
                 cv["curie"] = enriched.curie
                 if enriched.label:
                     cv["label"] = enriched.label
+                # Add InterPro type if available (cached from API call)
+                if cond_type == "InterPro id" and value in enricher._cache.interpro_types:
+                    cv["type"] = enricher._cache.interpro_types[value]
 
     # Enrich GO annotations
     for ann in main_rule.get("annotations", []):
