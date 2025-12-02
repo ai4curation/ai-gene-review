@@ -1021,8 +1021,10 @@ clean-imodulondb-cache:
 # ============== UniProt Rules (ARBA, UniRule) ==============
 
 # Initialize a new rule review YAML file with proper structure and TODO stubs
+# IMPORTANT: Will FAIL if review YAML already exists (prevents accidental overwrites)
+#            To refresh, manually delete the review YAML first
 # This creates:
-#   - {cache_dir}/{rule_id}/{rule_id}-review.yaml with all required fields
+#   - {cache_dir}/{rule_id}/{rule_id}-review.yaml with all required fields (WILL NOT OVERWRITE)
 #   - {cache_dir}/{rule_id}/{rule_id}.enriched.json (if missing)
 # Then run these commands in order:
 #   1. just analyze-rule {rule_id}      # Generate analysis files
@@ -1033,6 +1035,8 @@ clean-imodulondb-cache:
 # Examples:
 #   just init-rule-review ARBA00026249
 #   just init-rule-review UR000000070 --cache-dir rules/unirule
+# If you get "Review file already exists" error:
+#   rm rules/arba/ARBA00026249/ARBA00026249-review.yaml  # Then re-run init-rule-review
 init-rule-review rule_id *args="":
     uv run python -c "from ai_gene_review.etl.rule_review_init import init_rule_review; from pathlib import Path; init_rule_review('{{rule_id}}', cache_dir=Path('rules/arba'))"
 

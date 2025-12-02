@@ -240,20 +240,19 @@ def generate_entries(
 def sync_review_with_analysis(
     review_yaml_path: Path,
     analysis_json_path: Optional[Path] = None,
-    containment_threshold: float = 0.8,
     dry_run: bool = False
 ) -> dict:
     """Sync a rule review YAML file with its analysis JSON data.
 
     Updates the review YAML with:
     1. pairwise_overlap sections for each condition set (from analysis data)
-    2. global_pairwise_overlap section at rule level (filtered by containment threshold)
-    3. entries section with entry-centric view of all entities and their relationships
+    2. entries section with entry-centric view of all entities and their relationships
+
+    Also removes deprecated global_pairwise_overlap fields if present.
 
     Args:
         review_yaml_path: Path to the rule review YAML file
         analysis_json_path: Optional path to analysis JSON (defaults to sibling file)
-        containment_threshold: Minimum containment_a_in_b to include in global_pairwise_overlap
         dry_run: If True, return changes without writing to file
 
     Returns:
@@ -285,7 +284,6 @@ def sync_review_with_analysis(
     stats = {
         'status': 'updated',
         'condition_sets_updated': 0,
-        'global_pairs_added': 0,
         'total_pairs_in_analysis': 0
     }
 
@@ -345,57 +343,14 @@ def sync_review_with_analysis(
             cs['pairwise_overlap'] = pairwise_overlap
             stats['condition_sets_updated'] += 1
 
-    # Create global_pairwise_overlap (filtered by containment threshold)
-    # Since containment is asymmetric, test both directions (A→B and B→A)
-    # Only include one direction if both pass the threshold
-    global_pairs = []
-    seen_pairs = set()  # Track (cond_a, cond_b) tuples to avoid duplicates
+    # Remove deprecated global_pairwise_overlap fields if present
+    if 'rule' in review_data:
+        if 'global_pairwise_overlap' in review_data['rule']:
+            del review_data['rule']['global_pairwise_overlap']
+        if 'global_pairwise_overlap_thresholds' in review_data['rule']:
+            del review_data['rule']['global_pairwise_overlap_thresholds']
 
-    for pair in all_pairs:
-        cond_a = pair['condition_a']
-        cond_b = pair['condition_b']
-
-        # Test both directions
-        a_in_b = pair.get('containment_a_in_b', 0)
-        b_in_a = pair.get('containment_b_in_a', 0)
-
-        # Include if either direction passes threshold
-        if a_in_b >= containment_threshold or b_in_a >= containment_threshold:
-            # Create canonical key to avoid duplicates (same pair in both directions)
-            pair_key = tuple(sorted([cond_a, cond_b]))
-
-            if pair_key not in seen_pairs:
-                seen_pairs.add(pair_key)
-                global_pairs.append({
-                    'condition_a': pair['condition_a'],
-                    'condition_b': pair['condition_b'],
-                    'protein_database': pair['protein_database'],
-                    'count_a': pair['count_a'],
-                    'count_b': pair['count_b'],
-                    'intersection_count': pair['intersection_count'],
-                    'a_minus_b_count': pair['a_minus_b_count'],
-                    'b_minus_a_count': pair['b_minus_a_count'],
-                    'jaccard_similarity': pair['jaccard_similarity'],
-                    'containment_a_in_b': pair['containment_a_in_b'],
-                    'containment_b_in_a': pair['containment_b_in_a'],
-                    'interpretation': pair['interpretation'],
-                    'condition_a_in_sets': pair.get('condition_a_in_sets', []),
-                    'condition_b_in_sets': pair.get('condition_b_in_sets', [])
-                })
-
-    stats['global_pairs_added'] = len(global_pairs)
-
-    if global_pairs:
-        if 'rule' not in review_data:
-            review_data['rule'] = {}
-        review_data['rule']['global_pairwise_overlap'] = global_pairs
-
-        # Add thresholds metadata
-        review_data['rule']['global_pairwise_overlap_thresholds'] = {
-            'containment_a_in_b_threshold': containment_threshold
-        }
-
-    # Generate entry-centric view
+    # Generate entry-centric view (replaces deprecated global_pairwise_overlap)
     entries = generate_entries(analysis_data, review_data, jaccard_boost=0.05)
     stats['entries_generated'] = len(entries)
 
@@ -415,7 +370,6 @@ def sync_review_with_analysis(
 def sync_all_reviews(
     cache_dir: Path,
     rule_type: str = "all",
-    containment_threshold: float = 0.8,
     dry_run: bool = False
 ) -> dict:
     """Sync all rule review YAML files in a directory.
@@ -423,7 +377,6 @@ def sync_all_reviews(
     Args:
         cache_dir: Base cache directory (e.g., Path("rules"))
         rule_type: "arba", "unirule", or "all"
-        containment_threshold: Minimum containment_a_in_b for global_pairwise_overlap
         dry_run: If True, report changes without writing files
 
     Returns:
@@ -437,7 +390,7 @@ def sync_all_reviews(
         'reviews_updated': 0,
         'reviews_skipped': 0,
         'total_condition_sets_updated': 0,
-        'total_global_pairs_added': 0
+        'total_entries_generated': 0
     }
 
     # Determine which directories to scan
@@ -457,7 +410,6 @@ def sync_all_reviews(
         for review_yaml in sorted(rule_dir.glob("*/*-review.yaml")):
             stats = sync_review_with_analysis(
                 review_yaml,
-                containment_threshold=containment_threshold,
                 dry_run=dry_run
             )
 
@@ -466,7 +418,7 @@ def sync_all_reviews(
             if stats['status'] == 'updated':
                 overall_stats['reviews_updated'] += 1
                 overall_stats['total_condition_sets_updated'] += stats['condition_sets_updated']
-                overall_stats['total_global_pairs_added'] += stats['global_pairs_added']
+                overall_stats['total_entries_generated'] += stats.get('entries_generated', 0)
             elif stats['status'] == 'skipped':
                 overall_stats['reviews_skipped'] += 1
 
