@@ -1329,12 +1329,14 @@ def build_heatmap_table_data(
                     # Extract taxon label from taxon conditions
                     if cond_type == 'taxon':
                         cs_taxon_label = cond_val.get('label')
-                    # Extract domain labels and types
+                    # Extract domain labels and types for all non-taxon conditions
+                    # This includes InterPro id, FunFam id, PANTHER id, and any future types
                     domain_id = cond_val.get('value')
-                    if domain_id and cond_type in ['InterPro id', 'FunFam id']:
+                    if domain_id and cond_type != 'taxon':
                         domain_metadata[domain_id] = {
                             'label': cond_val.get('label'),
-                            'type': cond_val.get('type')  # InterPro type from enriched data
+                            'type': cond_val.get('type'),  # InterPro type from enriched data
+                            'condition_type': cond_type  # Store the condition type (e.g., 'PANTHER id', 'InterPro id')
                         }
             # Store taxon label for this CS
             if cs_taxon_label:
