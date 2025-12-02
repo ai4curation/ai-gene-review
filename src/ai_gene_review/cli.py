@@ -2062,6 +2062,8 @@ def rules_sync(
             )
 
             if stats['status'] == 'updated':
+                if stats.get('condition_sets_populated', 0) > 0:
+                    typer.echo(f"  ✓ Populated {stats['condition_sets_populated']} condition set(s) from enriched.json")
                 typer.echo(f"  ✓ Updated {stats['condition_sets_updated']} condition set(s)")
                 typer.echo(f"  ✓ Generated {stats.get('entries_generated', 0)} entries")
             elif stats['status'] == 'skipped':

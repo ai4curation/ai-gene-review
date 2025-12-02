@@ -284,8 +284,55 @@ def sync_review_with_analysis(
     stats = {
         'status': 'updated',
         'condition_sets_updated': 0,
+        'condition_sets_populated': 0,
         'total_pairs_in_analysis': 0
     }
+
+    # Ensure rule section exists
+    if 'rule' not in review_data:
+        review_data['rule'] = {}
+
+    # Populate condition_sets from enriched.json if missing or empty
+    existing_cs = review_data['rule'].get('condition_sets', [])
+    if not existing_cs:
+        rule_id = review_data.get('id')
+        enriched_path = review_yaml_path.parent / f"{rule_id}.enriched.json"
+        if enriched_path.exists():
+            with open(enriched_path, 'r') as f:
+                enriched_data = json.load(f)
+
+            # Extract condition sets from enriched data
+            cond_sets = enriched_data.get('conditionSets') or enriched_data.get('mainRule', {}).get('conditionSets', [])
+            populated_cs = []
+            for cs_idx, cond_set in enumerate(cond_sets, start=1):
+                conditions = []
+                for condition in cond_set.get('conditions', []):
+                    cond_type = condition.get('type', '')
+                    for cond_val in condition.get('conditionValues', []):
+                        # Map enriched condition types to review YAML types
+                        condition_type_map = {
+                            'InterPro id': 'INTERPRO',
+                            'FunFam id': 'FUNFAM',
+                            'PANTHER id': 'PANTHER',
+                            'taxon': 'TAXON'
+                        }
+                        mapped_type = condition_type_map.get(cond_type, cond_type.upper())
+                        conditions.append({
+                            'condition_type': mapped_type,
+                            'value': cond_val.get('value', ''),
+                            'curie': cond_val.get('curie', ''),
+                            'label': cond_val.get('label', ''),
+                            'negated': cond_val.get('negated', False)
+                        })
+                populated_cs.append({
+                    'number': cs_idx,
+                    'conditions': conditions,
+                    'notes': ''
+                })
+
+            if populated_cs:
+                review_data['rule']['condition_sets'] = populated_cs
+                stats['condition_sets_populated'] = len(populated_cs)
 
     # Get all pairwise overlap data from analysis
     all_pairs = analysis_data.get('domain_overlap_analysis', {}).get('pairs', [])
