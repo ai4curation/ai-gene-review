@@ -340,6 +340,12 @@ render-all:
     uv run python -m ai_gene_review.render --all genes/
 
 # Render a single rule review YAML as HTML (automatically runs analysis first if needed)
+# DEPENDENCIES:
+#   - Requires {rule_id}-review.yaml with populated `entries` field (run sync-rule-review-single first)
+#   - Requires {rule_id}-analysis.yaml (created automatically by analyze-rule dependency)
+# CREATES:
+#   - {rule_id}-review.html
+# Example: just render-rule ARBA00026249
 render-rule rule_id cache_dir="rules/arba": (analyze-rule rule_id)
     uv run python -c "from ai_gene_review.etl.rule_analysis import render_rule_review_html; from pathlib import Path; render_rule_review_html('{{rule_id}}', Path('{{cache_dir}}'))"
 
@@ -1014,6 +1020,22 @@ clean-imodulondb-cache:
 
 # ============== UniProt Rules (ARBA, UniRule) ==============
 
+# Initialize a new rule review YAML file with proper structure and TODO stubs
+# This creates:
+#   - {cache_dir}/{rule_id}/{rule_id}-review.yaml with all required fields
+#   - {cache_dir}/{rule_id}/{rule_id}.enriched.json (if missing)
+# Then run these commands in order:
+#   1. just analyze-rule {rule_id}      # Generate analysis files
+#   2. just sync-rule-review-single {rule_id}  # Populate entries field
+#   3. just rules-deep-research-perplexity {rule_id}  # Research literature
+#   4. Edit the review YAML to fill in TODO placeholders
+#   5. just render-rule {rule_id}       # Generate HTML
+# Examples:
+#   just init-rule-review ARBA00026249
+#   just init-rule-review UR000000070 --cache-dir rules/unirule
+init-rule-review rule_id *args="":
+    uv run python -c "from ai_gene_review.etl.rule_review_init import init_rule_review; from pathlib import Path; init_rule_review('{{rule_id}}', cache_dir=Path('rules/arba'))"
+
 # Sync ARBA rules with GO annotations from UniProt (stores in rules/arba/)
 # By default only syncs rules that have GO term annotations
 # Examples:
@@ -1059,6 +1081,10 @@ rules-validate *args="":
     uv run ai-gene-review rules-validate {{args}}
 
 # Sync a single rule review YAML file with analysis data (automatically analyzes first if needed)
+# This populates the `entries` field in the review YAML with pairwise overlap data
+# DEPENDENCIES:
+#   - Requires {rule_id}-review.yaml to exist (create with init-rule-review first)
+#   - Requires {rule_id}-analysis.yaml (created automatically by analyze-rule dependency)
 # Example: just sync-rule-review-single ARBA00027128
 sync-rule-review-single rule_id cache_dir="rules/arba": (analyze-rule rule_id)
     uv run ai-gene-review rules-sync {{cache_dir}}/{{rule_id}}/{{rule_id}}-review.yaml
@@ -1105,6 +1131,13 @@ sync-ipr2go cache_dir="rules/arba":
 
 # Analyze an ARBA rule for InterPro overlap and ipr2go redundancy
 # Outputs YAML, JSON, and text formats
+# DEPENDENCIES:
+#   - Requires {rule_id}.enriched.json (created by init-rule-review or fetched from UniProt)
+# CREATES:
+#   - {rule_id}-analysis.yaml (required for sync-rule-review-single)
+#   - {rule_id}-analysis.json
+#   - {rule_id}-analysis.txt
+#   - {rule_id}-heatmap.png
 # Example: just analyze-rule ARBA00026249
 # Example: just analyze-rule ARBA00026249 --cache-dir rules/arba
 # NOTE: Skips analysis if enriched.json AND analysis.yaml already exist (lazy evaluation)
