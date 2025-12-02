@@ -1357,6 +1357,23 @@ def build_heatmap_table_data(
                     'count': pair['count_a'] if domain_id == pair['condition_a'] else pair['count_b']
                 }
 
+    # Also add any domains from domain_metadata that aren't in pairs (e.g., PANTHER signatures)
+    # These domains won't have protein counts but should still appear in the table
+    if enriched_rule:
+        cond_sets = enriched_rule.get('conditionSets') or enriched_rule.get('mainRule', {}).get('conditionSets', [])
+        for cs_idx, cond_set in enumerate(cond_sets):
+            for condition in cond_set.get('conditions', []):
+                for cond_val in condition.get('conditionValues', []):
+                    domain_id = cond_val.get('value')
+                    if domain_id and domain_id not in domains and domain_id in domain_metadata:
+                        domains[domain_id] = {
+                            'id': domain_id,
+                            'label': domain_metadata[domain_id].get('label'),
+                            'type': domain_metadata[domain_id].get('type'),
+                            'condition_sets': [cs_idx],  # This domain appears in this CS
+                            'count': None  # No protein count available
+                        }
+
     # Order domains by condition set, then alphabetically
     # GO terms have empty condition_sets, so they sort last (using infinity)
     domain_list = sorted(domains.values(), key=lambda d: (min(d['condition_sets']) if d['condition_sets'] else float('inf'), d['id']))
