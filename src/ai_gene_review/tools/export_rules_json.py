@@ -119,11 +119,21 @@ def export_rules_json(cache_dir: str = "rules/arba"):
         go_terms = []
         go_annotations = main_rule.get('annotations', [])
         for go_ann in go_annotations:
+            # Handle both annotation structures (reviewed vs unreviewed)
             if go_ann.get('annotationType') == 'function':
+                # Reviewed rule format
                 go_id = go_ann.get('value', '')
                 go_label = go_ann.get('label', '')
                 if go_id:
                     go_terms.append({'id': go_id, 'label': go_label})
+            elif go_ann.get('annotationType') == 'ANNOTATION':
+                # Enriched rule format - GO data is in dbReference
+                db_ref = go_ann.get('dbReference', {})
+                if db_ref.get('database') == 'GO':
+                    go_id = db_ref.get('id', '')
+                    go_label = db_ref.get('label', '')
+                    if go_id:
+                        go_terms.append({'id': go_id, 'label': go_label})
 
         # Get protein counts
         stats = enriched.get('statistics', {})
