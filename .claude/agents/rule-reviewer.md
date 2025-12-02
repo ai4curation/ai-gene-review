@@ -330,10 +330,31 @@ A rule **NEEDS_IMPROVEMENT** when:
 
 #### Evaluating GO Term Coverage
 
-Look at the GO term (TGT) column:
-- **High coverage (>70%)**: Domain strongly predicts the GO term
-- **Moderate coverage (30-70%)**: Domain correlates with function but has other roles too
-- **Low coverage (<30%)**: Domain is promiscuous or GO term is overly specific
+**CRITICAL UNDERSTANDING**: The coverage statistics show **DIRECT** annotations to the predicted GO term only. They do NOT include annotations to more specific child terms.
+
+Example: If a rule predicts GO:0032206 "positive regulation of telomere maintenance":
+- Coverage might show 22% (34/155 proteins directly annotated to GO:0032206)
+- BUT many more proteins may be annotated to specific child terms like:
+  - GO:0090399 "replicative senescence"
+  - GO:0010833 "telomere maintenance via telomere lengthening"
+  - GO:0032210 "regulation of telomere maintenance via telomerase"
+
+**This does NOT mean low predictive power!** It often indicates that:
+1. Proteins are correctly annotated to more specific terms (which is good curation)
+2. The rule correctly identifies proteins involved in this process
+3. The general term serves as an appropriate umbrella annotation
+
+When interpreting coverage statistics:
+- **High direct coverage (>70%)**: Domain strongly and specifically predicts this exact term
+- **Moderate direct coverage (30-70%)**: Domain predicts the general function; proteins may have more specific annotations
+- **Low direct coverage (<30%)**: Could mean:
+  - ✓ Proteins are annotated to more specific child terms (check GO hierarchy)
+  - ✗ Domain is promiscuous and appears in unrelated contexts
+  - ✗ GO term is inappropriate for these proteins
+
+**How to distinguish**: Look at the deep research and biological context:
+- If literature supports the functional relationship → low coverage likely reflects specific term usage
+- If literature contradicts or shows diverse functions → domain may be promiscuous
 
 Cross-reference with InterPro2GO redundancy:
 - If annotation already exists in InterPro2GO, the ARBA rule may be redundant
