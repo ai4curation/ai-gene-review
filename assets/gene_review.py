@@ -1,5 +1,5 @@
 # Auto generated from gene_review.yaml by pythongen.py version: 0.0.1
-# Generation date: 2025-11-05T13:37:28
+# Generation date: 2025-12-02T13:57:12
 # Schema: gene_review
 #
 # id: https://ai4curation.io/ai-gene-review
@@ -56,7 +56,7 @@ from rdflib import (
     URIRef
 )
 
-from linkml_runtime.linkml_model.types import Boolean, String
+from linkml_runtime.linkml_model.types import Boolean, Float, Integer, String
 from linkml_runtime.utils.metamodelcore import Bool
 
 metamodel_version = "1.7.0"
@@ -90,6 +90,14 @@ class TermId(extended_str):
 
 
 class ReferenceId(extended_str):
+    pass
+
+
+class RuleReviewId(extended_str):
+    pass
+
+
+class RuleReviewEntryId(extended_str):
     pass
 
 
@@ -614,6 +622,720 @@ class Question(YAMLRoot):
         super().__post_init__(**kwargs)
 
 
+@dataclass(repr=False)
+class RuleReview(YAMLRoot):
+    """
+    A review of a UniProt annotation rule (ARBA or UniRule). Each review covers ONE rule and assesses its quality,
+    literature support, and biological appropriateness.
+    """
+    _inherited_slots: ClassVar[list[str]] = []
+
+    class_class_uri: ClassVar[URIRef] = GENE_REVIEW["RuleReview"]
+    class_class_curie: ClassVar[str] = "gene_review:RuleReview"
+    class_name: ClassVar[str] = "RuleReview"
+    class_model_uri: ClassVar[URIRef] = GENE_REVIEW.RuleReview
+
+    id: Union[str, RuleReviewId] = None
+    rule_type: Union[str, "RuleTypeEnum"] = None
+    rule: Union[dict, "EmbeddedRule"] = None
+    action: Union[str, "RuleActionEnum"] = None
+    description: Optional[str] = None
+    references: Optional[Union[dict[Union[str, ReferenceId], Union[dict, Reference]], list[Union[dict, Reference]]]] = empty_dict()
+    status: Optional[Union[str, "RuleReviewStatusEnum"]] = None
+    review_summary: Optional[str] = None
+    action_rationale: Optional[str] = None
+    suggested_modifications: Optional[Union[str, list[str]]] = empty_list()
+    parsimony: Optional[Union[dict, "ParsimonyAssessment"]] = None
+    literature_support: Optional[Union[dict, "LiteratureSupportAssessment"]] = None
+    condition_overlap: Optional[Union[dict, "ConditionOverlapAssessment"]] = None
+    go_specificity: Optional[Union[dict, "GOSpecificityAssessment"]] = None
+    taxonomic_scope: Optional[Union[dict, "TaxonomicScopeAssessment"]] = None
+    confidence: Optional[float] = None
+    supported_by: Optional[Union[Union[dict, SupportingTextInReference], list[Union[dict, SupportingTextInReference]]]] = empty_list()
+
+    def __post_init__(self, *_: str, **kwargs: Any):
+        if self._is_empty(self.id):
+            self.MissingRequiredField("id")
+        if not isinstance(self.id, RuleReviewId):
+            self.id = RuleReviewId(self.id)
+
+        if self._is_empty(self.rule_type):
+            self.MissingRequiredField("rule_type")
+        if not isinstance(self.rule_type, RuleTypeEnum):
+            self.rule_type = RuleTypeEnum(self.rule_type)
+
+        if self._is_empty(self.rule):
+            self.MissingRequiredField("rule")
+        if not isinstance(self.rule, EmbeddedRule):
+            self.rule = EmbeddedRule(**as_dict(self.rule))
+
+        if self._is_empty(self.action):
+            self.MissingRequiredField("action")
+        if not isinstance(self.action, RuleActionEnum):
+            self.action = RuleActionEnum(self.action)
+
+        if self.description is not None and not isinstance(self.description, str):
+            self.description = str(self.description)
+
+        self._normalize_inlined_as_list(slot_name="references", slot_type=Reference, key_name="id", keyed=True)
+
+        if self.status is not None and not isinstance(self.status, RuleReviewStatusEnum):
+            self.status = RuleReviewStatusEnum(self.status)
+
+        if self.review_summary is not None and not isinstance(self.review_summary, str):
+            self.review_summary = str(self.review_summary)
+
+        if self.action_rationale is not None and not isinstance(self.action_rationale, str):
+            self.action_rationale = str(self.action_rationale)
+
+        if not isinstance(self.suggested_modifications, list):
+            self.suggested_modifications = [self.suggested_modifications] if self.suggested_modifications is not None else []
+        self.suggested_modifications = [v if isinstance(v, str) else str(v) for v in self.suggested_modifications]
+
+        if self.parsimony is not None and not isinstance(self.parsimony, ParsimonyAssessment):
+            self.parsimony = ParsimonyAssessment(**as_dict(self.parsimony))
+
+        if self.literature_support is not None and not isinstance(self.literature_support, LiteratureSupportAssessment):
+            self.literature_support = LiteratureSupportAssessment(**as_dict(self.literature_support))
+
+        if self.condition_overlap is not None and not isinstance(self.condition_overlap, ConditionOverlapAssessment):
+            self.condition_overlap = ConditionOverlapAssessment(**as_dict(self.condition_overlap))
+
+        if self.go_specificity is not None and not isinstance(self.go_specificity, GOSpecificityAssessment):
+            self.go_specificity = GOSpecificityAssessment(**as_dict(self.go_specificity))
+
+        if self.taxonomic_scope is not None and not isinstance(self.taxonomic_scope, TaxonomicScopeAssessment):
+            self.taxonomic_scope = TaxonomicScopeAssessment(**as_dict(self.taxonomic_scope))
+
+        if self.confidence is not None and not isinstance(self.confidence, float):
+            self.confidence = float(self.confidence)
+
+        self._normalize_inlined_as_dict(slot_name="supported_by", slot_type=SupportingTextInReference, key_name="reference_id", keyed=False)
+
+        super().__post_init__(**kwargs)
+
+
+@dataclass(repr=False)
+class EmbeddedRule(YAMLRoot):
+    """
+    An embedded representation of an ARBA or UniRule for storage in YAML. Captures the essential structure: conditions
+    (antecedent) and GO annotations (consequent).
+    """
+    _inherited_slots: ClassVar[list[str]] = []
+
+    class_class_uri: ClassVar[URIRef] = GENE_REVIEW["EmbeddedRule"]
+    class_class_curie: ClassVar[str] = "gene_review:EmbeddedRule"
+    class_name: ClassVar[str] = "EmbeddedRule"
+    class_model_uri: ClassVar[URIRef] = GENE_REVIEW.EmbeddedRule
+
+    rule_id: str = None
+    condition_sets: Union[Union[dict, "RuleConditionSet"], list[Union[dict, "RuleConditionSet"]]] = None
+    entries: Union[dict[Union[str, RuleReviewEntryId], Union[dict, "RuleReviewEntry"]], list[Union[dict, "RuleReviewEntry"]]] = empty_dict()
+    go_annotations: Optional[Union[Union[dict, "RuleGOAnnotation"], list[Union[dict, "RuleGOAnnotation"]]]] = empty_list()
+    ipr2go_redundancy: Optional[Union[dict, "InterPro2GORedundancy"]] = None
+    reviewed_protein_count: Optional[int] = None
+    unreviewed_protein_count: Optional[int] = None
+    created_date: Optional[str] = None
+    modified_date: Optional[str] = None
+
+    def __post_init__(self, *_: str, **kwargs: Any):
+        if self._is_empty(self.rule_id):
+            self.MissingRequiredField("rule_id")
+        if not isinstance(self.rule_id, str):
+            self.rule_id = str(self.rule_id)
+
+        if self._is_empty(self.condition_sets):
+            self.MissingRequiredField("condition_sets")
+        if not isinstance(self.condition_sets, list):
+            self.condition_sets = [self.condition_sets] if self.condition_sets is not None else []
+        self.condition_sets = [v if isinstance(v, RuleConditionSet) else RuleConditionSet(**as_dict(v)) for v in self.condition_sets]
+
+        if self._is_empty(self.entries):
+            self.MissingRequiredField("entries")
+        self._normalize_inlined_as_list(slot_name="entries", slot_type=RuleReviewEntry, key_name="id", keyed=True)
+
+        if not isinstance(self.go_annotations, list):
+            self.go_annotations = [self.go_annotations] if self.go_annotations is not None else []
+        self.go_annotations = [v if isinstance(v, RuleGOAnnotation) else RuleGOAnnotation(**as_dict(v)) for v in self.go_annotations]
+
+        if self.ipr2go_redundancy is not None and not isinstance(self.ipr2go_redundancy, InterPro2GORedundancy):
+            self.ipr2go_redundancy = InterPro2GORedundancy(**as_dict(self.ipr2go_redundancy))
+
+        if self.reviewed_protein_count is not None and not isinstance(self.reviewed_protein_count, int):
+            self.reviewed_protein_count = int(self.reviewed_protein_count)
+
+        if self.unreviewed_protein_count is not None and not isinstance(self.unreviewed_protein_count, int):
+            self.unreviewed_protein_count = int(self.unreviewed_protein_count)
+
+        if self.created_date is not None and not isinstance(self.created_date, str):
+            self.created_date = str(self.created_date)
+
+        if self.modified_date is not None and not isinstance(self.modified_date, str):
+            self.modified_date = str(self.modified_date)
+
+        super().__post_init__(**kwargs)
+
+
+@dataclass(repr=False)
+class RuleConditionSet(YAMLRoot):
+    """
+    A set of conditions that must ALL be true (conjunction/AND). Multiple condition sets in a rule are OR-ed together
+    (disjunction).
+    """
+    _inherited_slots: ClassVar[list[str]] = []
+
+    class_class_uri: ClassVar[URIRef] = GENE_REVIEW["RuleConditionSet"]
+    class_class_curie: ClassVar[str] = "gene_review:RuleConditionSet"
+    class_name: ClassVar[str] = "RuleConditionSet"
+    class_model_uri: ClassVar[URIRef] = GENE_REVIEW.RuleConditionSet
+
+    number: int = None
+    conditions: Union[Union[dict, "RuleCondition"], list[Union[dict, "RuleCondition"]]] = None
+    notes: Optional[str] = None
+    pairwise_overlap: Optional[Union[Union[dict, "PairwiseOverlap"], list[Union[dict, "PairwiseOverlap"]]]] = empty_list()
+
+    def __post_init__(self, *_: str, **kwargs: Any):
+        if self._is_empty(self.number):
+            self.MissingRequiredField("number")
+        if not isinstance(self.number, int):
+            self.number = int(self.number)
+
+        if self._is_empty(self.conditions):
+            self.MissingRequiredField("conditions")
+        if not isinstance(self.conditions, list):
+            self.conditions = [self.conditions] if self.conditions is not None else []
+        self.conditions = [v if isinstance(v, RuleCondition) else RuleCondition(**as_dict(v)) for v in self.conditions]
+
+        if self.notes is not None and not isinstance(self.notes, str):
+            self.notes = str(self.notes)
+
+        if not isinstance(self.pairwise_overlap, list):
+            self.pairwise_overlap = [self.pairwise_overlap] if self.pairwise_overlap is not None else []
+        self.pairwise_overlap = [v if isinstance(v, PairwiseOverlap) else PairwiseOverlap(**as_dict(v)) for v in self.pairwise_overlap]
+
+        super().__post_init__(**kwargs)
+
+
+@dataclass(repr=False)
+class RuleCondition(YAMLRoot):
+    """
+    A single condition in a rule antecedent
+    """
+    _inherited_slots: ClassVar[list[str]] = []
+
+    class_class_uri: ClassVar[URIRef] = GENE_REVIEW["RuleCondition"]
+    class_class_curie: ClassVar[str] = "gene_review:RuleCondition"
+    class_name: ClassVar[str] = "RuleCondition"
+    class_model_uri: ClassVar[URIRef] = GENE_REVIEW.RuleCondition
+
+    condition_type: Union[str, "ConditionTypeEnum"] = None
+    value: str = None
+    curie: Optional[str] = None
+    label: Optional[str] = None
+    interpro_type: Optional[Union[str, "InterProTypeEnum"]] = None
+    negated: Optional[Union[bool, Bool]] = None
+    protein_count: Optional[int] = None
+    protein_database: Optional[Union[str, "ProteinDatabaseEnum"]] = None
+    uniqueness_score: Optional[float] = None
+    sample_proteins: Optional[Union[str, list[str]]] = empty_list()
+
+    def __post_init__(self, *_: str, **kwargs: Any):
+        if self._is_empty(self.condition_type):
+            self.MissingRequiredField("condition_type")
+        if not isinstance(self.condition_type, ConditionTypeEnum):
+            self.condition_type = ConditionTypeEnum(self.condition_type)
+
+        if self._is_empty(self.value):
+            self.MissingRequiredField("value")
+        if not isinstance(self.value, str):
+            self.value = str(self.value)
+
+        if self.curie is not None and not isinstance(self.curie, str):
+            self.curie = str(self.curie)
+
+        if self.label is not None and not isinstance(self.label, str):
+            self.label = str(self.label)
+
+        if self.interpro_type is not None and not isinstance(self.interpro_type, InterProTypeEnum):
+            self.interpro_type = InterProTypeEnum(self.interpro_type)
+
+        if self.negated is not None and not isinstance(self.negated, Bool):
+            self.negated = Bool(self.negated)
+
+        if self.protein_count is not None and not isinstance(self.protein_count, int):
+            self.protein_count = int(self.protein_count)
+
+        if self.protein_database is not None and not isinstance(self.protein_database, ProteinDatabaseEnum):
+            self.protein_database = ProteinDatabaseEnum(self.protein_database)
+
+        if self.uniqueness_score is not None and not isinstance(self.uniqueness_score, float):
+            self.uniqueness_score = float(self.uniqueness_score)
+
+        if not isinstance(self.sample_proteins, list):
+            self.sample_proteins = [self.sample_proteins] if self.sample_proteins is not None else []
+        self.sample_proteins = [v if isinstance(v, str) else str(v) for v in self.sample_proteins]
+
+        super().__post_init__(**kwargs)
+
+
+@dataclass(repr=False)
+class RuleGOAnnotation(YAMLRoot):
+    """
+    A GO annotation produced by the rule
+    """
+    _inherited_slots: ClassVar[list[str]] = []
+
+    class_class_uri: ClassVar[URIRef] = GENE_REVIEW["RuleGOAnnotation"]
+    class_class_curie: ClassVar[str] = "gene_review:RuleGOAnnotation"
+    class_name: ClassVar[str] = "RuleGOAnnotation"
+    class_model_uri: ClassVar[URIRef] = GENE_REVIEW.RuleGOAnnotation
+
+    go_id: str = None
+    go_label: Optional[str] = None
+    aspect: Optional[str] = None
+
+    def __post_init__(self, *_: str, **kwargs: Any):
+        if self._is_empty(self.go_id):
+            self.MissingRequiredField("go_id")
+        if not isinstance(self.go_id, str):
+            self.go_id = str(self.go_id)
+
+        if self.go_label is not None and not isinstance(self.go_label, str):
+            self.go_label = str(self.go_label)
+
+        if self.aspect is not None and not isinstance(self.aspect, str):
+            self.aspect = str(self.aspect)
+
+        super().__post_init__(**kwargs)
+
+
+@dataclass(repr=False)
+class PairwiseOverlap(YAMLRoot):
+    """
+    Overlap statistics between two domain conditions (InterPro, FunFam, etc.) in the same condition set. Provides set
+    difference metrics to measure uniqueness and redundancy.
+    """
+    _inherited_slots: ClassVar[list[str]] = []
+
+    class_class_uri: ClassVar[URIRef] = GENE_REVIEW["PairwiseOverlap"]
+    class_class_curie: ClassVar[str] = "gene_review:PairwiseOverlap"
+    class_name: ClassVar[str] = "PairwiseOverlap"
+    class_model_uri: ClassVar[URIRef] = GENE_REVIEW.PairwiseOverlap
+
+    condition_a: str = None
+    condition_b: str = None
+    protein_database: Union[str, "ProteinDatabaseEnum"] = None
+    count_a: int = None
+    count_b: int = None
+    intersection_count: int = None
+    a_minus_b_count: int = None
+    b_minus_a_count: int = None
+    jaccard_similarity: float = None
+    containment_a_in_b: float = None
+    containment_b_in_a: float = None
+    condition_a_label: Optional[str] = None
+    condition_b_label: Optional[str] = None
+    interpretation: Optional[Union[str, "OverlapInterpretationEnum"]] = None
+    condition_a_in_sets: Optional[Union[int, list[int]]] = empty_list()
+    condition_b_in_sets: Optional[Union[int, list[int]]] = empty_list()
+
+    def __post_init__(self, *_: str, **kwargs: Any):
+        if self._is_empty(self.condition_a):
+            self.MissingRequiredField("condition_a")
+        if not isinstance(self.condition_a, str):
+            self.condition_a = str(self.condition_a)
+
+        if self._is_empty(self.condition_b):
+            self.MissingRequiredField("condition_b")
+        if not isinstance(self.condition_b, str):
+            self.condition_b = str(self.condition_b)
+
+        if self._is_empty(self.protein_database):
+            self.MissingRequiredField("protein_database")
+        if not isinstance(self.protein_database, ProteinDatabaseEnum):
+            self.protein_database = ProteinDatabaseEnum(self.protein_database)
+
+        if self._is_empty(self.count_a):
+            self.MissingRequiredField("count_a")
+        if not isinstance(self.count_a, int):
+            self.count_a = int(self.count_a)
+
+        if self._is_empty(self.count_b):
+            self.MissingRequiredField("count_b")
+        if not isinstance(self.count_b, int):
+            self.count_b = int(self.count_b)
+
+        if self._is_empty(self.intersection_count):
+            self.MissingRequiredField("intersection_count")
+        if not isinstance(self.intersection_count, int):
+            self.intersection_count = int(self.intersection_count)
+
+        if self._is_empty(self.a_minus_b_count):
+            self.MissingRequiredField("a_minus_b_count")
+        if not isinstance(self.a_minus_b_count, int):
+            self.a_minus_b_count = int(self.a_minus_b_count)
+
+        if self._is_empty(self.b_minus_a_count):
+            self.MissingRequiredField("b_minus_a_count")
+        if not isinstance(self.b_minus_a_count, int):
+            self.b_minus_a_count = int(self.b_minus_a_count)
+
+        if self._is_empty(self.jaccard_similarity):
+            self.MissingRequiredField("jaccard_similarity")
+        if not isinstance(self.jaccard_similarity, float):
+            self.jaccard_similarity = float(self.jaccard_similarity)
+
+        if self._is_empty(self.containment_a_in_b):
+            self.MissingRequiredField("containment_a_in_b")
+        if not isinstance(self.containment_a_in_b, float):
+            self.containment_a_in_b = float(self.containment_a_in_b)
+
+        if self._is_empty(self.containment_b_in_a):
+            self.MissingRequiredField("containment_b_in_a")
+        if not isinstance(self.containment_b_in_a, float):
+            self.containment_b_in_a = float(self.containment_b_in_a)
+
+        if self.condition_a_label is not None and not isinstance(self.condition_a_label, str):
+            self.condition_a_label = str(self.condition_a_label)
+
+        if self.condition_b_label is not None and not isinstance(self.condition_b_label, str):
+            self.condition_b_label = str(self.condition_b_label)
+
+        if self.interpretation is not None and not isinstance(self.interpretation, OverlapInterpretationEnum):
+            self.interpretation = OverlapInterpretationEnum(self.interpretation)
+
+        if not isinstance(self.condition_a_in_sets, list):
+            self.condition_a_in_sets = [self.condition_a_in_sets] if self.condition_a_in_sets is not None else []
+        self.condition_a_in_sets = [v if isinstance(v, int) else int(v) for v in self.condition_a_in_sets]
+
+        if not isinstance(self.condition_b_in_sets, list):
+            self.condition_b_in_sets = [self.condition_b_in_sets] if self.condition_b_in_sets is not None else []
+        self.condition_b_in_sets = [v if isinstance(v, int) else int(v) for v in self.condition_b_in_sets]
+
+        super().__post_init__(**kwargs)
+
+
+@dataclass(repr=False)
+class RuleReviewEntry(YAMLRoot):
+    """
+    An entity in the rule - either a domain/family condition or a GO term target. Each entry tracks its relationships
+    (predictions, predicted-by, equivalence) to other entries.
+    """
+    _inherited_slots: ClassVar[list[str]] = []
+
+    class_class_uri: ClassVar[URIRef] = GENE_REVIEW["RuleReviewEntry"]
+    class_class_curie: ClassVar[str] = "gene_review:RuleReviewEntry"
+    class_name: ClassVar[str] = "RuleReviewEntry"
+    class_model_uri: ClassVar[URIRef] = GENE_REVIEW.RuleReviewEntry
+
+    id: Union[str, RuleReviewEntryId] = None
+    type: Union[str, "EntryTypeEnum"] = None
+    label: Optional[str] = None
+    appears_in_condition_sets: Optional[Union[int, list[int]]] = empty_list()
+    protein_count: Optional[int] = None
+    source: Optional[str] = None
+    asserted_predicted_go_terms: Optional[Union[str, list[str]]] = empty_list()
+    related_entries: Optional[Union[Union[dict, "RelatedEntry"], list[Union[dict, "RelatedEntry"]]]] = empty_list()
+
+    def __post_init__(self, *_: str, **kwargs: Any):
+        if self._is_empty(self.id):
+            self.MissingRequiredField("id")
+        if not isinstance(self.id, RuleReviewEntryId):
+            self.id = RuleReviewEntryId(self.id)
+
+        if self._is_empty(self.type):
+            self.MissingRequiredField("type")
+        if not isinstance(self.type, EntryTypeEnum):
+            self.type = EntryTypeEnum(self.type)
+
+        if self.label is not None and not isinstance(self.label, str):
+            self.label = str(self.label)
+
+        if not isinstance(self.appears_in_condition_sets, list):
+            self.appears_in_condition_sets = [self.appears_in_condition_sets] if self.appears_in_condition_sets is not None else []
+        self.appears_in_condition_sets = [v if isinstance(v, int) else int(v) for v in self.appears_in_condition_sets]
+
+        if self.protein_count is not None and not isinstance(self.protein_count, int):
+            self.protein_count = int(self.protein_count)
+
+        if self.source is not None and not isinstance(self.source, str):
+            self.source = str(self.source)
+
+        if not isinstance(self.asserted_predicted_go_terms, list):
+            self.asserted_predicted_go_terms = [self.asserted_predicted_go_terms] if self.asserted_predicted_go_terms is not None else []
+        self.asserted_predicted_go_terms = [v if isinstance(v, str) else str(v) for v in self.asserted_predicted_go_terms]
+
+        if not isinstance(self.related_entries, list):
+            self.related_entries = [self.related_entries] if self.related_entries is not None else []
+        self.related_entries = [v if isinstance(v, RelatedEntry) else RelatedEntry(**as_dict(v)) for v in self.related_entries]
+
+        super().__post_init__(**kwargs)
+
+
+@dataclass(repr=False)
+class RelatedEntry(YAMLRoot):
+    """
+    A relationship from this entry to another entry in the rule. Categorized as PREDICTS (this → other), PREDICTED_BY
+    (other → this), or EQUIV (bidirectional).
+    """
+    _inherited_slots: ClassVar[list[str]] = []
+
+    class_class_uri: ClassVar[URIRef] = GENE_REVIEW["RelatedEntry"]
+    class_class_curie: ClassVar[str] = "gene_review:RelatedEntry"
+    class_name: ClassVar[str] = "RelatedEntry"
+    class_model_uri: ClassVar[URIRef] = GENE_REVIEW.RelatedEntry
+
+    relationship: Union[str, "EntryRelationshipEnum"] = None
+    target_id: str = None
+    containment: Optional[float] = None
+    jaccard_similarity: Optional[float] = None
+    intersection_count: Optional[int] = None
+    exclusive_count: Optional[int] = None
+
+    def __post_init__(self, *_: str, **kwargs: Any):
+        if self._is_empty(self.relationship):
+            self.MissingRequiredField("relationship")
+        if not isinstance(self.relationship, EntryRelationshipEnum):
+            self.relationship = EntryRelationshipEnum(self.relationship)
+
+        if self._is_empty(self.target_id):
+            self.MissingRequiredField("target_id")
+        if not isinstance(self.target_id, str):
+            self.target_id = str(self.target_id)
+
+        if self.containment is not None and not isinstance(self.containment, float):
+            self.containment = float(self.containment)
+
+        if self.jaccard_similarity is not None and not isinstance(self.jaccard_similarity, float):
+            self.jaccard_similarity = float(self.jaccard_similarity)
+
+        if self.intersection_count is not None and not isinstance(self.intersection_count, int):
+            self.intersection_count = int(self.intersection_count)
+
+        if self.exclusive_count is not None and not isinstance(self.exclusive_count, int):
+            self.exclusive_count = int(self.exclusive_count)
+
+        super().__post_init__(**kwargs)
+
+
+@dataclass(repr=False)
+class InterPro2GORedundancy(YAMLRoot):
+    """
+    Analysis of whether rule GO annotations are redundant with existing InterPro2GO mappings from the GO Consortium.
+    """
+    _inherited_slots: ClassVar[list[str]] = []
+
+    class_class_uri: ClassVar[URIRef] = GENE_REVIEW["InterPro2GORedundancy"]
+    class_class_curie: ClassVar[str] = "gene_review:InterPro2GORedundancy"
+    class_name: ClassVar[str] = "InterPro2GORedundancy"
+    class_model_uri: ClassVar[URIRef] = GENE_REVIEW.InterPro2GORedundancy
+
+    redundant_annotations: Optional[Union[Union[dict, "RedundantAnnotation"], list[Union[dict, "RedundantAnnotation"]]]] = empty_list()
+    novel_annotations: Optional[Union[str, list[str]]] = empty_list()
+    summary: Optional[str] = None
+
+    def __post_init__(self, *_: str, **kwargs: Any):
+        if not isinstance(self.redundant_annotations, list):
+            self.redundant_annotations = [self.redundant_annotations] if self.redundant_annotations is not None else []
+        self.redundant_annotations = [v if isinstance(v, RedundantAnnotation) else RedundantAnnotation(**as_dict(v)) for v in self.redundant_annotations]
+
+        if not isinstance(self.novel_annotations, list):
+            self.novel_annotations = [self.novel_annotations] if self.novel_annotations is not None else []
+        self.novel_annotations = [v if isinstance(v, str) else str(v) for v in self.novel_annotations]
+
+        if self.summary is not None and not isinstance(self.summary, str):
+            self.summary = str(self.summary)
+
+        super().__post_init__(**kwargs)
+
+
+@dataclass(repr=False)
+class RedundantAnnotation(YAMLRoot):
+    """
+    A GO annotation that is redundant with an existing InterPro2GO mapping
+    """
+    _inherited_slots: ClassVar[list[str]] = []
+
+    class_class_uri: ClassVar[URIRef] = GENE_REVIEW["RedundantAnnotation"]
+    class_class_curie: ClassVar[str] = "gene_review:RedundantAnnotation"
+    class_name: ClassVar[str] = "RedundantAnnotation"
+    class_model_uri: ClassVar[URIRef] = GENE_REVIEW.RedundantAnnotation
+
+    go_id: str = None
+    interpro_source: str = None
+    go_label: Optional[str] = None
+    interpro_label: Optional[str] = None
+
+    def __post_init__(self, *_: str, **kwargs: Any):
+        if self._is_empty(self.go_id):
+            self.MissingRequiredField("go_id")
+        if not isinstance(self.go_id, str):
+            self.go_id = str(self.go_id)
+
+        if self._is_empty(self.interpro_source):
+            self.MissingRequiredField("interpro_source")
+        if not isinstance(self.interpro_source, str):
+            self.interpro_source = str(self.interpro_source)
+
+        if self.go_label is not None and not isinstance(self.go_label, str):
+            self.go_label = str(self.go_label)
+
+        if self.interpro_label is not None and not isinstance(self.interpro_label, str):
+            self.interpro_label = str(self.interpro_label)
+
+        super().__post_init__(**kwargs)
+
+
+@dataclass(repr=False)
+class ParsimonyAssessment(YAMLRoot):
+    """
+    Assessment of rule parsimony (simplicity vs complexity)
+    """
+    _inherited_slots: ClassVar[list[str]] = []
+
+    class_class_uri: ClassVar[URIRef] = GENE_REVIEW["ParsimonyAssessment"]
+    class_class_curie: ClassVar[str] = "gene_review:ParsimonyAssessment"
+    class_name: ClassVar[str] = "ParsimonyAssessment"
+    class_model_uri: ClassVar[URIRef] = GENE_REVIEW.ParsimonyAssessment
+
+    assessment: Union[str, "ParsimonyEnum"] = None
+    notes: Optional[str] = None
+    supported_by: Optional[Union[Union[dict, SupportingTextInReference], list[Union[dict, SupportingTextInReference]]]] = empty_list()
+
+    def __post_init__(self, *_: str, **kwargs: Any):
+        if self._is_empty(self.assessment):
+            self.MissingRequiredField("assessment")
+        if not isinstance(self.assessment, ParsimonyEnum):
+            self.assessment = ParsimonyEnum(self.assessment)
+
+        if self.notes is not None and not isinstance(self.notes, str):
+            self.notes = str(self.notes)
+
+        self._normalize_inlined_as_dict(slot_name="supported_by", slot_type=SupportingTextInReference, key_name="reference_id", keyed=False)
+
+        super().__post_init__(**kwargs)
+
+
+@dataclass(repr=False)
+class LiteratureSupportAssessment(YAMLRoot):
+    """
+    Assessment of literature support for the rule
+    """
+    _inherited_slots: ClassVar[list[str]] = []
+
+    class_class_uri: ClassVar[URIRef] = GENE_REVIEW["LiteratureSupportAssessment"]
+    class_class_curie: ClassVar[str] = "gene_review:LiteratureSupportAssessment"
+    class_name: ClassVar[str] = "LiteratureSupportAssessment"
+    class_model_uri: ClassVar[URIRef] = GENE_REVIEW.LiteratureSupportAssessment
+
+    assessment: Union[str, "LiteratureSupportEnum"] = None
+    notes: Optional[str] = None
+    supported_by: Optional[Union[Union[dict, SupportingTextInReference], list[Union[dict, SupportingTextInReference]]]] = empty_list()
+
+    def __post_init__(self, *_: str, **kwargs: Any):
+        if self._is_empty(self.assessment):
+            self.MissingRequiredField("assessment")
+        if not isinstance(self.assessment, LiteratureSupportEnum):
+            self.assessment = LiteratureSupportEnum(self.assessment)
+
+        if self.notes is not None and not isinstance(self.notes, str):
+            self.notes = str(self.notes)
+
+        self._normalize_inlined_as_dict(slot_name="supported_by", slot_type=SupportingTextInReference, key_name="reference_id", keyed=False)
+
+        super().__post_init__(**kwargs)
+
+
+@dataclass(repr=False)
+class ConditionOverlapAssessment(YAMLRoot):
+    """
+    Assessment of overlap between rule conditions
+    """
+    _inherited_slots: ClassVar[list[str]] = []
+
+    class_class_uri: ClassVar[URIRef] = GENE_REVIEW["ConditionOverlapAssessment"]
+    class_class_curie: ClassVar[str] = "gene_review:ConditionOverlapAssessment"
+    class_name: ClassVar[str] = "ConditionOverlapAssessment"
+    class_model_uri: ClassVar[URIRef] = GENE_REVIEW.ConditionOverlapAssessment
+
+    assessment: Union[str, "OverlapEnum"] = None
+    notes: Optional[str] = None
+    supported_by: Optional[Union[Union[dict, SupportingTextInReference], list[Union[dict, SupportingTextInReference]]]] = empty_list()
+
+    def __post_init__(self, *_: str, **kwargs: Any):
+        if self._is_empty(self.assessment):
+            self.MissingRequiredField("assessment")
+        if not isinstance(self.assessment, OverlapEnum):
+            self.assessment = OverlapEnum(self.assessment)
+
+        if self.notes is not None and not isinstance(self.notes, str):
+            self.notes = str(self.notes)
+
+        self._normalize_inlined_as_dict(slot_name="supported_by", slot_type=SupportingTextInReference, key_name="reference_id", keyed=False)
+
+        super().__post_init__(**kwargs)
+
+
+@dataclass(repr=False)
+class GOSpecificityAssessment(YAMLRoot):
+    """
+    Assessment of GO term specificity
+    """
+    _inherited_slots: ClassVar[list[str]] = []
+
+    class_class_uri: ClassVar[URIRef] = GENE_REVIEW["GOSpecificityAssessment"]
+    class_class_curie: ClassVar[str] = "gene_review:GOSpecificityAssessment"
+    class_name: ClassVar[str] = "GOSpecificityAssessment"
+    class_model_uri: ClassVar[URIRef] = GENE_REVIEW.GOSpecificityAssessment
+
+    assessment: Union[str, "SpecificityEnum"] = None
+    notes: Optional[str] = None
+    supported_by: Optional[Union[Union[dict, SupportingTextInReference], list[Union[dict, SupportingTextInReference]]]] = empty_list()
+
+    def __post_init__(self, *_: str, **kwargs: Any):
+        if self._is_empty(self.assessment):
+            self.MissingRequiredField("assessment")
+        if not isinstance(self.assessment, SpecificityEnum):
+            self.assessment = SpecificityEnum(self.assessment)
+
+        if self.notes is not None and not isinstance(self.notes, str):
+            self.notes = str(self.notes)
+
+        self._normalize_inlined_as_dict(slot_name="supported_by", slot_type=SupportingTextInReference, key_name="reference_id", keyed=False)
+
+        super().__post_init__(**kwargs)
+
+
+@dataclass(repr=False)
+class TaxonomicScopeAssessment(YAMLRoot):
+    """
+    Assessment of taxonomic restriction appropriateness
+    """
+    _inherited_slots: ClassVar[list[str]] = []
+
+    class_class_uri: ClassVar[URIRef] = GENE_REVIEW["TaxonomicScopeAssessment"]
+    class_class_curie: ClassVar[str] = "gene_review:TaxonomicScopeAssessment"
+    class_name: ClassVar[str] = "TaxonomicScopeAssessment"
+    class_model_uri: ClassVar[URIRef] = GENE_REVIEW.TaxonomicScopeAssessment
+
+    assessment: Union[str, "TaxonomicScopeEnum"] = None
+    notes: Optional[str] = None
+    supported_by: Optional[Union[Union[dict, SupportingTextInReference], list[Union[dict, SupportingTextInReference]]]] = empty_list()
+
+    def __post_init__(self, *_: str, **kwargs: Any):
+        if self._is_empty(self.assessment):
+            self.MissingRequiredField("assessment")
+        if not isinstance(self.assessment, TaxonomicScopeEnum):
+            self.assessment = TaxonomicScopeEnum(self.assessment)
+
+        if self.notes is not None and not isinstance(self.notes, str):
+            self.notes = str(self.notes)
+
+        self._normalize_inlined_as_dict(slot_name="supported_by", slot_type=SupportingTextInReference, key_name="reference_id", keyed=False)
+
+        super().__post_init__(**kwargs)
+
+
 # Enumerations
 class EvidenceType(EnumDefinitionImpl):
     """
@@ -950,6 +1672,338 @@ class ManuscriptSection(EnumDefinitionImpl):
         description="Sections of a scientific manuscript or publication",
     )
 
+class RuleTypeEnum(EnumDefinitionImpl):
+    """
+    Type of UniProt annotation rule
+    """
+    ARBA = PermissibleValue(
+        text="ARBA",
+        description="Association-Rule-Based Annotator rule (automatically mined)")
+    UNIRULE = PermissibleValue(
+        text="UNIRULE",
+        description="Expert-curated UniRule")
+
+    _defn = EnumDefinition(
+        name="RuleTypeEnum",
+        description="Type of UniProt annotation rule",
+    )
+
+class RuleReviewStatusEnum(EnumDefinitionImpl):
+    """
+    Status of the rule review
+    """
+    PENDING = PermissibleValue(
+        text="PENDING",
+        description="Review has not been started")
+    IN_PROGRESS = PermissibleValue(
+        text="IN_PROGRESS",
+        description="Review is underway")
+    COMPLETE = PermissibleValue(
+        text="COMPLETE",
+        description="Review is complete")
+
+    _defn = EnumDefinition(
+        name="RuleReviewStatusEnum",
+        description="Status of the rule review",
+    )
+
+class RuleActionEnum(EnumDefinitionImpl):
+    """
+    Recommended action for the rule
+    """
+    ACCEPT = PermissibleValue(
+        text="ACCEPT",
+        description="Rule is correct and should be kept as-is")
+    MODIFY = PermissibleValue(
+        text="MODIFY",
+        description="Rule needs modification (see suggested_modifications)")
+    DEPRECATE = PermissibleValue(
+        text="DEPRECATE",
+        description="Rule should be removed or retired")
+    SPLIT = PermissibleValue(
+        text="SPLIT",
+        description="Rule should be split into multiple more specific rules")
+    MERGE = PermissibleValue(
+        text="MERGE",
+        description="Rule should be merged with another related rule")
+    UNDECIDED = PermissibleValue(
+        text="UNDECIDED",
+        description="Unable to determine appropriate action")
+
+    _defn = EnumDefinition(
+        name="RuleActionEnum",
+        description="Recommended action for the rule",
+    )
+
+class ParsimonyEnum(EnumDefinitionImpl):
+    """
+    Assessment of rule parsimony (simplicity vs complexity)
+    """
+    PARSIMONIOUS = PermissibleValue(
+        text="PARSIMONIOUS",
+        description="Rule is appropriately simple - conditions are necessary and sufficient")
+    ACCEPTABLE = PermissibleValue(
+        text="ACCEPTABLE",
+        description="Rule complexity is reasonable given the biological context")
+    REDUNDANT = PermissibleValue(
+        text="REDUNDANT",
+        description="Some conditions are redundant and could be removed")
+    OVERLY_COMPLEX = PermissibleValue(
+        text="OVERLY_COMPLEX",
+        description="Rule has unnecessary complexity that should be simplified")
+
+    _defn = EnumDefinition(
+        name="ParsimonyEnum",
+        description="Assessment of rule parsimony (simplicity vs complexity)",
+    )
+
+class LiteratureSupportEnum(EnumDefinitionImpl):
+    """
+    Level of literature support for the rule
+    """
+    STRONG = PermissibleValue(
+        text="STRONG",
+        description="Multiple high-quality papers directly support the domain-function relationship")
+    MODERATE = PermissibleValue(
+        text="MODERATE",
+        description="Some supporting evidence exists but not comprehensive")
+    WEAK = PermissibleValue(
+        text="WEAK",
+        description="Limited evidence, mostly indirect or from computational studies")
+    NONE = PermissibleValue(
+        text="NONE",
+        description="No literature support found")
+    CONTRADICTED = PermissibleValue(
+        text="CONTRADICTED",
+        description="Literature contradicts the rule's predicted function")
+
+    _defn = EnumDefinition(
+        name="LiteratureSupportEnum",
+        description="Level of literature support for the rule",
+    )
+
+class OverlapEnum(EnumDefinitionImpl):
+    """
+    Assessment of condition overlap/redundancy
+    """
+    NONE = PermissibleValue(
+        text="NONE",
+        description="Conditions are independent and non-overlapping")
+    MINOR = PermissibleValue(
+        text="MINOR",
+        description="Slight overlap but conditions add meaningful specificity")
+    SIGNIFICANT = PermissibleValue(
+        text="SIGNIFICANT",
+        description="Substantial overlap - conditions may be capturing the same thing")
+    COMPLETE = PermissibleValue(
+        text="COMPLETE",
+        description="Conditions are essentially equivalent/redundant")
+
+    _defn = EnumDefinition(
+        name="OverlapEnum",
+        description="Assessment of condition overlap/redundancy",
+    )
+
+class SpecificityEnum(EnumDefinitionImpl):
+    """
+    Assessment of GO term specificity
+    """
+    TOO_BROAD = PermissibleValue(
+        text="TOO_BROAD",
+        description="GO term is too general - a more specific term should be used")
+    APPROPRIATE = PermissibleValue(
+        text="APPROPRIATE",
+        description="GO term specificity matches the evidence")
+    TOO_NARROW = PermissibleValue(
+        text="TOO_NARROW",
+        description="GO term is overly specific for what the domains predict")
+    MISMATCHED = PermissibleValue(
+        text="MISMATCHED",
+        description="GO term is in wrong branch or aspect")
+
+    _defn = EnumDefinition(
+        name="SpecificityEnum",
+        description="Assessment of GO term specificity",
+    )
+
+class TaxonomicScopeEnum(EnumDefinitionImpl):
+    """
+    Assessment of taxonomic restriction appropriateness
+    """
+    TOO_BROAD = PermissibleValue(
+        text="TOO_BROAD",
+        description="Taxon is too inclusive - should be restricted further")
+    APPROPRIATE = PermissibleValue(
+        text="APPROPRIATE",
+        description="Taxonomic scope matches the domain's evolutionary distribution")
+    TOO_NARROW = PermissibleValue(
+        text="TOO_NARROW",
+        description="Taxon is overly restrictive - function applies more broadly")
+    MISSING = PermissibleValue(
+        text="MISSING",
+        description="Rule lacks necessary taxonomic restriction")
+    UNNECESSARY = PermissibleValue(
+        text="UNNECESSARY",
+        description="Taxonomic restriction is not needed for this domain")
+
+    _defn = EnumDefinition(
+        name="TaxonomicScopeEnum",
+        description="Assessment of taxonomic restriction appropriateness",
+    )
+
+class ConditionTypeEnum(EnumDefinitionImpl):
+    """
+    Types of conditions in rule antecedents
+    """
+    INTERPRO = PermissibleValue(
+        text="INTERPRO",
+        description="InterPro domain/family")
+    FUNFAM = PermissibleValue(
+        text="FUNFAM",
+        description="CATH FunFam functional family")
+    PANTHER = PermissibleValue(
+        text="PANTHER",
+        description="PANTHER family")
+    PFAM = PermissibleValue(
+        text="PFAM",
+        description="Pfam domain")
+    TAXON = PermissibleValue(
+        text="TAXON",
+        description="Taxonomic constraint")
+    SEQUENCE_LENGTH = PermissibleValue(
+        text="SEQUENCE_LENGTH",
+        description="Sequence length constraint")
+    OTHER = PermissibleValue(
+        text="OTHER",
+        description="Other condition type")
+
+    _defn = EnumDefinition(
+        name="ConditionTypeEnum",
+        description="Types of conditions in rule antecedents",
+    )
+
+class ProteinDatabaseEnum(EnumDefinitionImpl):
+    """
+    Protein database types for rule analysis
+    """
+    SWISSPROT = PermissibleValue(
+        text="SWISSPROT",
+        description="Swiss-Prot (reviewed, manually curated proteins)")
+    TREMBL = PermissibleValue(
+        text="TREMBL",
+        description="TrEMBL (unreviewed, automatically annotated proteins)")
+    UNIPROT = PermissibleValue(
+        text="UNIPROT",
+        description="Full UniProtKB (Swiss-Prot + TrEMBL)")
+
+    _defn = EnumDefinition(
+        name="ProteinDatabaseEnum",
+        description="Protein database types for rule analysis",
+    )
+
+class InterProTypeEnum(EnumDefinitionImpl):
+    """
+    InterPro entry types categorizing protein signatures
+    """
+    FAMILY = PermissibleValue(
+        text="FAMILY",
+        description="Protein family (groups of proteins sharing similar sequence and function)")
+    DOMAIN = PermissibleValue(
+        text="DOMAIN",
+        description="Protein domain (distinct functional or structural unit)")
+    ACTIVE_SITE = PermissibleValue(
+        text="ACTIVE_SITE",
+        description="Active site (residues directly involved in catalysis)")
+    BINDING_SITE = PermissibleValue(
+        text="BINDING_SITE",
+        description="Binding site (residues involved in binding substrates/ligands)")
+    CONSERVED_SITE = PermissibleValue(
+        text="CONSERVED_SITE",
+        description="Conserved site (conserved residues with functional significance)")
+    REPEAT = PermissibleValue(
+        text="REPEAT",
+        description="Repeat (short sequence motif that occurs multiple times)")
+    HOMOLOGOUS_SUPERFAMILY = PermissibleValue(
+        text="HOMOLOGOUS_SUPERFAMILY",
+        description="Homologous superfamily (proteins with distant evolutionary relationships)")
+    PTM = PermissibleValue(
+        text="PTM",
+        description="Post-translational modification site")
+
+    _defn = EnumDefinition(
+        name="InterProTypeEnum",
+        description="InterPro entry types categorizing protein signatures",
+    )
+
+class OverlapInterpretationEnum(EnumDefinitionImpl):
+    """
+    Automated interpretation of domain overlap patterns
+    """
+    REDUNDANT = PermissibleValue(
+        text="REDUNDANT",
+        description="Very high overlap (Jaccard > 0.9), conditions are nearly identical")
+    SUBSET = PermissibleValue(
+        text="SUBSET",
+        description="One condition is a subset of the other (containment > 0.95)")
+    HIGH_OVERLAP = PermissibleValue(
+        text="HIGH_OVERLAP",
+        description="High overlap (Jaccard > 0.5), conditions are similar")
+    MODERATE = PermissibleValue(
+        text="MODERATE",
+        description="Moderate overlap (0.2 < Jaccard <= 0.5)")
+    LOW = PermissibleValue(
+        text="LOW",
+        description="Low overlap (Jaccard <= 0.2), conditions are mostly distinct")
+    DISJOINT = PermissibleValue(
+        text="DISJOINT",
+        description="No overlap (intersection = 0), conditions are completely distinct")
+
+    _defn = EnumDefinition(
+        name="OverlapInterpretationEnum",
+        description="Automated interpretation of domain overlap patterns",
+    )
+
+class EntryTypeEnum(EnumDefinitionImpl):
+    """
+    Type of entry in a rule review (domain/family condition or GO term target)
+    """
+    INTERPRO = PermissibleValue(
+        text="INTERPRO",
+        description="InterPro entry (domain, family, repeat, etc.)")
+    FUNFAM = PermissibleValue(
+        text="FUNFAM",
+        description="CATH FunFam (functional family from CATH database)")
+    PANTHER = PermissibleValue(
+        text="PANTHER",
+        description="PANTHER family or subfamily")
+    GO_TERM = PermissibleValue(
+        text="GO_TERM",
+        description="Gene Ontology term (annotation target)")
+
+    _defn = EnumDefinition(
+        name="EntryTypeEnum",
+        description="Type of entry in a rule review (domain/family condition or GO term target)",
+    )
+
+class EntryRelationshipEnum(EnumDefinitionImpl):
+    """
+    Type of relationship between entries in a rule
+    """
+    PREDICTS = PermissibleValue(
+        text="PREDICTS",
+        description="""This entry predicts the target (this ⊆ target). Selected when containment_a_in_b is highest among {jaccard+0.05, containment_a_in_b, containment_b_in_a}.""")
+    PREDICTED_BY = PermissibleValue(
+        text="PREDICTED_BY",
+        description="""This entry is predicted by the target (target ⊆ this). Selected when containment_b_in_a is highest among {jaccard+0.05, containment_a_in_b, containment_b_in_a}.""")
+    EQUIV = PermissibleValue(
+        text="EQUIV",
+        description="""This entry is equivalent to the target (bidirectional high similarity). Selected when jaccard_boosted (jaccard + 0.05) is highest among {jaccard+0.05, containment_a_in_b, containment_b_in_a}.""")
+
+    _defn = EnumDefinition(
+        name="EntryRelationshipEnum",
+        description="Type of relationship between entries in a rule",
+    )
+
 # Slots
 class slots:
     pass
@@ -1134,6 +2188,282 @@ slots.question__question = Slot(uri=GENE_REVIEW.question, name="question__questi
 slots.question__experts = Slot(uri=GENE_REVIEW.experts, name="question__experts", curie=GENE_REVIEW.curie('experts'),
                    model_uri=GENE_REVIEW.question__experts, domain=None, range=Optional[Union[str, list[str]]])
 
+slots.ruleReview__status = Slot(uri=GENE_REVIEW.status, name="ruleReview__status", curie=GENE_REVIEW.curie('status'),
+                   model_uri=GENE_REVIEW.ruleReview__status, domain=None, range=Optional[Union[str, "RuleReviewStatusEnum"]])
+
+slots.ruleReview__rule_type = Slot(uri=GENE_REVIEW.rule_type, name="ruleReview__rule_type", curie=GENE_REVIEW.curie('rule_type'),
+                   model_uri=GENE_REVIEW.ruleReview__rule_type, domain=None, range=Union[str, "RuleTypeEnum"])
+
+slots.ruleReview__rule = Slot(uri=GENE_REVIEW.rule, name="ruleReview__rule", curie=GENE_REVIEW.curie('rule'),
+                   model_uri=GENE_REVIEW.ruleReview__rule, domain=None, range=Union[dict, EmbeddedRule])
+
+slots.ruleReview__review_summary = Slot(uri=GENE_REVIEW.review_summary, name="ruleReview__review_summary", curie=GENE_REVIEW.curie('review_summary'),
+                   model_uri=GENE_REVIEW.ruleReview__review_summary, domain=None, range=Optional[str])
+
+slots.ruleReview__action = Slot(uri=GENE_REVIEW.action, name="ruleReview__action", curie=GENE_REVIEW.curie('action'),
+                   model_uri=GENE_REVIEW.ruleReview__action, domain=None, range=Union[str, "RuleActionEnum"])
+
+slots.ruleReview__action_rationale = Slot(uri=GENE_REVIEW.action_rationale, name="ruleReview__action_rationale", curie=GENE_REVIEW.curie('action_rationale'),
+                   model_uri=GENE_REVIEW.ruleReview__action_rationale, domain=None, range=Optional[str])
+
+slots.ruleReview__suggested_modifications = Slot(uri=GENE_REVIEW.suggested_modifications, name="ruleReview__suggested_modifications", curie=GENE_REVIEW.curie('suggested_modifications'),
+                   model_uri=GENE_REVIEW.ruleReview__suggested_modifications, domain=None, range=Optional[Union[str, list[str]]])
+
+slots.ruleReview__parsimony = Slot(uri=GENE_REVIEW.parsimony, name="ruleReview__parsimony", curie=GENE_REVIEW.curie('parsimony'),
+                   model_uri=GENE_REVIEW.ruleReview__parsimony, domain=None, range=Optional[Union[dict, ParsimonyAssessment]])
+
+slots.ruleReview__literature_support = Slot(uri=GENE_REVIEW.literature_support, name="ruleReview__literature_support", curie=GENE_REVIEW.curie('literature_support'),
+                   model_uri=GENE_REVIEW.ruleReview__literature_support, domain=None, range=Optional[Union[dict, LiteratureSupportAssessment]])
+
+slots.ruleReview__condition_overlap = Slot(uri=GENE_REVIEW.condition_overlap, name="ruleReview__condition_overlap", curie=GENE_REVIEW.curie('condition_overlap'),
+                   model_uri=GENE_REVIEW.ruleReview__condition_overlap, domain=None, range=Optional[Union[dict, ConditionOverlapAssessment]])
+
+slots.ruleReview__go_specificity = Slot(uri=GENE_REVIEW.go_specificity, name="ruleReview__go_specificity", curie=GENE_REVIEW.curie('go_specificity'),
+                   model_uri=GENE_REVIEW.ruleReview__go_specificity, domain=None, range=Optional[Union[dict, GOSpecificityAssessment]])
+
+slots.ruleReview__taxonomic_scope = Slot(uri=GENE_REVIEW.taxonomic_scope, name="ruleReview__taxonomic_scope", curie=GENE_REVIEW.curie('taxonomic_scope'),
+                   model_uri=GENE_REVIEW.ruleReview__taxonomic_scope, domain=None, range=Optional[Union[dict, TaxonomicScopeAssessment]])
+
+slots.ruleReview__confidence = Slot(uri=GENE_REVIEW.confidence, name="ruleReview__confidence", curie=GENE_REVIEW.curie('confidence'),
+                   model_uri=GENE_REVIEW.ruleReview__confidence, domain=None, range=Optional[float])
+
+slots.ruleReview__supported_by = Slot(uri=GENE_REVIEW.supported_by, name="ruleReview__supported_by", curie=GENE_REVIEW.curie('supported_by'),
+                   model_uri=GENE_REVIEW.ruleReview__supported_by, domain=None, range=Optional[Union[Union[dict, SupportingTextInReference], list[Union[dict, SupportingTextInReference]]]])
+
+slots.embeddedRule__rule_id = Slot(uri=GENE_REVIEW.rule_id, name="embeddedRule__rule_id", curie=GENE_REVIEW.curie('rule_id'),
+                   model_uri=GENE_REVIEW.embeddedRule__rule_id, domain=None, range=str)
+
+slots.embeddedRule__condition_sets = Slot(uri=GENE_REVIEW.condition_sets, name="embeddedRule__condition_sets", curie=GENE_REVIEW.curie('condition_sets'),
+                   model_uri=GENE_REVIEW.embeddedRule__condition_sets, domain=None, range=Union[Union[dict, RuleConditionSet], list[Union[dict, RuleConditionSet]]])
+
+slots.embeddedRule__go_annotations = Slot(uri=GENE_REVIEW.go_annotations, name="embeddedRule__go_annotations", curie=GENE_REVIEW.curie('go_annotations'),
+                   model_uri=GENE_REVIEW.embeddedRule__go_annotations, domain=None, range=Optional[Union[Union[dict, RuleGOAnnotation], list[Union[dict, RuleGOAnnotation]]]])
+
+slots.embeddedRule__ipr2go_redundancy = Slot(uri=GENE_REVIEW.ipr2go_redundancy, name="embeddedRule__ipr2go_redundancy", curie=GENE_REVIEW.curie('ipr2go_redundancy'),
+                   model_uri=GENE_REVIEW.embeddedRule__ipr2go_redundancy, domain=None, range=Optional[Union[dict, InterPro2GORedundancy]])
+
+slots.embeddedRule__entries = Slot(uri=GENE_REVIEW.entries, name="embeddedRule__entries", curie=GENE_REVIEW.curie('entries'),
+                   model_uri=GENE_REVIEW.embeddedRule__entries, domain=None, range=Union[dict[Union[str, RuleReviewEntryId], Union[dict, RuleReviewEntry]], list[Union[dict, RuleReviewEntry]]])
+
+slots.embeddedRule__reviewed_protein_count = Slot(uri=GENE_REVIEW.reviewed_protein_count, name="embeddedRule__reviewed_protein_count", curie=GENE_REVIEW.curie('reviewed_protein_count'),
+                   model_uri=GENE_REVIEW.embeddedRule__reviewed_protein_count, domain=None, range=Optional[int])
+
+slots.embeddedRule__unreviewed_protein_count = Slot(uri=GENE_REVIEW.unreviewed_protein_count, name="embeddedRule__unreviewed_protein_count", curie=GENE_REVIEW.curie('unreviewed_protein_count'),
+                   model_uri=GENE_REVIEW.embeddedRule__unreviewed_protein_count, domain=None, range=Optional[int])
+
+slots.embeddedRule__created_date = Slot(uri=GENE_REVIEW.created_date, name="embeddedRule__created_date", curie=GENE_REVIEW.curie('created_date'),
+                   model_uri=GENE_REVIEW.embeddedRule__created_date, domain=None, range=Optional[str])
+
+slots.embeddedRule__modified_date = Slot(uri=GENE_REVIEW.modified_date, name="embeddedRule__modified_date", curie=GENE_REVIEW.curie('modified_date'),
+                   model_uri=GENE_REVIEW.embeddedRule__modified_date, domain=None, range=Optional[str])
+
+slots.ruleConditionSet__number = Slot(uri=GENE_REVIEW.number, name="ruleConditionSet__number", curie=GENE_REVIEW.curie('number'),
+                   model_uri=GENE_REVIEW.ruleConditionSet__number, domain=None, range=int)
+
+slots.ruleConditionSet__conditions = Slot(uri=GENE_REVIEW.conditions, name="ruleConditionSet__conditions", curie=GENE_REVIEW.curie('conditions'),
+                   model_uri=GENE_REVIEW.ruleConditionSet__conditions, domain=None, range=Union[Union[dict, RuleCondition], list[Union[dict, RuleCondition]]])
+
+slots.ruleConditionSet__notes = Slot(uri=GENE_REVIEW.notes, name="ruleConditionSet__notes", curie=GENE_REVIEW.curie('notes'),
+                   model_uri=GENE_REVIEW.ruleConditionSet__notes, domain=None, range=Optional[str])
+
+slots.ruleConditionSet__pairwise_overlap = Slot(uri=GENE_REVIEW.pairwise_overlap, name="ruleConditionSet__pairwise_overlap", curie=GENE_REVIEW.curie('pairwise_overlap'),
+                   model_uri=GENE_REVIEW.ruleConditionSet__pairwise_overlap, domain=None, range=Optional[Union[Union[dict, PairwiseOverlap], list[Union[dict, PairwiseOverlap]]]])
+
+slots.ruleCondition__condition_type = Slot(uri=GENE_REVIEW.condition_type, name="ruleCondition__condition_type", curie=GENE_REVIEW.curie('condition_type'),
+                   model_uri=GENE_REVIEW.ruleCondition__condition_type, domain=None, range=Union[str, "ConditionTypeEnum"])
+
+slots.ruleCondition__value = Slot(uri=GENE_REVIEW.value, name="ruleCondition__value", curie=GENE_REVIEW.curie('value'),
+                   model_uri=GENE_REVIEW.ruleCondition__value, domain=None, range=str)
+
+slots.ruleCondition__curie = Slot(uri=GENE_REVIEW.curie, name="ruleCondition__curie", curie=GENE_REVIEW.curie('curie'),
+                   model_uri=GENE_REVIEW.ruleCondition__curie, domain=None, range=Optional[str])
+
+slots.ruleCondition__label = Slot(uri=GENE_REVIEW.label, name="ruleCondition__label", curie=GENE_REVIEW.curie('label'),
+                   model_uri=GENE_REVIEW.ruleCondition__label, domain=None, range=Optional[str])
+
+slots.ruleCondition__interpro_type = Slot(uri=GENE_REVIEW.interpro_type, name="ruleCondition__interpro_type", curie=GENE_REVIEW.curie('interpro_type'),
+                   model_uri=GENE_REVIEW.ruleCondition__interpro_type, domain=None, range=Optional[Union[str, "InterProTypeEnum"]])
+
+slots.ruleCondition__negated = Slot(uri=GENE_REVIEW.negated, name="ruleCondition__negated", curie=GENE_REVIEW.curie('negated'),
+                   model_uri=GENE_REVIEW.ruleCondition__negated, domain=None, range=Optional[Union[bool, Bool]])
+
+slots.ruleCondition__protein_count = Slot(uri=GENE_REVIEW.protein_count, name="ruleCondition__protein_count", curie=GENE_REVIEW.curie('protein_count'),
+                   model_uri=GENE_REVIEW.ruleCondition__protein_count, domain=None, range=Optional[int])
+
+slots.ruleCondition__protein_database = Slot(uri=GENE_REVIEW.protein_database, name="ruleCondition__protein_database", curie=GENE_REVIEW.curie('protein_database'),
+                   model_uri=GENE_REVIEW.ruleCondition__protein_database, domain=None, range=Optional[Union[str, "ProteinDatabaseEnum"]])
+
+slots.ruleCondition__uniqueness_score = Slot(uri=GENE_REVIEW.uniqueness_score, name="ruleCondition__uniqueness_score", curie=GENE_REVIEW.curie('uniqueness_score'),
+                   model_uri=GENE_REVIEW.ruleCondition__uniqueness_score, domain=None, range=Optional[float])
+
+slots.ruleCondition__sample_proteins = Slot(uri=GENE_REVIEW.sample_proteins, name="ruleCondition__sample_proteins", curie=GENE_REVIEW.curie('sample_proteins'),
+                   model_uri=GENE_REVIEW.ruleCondition__sample_proteins, domain=None, range=Optional[Union[str, list[str]]])
+
+slots.ruleGOAnnotation__go_id = Slot(uri=GENE_REVIEW.go_id, name="ruleGOAnnotation__go_id", curie=GENE_REVIEW.curie('go_id'),
+                   model_uri=GENE_REVIEW.ruleGOAnnotation__go_id, domain=None, range=str)
+
+slots.ruleGOAnnotation__go_label = Slot(uri=GENE_REVIEW.go_label, name="ruleGOAnnotation__go_label", curie=GENE_REVIEW.curie('go_label'),
+                   model_uri=GENE_REVIEW.ruleGOAnnotation__go_label, domain=None, range=Optional[str])
+
+slots.ruleGOAnnotation__aspect = Slot(uri=GENE_REVIEW.aspect, name="ruleGOAnnotation__aspect", curie=GENE_REVIEW.curie('aspect'),
+                   model_uri=GENE_REVIEW.ruleGOAnnotation__aspect, domain=None, range=Optional[str])
+
+slots.pairwiseOverlap__condition_a = Slot(uri=GENE_REVIEW.condition_a, name="pairwiseOverlap__condition_a", curie=GENE_REVIEW.curie('condition_a'),
+                   model_uri=GENE_REVIEW.pairwiseOverlap__condition_a, domain=None, range=str)
+
+slots.pairwiseOverlap__condition_b = Slot(uri=GENE_REVIEW.condition_b, name="pairwiseOverlap__condition_b", curie=GENE_REVIEW.curie('condition_b'),
+                   model_uri=GENE_REVIEW.pairwiseOverlap__condition_b, domain=None, range=str)
+
+slots.pairwiseOverlap__condition_a_label = Slot(uri=GENE_REVIEW.condition_a_label, name="pairwiseOverlap__condition_a_label", curie=GENE_REVIEW.curie('condition_a_label'),
+                   model_uri=GENE_REVIEW.pairwiseOverlap__condition_a_label, domain=None, range=Optional[str])
+
+slots.pairwiseOverlap__condition_b_label = Slot(uri=GENE_REVIEW.condition_b_label, name="pairwiseOverlap__condition_b_label", curie=GENE_REVIEW.curie('condition_b_label'),
+                   model_uri=GENE_REVIEW.pairwiseOverlap__condition_b_label, domain=None, range=Optional[str])
+
+slots.pairwiseOverlap__protein_database = Slot(uri=GENE_REVIEW.protein_database, name="pairwiseOverlap__protein_database", curie=GENE_REVIEW.curie('protein_database'),
+                   model_uri=GENE_REVIEW.pairwiseOverlap__protein_database, domain=None, range=Union[str, "ProteinDatabaseEnum"])
+
+slots.pairwiseOverlap__count_a = Slot(uri=GENE_REVIEW.count_a, name="pairwiseOverlap__count_a", curie=GENE_REVIEW.curie('count_a'),
+                   model_uri=GENE_REVIEW.pairwiseOverlap__count_a, domain=None, range=int)
+
+slots.pairwiseOverlap__count_b = Slot(uri=GENE_REVIEW.count_b, name="pairwiseOverlap__count_b", curie=GENE_REVIEW.curie('count_b'),
+                   model_uri=GENE_REVIEW.pairwiseOverlap__count_b, domain=None, range=int)
+
+slots.pairwiseOverlap__intersection_count = Slot(uri=GENE_REVIEW.intersection_count, name="pairwiseOverlap__intersection_count", curie=GENE_REVIEW.curie('intersection_count'),
+                   model_uri=GENE_REVIEW.pairwiseOverlap__intersection_count, domain=None, range=int)
+
+slots.pairwiseOverlap__a_minus_b_count = Slot(uri=GENE_REVIEW.a_minus_b_count, name="pairwiseOverlap__a_minus_b_count", curie=GENE_REVIEW.curie('a_minus_b_count'),
+                   model_uri=GENE_REVIEW.pairwiseOverlap__a_minus_b_count, domain=None, range=int)
+
+slots.pairwiseOverlap__b_minus_a_count = Slot(uri=GENE_REVIEW.b_minus_a_count, name="pairwiseOverlap__b_minus_a_count", curie=GENE_REVIEW.curie('b_minus_a_count'),
+                   model_uri=GENE_REVIEW.pairwiseOverlap__b_minus_a_count, domain=None, range=int)
+
+slots.pairwiseOverlap__jaccard_similarity = Slot(uri=GENE_REVIEW.jaccard_similarity, name="pairwiseOverlap__jaccard_similarity", curie=GENE_REVIEW.curie('jaccard_similarity'),
+                   model_uri=GENE_REVIEW.pairwiseOverlap__jaccard_similarity, domain=None, range=float)
+
+slots.pairwiseOverlap__containment_a_in_b = Slot(uri=GENE_REVIEW.containment_a_in_b, name="pairwiseOverlap__containment_a_in_b", curie=GENE_REVIEW.curie('containment_a_in_b'),
+                   model_uri=GENE_REVIEW.pairwiseOverlap__containment_a_in_b, domain=None, range=float)
+
+slots.pairwiseOverlap__containment_b_in_a = Slot(uri=GENE_REVIEW.containment_b_in_a, name="pairwiseOverlap__containment_b_in_a", curie=GENE_REVIEW.curie('containment_b_in_a'),
+                   model_uri=GENE_REVIEW.pairwiseOverlap__containment_b_in_a, domain=None, range=float)
+
+slots.pairwiseOverlap__interpretation = Slot(uri=GENE_REVIEW.interpretation, name="pairwiseOverlap__interpretation", curie=GENE_REVIEW.curie('interpretation'),
+                   model_uri=GENE_REVIEW.pairwiseOverlap__interpretation, domain=None, range=Optional[Union[str, "OverlapInterpretationEnum"]])
+
+slots.pairwiseOverlap__condition_a_in_sets = Slot(uri=GENE_REVIEW.condition_a_in_sets, name="pairwiseOverlap__condition_a_in_sets", curie=GENE_REVIEW.curie('condition_a_in_sets'),
+                   model_uri=GENE_REVIEW.pairwiseOverlap__condition_a_in_sets, domain=None, range=Optional[Union[int, list[int]]])
+
+slots.pairwiseOverlap__condition_b_in_sets = Slot(uri=GENE_REVIEW.condition_b_in_sets, name="pairwiseOverlap__condition_b_in_sets", curie=GENE_REVIEW.curie('condition_b_in_sets'),
+                   model_uri=GENE_REVIEW.pairwiseOverlap__condition_b_in_sets, domain=None, range=Optional[Union[int, list[int]]])
+
+slots.ruleReviewEntry__id = Slot(uri=GENE_REVIEW.id, name="ruleReviewEntry__id", curie=GENE_REVIEW.curie('id'),
+                   model_uri=GENE_REVIEW.ruleReviewEntry__id, domain=None, range=URIRef)
+
+slots.ruleReviewEntry__label = Slot(uri=GENE_REVIEW.label, name="ruleReviewEntry__label", curie=GENE_REVIEW.curie('label'),
+                   model_uri=GENE_REVIEW.ruleReviewEntry__label, domain=None, range=Optional[str])
+
+slots.ruleReviewEntry__type = Slot(uri=GENE_REVIEW.type, name="ruleReviewEntry__type", curie=GENE_REVIEW.curie('type'),
+                   model_uri=GENE_REVIEW.ruleReviewEntry__type, domain=None, range=Union[str, "EntryTypeEnum"])
+
+slots.ruleReviewEntry__appears_in_condition_sets = Slot(uri=GENE_REVIEW.appears_in_condition_sets, name="ruleReviewEntry__appears_in_condition_sets", curie=GENE_REVIEW.curie('appears_in_condition_sets'),
+                   model_uri=GENE_REVIEW.ruleReviewEntry__appears_in_condition_sets, domain=None, range=Optional[Union[int, list[int]]])
+
+slots.ruleReviewEntry__protein_count = Slot(uri=GENE_REVIEW.protein_count, name="ruleReviewEntry__protein_count", curie=GENE_REVIEW.curie('protein_count'),
+                   model_uri=GENE_REVIEW.ruleReviewEntry__protein_count, domain=None, range=Optional[int])
+
+slots.ruleReviewEntry__source = Slot(uri=GENE_REVIEW.source, name="ruleReviewEntry__source", curie=GENE_REVIEW.curie('source'),
+                   model_uri=GENE_REVIEW.ruleReviewEntry__source, domain=None, range=Optional[str])
+
+slots.ruleReviewEntry__asserted_predicted_go_terms = Slot(uri=GENE_REVIEW.asserted_predicted_go_terms, name="ruleReviewEntry__asserted_predicted_go_terms", curie=GENE_REVIEW.curie('asserted_predicted_go_terms'),
+                   model_uri=GENE_REVIEW.ruleReviewEntry__asserted_predicted_go_terms, domain=None, range=Optional[Union[str, list[str]]])
+
+slots.ruleReviewEntry__related_entries = Slot(uri=GENE_REVIEW.related_entries, name="ruleReviewEntry__related_entries", curie=GENE_REVIEW.curie('related_entries'),
+                   model_uri=GENE_REVIEW.ruleReviewEntry__related_entries, domain=None, range=Optional[Union[Union[dict, RelatedEntry], list[Union[dict, RelatedEntry]]]])
+
+slots.relatedEntry__relationship = Slot(uri=GENE_REVIEW.relationship, name="relatedEntry__relationship", curie=GENE_REVIEW.curie('relationship'),
+                   model_uri=GENE_REVIEW.relatedEntry__relationship, domain=None, range=Union[str, "EntryRelationshipEnum"])
+
+slots.relatedEntry__target_id = Slot(uri=GENE_REVIEW.target_id, name="relatedEntry__target_id", curie=GENE_REVIEW.curie('target_id'),
+                   model_uri=GENE_REVIEW.relatedEntry__target_id, domain=None, range=str)
+
+slots.relatedEntry__containment = Slot(uri=GENE_REVIEW.containment, name="relatedEntry__containment", curie=GENE_REVIEW.curie('containment'),
+                   model_uri=GENE_REVIEW.relatedEntry__containment, domain=None, range=Optional[float])
+
+slots.relatedEntry__jaccard_similarity = Slot(uri=GENE_REVIEW.jaccard_similarity, name="relatedEntry__jaccard_similarity", curie=GENE_REVIEW.curie('jaccard_similarity'),
+                   model_uri=GENE_REVIEW.relatedEntry__jaccard_similarity, domain=None, range=Optional[float])
+
+slots.relatedEntry__intersection_count = Slot(uri=GENE_REVIEW.intersection_count, name="relatedEntry__intersection_count", curie=GENE_REVIEW.curie('intersection_count'),
+                   model_uri=GENE_REVIEW.relatedEntry__intersection_count, domain=None, range=Optional[int])
+
+slots.relatedEntry__exclusive_count = Slot(uri=GENE_REVIEW.exclusive_count, name="relatedEntry__exclusive_count", curie=GENE_REVIEW.curie('exclusive_count'),
+                   model_uri=GENE_REVIEW.relatedEntry__exclusive_count, domain=None, range=Optional[int])
+
+slots.interPro2GORedundancy__redundant_annotations = Slot(uri=GENE_REVIEW.redundant_annotations, name="interPro2GORedundancy__redundant_annotations", curie=GENE_REVIEW.curie('redundant_annotations'),
+                   model_uri=GENE_REVIEW.interPro2GORedundancy__redundant_annotations, domain=None, range=Optional[Union[Union[dict, RedundantAnnotation], list[Union[dict, RedundantAnnotation]]]])
+
+slots.interPro2GORedundancy__novel_annotations = Slot(uri=GENE_REVIEW.novel_annotations, name="interPro2GORedundancy__novel_annotations", curie=GENE_REVIEW.curie('novel_annotations'),
+                   model_uri=GENE_REVIEW.interPro2GORedundancy__novel_annotations, domain=None, range=Optional[Union[str, list[str]]])
+
+slots.interPro2GORedundancy__summary = Slot(uri=GENE_REVIEW.summary, name="interPro2GORedundancy__summary", curie=GENE_REVIEW.curie('summary'),
+                   model_uri=GENE_REVIEW.interPro2GORedundancy__summary, domain=None, range=Optional[str])
+
+slots.redundantAnnotation__go_id = Slot(uri=GENE_REVIEW.go_id, name="redundantAnnotation__go_id", curie=GENE_REVIEW.curie('go_id'),
+                   model_uri=GENE_REVIEW.redundantAnnotation__go_id, domain=None, range=str)
+
+slots.redundantAnnotation__go_label = Slot(uri=GENE_REVIEW.go_label, name="redundantAnnotation__go_label", curie=GENE_REVIEW.curie('go_label'),
+                   model_uri=GENE_REVIEW.redundantAnnotation__go_label, domain=None, range=Optional[str])
+
+slots.redundantAnnotation__interpro_source = Slot(uri=GENE_REVIEW.interpro_source, name="redundantAnnotation__interpro_source", curie=GENE_REVIEW.curie('interpro_source'),
+                   model_uri=GENE_REVIEW.redundantAnnotation__interpro_source, domain=None, range=str)
+
+slots.redundantAnnotation__interpro_label = Slot(uri=GENE_REVIEW.interpro_label, name="redundantAnnotation__interpro_label", curie=GENE_REVIEW.curie('interpro_label'),
+                   model_uri=GENE_REVIEW.redundantAnnotation__interpro_label, domain=None, range=Optional[str])
+
+slots.parsimonyAssessment__assessment = Slot(uri=GENE_REVIEW.assessment, name="parsimonyAssessment__assessment", curie=GENE_REVIEW.curie('assessment'),
+                   model_uri=GENE_REVIEW.parsimonyAssessment__assessment, domain=None, range=Union[str, "ParsimonyEnum"])
+
+slots.parsimonyAssessment__notes = Slot(uri=GENE_REVIEW.notes, name="parsimonyAssessment__notes", curie=GENE_REVIEW.curie('notes'),
+                   model_uri=GENE_REVIEW.parsimonyAssessment__notes, domain=None, range=Optional[str])
+
+slots.parsimonyAssessment__supported_by = Slot(uri=GENE_REVIEW.supported_by, name="parsimonyAssessment__supported_by", curie=GENE_REVIEW.curie('supported_by'),
+                   model_uri=GENE_REVIEW.parsimonyAssessment__supported_by, domain=None, range=Optional[Union[Union[dict, SupportingTextInReference], list[Union[dict, SupportingTextInReference]]]])
+
+slots.literatureSupportAssessment__assessment = Slot(uri=GENE_REVIEW.assessment, name="literatureSupportAssessment__assessment", curie=GENE_REVIEW.curie('assessment'),
+                   model_uri=GENE_REVIEW.literatureSupportAssessment__assessment, domain=None, range=Union[str, "LiteratureSupportEnum"])
+
+slots.literatureSupportAssessment__notes = Slot(uri=GENE_REVIEW.notes, name="literatureSupportAssessment__notes", curie=GENE_REVIEW.curie('notes'),
+                   model_uri=GENE_REVIEW.literatureSupportAssessment__notes, domain=None, range=Optional[str])
+
+slots.literatureSupportAssessment__supported_by = Slot(uri=GENE_REVIEW.supported_by, name="literatureSupportAssessment__supported_by", curie=GENE_REVIEW.curie('supported_by'),
+                   model_uri=GENE_REVIEW.literatureSupportAssessment__supported_by, domain=None, range=Optional[Union[Union[dict, SupportingTextInReference], list[Union[dict, SupportingTextInReference]]]])
+
+slots.conditionOverlapAssessment__assessment = Slot(uri=GENE_REVIEW.assessment, name="conditionOverlapAssessment__assessment", curie=GENE_REVIEW.curie('assessment'),
+                   model_uri=GENE_REVIEW.conditionOverlapAssessment__assessment, domain=None, range=Union[str, "OverlapEnum"])
+
+slots.conditionOverlapAssessment__notes = Slot(uri=GENE_REVIEW.notes, name="conditionOverlapAssessment__notes", curie=GENE_REVIEW.curie('notes'),
+                   model_uri=GENE_REVIEW.conditionOverlapAssessment__notes, domain=None, range=Optional[str])
+
+slots.conditionOverlapAssessment__supported_by = Slot(uri=GENE_REVIEW.supported_by, name="conditionOverlapAssessment__supported_by", curie=GENE_REVIEW.curie('supported_by'),
+                   model_uri=GENE_REVIEW.conditionOverlapAssessment__supported_by, domain=None, range=Optional[Union[Union[dict, SupportingTextInReference], list[Union[dict, SupportingTextInReference]]]])
+
+slots.gOSpecificityAssessment__assessment = Slot(uri=GENE_REVIEW.assessment, name="gOSpecificityAssessment__assessment", curie=GENE_REVIEW.curie('assessment'),
+                   model_uri=GENE_REVIEW.gOSpecificityAssessment__assessment, domain=None, range=Union[str, "SpecificityEnum"])
+
+slots.gOSpecificityAssessment__notes = Slot(uri=GENE_REVIEW.notes, name="gOSpecificityAssessment__notes", curie=GENE_REVIEW.curie('notes'),
+                   model_uri=GENE_REVIEW.gOSpecificityAssessment__notes, domain=None, range=Optional[str])
+
+slots.gOSpecificityAssessment__supported_by = Slot(uri=GENE_REVIEW.supported_by, name="gOSpecificityAssessment__supported_by", curie=GENE_REVIEW.curie('supported_by'),
+                   model_uri=GENE_REVIEW.gOSpecificityAssessment__supported_by, domain=None, range=Optional[Union[Union[dict, SupportingTextInReference], list[Union[dict, SupportingTextInReference]]]])
+
+slots.taxonomicScopeAssessment__assessment = Slot(uri=GENE_REVIEW.assessment, name="taxonomicScopeAssessment__assessment", curie=GENE_REVIEW.curie('assessment'),
+                   model_uri=GENE_REVIEW.taxonomicScopeAssessment__assessment, domain=None, range=Union[str, "TaxonomicScopeEnum"])
+
+slots.taxonomicScopeAssessment__notes = Slot(uri=GENE_REVIEW.notes, name="taxonomicScopeAssessment__notes", curie=GENE_REVIEW.curie('notes'),
+                   model_uri=GENE_REVIEW.taxonomicScopeAssessment__notes, domain=None, range=Optional[str])
+
+slots.taxonomicScopeAssessment__supported_by = Slot(uri=GENE_REVIEW.supported_by, name="taxonomicScopeAssessment__supported_by", curie=GENE_REVIEW.curie('supported_by'),
+                   model_uri=GENE_REVIEW.taxonomicScopeAssessment__supported_by, domain=None, range=Optional[Union[Union[dict, SupportingTextInReference], list[Union[dict, SupportingTextInReference]]]])
+
 slots.Term_id = Slot(uri=GENE_REVIEW.id, name="Term_id", curie=GENE_REVIEW.curie('id'),
                    model_uri=GENE_REVIEW.Term_id, domain=Term, range=Union[str, TermId])
 
@@ -1145,3 +2475,6 @@ slots.ExistingAnnotation_term = Slot(uri=GENE_REVIEW.term, name="ExistingAnnotat
 
 slots.AnnotationExtension_predicate = Slot(uri=RDF.predicate, name="AnnotationExtension_predicate", curie=RDF.curie('predicate'),
                    model_uri=GENE_REVIEW.AnnotationExtension_predicate, domain=AnnotationExtension, range=str)
+
+slots.RuleReview_id = Slot(uri=GENE_REVIEW.id, name="RuleReview_id", curie=GENE_REVIEW.curie('id'),
+                   model_uri=GENE_REVIEW.RuleReview_id, domain=RuleReview, range=Union[str, RuleReviewId])

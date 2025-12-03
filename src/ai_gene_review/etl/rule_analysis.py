@@ -1366,14 +1366,26 @@ def plot_domain_overlap_heatmap(
     # Create figure
     fig, ax = plt.subplots(figsize=figsize)
 
+    # Get external IPR IDs to distinguish them from GO term targets
+    external_ipr_ids = set()
+    for ext in analysis.get('external_ipr2go_domains', []):
+        external_ipr_ids.add(ext.get('interpro_id', ''))
+
     # Calculate condition set boundaries first
+    # Need to distinguish between TGT (GO terms) and EXT (external IPRs)
+    # Both have empty condition sets but should be in separate groups
     cs_boundaries = []
     prev_cs = None
+    prev_is_ext = None
     for i, domain in enumerate(domains):
         curr_cs = min(domain_to_sets[domain]) if domain_to_sets[domain] else float('inf')
-        if prev_cs is not None and curr_cs != prev_cs:
-            cs_boundaries.append(i)
+        curr_is_ext = domain in external_ipr_ids
+        # Boundary when condition set changes OR when switching between TGT/EXT
+        if prev_cs is not None:
+            if curr_cs != prev_cs or (curr_cs == float('inf') and prev_is_ext != curr_is_ext):
+                cs_boundaries.append(i)
         prev_cs = curr_cs
+        prev_is_ext = curr_is_ext
 
     # Calculate condition set labels and positions
     cs_labels = []
@@ -1382,10 +1394,13 @@ def plot_domain_overlap_heatmap(
     prev_boundary = 0
     for boundary in cs_boundaries + [n_domains]:
         mid_idx = (prev_boundary + boundary) // 2
-        domain_sets = domain_to_sets[domains[mid_idx]]
+        domain_at_mid = domains[mid_idx]
+        domain_sets = domain_to_sets[domain_at_mid]
         if domain_sets:
             cs_num = min(domain_sets)
             cs_labels.append(f"CS{cs_num}")
+        elif domain_at_mid in external_ipr_ids:
+            cs_labels.append("EXT")  # External IPR from ipr2go
         else:
             cs_labels.append("TGT")  # GO term target
         cs_positions_y.append((prev_boundary + boundary) / 2)
@@ -1609,25 +1624,72 @@ def build_heatmap_table_data(
     if current_group['domains']:
         cs_groups.append(current_group)
 
-    # Add external IPRs (from ipr2go) as a separate "EXT" group
-    if external_domains:
-        first_idx = external_domains[0][0]
-        cs_boundary_cols.add(first_idx)  # Mark first external domain as a boundary
-        cs_groups.append({
-            'cs_label': 'EXT',  # External domains from ipr2go
-            'domains': [d for _, d in external_domains],
-            'taxon_label': 'ipr2go'  # Indicate source
-        })
+    # Find GO term index in domain_list (if it exists from pairs, not appended)
+    go_term_idx = None
+    if go_term and go_term['id'] in domain_ids:
+        go_term_idx = domain_ids.index(go_term['id'])
 
-    # Add GO term as a separate "TGT" (target) group
-    if go_term:
+    # Find first external domain index
+    first_ext_idx = external_domains[0][0] if external_domains else None
+
+    # Add TGT and EXT groups in the order they appear in domain_list
+    # This ensures column order matches row order for proper diagonal alignment
+    if go_term_idx is not None and first_ext_idx is not None:
+        if go_term_idx < first_ext_idx:
+            # GO term comes first in domain_list - add TGT before EXT
+            cs_boundary_cols.add(go_term_idx)
+            cs_groups.append({
+                'cs_label': 'TGT',
+                'domains': [go_term],
+                'taxon_label': None
+            })
+            cs_boundary_cols.add(first_ext_idx)
+            cs_groups.append({
+                'cs_label': 'EXT',
+                'domains': [d for _, d in external_domains],
+                'taxon_label': 'ipr2go'
+            })
+        else:
+            # External domains come first - add EXT before TGT
+            cs_boundary_cols.add(first_ext_idx)
+            cs_groups.append({
+                'cs_label': 'EXT',
+                'domains': [d for _, d in external_domains],
+                'taxon_label': 'ipr2go'
+            })
+            cs_boundary_cols.add(go_term_idx)
+            cs_groups.append({
+                'cs_label': 'TGT',
+                'domains': [go_term],
+                'taxon_label': None
+            })
+    elif external_domains:
+        # Only external domains, no GO term in pairs
+        cs_boundary_cols.add(first_ext_idx)
+        cs_groups.append({
+            'cs_label': 'EXT',
+            'domains': [d for _, d in external_domains],
+            'taxon_label': 'ipr2go'
+        })
+        if go_term:
+            # GO term was appended at end
+            cs_boundary_cols.add(len(domain_list) - 1)
+            cs_groups.append({
+                'cs_label': 'TGT',
+                'domains': [go_term],
+                'taxon_label': None
+            })
+    elif go_term:
+        # Only GO term, no external domains
+        if go_term_idx is not None:
+            cs_boundary_cols.add(go_term_idx)
+        else:
+            cs_boundary_cols.add(len(domain_list) - 1)
         cs_groups.append({
             'cs_label': 'TGT',
             'domains': [go_term],
             'taxon_label': None
         })
-        # Mark GO term column as a boundary
-        cs_boundary_cols.add(len(domain_list) - 1)
 
     # Build matrix: matrix[i][j] = containment of domain i in domain j (i PREDICTS j)
     n = len(domain_ids)
