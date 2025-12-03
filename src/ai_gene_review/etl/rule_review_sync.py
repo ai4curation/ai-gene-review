@@ -144,6 +144,21 @@ def generate_entries(
                 'protein_count': None
             }
 
+    # Add external IPRs from ipr2go (not in any condition set but map to rule's GO terms)
+    external_iprs = analysis_data.get('external_ipr2go_domains', [])
+    for ext_ipr in external_iprs:
+        ipr_id = ext_ipr.get('interpro_id')
+        if ipr_id and ipr_id not in entities:
+            entities[ipr_id] = {
+                'id': ipr_id,
+                'label': ext_ipr.get('label', ''),  # Label from external IPR data
+                'type': 'INTERPRO',
+                'appears_in_condition_sets': [],  # Empty = not in any condition set
+                'source': 'ipr2go',  # Mark as external from ipr2go
+                'protein_count': ext_ipr.get('protein_count'),  # Protein count if available
+                'asserted_predicted_go_terms': ext_ipr.get('maps_to_go', [])  # GO terms it maps to
+            }
+
     # Process pairwise overlaps to build relationships
     all_pairs = analysis_data.get('domain_overlap_analysis', {}).get('pairs', [])
 
@@ -226,8 +241,16 @@ def generate_entries(
         if entity_data['appears_in_condition_sets']:
             entry['appears_in_condition_sets'] = sorted(entity_data['appears_in_condition_sets'])
 
+        # Include source field for external IPRs from ipr2go
+        if entity_data.get('source'):
+            entry['source'] = entity_data['source']
+
         if entity_data['protein_count'] is not None:
             entry['protein_count'] = entity_data['protein_count']
+
+        # Include asserted GO terms for entries that have ipr2go mappings
+        if entity_data.get('asserted_predicted_go_terms'):
+            entry['asserted_predicted_go_terms'] = entity_data['asserted_predicted_go_terms']
 
         if entity_id in relationships and relationships[entity_id]:
             entry['related_entries'] = relationships[entity_id]
