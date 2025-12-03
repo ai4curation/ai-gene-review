@@ -94,6 +94,29 @@ def fetch_interpro2go_mappings(cache_dir: Path) -> dict[str, list[str]]:
     return mappings
 
 
+def get_interpros_for_go(go_id: str, ipr2go_mappings: dict[str, list[str]]) -> list[str]:
+    """Reverse lookup: find all InterPro IDs that map to a GO term.
+
+    This is the inverse of the ipr2go mappings - given a GO term, find all
+    InterPro domains that have been mapped to it.
+
+    Args:
+        go_id: GO term ID (e.g., "GO:0004791")
+        ipr2go_mappings: Dict from fetch_interpro2go_mappings()
+
+    Returns:
+        List of InterPro IDs that map to this GO term
+
+    Example:
+        >>> mappings = {"IPR005982": ["GO:0004791"], "IPR006338": ["GO:0004791", "GO:0016491"]}
+        >>> sorted(get_interpros_for_go("GO:0004791", mappings))
+        ['IPR005982', 'IPR006338']
+        >>> get_interpros_for_go("GO:9999999", mappings)
+        []
+    """
+    return [ipr for ipr, go_list in ipr2go_mappings.items() if go_id in go_list]
+
+
 def get_swissprot_count_for_interpro(
     interpro_id: str,
     reviewed_only: bool = True,
@@ -768,7 +791,9 @@ def analyze_ipr2go_redundancy(
 
 def analyze_all_domain_pairs(
     rule: ARBARule,
-    request_delay: float = 0.1
+    request_delay: float = 0.1,
+    ipr2go_mappings: Optional[dict[str, list[str]]] = None,
+    include_external_iprs: bool = True,
 ) -> dict:
     """Analyze all pairwise overlaps between domain conditions across entire rule.
 
@@ -776,12 +801,18 @@ def analyze_all_domain_pairs(
     then performs pairwise overlap analysis. This flattened approach catches
     redundancy anywhere in the rule's boolean structure.
 
+    If ipr2go_mappings is provided and include_external_iprs is True, also includes
+    InterPro domains from ipr2go that map to the rule's GO terms but are not part
+    of any condition set. These external IPRs have empty condition_set_membership.
+
     Args:
         rule: ARBARule object to analyze
         request_delay: Delay between API requests
+        ipr2go_mappings: Optional dict from fetch_interpro2go_mappings() for finding external IPRs
+        include_external_iprs: If True and ipr2go_mappings provided, include external IPRs
 
     Returns:
-        Dict with pairs analysis and summary
+        Dict with pairs analysis, summary, and list of external_ipr_ids
 
     Example:
         >>> from ai_gene_review.etl.arba import ARBAClient
@@ -828,11 +859,27 @@ def analyze_all_domain_pairs(
                     if cs_idx not in condition_set_membership[domain_key]:
                         condition_set_membership[domain_key].append(cs_idx)
 
+    # Add external IPRs from ipr2go that map to rule's GO terms but aren't in rule
+    external_ipr_ids = []
+    if include_external_iprs and ipr2go_mappings:
+        rule_interpro_ids = set(rule.get_interpro_ids())
+        for go_id in rule.get_go_ids():
+            iprs_for_go = get_interpros_for_go(go_id, ipr2go_mappings)
+            for ipr in iprs_for_go:
+                if ipr not in rule_interpro_ids:
+                    domain_key = ("interpro", ipr)
+                    if domain_key not in all_domain_conditions:
+                        all_domain_conditions.append(domain_key)
+                        # Empty list = not in any condition set (external)
+                        condition_set_membership[domain_key] = []
+                        external_ipr_ids.append(ipr)
+
     # No analysis if < 2 domain conditions total
     if len(all_domain_conditions) < 2:
         return {
             "pairs": [],
-            "summary": f"Only {len(all_domain_conditions)} domain condition(s) in entire rule"
+            "summary": f"Only {len(all_domain_conditions)} domain condition(s) in entire rule",
+            "external_ipr_ids": external_ipr_ids
         }
 
     # Analyze all pairwise combinations
@@ -973,10 +1020,13 @@ def analyze_all_domain_pairs(
     summary += f"Average Jaccard similarity: {avg_jaccard:.3f}. "
     summary += f"{len(high_overlap_pairs)} pairs with >50% overlap, "
     summary += f"{len(subset_pairs)} subset relationships."
+    if external_ipr_ids:
+        summary += f" Included {len(external_ipr_ids)} external IPR(s) from ipr2go."
 
     return {
         "pairs": pairs_analysis,
-        "summary": summary
+        "summary": summary,
+        "external_ipr_ids": external_ipr_ids
     }
 
 
@@ -984,7 +1034,8 @@ def analyze_rule_post_enrichment(
     rule: ARBARule,
     cache_dir: Path,
     request_delay: float = 0.1,
-    max_condition_sets: int = 12
+    max_condition_sets: int = 12,
+    include_external_iprs: bool = True,
 ) -> dict:
     """Main analysis function - runs all steps deterministically.
 
@@ -993,12 +1044,15 @@ def analyze_rule_post_enrichment(
     2. Get ipr2go mappings from cached file
     3. Analyze redundancy with ipr2go mappings
     4. Summarize findings per condition set
+    5. (If include_external_iprs) Include external IPRs from ipr2go
 
     Args:
         rule: ARBARule object to analyze
         cache_dir: Directory for caching ipr2go file
         request_delay: Delay between API requests
         max_condition_sets: Maximum number of condition sets to analyze (default: 12)
+        include_external_iprs: If True, include IPRs from ipr2go that map to rule's GO terms
+            but are not part of any condition set (default: True)
 
     Returns:
         Complete analysis dict suitable for adding to enriched JSON
@@ -1029,7 +1083,13 @@ def analyze_rule_post_enrichment(
     ipr2go_mappings = fetch_interpro2go_mappings(cache_dir)
 
     # Analyze all domain pairs across entire rule (flattened)
-    all_pairs_analysis = analyze_all_domain_pairs(rule, request_delay=request_delay)
+    # Also includes external IPRs from ipr2go that map to the rule's GO terms
+    all_pairs_analysis = analyze_all_domain_pairs(
+        rule,
+        request_delay=request_delay,
+        ipr2go_mappings=ipr2go_mappings,
+        include_external_iprs=include_external_iprs,
+    )
 
     # Collect all InterPro IDs for ipr2go analysis
     all_interpro_ids = []
@@ -1081,8 +1141,37 @@ def analyze_rule_post_enrichment(
     # Extract domain labels from enriched JSON if available
     domain_labels = extract_domain_labels_from_enriched_rule(rule.uni_rule_id, cache_dir)
 
+    # Build external IPR info from the analysis
+    external_ipr_ids = all_pairs_analysis.get("external_ipr_ids", [])
+    external_ipr2go_domains = []
+
+    # Build protein count lookup from pairs
+    pairs = all_pairs_analysis.get("pairs", [])
+    ipr_protein_counts = {}
+    for pair in pairs:
+        if pair['condition_a'] not in ipr_protein_counts:
+            ipr_protein_counts[pair['condition_a']] = pair.get('count_a')
+        if pair['condition_b'] not in ipr_protein_counts:
+            ipr_protein_counts[pair['condition_b']] = pair.get('count_b')
+
+    for ipr_id in external_ipr_ids:
+        # Find which GO terms this IPR maps to (from ipr2go)
+        maps_to_go = [go_id for go_id in rule_go_ids if ipr_id in get_interpros_for_go(go_id, ipr2go_mappings)]
+        # Get protein count from pairs if available
+        protein_count = ipr_protein_counts.get(ipr_id)
+        # Get label from domain_labels if available
+        label = domain_labels.get(ipr_id, '')
+        external_ipr2go_domains.append({
+            "interpro_id": ipr_id,
+            "label": label,
+            "maps_to_go": maps_to_go,
+            "source": "ipr2go",
+            "protein_count": protein_count
+        })
+
     return {
         "rule_id": rule.uni_rule_id,
+        "external_ipr2go_domains": external_ipr2go_domains,
         "domain_overlap_analysis": all_pairs_analysis,
         "condition_sets_summary": condition_sets_summary,
         "ipr2go_redundancy": redundancy_analysis,
@@ -1277,14 +1366,26 @@ def plot_domain_overlap_heatmap(
     # Create figure
     fig, ax = plt.subplots(figsize=figsize)
 
+    # Get external IPR IDs to distinguish them from GO term targets
+    external_ipr_ids = set()
+    for ext in analysis.get('external_ipr2go_domains', []):
+        external_ipr_ids.add(ext.get('interpro_id', ''))
+
     # Calculate condition set boundaries first
+    # Need to distinguish between TGT (GO terms) and EXT (external IPRs)
+    # Both have empty condition sets but should be in separate groups
     cs_boundaries = []
     prev_cs = None
+    prev_is_ext = None
     for i, domain in enumerate(domains):
         curr_cs = min(domain_to_sets[domain]) if domain_to_sets[domain] else float('inf')
-        if prev_cs is not None and curr_cs != prev_cs:
-            cs_boundaries.append(i)
+        curr_is_ext = domain in external_ipr_ids
+        # Boundary when condition set changes OR when switching between TGT/EXT
+        if prev_cs is not None:
+            if curr_cs != prev_cs or (curr_cs == float('inf') and prev_is_ext != curr_is_ext):
+                cs_boundaries.append(i)
         prev_cs = curr_cs
+        prev_is_ext = curr_is_ext
 
     # Calculate condition set labels and positions
     cs_labels = []
@@ -1293,10 +1394,13 @@ def plot_domain_overlap_heatmap(
     prev_boundary = 0
     for boundary in cs_boundaries + [n_domains]:
         mid_idx = (prev_boundary + boundary) // 2
-        domain_sets = domain_to_sets[domains[mid_idx]]
+        domain_at_mid = domains[mid_idx]
+        domain_sets = domain_to_sets[domain_at_mid]
         if domain_sets:
             cs_num = min(domain_sets)
             cs_labels.append(f"CS{cs_num}")
+        elif domain_at_mid in external_ipr_ids:
+            cs_labels.append("EXT")  # External IPR from ipr2go
         else:
             cs_labels.append("TGT")  # GO term target
         cs_positions_y.append((prev_boundary + boundary) / 2)
@@ -1477,24 +1581,31 @@ def build_heatmap_table_data(
 
     # Append GO term to domain list if found and not already there (will appear as TGT column)
     # The GO term may already be in the list from the pairs loop
+    go_term_appended = False
     if go_term and go_term['id'] not in domain_ids:
         domain_list.append(go_term)
         domain_ids.append(go_term['id'])
+        go_term_appended = True
 
     # Build condition set groups for two-level headers and track CS boundary columns
     # condition_sets values are already 1-based (from analyze_all_domain_pairs and above loops)
-    # Exclude GO term from this loop (it has no condition sets and will be added separately)
+    # Exclude GO term and external IPRs from this loop (added separately)
     cs_groups = []
     cs_boundary_cols = set()  # Columns that start a new CS
     current_cs = None
     current_group = {'cs_label': None, 'domains': [], 'taxon_label': None}
+    external_domains = []  # Collect external IPRs (empty condition_sets, not GO terms)
 
     # Only process domains (not GO term) for CS grouping
-    num_domains = len(domain_list) - (1 if go_term else 0)
+    # If GO term was appended, skip the last element; if it was already in list from pairs, include all
+    num_domains = len(domain_list) - (1 if go_term_appended else 0)
     for idx in range(num_domains):
         domain = domain_list[idx]
-        # Skip if this domain has no condition sets (e.g., GO terms that got added from pairs)
+        # Skip if this domain has no condition sets (external IPRs from ipr2go)
         if not domain['condition_sets']:
+            # Collect external domains for separate group (but not GO terms)
+            if not domain['id'].startswith('GO:'):
+                external_domains.append((idx, domain))
             continue
         cs = min(domain['condition_sets'])
         if cs != current_cs:
@@ -1513,15 +1624,72 @@ def build_heatmap_table_data(
     if current_group['domains']:
         cs_groups.append(current_group)
 
-    # Add GO term as a separate "TGT" (target) group
-    if go_term:
+    # Find GO term index in domain_list (if it exists from pairs, not appended)
+    go_term_idx = None
+    if go_term and go_term['id'] in domain_ids:
+        go_term_idx = domain_ids.index(go_term['id'])
+
+    # Find first external domain index
+    first_ext_idx = external_domains[0][0] if external_domains else None
+
+    # Add TGT and EXT groups in the order they appear in domain_list
+    # This ensures column order matches row order for proper diagonal alignment
+    if go_term_idx is not None and first_ext_idx is not None:
+        if go_term_idx < first_ext_idx:
+            # GO term comes first in domain_list - add TGT before EXT
+            cs_boundary_cols.add(go_term_idx)
+            cs_groups.append({
+                'cs_label': 'TGT',
+                'domains': [go_term],
+                'taxon_label': None
+            })
+            cs_boundary_cols.add(first_ext_idx)
+            cs_groups.append({
+                'cs_label': 'EXT',
+                'domains': [d for _, d in external_domains],
+                'taxon_label': 'ipr2go'
+            })
+        else:
+            # External domains come first - add EXT before TGT
+            cs_boundary_cols.add(first_ext_idx)
+            cs_groups.append({
+                'cs_label': 'EXT',
+                'domains': [d for _, d in external_domains],
+                'taxon_label': 'ipr2go'
+            })
+            cs_boundary_cols.add(go_term_idx)
+            cs_groups.append({
+                'cs_label': 'TGT',
+                'domains': [go_term],
+                'taxon_label': None
+            })
+    elif external_domains:
+        # Only external domains, no GO term in pairs
+        cs_boundary_cols.add(first_ext_idx)
+        cs_groups.append({
+            'cs_label': 'EXT',
+            'domains': [d for _, d in external_domains],
+            'taxon_label': 'ipr2go'
+        })
+        if go_term:
+            # GO term was appended at end
+            cs_boundary_cols.add(len(domain_list) - 1)
+            cs_groups.append({
+                'cs_label': 'TGT',
+                'domains': [go_term],
+                'taxon_label': None
+            })
+    elif go_term:
+        # Only GO term, no external domains
+        if go_term_idx is not None:
+            cs_boundary_cols.add(go_term_idx)
+        else:
+            cs_boundary_cols.add(len(domain_list) - 1)
         cs_groups.append({
             'cs_label': 'TGT',
             'domains': [go_term],
             'taxon_label': None
         })
-        # Mark GO term column as a boundary
-        cs_boundary_cols.add(len(domain_list) - 1)
 
     # Build matrix: matrix[i][j] = containment of domain i in domain j (i PREDICTS j)
     n = len(domain_ids)
