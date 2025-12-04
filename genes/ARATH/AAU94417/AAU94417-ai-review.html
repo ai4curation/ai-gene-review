@@ -1,0 +1,3763 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PSBP1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>PSBP1</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q42029" target="_blank" class="term-link">
+                        Q42029
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Arabidopsis thaliana</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "PSBP1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q42029" data-a="DESCRIPTION: PSBP-1 (Oxygen-evolving enhancer protein 2-1) is a..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>PSBP-1 (Oxygen-evolving enhancer protein 2-1) is a 23 kDa extrinsic subunit of the photosystem II (PSII) oxygen-evolving complex (OEC). It is localized to the thylakoid lumen of chloroplasts where it stabilizes the manganese cluster of the OEC and is essential for efficient water splitting and oxygen evolution during photosynthesis.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009535" target="_blank" class="term-link">
+                                    GO:0009535
+                                </a>
+                            </span>
+                            <span class="term-label">chloroplast thylakoid membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q42029" data-a="GO:0009535" data-r="GO_REF:0000033" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PSBP-1 is an extrinsic component of PSII located in the thylakoid lumen, not the membrane itself. This is an over-annotation. [PMID:11719511 &#34;proteome map of the chloroplast lumen&#34;]
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0048564" target="_blank" class="term-link">
+                                    GO:0048564
+                                </a>
+                            </span>
+                            <span class="term-label">photosystem I assembly</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q42029" data-a="GO:0048564" data-r="GO_REF:0000033" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PSBP-1 is a component of photosystem II, not photosystem I. This is incorrect. [PMID:9039496 &#34;psbP gene encoding precursor of 23-kDa polypeptide of oxygen-evolving complex in Arabidopsis thaliana&#34;]
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005509" target="_blank" class="term-link">
+                                    GO:0005509
+                                </a>
+                            </span>
+                            <span class="term-label">calcium ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q42029" data-a="GO:0005509" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PSBP domain proteins are known to bind calcium ions, which is important for OEC stabilization. However, this is IEA (automatic annotation) and needs experimental verification. The primary function is not calcium binding per se but stabilization of the OEC.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009523" target="_blank" class="term-link">
+                                    GO:0009523
+                                </a>
+                            </span>
+                            <span class="term-label">photosystem II</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q42029" data-a="GO:0009523" data-r="GO_REF:0000120" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but too general. PSBP-1 is specifically a component of the oxygen-evolving complex of PSII. Should be replaced with GO:0009654 (photosystem II oxygen evolving complex).
+                        </div>
+                        
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009654" target="_blank" class="term-link">
+                                    photosystem II oxygen evolving complex
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009543" target="_blank" class="term-link">
+                                    GO:0009543
+                                </a>
+                            </span>
+                            <span class="term-label">chloroplast thylakoid lumen</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q42029" data-a="GO:0009543" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct localization. PSBP-1 is indeed located in the thylakoid lumen where it functions as part of the OEC. [PMID:11719511 &#34;Proteome map of the chloroplast lumen of Arabidopsis thaliana&#34;]
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009654" target="_blank" class="term-link">
+                                    GO:0009654
+                                </a>
+                            </span>
+                            <span class="term-label">photosystem II oxygen evolving complex</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q42029" data-a="GO:0009654" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct and specific localization. PSBP-1 is a core component of the OEC. [PMID:9039496 &#34;23-kDa polypeptide of oxygen-evolving complex&#34;]
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015979" target="_blank" class="term-link">
+                                    GO:0015979
+                                </a>
+                            </span>
+                            <span class="term-label">photosynthesis</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q42029" data-a="GO:0015979" data-r="GO_REF:0000120" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but too general. PSBP-1 is specifically involved in the light reactions of photosynthesis. Should be replaced with GO:0019684 (photosynthesis, light reaction).
+                        </div>
+                        
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019684" target="_blank" class="term-link">
+                                    photosynthesis, light reaction
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019898" target="_blank" class="term-link">
+                                    GO:0019898
+                                </a>
+                            </span>
+                            <span class="term-label">extrinsic component of membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q42029" data-a="GO:0019898" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct. PSBP-1 is an extrinsic (peripheral) component associated with the thylakoid membrane via the PSII complex. [PMID:11719511 &#34;PsbP domain proteins&#34;]
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1901149" target="_blank" class="term-link">
+                                    GO:1901149
+                                </a>
+                            </span>
+                            <span class="term-label">salicylic acid binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25628632" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25628632
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Identification of multiple salicylic acid-binding proteins u...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q42029" data-a="GO:1901149" data-r="PMID:25628632" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput screen result. Not a core function of PSBP-1. May represent non-specific binding or a regulatory interaction unrelated to its primary role in photosynthesis.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009535" target="_blank" class="term-link">
+                                    GO:0009535
+                                </a>
+                            </span>
+                            <span class="term-label">chloroplast thylakoid membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15322131" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15322131
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    New functions of the thylakoid membrane proteome of Arabidop...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q42029" data-a="GO:0009535" data-r="PMID:15322131" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PSBP-1 is in the lumen, not the membrane itself. Proteomic studies may detect it in membrane fractions due to its tight association with PSII, but this is imprecise localization.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009543" target="_blank" class="term-link">
+                                    GO:0009543
+                                </a>
+                            </span>
+                            <span class="term-label">chloroplast thylakoid lumen</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11826309" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11826309
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Central functions of the lumenal and peripheral thylakoid pr...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q42029" data-a="GO:0009543" data-r="PMID:11826309" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct localization with experimental support. [PMID:11826309 &#34;Central functions of the lumenal and peripheral thylakoid proteome&#34;]
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009579" target="_blank" class="term-link">
+                                    GO:0009579
+                                </a>
+                            </span>
+                            <span class="term-label">thylakoid</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11826309" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11826309
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Central functions of the lumenal and peripheral thylakoid pr...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q42029" data-a="GO:0009579" data-r="PMID:11826309" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Too general. PSBP-1 is specifically in the thylakoid lumen (GO:0009543).
+                        </div>
+                        
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009543" target="_blank" class="term-link">
+                                    chloroplast thylakoid lumen
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031977" target="_blank" class="term-link">
+                                    GO:0031977
+                                </a>
+                            </span>
+                            <span class="term-label">thylakoid lumen</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11719511" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11719511
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Proteome map of the chloroplast lumen of Arabidopsis thalian...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q42029" data-a="GO:0031977" data-r="PMID:11719511" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct localization. [PMID:11719511 &#34;Proteome map of the chloroplast lumen&#34;]
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0048046" target="_blank" class="term-link">
+                                    GO:0048046
+                                </a>
+                            </span>
+                            <span class="term-label">apoplast</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18538804" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18538804
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Hydroponic isotope labelling of entire plants (HILEP) for qu...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q42029" data-a="GO:0048046" data-r="PMID:18538804" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Incorrect localization. PSBP-1 is a chloroplast protein, not an apoplast protein. This is likely contamination or misidentification in the proteomic study.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009570" target="_blank" class="term-link">
+                                    GO:0009570
+                                </a>
+                            </span>
+                            <span class="term-label">chloroplast stroma</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16207701" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16207701
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The oligomeric stromal proteome of Arabidopsis thaliana chlo...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q42029" data-a="GO:0009570" data-r="PMID:16207701" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Incorrect localization. PSBP-1 is in the thylakoid lumen, not the stroma. Likely cross-contamination in proteomic fractionation.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009535" target="_blank" class="term-link">
+                                    GO:0009535
+                                </a>
+                            </span>
+                            <span class="term-label">chloroplast thylakoid membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14729914" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:14729914
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    In-depth analysis of the thylakoid membrane proteome of Arab...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q42029" data-a="GO:0009535" data-r="PMID:14729914" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PSBP-1 is in the lumen, not the membrane. Proteomic membrane fractions may include lumenal proteins due to association with membrane complexes.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009579" target="_blank" class="term-link">
+                                    GO:0009579
+                                </a>
+                            </span>
+                            <span class="term-label">thylakoid</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14729914" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:14729914
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    In-depth analysis of the thylakoid membrane proteome of Arab...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q42029" data-a="GO:0009579" data-r="PMID:14729914" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Too general. Should be thylakoid lumen.
+                        </div>
+                        
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009543" target="_blank" class="term-link">
+                                    chloroplast thylakoid lumen
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009579" target="_blank" class="term-link">
+                                    GO:0009579
+                                </a>
+                            </span>
+                            <span class="term-label">thylakoid</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16648217" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16648217
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    High light response of the thylakoid proteome in arabidopsis...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q42029" data-a="GO:0009579" data-r="PMID:16648217" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Too general. Should be thylakoid lumen.
+                        </div>
+                        
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009543" target="_blank" class="term-link">
+                                    chloroplast thylakoid lumen
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009507" target="_blank" class="term-link">
+                                    GO:0009507
+                                </a>
+                            </span>
+                            <span class="term-label">chloroplast</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18431481" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18431481
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Sorting signals, N-terminal modifications and abundance of t...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q42029" data-a="GO:0009507" data-r="PMID:18431481" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Too general. PSBP-1 is specifically in the thylakoid lumen.
+                        </div>
+                        
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009543" target="_blank" class="term-link">
+                                    chloroplast thylakoid lumen
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009534" target="_blank" class="term-link">
+                                    GO:0009534
+                                </a>
+                            </span>
+                            <span class="term-label">chloroplast thylakoid</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20061580" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20061580
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    AT_CHLORO, a comprehensive chloroplast proteome database wit...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q42029" data-a="GO:0009534" data-r="PMID:20061580" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Too general. Should be thylakoid lumen.
+                        </div>
+                        
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009543" target="_blank" class="term-link">
+                                    chloroplast thylakoid lumen
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009570" target="_blank" class="term-link">
+                                    GO:0009570
+                                </a>
+                            </span>
+                            <span class="term-label">chloroplast stroma</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18633119" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18633119
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Quantitative proteomics of a chloroplast SRP54 sorting mutan...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q42029" data-a="GO:0009570" data-r="PMID:18633119" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Incorrect. PSBP-1 is in the thylakoid lumen, not stroma.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009579" target="_blank" class="term-link">
+                                    GO:0009579
+                                </a>
+                            </span>
+                            <span class="term-label">thylakoid</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18633119" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18633119
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Quantitative proteomics of a chloroplast SRP54 sorting mutan...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q42029" data-a="GO:0009579" data-r="PMID:18633119" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Too general. Should be thylakoid lumen.
+                        </div>
+                        
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009543" target="_blank" class="term-link">
+                                    chloroplast thylakoid lumen
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009941" target="_blank" class="term-link">
+                                    GO:0009941
+                                </a>
+                            </span>
+                            <span class="term-label">chloroplast envelope</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12938931" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12938931
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Proteomic study of the Arabidopsis thaliana chloroplastic en...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q42029" data-a="GO:0009941" data-r="PMID:12938931" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Incorrect localization. PSBP-1 is in the thylakoid lumen, not the chloroplast envelope. Likely contamination.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003729" target="_blank" class="term-link">
+                                    GO:0003729
+                                </a>
+                            </span>
+                            <span class="term-label">mRNA binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32344669" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32344669
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Discovering the RNA-Binding Proteome of Plant Leaves with an...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q42029" data-a="GO:0003729" data-r="PMID:32344669" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput RNA-binding proteome study. Not a core function of PSBP-1. May represent non-specific binding in vitro or moonlighting function unrelated to photosynthesis.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28887381" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28887381
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Global Analysis of Membrane-associated Protein Oligomerizati...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q42029" data-a="GO:0005576" data-r="PMID:28887381" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Incorrect. PSBP-1 is a chloroplast protein, not extracellular. This is misannotation.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009507" target="_blank" class="term-link">
+                                    GO:0009507
+                                </a>
+                            </span>
+                            <span class="term-label">chloroplast</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25293756" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25293756
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A proteomic strategy for global analysis of plant protein co...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q42029" data-a="GO:0009507" data-r="PMID:25293756" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Too general. Should be thylakoid lumen.
+                        </div>
+                        
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009543" target="_blank" class="term-link">
+                                    chloroplast thylakoid lumen
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009507" target="_blank" class="term-link">
+                                    GO:0009507
+                                </a>
+                            </span>
+                            <span class="term-label">chloroplast</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISM</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000122
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q42029" data-a="GO:0009507" data-r="GO_REF:0000122" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Too general. Should be thylakoid lumen.
+                        </div>
+                        
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009543" target="_blank" class="term-link">
+                                    chloroplast thylakoid lumen
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019904" target="_blank" class="term-link">
+                                    GO:0019904
+                                </a>
+                            </span>
+                            <span class="term-label">protein domain specific binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24736607" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:24736607
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A split-ubiquitin yeast two-hybrid screen to examine the sub...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q42029" data-a="GO:0019904" data-r="PMID:24736607" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Too vague. This is about chloroplast preprotein import receptors binding to PSBP-1 transit peptide. Not a core function of the mature protein.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008266" target="_blank" class="term-link">
+                                    GO:0008266
+                                </a>
+                            </span>
+                            <span class="term-label">poly(U) RNA binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17511964" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17511964
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Identification of proteins expressed at extremely low level ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q42029" data-a="GO:0008266" data-r="PMID:17511964" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Not a core function. May represent moonlighting activity unrelated to primary role in PSII.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019684" target="_blank" class="term-link">
+                                    GO:0019684
+                                </a>
+                            </span>
+                            <span class="term-label">photosynthesis, light reaction</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9039496" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9039496
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Nucleotide sequence of the psbP gene encoding precursor of 2...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q42029" data-a="GO:0019684" data-r="PMID:9039496" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct biological process. PSBP-1 is essential for the light reactions of photosynthesis. [PMID:9039496 &#34;psbP gene encoding precursor of 23-kDa polypeptide of oxygen-evolving complex&#34;]
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019898" target="_blank" class="term-link">
+                                    GO:0019898
+                                </a>
+                            </span>
+                            <span class="term-label">extrinsic component of membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11719511" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11719511
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Proteome map of the chloroplast lumen of Arabidopsis thalian...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q42029" data-a="GO:0019898" data-r="PMID:11719511" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct with experimental support. PSBP-1 is an extrinsic component. [PMID:11719511 &#34;Proteome map of the chloroplast lumen&#34;]
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009534" target="_blank" class="term-link">
+                                    GO:0009534
+                                </a>
+                            </span>
+                            <span class="term-label">chloroplast thylakoid</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11526245" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11526245
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    An essential role of a TatC homologue of a Delta pH- depende...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q42029" data-a="GO:0009534" data-r="PMID:11526245" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Too general. Should be thylakoid lumen. [file:ARATH/AAU94417/AAU94417-deep-research-perplexity-lite.md &#34;localized to the thylakoid lumen of chloroplasts&#34;]
+                        </div>
+                        
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009543" target="_blank" class="term-link">
+                                    chloroplast thylakoid lumen
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>PSBP-1 stabilizes the oxygen-evolving complex of photosystem II, enabling efficient water splitting and oxygen evolution during photosynthesis</h3>
+                <span class="vote-buttons" data-g="Q42029" data-a="FUNCTION: PSBP-1 stabilizes the oxygen-evolving complex of p..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0140777" target="_blank" class="term-link">
+                            protein-containing complex stabilizing activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019684" target="_blank" class="term-link">
+                                photosynthesis, light reaction
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042549" target="_blank" class="term-link">
+                                photosystem II stabilization
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009654" target="_blank" class="term-link">
+                                photosystem II oxygen evolving complex
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009543" target="_blank" class="term-link">
+                                chloroplast thylakoid lumen
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9039496" target="_blank" class="term-link">
+                                PMID:9039496
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">psbP gene encoding precursor of 23-kDa polypeptide of oxygen-evolving complex</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11719511" target="_blank" class="term-link">
+                                PMID:11719511
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Proteome map of the chloroplast lumen of Arabidopsis thaliana</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:ARATH/AAU94417/AAU94417-deep-research-perplexity-lite.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">PSBP-1 is essential for the stabilization of the oxygen-evolving complex (OEC) of PSII</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000122.md" target="_blank" class="term-link">
+                            GO_REF:0000122
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">AtSubP analysis</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11526245" target="_blank" class="term-link">
+                            PMID:11526245
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">An essential role of a TatC homologue of a Delta pH- dependent protein transporter in thylakoid membrane formation during chloroplast development in Arabidopsis thaliana.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11719511" target="_blank" class="term-link">
+                            PMID:11719511
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Proteome map of the chloroplast lumen of Arabidopsis thaliana.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11826309" target="_blank" class="term-link">
+                            PMID:11826309
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Central functions of the lumenal and peripheral thylakoid proteome of Arabidopsis determined by experimentation and genome-wide prediction.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12938931" target="_blank" class="term-link">
+                            PMID:12938931
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Proteomic study of the Arabidopsis thaliana chloroplastic envelope membrane utilizing alternatives to traditional two-dimensional electrophoresis.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/14729914" target="_blank" class="term-link">
+                            PMID:14729914
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">In-depth analysis of the thylakoid membrane proteome of Arabidopsis thaliana chloroplasts: new proteins, new functions, and a plastid proteome database.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15322131" target="_blank" class="term-link">
+                            PMID:15322131
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">New functions of the thylakoid membrane proteome of Arabidopsis thaliana revealed by a simple, fast, and versatile fractionation strategy.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16207701" target="_blank" class="term-link">
+                            PMID:16207701
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The oligomeric stromal proteome of Arabidopsis thaliana chloroplasts.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16648217" target="_blank" class="term-link">
+                            PMID:16648217
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">High light response of the thylakoid proteome in arabidopsis wild type and the ascorbate-deficient mutant vtc2-2. A comparative proteomics study.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17511964" target="_blank" class="term-link">
+                            PMID:17511964
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Identification of proteins expressed at extremely low level in Arabidopsis leaves.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18431481" target="_blank" class="term-link">
+                            PMID:18431481
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Sorting signals, N-terminal modifications and abundance of the chloroplast proteome.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18538804" target="_blank" class="term-link">
+                            PMID:18538804
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Hydroponic isotope labelling of entire plants (HILEP) for quantitative plant proteomics; an oxidative stress case study.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18633119" target="_blank" class="term-link">
+                            PMID:18633119
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Quantitative proteomics of a chloroplast SRP54 sorting mutant and its genetic interactions with CLPC1 in Arabidopsis.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20061580" target="_blank" class="term-link">
+                            PMID:20061580
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">AT_CHLORO, a comprehensive chloroplast proteome database with subplastidial localization and curated information on envelope proteins.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/24736607" target="_blank" class="term-link">
+                            PMID:24736607
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A split-ubiquitin yeast two-hybrid screen to examine the substrate specificity of atToc159 and atToc132, two Arabidopsis chloroplast preprotein import receptors.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25293756" target="_blank" class="term-link">
+                            PMID:25293756
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A proteomic strategy for global analysis of plant protein complexes.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25628632" target="_blank" class="term-link">
+                            PMID:25628632
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Identification of multiple salicylic acid-binding proteins using two high throughput screens.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28887381" target="_blank" class="term-link">
+                            PMID:28887381
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Global Analysis of Membrane-associated Protein Oligomerization Using Protein Correlation Profiling.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32344669" target="_blank" class="term-link">
+                            PMID:32344669
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Discovering the RNA-Binding Proteome of Plant Leaves with an Improved RNA Interactome Capture Method.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9039496" target="_blank" class="term-link">
+                            PMID:9039496
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Nucleotide sequence of the psbP gene encoding precursor of 23-kDa polypeptide of oxygen-evolving complex in Arabidopsis thaliana and its expression in the wild-type and a constitutively photomorphogenic mutant.</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Perplexity Lite</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(AAU94417-deep-research-perplexity-lite.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q42029" data-a="DOC: Deep Research Perplexity Lite" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: perplexity<br />
+model: sonar-pro<br />
+cached: false<br />
+start_time: '2025-10-19T15:06:54.397024'<br />
+end_time: '2025-10-19T15:07:14.180353'<br />
+duration_seconds: 19.78<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    reasoning_effort: low<br />
+    search_recency_filter: month<br />
+    search_domain_filter: []<br />
+    return_citations: true<br />
+    temperature: 0.1<br />
+citation_count: 3</p>
+<hr />
+<h2 id="question">Question</h2>
+<p>Research the AAU94417 gene in ARATH, focusing on its molecular function, biological processes, and cellular localization. Include information about protein domains, known interactions, and any disease associations.</p>
+<h2 id="output">Output</h2>
+<p>The <strong>AAU94417 gene</strong> in <em>Arabidopsis thaliana</em> (ARATH) encodes the <strong>PSBP-1 protein</strong>, a component of the photosystem II oxygen-evolving complex. Its molecular function, biological processes, and cellular localization are well-characterized, with additional details available on protein domains, interactions, and disease associations.</p>
+<hr />
+<p><strong>Key Concepts and Definitions</strong></p>
+<ul>
+<li><strong>Gene/Protein Name:</strong> AAU94417 (gene), PSBP-1 (protein)</li>
+<li><strong>Organism:</strong> <em>Arabidopsis thaliana</em> (ARATH)</li>
+<li><strong>Primary Function:</strong> Photosystem II stabilization and oxygen evolution</li>
+</ul>
+<hr />
+<p><strong>1. Molecular Function</strong></p>
+<ul>
+<li><strong>PSBP-1</strong> is a <strong>photosystem II (PSII) oxygen-evolving enhancer protein</strong>. It is essential for the stabilization of the oxygen-evolving complex (OEC) of PSII, which is responsible for water splitting and oxygen evolution during photosynthesis[1].</li>
+<li>The protein binds to the PSII complex and is involved in maintaining the proper structure and function of the OEC, particularly the manganese cluster that catalyzes water oxidation[1].</li>
+</ul>
+<hr />
+<p><strong>2. Biological Processes</strong></p>
+<ul>
+<li><strong>Photosynthesis:</strong> PSBP-1 is directly involved in the light-dependent reactions of photosynthesis, specifically in the evolution of oxygen from water[1].</li>
+<li><strong>Assembly and Stability of PSII:</strong> It plays a role in the assembly and stabilization of the PSII complex, ensuring efficient electron transport and photoprotection[1].</li>
+<li><strong>Response to Light Stimulus:</strong> As part of PSII, PSBP-1 is implicated in plant responses to varying light conditions, which affect photosynthetic efficiency and stress responses[1].</li>
+</ul>
+<hr />
+<p><strong>3. Cellular Localization</strong></p>
+<ul>
+<li><strong>Chloroplast Thylakoid Lumen:</strong> PSBP-1 is localized to the thylakoid lumen of chloroplasts, where the PSII complex resides[1].</li>
+<li>This localization is consistent with its role in the photosynthetic machinery and is supported by proteomic and localization studies in <em>Arabidopsis</em>[1].</li>
+</ul>
+<hr />
+<p><strong>4. Protein Domains</strong></p>
+<ul>
+<li><strong>PSBP Domain:</strong> The protein contains a conserved PSBP domain, characteristic of oxygen-evolving enhancer proteins in plants[1].</li>
+<li>This domain is responsible for interaction with other PSII subunits and for binding to the OEC[1].</li>
+</ul>
+<hr />
+<p><strong>5. Known Interactions</strong></p>
+<ul>
+<li><strong>PSII Core Complex:</strong> PSBP-1 interacts with other extrinsic proteins of the OEC (such as PsbO and PsbQ) and with core PSII subunits[1].</li>
+<li>These interactions are critical for the assembly, stability, and function of the PSII complex[1].</li>
+<li>No evidence of direct interaction with non-photosynthetic proteins has been reported in the literature as of 2024.</li>
+</ul>
+<hr />
+<p><strong>6. Disease Associations</strong></p>
+<ul>
+<li><strong>No Known Human Disease Associations:</strong> As a plant-specific protein involved in photosynthesis, PSBP-1 has no direct associations with human diseases.</li>
+<li><strong>Plant Phenotypes:</strong> Mutations or loss of function in PSBP-1 can lead to impaired photosynthetic efficiency, reduced growth, and increased sensitivity to light stress in <em>Arabidopsis</em>, but no disease in the clinical sense[1].</li>
+</ul>
+<hr />
+<p><strong>Recent Developments and Research (2023–2024)</strong></p>
+<ul>
+<li>Recent studies continue to confirm the essential role of PSBP-1 in PSII stability and function, with advanced proteomics and structural biology approaches refining our understanding of its interactions within the OEC[1].</li>
+<li>No new domains or unexpected functions have been reported in the latest literature.</li>
+</ul>
+<hr />
+<p><strong>Relevant Statistics and Data</strong></p>
+<ul>
+<li><strong>Protein Length:</strong> 214 amino acids[1].</li>
+<li><strong>Molecular Weight:</strong> ~23.5 kDa[1].</li>
+<li><strong>Gene Locus:</strong> AT1G06680 (TAIR/Ensembl Plants)[3].</li>
+</ul>
+<hr />
+<p><strong>Expert Opinions and Analysis</strong></p>
+<ul>
+<li>PSBP-1 is considered indispensable for efficient oxygen evolution in higher plants, and its evolutionary conservation underscores its critical role in photosynthetic organisms[1].</li>
+<li>Disruption of PSBP-1 function is a common tool in plant physiology research to study photosynthetic mechanisms and stress responses.</li>
+</ul>
+<hr />
+<p><strong>References (with URLs and Dates)</strong></p>
+<ul>
+<li>NCBI Protein: PSBP-1, <em>Arabidopsis thaliana</em> (NP_001078429.1), [https://www.ncbi.nlm.nih.gov/protein/NP_001078429.1] (accessed 2024-06-01)[1].</li>
+<li>Ensembl Plants: <em>Arabidopsis thaliana</em> genome, [https://plants.ensembl.org/Arabidopsis_thaliana/Info/Index] (accessed 2024-06-01)[3].</li>
+<li>Addgene: Plasmids related to PSBP-1, [https://www.addgene.org/browse/gene/837178/] (accessed 2024-06-01)[5].</li>
+</ul>
+<p>If you require more detailed structural or interaction data, or specific recent publications, please specify.</p>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>https://www.ncbi.nlm.nih.gov/protein/NP_001078429.1</li>
+<li>https://plants.ensembl.org/Arabidopsis_thaliana/Info/Index</li>
+<li>https://www.addgene.org/browse/gene/837178/</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q42029
+gene_symbol: PSBP1
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:3702
+  label: Arabidopsis thaliana
+description: &#39;PSBP-1 (Oxygen-evolving enhancer protein 2-1) is a 23 kDa extrinsic subunit of the photosystem II (PSII) oxygen-evolving complex (OEC). It is localized to the thylakoid lumen of chloroplasts where it stabilizes the manganese cluster of the OEC and is essential for efficient water splitting and oxygen evolution during photosynthesis.&#39;
+existing_annotations:
+- term:
+    id: GO:0009535
+    label: chloroplast thylakoid membrane
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &#39;PSBP-1 is an extrinsic component of PSII located in the thylakoid lumen, not the membrane itself. This is an over-annotation. [PMID:11719511 &#34;proteome map of the chloroplast lumen&#34;]&#39;
+    action: REMOVE
+- term:
+    id: GO:0048564
+    label: photosystem I assembly
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &#39;PSBP-1 is a component of photosystem II, not photosystem I. This is incorrect. [PMID:9039496 &#34;psbP gene encoding precursor of 23-kDa polypeptide of oxygen-evolving complex in Arabidopsis thaliana&#34;]&#39;
+    action: REMOVE
+- term:
+    id: GO:0005509
+    label: calcium ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &#39;PSBP domain proteins are known to bind calcium ions, which is important for OEC stabilization. However, this is IEA (automatic annotation) and needs experimental verification. The primary function is not calcium binding per se but stabilization of the OEC.&#39;
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0009523
+    label: photosystem II
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &#39;Correct but too general. PSBP-1 is specifically a component of the oxygen-evolving complex of PSII. Should be replaced with GO:0009654 (photosystem II oxygen evolving complex).&#39;
+    action: MODIFY
+    proposed_replacement_terms:
+    - id: GO:0009654
+      label: photosystem II oxygen evolving complex
+- term:
+    id: GO:0009543
+    label: chloroplast thylakoid lumen
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: &#39;Correct localization. PSBP-1 is indeed located in the thylakoid lumen where it functions as part of the OEC. [PMID:11719511 &#34;Proteome map of the chloroplast lumen of Arabidopsis thaliana&#34;]&#39;
+    action: ACCEPT
+- term:
+    id: GO:0009654
+    label: photosystem II oxygen evolving complex
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &#39;Correct and specific localization. PSBP-1 is a core component of the OEC. [PMID:9039496 &#34;23-kDa polypeptide of oxygen-evolving complex&#34;]&#39;
+    action: ACCEPT
+- term:
+    id: GO:0015979
+    label: photosynthesis
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &#39;Correct but too general. PSBP-1 is specifically involved in the light reactions of photosynthesis. Should be replaced with GO:0019684 (photosynthesis, light reaction).&#39;
+    action: MODIFY
+    proposed_replacement_terms:
+    - id: GO:0019684
+      label: photosynthesis, light reaction
+- term:
+    id: GO:0019898
+    label: extrinsic component of membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &#39;Correct. PSBP-1 is an extrinsic (peripheral) component associated with the thylakoid membrane via the PSII complex. [PMID:11719511 &#34;PsbP domain proteins&#34;]&#39;
+    action: ACCEPT
+- term:
+    id: GO:1901149
+    label: salicylic acid binding
+  evidence_type: HDA
+  original_reference_id: PMID:25628632
+  review:
+    summary: &#39;High-throughput screen result. Not a core function of PSBP-1. May represent non-specific binding or a regulatory interaction unrelated to its primary role in photosynthesis.&#39;
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0009535
+    label: chloroplast thylakoid membrane
+  evidence_type: HDA
+  original_reference_id: PMID:15322131
+  review:
+    summary: &#39;PSBP-1 is in the lumen, not the membrane itself. Proteomic studies may detect it in membrane fractions due to its tight association with PSII, but this is imprecise localization.&#39;
+    action: REMOVE
+- term:
+    id: GO:0009543
+    label: chloroplast thylakoid lumen
+  evidence_type: HDA
+  original_reference_id: PMID:11826309
+  review:
+    summary: &#39;Correct localization with experimental support. [PMID:11826309 &#34;Central functions of the lumenal and peripheral thylakoid proteome&#34;]&#39;
+    action: ACCEPT
+- term:
+    id: GO:0009579
+    label: thylakoid
+  evidence_type: HDA
+  original_reference_id: PMID:11826309
+  review:
+    summary: &#39;Too general. PSBP-1 is specifically in the thylakoid lumen (GO:0009543).&#39;
+    action: MODIFY
+    proposed_replacement_terms:
+    - id: GO:0009543
+      label: chloroplast thylakoid lumen
+- term:
+    id: GO:0031977
+    label: thylakoid lumen
+  evidence_type: HDA
+  original_reference_id: PMID:11719511
+  review:
+    summary: &#39;Correct localization. [PMID:11719511 &#34;Proteome map of the chloroplast lumen&#34;]&#39;
+    action: ACCEPT
+- term:
+    id: GO:0048046
+    label: apoplast
+  evidence_type: HDA
+  original_reference_id: PMID:18538804
+  review:
+    summary: &#39;Incorrect localization. PSBP-1 is a chloroplast protein, not an apoplast protein. This is likely contamination or misidentification in the proteomic study.&#39;
+    action: REMOVE
+- term:
+    id: GO:0009570
+    label: chloroplast stroma
+  evidence_type: HDA
+  original_reference_id: PMID:16207701
+  review:
+    summary: &#39;Incorrect localization. PSBP-1 is in the thylakoid lumen, not the stroma. Likely cross-contamination in proteomic fractionation.&#39;
+    action: REMOVE
+- term:
+    id: GO:0009535
+    label: chloroplast thylakoid membrane
+  evidence_type: HDA
+  original_reference_id: PMID:14729914
+  review:
+    summary: &#39;PSBP-1 is in the lumen, not the membrane. Proteomic membrane fractions may include lumenal proteins due to association with membrane complexes.&#39;
+    action: REMOVE
+- term:
+    id: GO:0009579
+    label: thylakoid
+  evidence_type: HDA
+  original_reference_id: PMID:14729914
+  review:
+    summary: &#39;Too general. Should be thylakoid lumen.&#39;
+    action: MODIFY
+    proposed_replacement_terms:
+    - id: GO:0009543
+      label: chloroplast thylakoid lumen
+- term:
+    id: GO:0009579
+    label: thylakoid
+  evidence_type: HDA
+  original_reference_id: PMID:16648217
+  review:
+    summary: &#39;Too general. Should be thylakoid lumen.&#39;
+    action: MODIFY
+    proposed_replacement_terms:
+    - id: GO:0009543
+      label: chloroplast thylakoid lumen
+- term:
+    id: GO:0009507
+    label: chloroplast
+  evidence_type: HDA
+  original_reference_id: PMID:18431481
+  review:
+    summary: &#39;Too general. PSBP-1 is specifically in the thylakoid lumen.&#39;
+    action: MODIFY
+    proposed_replacement_terms:
+    - id: GO:0009543
+      label: chloroplast thylakoid lumen
+- term:
+    id: GO:0009534
+    label: chloroplast thylakoid
+  evidence_type: HDA
+  original_reference_id: PMID:20061580
+  review:
+    summary: &#39;Too general. Should be thylakoid lumen.&#39;
+    action: MODIFY
+    proposed_replacement_terms:
+    - id: GO:0009543
+      label: chloroplast thylakoid lumen
+- term:
+    id: GO:0009570
+    label: chloroplast stroma
+  evidence_type: HDA
+  original_reference_id: PMID:18633119
+  review:
+    summary: &#39;Incorrect. PSBP-1 is in the thylakoid lumen, not stroma.&#39;
+    action: REMOVE
+- term:
+    id: GO:0009579
+    label: thylakoid
+  evidence_type: HDA
+  original_reference_id: PMID:18633119
+  review:
+    summary: &#39;Too general. Should be thylakoid lumen.&#39;
+    action: MODIFY
+    proposed_replacement_terms:
+    - id: GO:0009543
+      label: chloroplast thylakoid lumen
+- term:
+    id: GO:0009941
+    label: chloroplast envelope
+  evidence_type: HDA
+  original_reference_id: PMID:12938931
+  review:
+    summary: &#39;Incorrect localization. PSBP-1 is in the thylakoid lumen, not the chloroplast envelope. Likely contamination.&#39;
+    action: REMOVE
+- term:
+    id: GO:0003729
+    label: mRNA binding
+  evidence_type: IDA
+  original_reference_id: PMID:32344669
+  review:
+    summary: &#39;High-throughput RNA-binding proteome study. Not a core function of PSBP-1. May represent non-specific binding in vitro or moonlighting function unrelated to photosynthesis.&#39;
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: HDA
+  original_reference_id: PMID:28887381
+  review:
+    summary: &#39;Incorrect. PSBP-1 is a chloroplast protein, not extracellular. This is misannotation.&#39;
+    action: REMOVE
+- term:
+    id: GO:0009507
+    label: chloroplast
+  evidence_type: HDA
+  original_reference_id: PMID:25293756
+  review:
+    summary: &#39;Too general. Should be thylakoid lumen.&#39;
+    action: MODIFY
+    proposed_replacement_terms:
+    - id: GO:0009543
+      label: chloroplast thylakoid lumen
+- term:
+    id: GO:0009507
+    label: chloroplast
+  evidence_type: ISM
+  original_reference_id: GO_REF:0000122
+  review:
+    summary: &#39;Too general. Should be thylakoid lumen.&#39;
+    action: MODIFY
+    proposed_replacement_terms:
+    - id: GO:0009543
+      label: chloroplast thylakoid lumen
+- term:
+    id: GO:0019904
+    label: protein domain specific binding
+  evidence_type: IPI
+  original_reference_id: PMID:24736607
+  review:
+    summary: &#39;Too vague. This is about chloroplast preprotein import receptors binding to PSBP-1 transit peptide. Not a core function of the mature protein.&#39;
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0008266
+    label: poly(U) RNA binding
+  evidence_type: IDA
+  original_reference_id: PMID:17511964
+  review:
+    summary: &#39;Not a core function. May represent moonlighting activity unrelated to primary role in PSII.&#39;
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0019684
+    label: photosynthesis, light reaction
+  evidence_type: TAS
+  original_reference_id: PMID:9039496
+  review:
+    summary: &#39;Correct biological process. PSBP-1 is essential for the light reactions of photosynthesis. [PMID:9039496 &#34;psbP gene encoding precursor of 23-kDa polypeptide of oxygen-evolving complex&#34;]&#39;
+    action: ACCEPT
+- term:
+    id: GO:0019898
+    label: extrinsic component of membrane
+  evidence_type: TAS
+  original_reference_id: PMID:11719511
+  review:
+    summary: &#39;Correct with experimental support. PSBP-1 is an extrinsic component. [PMID:11719511 &#34;Proteome map of the chloroplast lumen&#34;]&#39;
+    action: ACCEPT
+- term:
+    id: GO:0009534
+    label: chloroplast thylakoid
+  evidence_type: IDA
+  original_reference_id: PMID:11526245
+  review:
+    summary: &#39;Too general. Should be thylakoid lumen. [file:ARATH/AAU94417/AAU94417-deep-research-perplexity-lite.md &#34;localized to the thylakoid lumen of chloroplasts&#34;]&#39;
+    action: MODIFY
+    proposed_replacement_terms:
+    - id: GO:0009543
+      label: chloroplast thylakoid lumen
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms.
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt.
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods.
+  findings: []
+- id: GO_REF:0000122
+  title: AtSubP analysis
+  findings: []
+- id: PMID:11526245
+  title: An essential role of a TatC homologue of a Delta pH- dependent protein transporter
+    in thylakoid membrane formation during chloroplast development in Arabidopsis
+    thaliana.
+  findings: []
+- id: PMID:11719511
+  title: Proteome map of the chloroplast lumen of Arabidopsis thaliana.
+  findings: []
+- id: PMID:11826309
+  title: Central functions of the lumenal and peripheral thylakoid proteome of Arabidopsis
+    determined by experimentation and genome-wide prediction.
+  findings: []
+- id: PMID:12938931
+  title: Proteomic study of the Arabidopsis thaliana chloroplastic envelope membrane
+    utilizing alternatives to traditional two-dimensional electrophoresis.
+  findings: []
+- id: PMID:14729914
+  title: &#39;In-depth analysis of the thylakoid membrane proteome of Arabidopsis thaliana
+    chloroplasts: new proteins, new functions, and a plastid proteome database.&#39;
+  findings: []
+- id: PMID:15322131
+  title: New functions of the thylakoid membrane proteome of Arabidopsis thaliana
+    revealed by a simple, fast, and versatile fractionation strategy.
+  findings: []
+- id: PMID:16207701
+  title: The oligomeric stromal proteome of Arabidopsis thaliana chloroplasts.
+  findings: []
+- id: PMID:16648217
+  title: High light response of the thylakoid proteome in arabidopsis wild type and
+    the ascorbate-deficient mutant vtc2-2. A comparative proteomics study.
+  findings: []
+- id: PMID:17511964
+  title: Identification of proteins expressed at extremely low level in Arabidopsis
+    leaves.
+  findings: []
+- id: PMID:18431481
+  title: Sorting signals, N-terminal modifications and abundance of the chloroplast
+    proteome.
+  findings: []
+- id: PMID:18538804
+  title: Hydroponic isotope labelling of entire plants (HILEP) for quantitative plant
+    proteomics; an oxidative stress case study.
+  findings: []
+- id: PMID:18633119
+  title: Quantitative proteomics of a chloroplast SRP54 sorting mutant and its genetic
+    interactions with CLPC1 in Arabidopsis.
+  findings: []
+- id: PMID:20061580
+  title: AT_CHLORO, a comprehensive chloroplast proteome database with subplastidial
+    localization and curated information on envelope proteins.
+  findings: []
+- id: PMID:24736607
+  title: A split-ubiquitin yeast two-hybrid screen to examine the substrate specificity
+    of atToc159 and atToc132, two Arabidopsis chloroplast preprotein import receptors.
+  findings: []
+- id: PMID:25293756
+  title: A proteomic strategy for global analysis of plant protein complexes.
+  findings: []
+- id: PMID:25628632
+  title: Identification of multiple salicylic acid-binding proteins using two high
+    throughput screens.
+  findings: []
+- id: PMID:28887381
+  title: Global Analysis of Membrane-associated Protein Oligomerization Using Protein
+    Correlation Profiling.
+  findings: []
+- id: PMID:32344669
+  title: Discovering the RNA-Binding Proteome of Plant Leaves with an Improved RNA
+    Interactome Capture Method.
+  findings: []
+- id: PMID:9039496
+  title: Nucleotide sequence of the psbP gene encoding precursor of 23-kDa polypeptide
+    of oxygen-evolving complex in Arabidopsis thaliana and its expression in the wild-type
+    and a constitutively photomorphogenic mutant.
+  findings: []
+core_functions:
+- description: PSBP-1 stabilizes the oxygen-evolving complex of photosystem II, enabling efficient water splitting and oxygen evolution during photosynthesis
+  molecular_function:
+    id: GO:0140777
+    label: protein-containing complex stabilizing activity
+  directly_involved_in:
+  - id: GO:0019684
+    label: photosynthesis, light reaction
+  - id: GO:0042549
+    label: photosystem II stabilization
+  locations:
+  - id: GO:0009654
+    label: photosystem II oxygen evolving complex
+  - id: GO:0009543
+    label: chloroplast thylakoid lumen
+  supported_by:
+  - reference_id: PMID:9039496
+    supporting_text: &#34;psbP gene encoding precursor of 23-kDa polypeptide of oxygen-evolving complex&#34;
+  - reference_id: PMID:11719511
+    supporting_text: &#34;Proteome map of the chloroplast lumen of Arabidopsis thaliana&#34;
+  - reference_id: file:ARATH/AAU94417/AAU94417-deep-research-perplexity-lite.md
+    supporting_text: &#34;PSBP-1 is essential for the stabilization of the oxygen-evolving complex (OEC) of PSII&#34;
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

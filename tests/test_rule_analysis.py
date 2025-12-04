@@ -23,6 +23,7 @@ from ai_gene_review.etl.rule_analysis import (
     analyze_rule_post_enrichment,
     calculate_jaccard_similarity,
     fetch_interpro2go_mappings,
+    get_interpros_for_go,
     get_swissprot_count_for_interpro,
     get_swissprot_count_for_interpro_intersection,
 )
@@ -354,18 +355,21 @@ def test_analyze_rule_post_enrichment_arba00026249(tmp_path, arba00026249_rule):
     assert "rule_id" in result
     assert result["rule_id"] == "ARBA00026249"
 
-    assert "condition_sets_analysis" in result
-    assert isinstance(result["condition_sets_analysis"], list)
+    assert "condition_sets_summary" in result
+    assert isinstance(result["condition_sets_summary"], list)
 
-    # First condition set should have InterPro overlap analysis
-    cs0_analysis = result["condition_sets_analysis"][0]
-    assert "interpro_overlap" in cs0_analysis
+    # First condition set should have domain count and pair count info
+    cs0_summary = result["condition_sets_summary"][0]
+    assert "condition_set_index" in cs0_summary
+    assert "domain_count" in cs0_summary
+    assert "relevant_pair_count" in cs0_summary
 
-    interpro_overlap = cs0_analysis["interpro_overlap"]
-    if interpro_overlap:  # Only if there are InterPro conditions
-        assert "pairs" in interpro_overlap
-        assert "summary" in interpro_overlap
-        assert len(interpro_overlap["pairs"]) > 0
+    # Check domain overlap analysis structure
+    assert "domain_overlap_analysis" in result
+    overlap_analysis = result["domain_overlap_analysis"]
+    assert "pairs" in overlap_analysis
+    assert "summary" in overlap_analysis
+    assert len(overlap_analysis["pairs"]) > 0
 
     # Check redundancy analysis
     assert "ipr2go_redundancy" in result
@@ -428,9 +432,10 @@ def test_analyze_rule_post_enrichment_no_interpro(tmp_path):
 
     assert result["rule_id"] == "TEST00000001"
 
-    # Should have condition set analysis but no InterPro overlap
-    cs0_analysis = result["condition_sets_analysis"][0]
-    assert cs0_analysis["interpro_overlap"] is None or cs0_analysis["interpro_overlap"]["pairs"] == []
+    # Should have condition set summary but no InterPro overlap
+    assert "condition_sets_summary" in result
+    cs0_summary = result["condition_sets_summary"][0]
+    assert cs0_summary["domain_count"] == 0  # No InterPro/FunFam/PANTHER conditions
 
 
 def test_empty_condition_set():
@@ -442,3 +447,101 @@ def test_empty_condition_set():
 
     assert result["pairs"] == []
     assert "summary" in result
+
+
+def test_get_interpros_for_go():
+    """Test reverse ipr2go lookup - finding InterPro IDs that map to a GO term."""
+    mappings = {
+        "IPR005982": ["GO:0004791"],
+        "IPR006338": ["GO:0004791", "GO:0016491"],
+        "IPR000001": ["GO:0000001"],
+        "IPR008255": ["GO:0050660"],
+    }
+
+    # Should find both IPRs that map to GO:0004791
+    result = get_interpros_for_go("GO:0004791", mappings)
+    assert set(result) == {"IPR005982", "IPR006338"}
+
+    # Should find only one IPR for GO:0016491
+    result = get_interpros_for_go("GO:0016491", mappings)
+    assert result == ["IPR006338"]
+
+    # Should return empty list for unknown GO term
+    result = get_interpros_for_go("GO:9999999", mappings)
+    assert result == []
+
+
+def test_get_interpros_for_go_empty_mappings():
+    """Test reverse ipr2go lookup with empty mappings."""
+    result = get_interpros_for_go("GO:0004791", {})
+    assert result == []
+
+
+@pytest.mark.integration
+def test_external_iprs_included_in_analysis(tmp_path):
+    """Test that external IPRs from ipr2go are included in overlap analysis."""
+    # Use a real cached rule
+    rule_file = Path("rules/arba/ARBA00026249/ARBA00026249.json")
+    if not rule_file.exists():
+        pytest.skip(f"Rule file not found: {rule_file}")
+
+    import json
+    from ai_gene_review.etl.arba import ARBARule
+
+    data = json.loads(rule_file.read_text())
+    rule = ARBARule.from_json(data)
+
+    # Run analysis with external IPRs included (default)
+    analysis = analyze_rule_post_enrichment(rule, Path("rules/arba"))
+
+    # Should have external_ipr2go_domains section
+    assert "external_ipr2go_domains" in analysis
+
+    # The analysis should include external_ipr_ids in domain_overlap_analysis
+    assert "external_ipr_ids" in analysis["domain_overlap_analysis"]
+
+    # For GO:0004791, there should be some external IPRs (like IPR006338)
+    external_ids = [x["interpro_id"] for x in analysis["external_ipr2go_domains"]]
+    # Note: The actual external IPRs depend on the ipr2go file content
+    # We just verify the structure is correct
+    assert isinstance(external_ids, list)
+
+
+@pytest.mark.integration
+def test_external_iprs_in_pairs(tmp_path):
+    """Test that external IPRs appear in pairwise overlap analysis."""
+    # Use a real cached rule
+    rule_file = Path("rules/arba/ARBA00026249/ARBA00026249.json")
+    if not rule_file.exists():
+        pytest.skip(f"Rule file not found: {rule_file}")
+
+    import json
+    from ai_gene_review.etl.arba import ARBARule
+
+    data = json.loads(rule_file.read_text())
+    rule = ARBARule.from_json(data)
+
+    # Run analysis with external IPRs included
+    analysis = analyze_rule_post_enrichment(rule, Path("rules/arba"))
+
+    external_ipr_ids = analysis["domain_overlap_analysis"].get("external_ipr_ids", [])
+    pairs = analysis["domain_overlap_analysis"]["pairs"]
+
+    # If there are external IPRs, they should appear in pairwise comparisons
+    if external_ipr_ids:
+        # Find pairs involving external IPRs
+        external_pairs = [
+            p for p in pairs
+            if p["condition_a"] in external_ipr_ids or p["condition_b"] in external_ipr_ids
+        ]
+        # External IPRs should be compared with rule domains and GO terms
+        assert len(external_pairs) > 0, "External IPRs should appear in pairwise comparisons"
+
+        # External IPRs should have empty condition_set membership
+        for pair in external_pairs:
+            if pair["condition_a"] in external_ipr_ids:
+                assert pair["condition_a_in_sets"] == [], \
+                    f"External IPR {pair['condition_a']} should have empty condition set membership"
+            if pair["condition_b"] in external_ipr_ids:
+                assert pair["condition_b_in_sets"] == [], \
+                    f"External IPR {pair['condition_b']} should have empty condition set membership"
