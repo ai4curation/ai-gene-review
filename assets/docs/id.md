@@ -15,6 +15,7 @@ None &#8594;  <sub>1..1</sub> [String](types/String.md)
 
 ## Children
 
+ *  [RuleReview➞id](RuleReview_id.md)
  *  [Term➞id](Term_id.md)
 
 ## Used by

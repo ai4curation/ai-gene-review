@@ -1,0 +1,2097 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>APO1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>APO1</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q9XIR4" target="_blank" class="term-link">
+                        Q9XIR4
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Arabidopsis thaliana</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "APO1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q9XIR4" data-a="DESCRIPTION: APO1 (Accumulation of Photosystem One 1) is a chlo..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>APO1 (Accumulation of Photosystem One 1) is a chloroplast-localized, plant-specific RNA-binding protein that promotes splicing of specific chloroplast group II introns. It contains tandem DUF794 zinc-binding motifs that enable high-affinity RNA binding. APO1 is essential for splicing of the ycf3 intron 2 and several other chloroplast introns (petD, clpP, ndhA/B), thereby indirectly enabling photosystem I assembly and NDH complex formation.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003723" target="_blank" class="term-link">
+                                    GO:0003723
+                                </a>
+                            </span>
+                            <span class="term-label">RNA binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9XIR4" data-a="GO:0003723" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> APO1 is a bona fide RNA-binding protein with direct experimental evidence
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21421812" target="_blank" class="term-link">
+                                        PMID:21421812
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">recombinant APO1 binds RNA with high affinity in vitro</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003723" target="_blank" class="term-link">
+                                    GO:0003723
+                                </a>
+                            </span>
+                            <span class="term-label">RNA binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9XIR4" data-a="GO:0003723" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Computational annotation based on InterPro domain, supported by experimental evidence
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21421812" target="_blank" class="term-link">
+                                        PMID:21421812
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">recombinant APO1 binds RNA with high affinity in vitro</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009507" target="_blank" class="term-link">
+                                    GO:0009507
+                                </a>
+                            </span>
+                            <span class="term-label">chloroplast</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9XIR4" data-a="GO:0009507" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct - computational prediction of chloroplast localization supported by experimental evidence
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The IDA annotation from PMID:15494558 provides experimental support for chloroplast localization
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000373" target="_blank" class="term-link">
+                                    GO:0000373
+                                </a>
+                            </span>
+                            <span class="term-label">Group II intron splicing</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21421812" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21421812
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    APO1 promotes the splicing of chloroplast group II introns a...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9XIR4" data-a="GO:0000373" data-r="PMID:21421812" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core function - APO1 promotes splicing of specific chloroplast group II introns
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21421812" target="_blank" class="term-link">
+                                        PMID:21421812
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">in Arabidopsis apo1 mutants, ycf3-intron 2 remains completely unspliced, petD intron splicing is strongly reduced, and the splicing of several other introns is compromised</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ARATH/Q9XIR4/Q9XIR4-deep-research.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">APO1 promotes the splicing of the second intron of ycf3 (a gene encoding a PSI assembly factor) and several other chloroplast introns</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003723" target="_blank" class="term-link">
+                                    GO:0003723
+                                </a>
+                            </span>
+                            <span class="term-label">RNA binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21421812" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21421812
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    APO1 promotes the splicing of chloroplast group II introns a...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9XIR4" data-a="GO:0003723" data-r="PMID:21421812" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core molecular function - direct experimental evidence for RNA binding
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21421812" target="_blank" class="term-link">
+                                        PMID:21421812
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">recombinant APO1 binds RNA with high affinity in vitro</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008270" target="_blank" class="term-link">
+                                    GO:0008270
+                                </a>
+                            </span>
+                            <span class="term-label">zinc ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21421812" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21421812
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    APO1 promotes the splicing of chloroplast group II introns a...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9XIR4" data-a="GO:0008270" data-r="PMID:21421812" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core molecular function - zinc binding essential for RNA-binding activity
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21421812" target="_blank" class="term-link">
+                                        PMID:21421812
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">DUF794, the domain of unknown function that makes up the entirety of mature APO1, harbors motifs resembling zinc fingers, and that DUF794 binds zinc</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009507" target="_blank" class="term-link">
+                                    GO:0009507
+                                </a>
+                            </span>
+                            <span class="term-label">chloroplast</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15494558" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15494558
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    ACCUMULATION OF PHOTOSYSTEM ONE1, a member of a novel gene f...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9XIR4" data-a="GO:0009507" data-r="PMID:15494558" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental evidence for chloroplast localization
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15494558" target="_blank" class="term-link">
+                                        PMID:15494558
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Members of the APO gene family are only found in vascular plants so far and are predicted to be localized in chloroplasts</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009658" target="_blank" class="term-link">
+                                    GO:0009658
+                                </a>
+                            </span>
+                            <span class="term-label">chloroplast organization</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15494558" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15494558
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    ACCUMULATION OF PHOTOSYSTEM ONE1, a member of a novel gene f...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9XIR4" data-a="GO:0009658" data-r="PMID:15494558" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Too general - this is a consequence of loss of intron splicing function
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> apo1 mutants have severely disrupted chloroplast ultrastructure with loss of grana stacks, but this is a pleiotropic phenotype secondary to the core RNA splicing function
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15494558" target="_blank" class="term-link">
+                                        PMID:15494558
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">apo1 fails to accumulate significant amounts of the outer antenna subunits of PSI and PSII and to form grana stacks</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010468" target="_blank" class="term-link">
+                                    GO:0010468
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of gene expression</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21421812" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21421812
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    APO1 promotes the splicing of chloroplast group II introns a...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q9XIR4" data-a="GO:0010468" data-r="PMID:21421812" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Too general - should use more specific RNA processing term
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> APO1 regulates gene expression through RNA splicing, not transcriptional regulation. The more specific term &#34;chloroplast group II intron splicing&#34; (GO:0000373) better captures the mechanism
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006397" target="_blank" class="term-link">
+                                    mRNA processing
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015979" target="_blank" class="term-link">
+                                    GO:0015979
+                                </a>
+                            </span>
+                            <span class="term-label">photosynthesis</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15494558" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15494558
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    ACCUMULATION OF PHOTOSYSTEM ONE1, a member of a novel gene f...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9XIR4" data-a="GO:0015979" data-r="PMID:15494558" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Indirect involvement - APO1 is required for photosynthesis but not directly involved
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> APO1 mutants cannot perform photosynthesis due to loss of PSI, but APO1 itself does not directly participate in photosynthetic electron transport. Its core function is RNA splicing that enables expression of photosynthetic components
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15494558" target="_blank" class="term-link">
+                                        PMID:15494558
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">APO1 is essentially required for photoautotrophic growth, and levels of PSI core subunits are below the limit of detection in the apo1 mutant</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>APO1 binds chloroplast group II intron RNAs via its zinc-binding DUF794 domain and promotes their splicing</h3>
+                <span class="vote-buttons" data-g="Q9XIR4" data-a="FUNCTION: APO1 binds chloroplast group II intron RNAs via it..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003723" target="_blank" class="term-link">
+                            RNA binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000373" target="_blank" class="term-link">
+                                Group II intron splicing
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009507" target="_blank" class="term-link">
+                                chloroplast
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21421812" target="_blank" class="term-link">
+                                PMID:21421812
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">recombinant APO1 binds RNA with high affinity in vitro</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21421812" target="_blank" class="term-link">
+                                PMID:21421812
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">in Arabidopsis apo1 mutants, ycf3-intron 2 remains completely unspliced, petD intron splicing is strongly reduced, and the splicing of several other introns is compromised</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15494558" target="_blank" class="term-link">
+                            PMID:15494558
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">ACCUMULATION OF PHOTOSYSTEM ONE1, a member of a novel gene family, is required for accumulation of [4Fe-4S] cluster-containing chloroplast complexes and antenna proteins.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21421812" target="_blank" class="term-link">
+                            PMID:21421812
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">APO1 promotes the splicing of chloroplast group II introns and harbors a plant-specific zinc-dependent RNA binding domain.</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(Q9XIR4-deep-research.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9XIR4" data-a="DOC: Deep Research" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="deep-research-report-q9xir4-arath">Deep Research Report: Q9XIR4 (ARATH)</h1>
+<p>Generated using OpenAI Deep Research API</p>
+<hr />
+<h1 id="gene-function-and-molecular-mechanisms">Gene Function and Molecular Mechanisms</h1>
+<p><strong>APO1 (Accumulation of Photosystem One 1)</strong> is a nuclear gene in <em>Arabidopsis thaliana</em> that encodes a chloroplast-targeted protein essential for photosystem I (PSI) biogenesis and related processes. Initial studies showed that loss-of-function <em>apo1</em> mutants have an almost complete absence of PSI complexes and are unable to grow photoautotrophically (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC527200/#:~:text=residues%20that%20could%20potentially%20provide,polysome%20association%20suggest%20that%20translational">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC527200/#:~:text=medium%2C%20the%20otherwise%20albinotic%20apo1,Figure%201A">pmc.ncbi.nlm.nih.gov</a>). This led to the early hypothesis that APO1 functions as an assembly factor for [4Fe-4S] clusters in chloroplast proteins, perhaps facilitating cofactor insertion into PSI core subunits (PsaA/PsaB) during translation (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC527200/#:~:text=experiments%20and%20analyses%20of%20polysome,probably%20in%20association%20with%20plastid">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC527200/#:~:text=mutant,in%20association%20with%20plastid%20nucleoids">pmc.ncbi.nlm.nih.gov</a>). Indeed, <em>apo1</em> mutants exhibit stalled translation elongation for the psaA/B mRNAs, suggesting APO1 normally enables proper cofactor incorporation and allows translation to proceed (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC527200/#:~:text=To%20test%20whether%20initiation%20or,needed%20for%20initiation%20but%20rather">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC527200/#:~:text=eukaryotes%20loses%20its%20%5B4Fe,be%20used%20to%20regulate%20translation">pmc.ncbi.nlm.nih.gov</a>). However, later research revealed a different primary mechanism: APO1 is required for the <strong>splicing of specific chloroplast group II introns</strong>, and this RNA splicing role can fully explain the PSI assembly defects (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3082255/#:~:text=Arabidopsis%20thaliana%20APO1%20is%20required,defects%20can%20account%20for%20the">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3082255/#:~:text=levels%20of%20two%20complexes%20harboring,high%20affinity%20in%20vitro%2C%20that">pmc.ncbi.nlm.nih.gov</a>). In particular, APO1 promotes the splicing of the second intron of <em>ycf3</em> (a gene encoding a PSI assembly factor) and several other chloroplast introns; in <em>apo1</em> mutants, <em>ycf3</em> intron 2 is completely unspliced and introns in <em>petD</em>, <em>clpP</em>, <em>ndhA/B</em> are inefficiently spliced (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3082255/#:~:text=facilitate%20the%20incorporation%20of%20%5B4Fe,affinity%20in%20vitro%2C%20demonstrating%20that">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3082255/#:~:text=fail%20to%20splice%20the%20second,Arabidopsis%20genomes%20encode%20four%20proteins">pmc.ncbi.nlm.nih.gov</a>). The failure to produce Ycf3 and certain NDH subunits due to these splicing defects leads secondarily to the loss of PSI and NADH dehydrogenase–like (NDH) complexes in the chloroplast (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3082255/#:~:text=levels%20of%20two%20complexes%20harboring,high%20affinity%20in%20vitro%2C%20that">pmc.ncbi.nlm.nih.gov</a>). Thus, APO1’s molecular function is now understood as a <strong>plant-specific RNA-binding protein</strong> that facilitates chloroplast intron splicing, indirectly ensuring the assembly of 4Fe-4S cluster-containing complexes like PSI and NDH. Consistent with this, recombinant APO1 protein binds RNA with high affinity in vitro, supporting its direct role in RNA metabolism (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3082255/#:~:text=several%20other%20introns%20is%20compromised,specific%20RNA%20binding">pmc.ncbi.nlm.nih.gov</a>). In summary, APO1 acts at the post-transcriptional level to promote expression of key photosynthetic components – originally thought to assist cofactor assembly, but now known to function as an organelle <strong>RNA splicing factor</strong> whose activity is critical for PSI biogenesis and chloroplast electron transport (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3082255/#:~:text=fail%20to%20splice%20the%20second,Arabidopsis%20genomes%20encode%20four%20proteins">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC527200/#:~:text=experiments%20and%20analyses%20of%20polysome,probably%20in%20association%20with%20plastid">pmc.ncbi.nlm.nih.gov</a>).  </p>
+<h1 id="cellular-localization-and-subcellular-components">Cellular Localization and Subcellular Components</h1>
+<p>APO1 is a chloroplast-localized protein. It contains an N-terminal transit peptide that directs it to the plastid; in vitro import experiments showed a 49 kDa APO1 precursor is imported into isolated chloroplasts and cleaved to a mature ~42 kDa protein (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC527200/#:~:text=In%20vitro%20synthesized%20APO1%20precursor,programs%20available%20in%20public%20databases">pmc.ncbi.nlm.nih.gov</a>). Within the chloroplast, APO1 is predominantly found in the <strong>stroma</strong>, concentrated in distinct foci associated with the plastid <strong>nucleoids</strong> (DNA–protein complexes in chloroplasts) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC527200/#:~:text=chloroplasts%20consistent%20with%20the%20findings,It%20is">pmc.ncbi.nlm.nih.gov</a>). A translational fusion of APO1 to GFP in tobacco protoplasts displayed fluorescent puncta inside chloroplasts that co-localized with DAPI-stained nucleoids (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC527200/#:~:text=chloroplasts%20consistent%20with%20the%20findings,It%20is">pmc.ncbi.nlm.nih.gov</a>). This nucleoid localization is consistent with APO1’s role in intron splicing and translation – processes that occur in close proximity to chloroplast DNA and ribosomes. By associating with nucleoids, APO1 likely interacts with chloroplast RNA/protein complexes (such as the spliceosomal ribonucleoproteins for group II introns) at the site of transcript synthesis (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC527200/#:~:text=chloroplasts%20consistent%20with%20the%20findings,It%20is">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3082255/#:~:text=In%20this%20study%2C%20we%20identify,in%20a%20coimmunoprecipitate%20with%20the">pmc.ncbi.nlm.nih.gov</a>). No evidence suggests APO1 is present outside of plastids; predictions and experimental data indicate it lacks mitochondrial targeting and is specific to the chloroplast compartment (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC527200/#:~:text=dicotyledonae,mitochondrial%20protein%20in%20both%20organisms">pmc.ncbi.nlm.nih.gov</a>). In summary, APO1’s cellular component is the chloroplast stroma, particularly <strong>plastid nucleoids</strong>, consistent with its function in chloroplast gene expression and assembly of thylakoid complexes (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC527200/#:~:text=chloroplasts%20consistent%20with%20the%20findings,It%20is">pmc.ncbi.nlm.nih.gov</a>).  </p>
+<h1 id="biological-processes-involvement">Biological Processes Involvement</h1>
+<p>APO1 is fundamentally involved in <strong>photosynthetic apparatus assembly</strong> and chloroplast gene expression. The first characterized role of APO1 was in the <strong>biogenesis of Photosystem I</strong>. <em>apo1</em> null mutants fail to accumulate any detectable PSI reaction center or antenna proteins, leading to loss of PSI function (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC527200/#:~:text=outer%20antenna%20subunits%20of%20PSI,encoded">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC527200/#:~:text=a%20hardly%20detectable%20shoulder%20in,fails%20to%20accumulate%20in%20apo1">pmc.ncbi.nlm.nih.gov</a>). Consequently, mutants show a high chlorophyll fluorescence (hcf) phenotype because absorbed light cannot be effectively used in electron transport (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC527200/#:~:text=medium%2C%20the%20otherwise%20albinotic%20apo1,Figure%201A">pmc.ncbi.nlm.nih.gov</a>). APO1 is indispensable for assembling the entire PSI holocomplex, including both plastid-encoded core subunits (PsaA/B/C) and nuclear-encoded PSI peripheral/light-harvesting subunits, which are dramatically reduced in <em>apo1</em> mutants (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC527200/#:~:text=subunits%20are%20below%20the%20limit,encoded">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC527200/#:~:text=%28C%29%20Immunoblot%20analysis%20of%20Fe,The">pmc.ncbi.nlm.nih.gov</a>). Uniquely, <em>apo1</em> mutants also fail to accumulate normal levels of <strong>light-harvesting antenna proteins</strong> of both PSI and PSII, a phenotype not seen in other PSI-deficient mutants (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC527200/#:~:text=subunits%20are%20below%20the%20limit,encoded">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC527200/#:~:text=match%20at%20L267%20Levels%20of,The%20inability%20of%20apo1%20to">pmc.ncbi.nlm.nih.gov</a>). Beyond PSI, APO1 affects other chloroplast complexes that contain Fe-S cofactors. The chloroplast NDH complex (a 4Fe-4S-containing NAD(P)H dehydrogenase-like complex involved in cyclic electron flow) is significantly reduced in <em>apo1</em> mutants, as is the ferredoxin–thioredoxin reductase (FTR) complex (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC527200/#:~:text=cluster%E2%80%93containing%20complexes%20and%20proteins%20,Meurer%2C%202004%20%3B%20%2023">pmc.ncbi.nlm.nih.gov</a>). In contrast, Fe-S–independent complexes (PSII, cyt b6f, ATP synthase) and 2Fe-2S proteins (e.g. ferredoxin) accumulate normally in <em>apo1</em> mutants (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC527200/#:~:text=apo1%20revealed%20that%20nuclear,and%20the">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC527200/#:~:text=cluster%E2%80%93containing%20complexes%20and%20proteins%20,Meurer%2C%202004%20%3B%20%2023">pmc.ncbi.nlm.nih.gov</a>). This pointed to a specific requirement for APO1 in the <strong>assembly or stability of chloroplast [4Fe-4S] cluster-containing complexes</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC527200/#:~:text=cluster%E2%80%93containing%20complexes%20and%20proteins%20,Meurer%2C%202004%20%3B%20%2023">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC527200/#:~:text=Members%20of%20the%20APO%20gene,could%20explain%20the%20pleiotropic%20phenotype">pmc.ncbi.nlm.nih.gov</a>). We now know APO1 fulfills this role indirectly by promoting intron splicing for key genes required for those complexes. For example, APO1-dependent splicing of <em>ycf3</em> intron 2 is required for PSI assembly (since Ycf3 protein is a PSI assembly factor) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3082255/#:~:text=levels%20of%20two%20complexes%20harboring,high%20affinity%20in%20vitro%2C%20that">pmc.ncbi.nlm.nih.gov</a>). APO1 also assists splicing of introns in <em>ndhA</em> and <em>ndhB</em> (encoding NDH subunits) and <em>petD</em> (a subunit of the cytochrome <em>b6f</em> complex) among others (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3082255/#:~:text=facilitate%20the%20incorporation%20of%20%5B4Fe,affinity%20in%20vitro%2C%20demonstrating%20that">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3082255/#:~:text=fail%20to%20splice%20the%20second,Arabidopsis%20genomes%20encode%20four%20proteins">pmc.ncbi.nlm.nih.gov</a>). Therefore, APO1 is centrally involved in <strong>chloroplast group II intron splicing</strong>, a biological process essential for the proper expression of several photosynthetic genes. By ensuring correct RNA maturation, APO1 enables downstream processes: assembly of PSI, integration of its Fe-S cofactors (via PsaC binding to PsaA/B), formation of NDH and FTR complexes, and normal thylakoid membrane development (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3082255/#:~:text=levels%20of%20two%20complexes%20harboring,high%20affinity%20in%20vitro%2C%20that">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC527200/#:~:text=Members%20of%20the%20APO%20gene,could%20explain%20the%20pleiotropic%20phenotype">pmc.ncbi.nlm.nih.gov</a>). In summary, the biological processes requiring APO1 include <strong>photosystem I biogenesis</strong>, <strong>thylakoid membrane organization</strong>, <strong>Fe-S protein assembly</strong>, and <strong>chloroplast RNA processing (group II intron splicing)</strong>. These processes are all critical for a functional photosynthetic electron transport chain and overall chloroplast development.  </p>
+<h1 id="disease-associations-and-phenotypes">Disease Associations and Phenotypes</h1>
+<p>Because APO1 is essential for chloroplast function, <em>apo1</em> mutants display severe phenotypes in plants. While not a “disease” in the human sense, the loss of APO1 causes an albino or pale-green <strong>seedling-lethal phenotype</strong> under photoautotrophic conditions (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC527200/#:~:text=medium%2C%20the%20otherwise%20albinotic%20apo1,Figure%201A">pmc.ncbi.nlm.nih.gov</a>). Mutant seedlings are unable to grow without an external carbon source (sucrose) due to loss of photosynthetic capability (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC527200/#:~:text=medium%2C%20the%20otherwise%20albinotic%20apo1,Figure%201A">pmc.ncbi.nlm.nih.gov</a>). On sucrose-supplemented medium, <em>apo1</em> mutants can germinate and develop leaves, but these leaves remain very pale and exhibit high chlorophyll fluorescence (HCF), indicating that absorbed light energy is mostly re-emitted rather than used in photochemistry (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC527200/#:~:text=medium%2C%20the%20otherwise%20albinotic%20apo1,Figure%201A">pmc.ncbi.nlm.nih.gov</a>). The characteristic HCF phenotype reflects a block in electron transport downstream of photosystem II, consistent with the absence of PSI activity (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC527200/#:~:text=observed%20in%20qP%20processes%20in,Meurer%20et">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC527200/#:~:text=a%20hardly%20detectable%20shoulder%20in,fails%20to%20accumulate%20in%20apo1">pmc.ncbi.nlm.nih.gov</a>). Under low light intensity (to minimize photo-oxidative damage), <em>apo1</em> mutant plants survive as pale seedlings, but even moderate light causes rapid bleaching of chlorophyll, suggesting extreme <strong>light sensitivity</strong> due to the inability to dissipate excitation energy in PSI (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC527200/#:~:text=match%20at%20L146%20The%20T,Under%20moderate%20light">pmc.ncbi.nlm.nih.gov</a>). The chloroplast ultrastructure in mutants is profoundly disturbed: chloroplasts are only 25% of normal size and lack organized grana stacks, containing only rudimentary <strong>stromal lamellae</strong> membranes (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC527200/#:~:text=interconnected%20grana%20and%20a%20random,based%20on%20the%20fresh%20weight">pmc.ncbi.nlm.nih.gov</a>). This ultrastructural defect indicates that <strong>thylakoid membrane development is arrested at an early stage</strong> in the absence of PSI and associated antennas (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC527200/#:~:text=interconnected%20grana%20and%20a%20random,based%20on%20the%20fresh%20weight">pmc.ncbi.nlm.nih.gov</a>). Despite the severe photosynthetic impairment, other cellular processes proceed normally enough for heterotrophic growth; leaf morphology and general development (aside from pigmentation) appear unaltered when sugar is provided (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC527200/#:~:text=match%20at%20L146%20The%20T,Under%20moderate%20light">pmc.ncbi.nlm.nih.gov</a>). There are no known pathogen susceptibilities or classical “disease” syndromes directly tied to <em>APO1</em> mutations; however, the inability to perform photosynthesis is lethal to the plant unless artificially supported. In summary, the <em>apo1</em> phenotype is defined by <strong>albino, non-photosynthetic seedlings with high chlorophyll fluorescence</strong>, reflecting a loss of PSI and other Fe-S complexes. This phenotype underscores APO1’s essential role in chloroplast biogenesis and is often termed a high chlorophyll fluorescence or <strong>hcf mutant phenotype</strong> in Arabidopsis (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC527200/#:~:text=medium%2C%20the%20otherwise%20albinotic%20apo1,Figure%201A">pmc.ncbi.nlm.nih.gov</a>). No human or animal disease associations exist for APO1, as it is plant-specific, but in the plant context its loss mimics a catastrophic “chloroplast disease” leading to seedling death.  </p>
+<h1 id="protein-domains-and-structural-features">Protein Domains and Structural Features</h1>
+<p>The APO1 protein has a distinctive architecture featuring an organelle-targeting segment and a large plant-specific functional domain. The N-terminal ~70 amino acids form a <strong>chloroplast transit peptide</strong>, which is cleaved upon import into the chloroplast stroma (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC527200/#:~:text=In%20vitro%20synthesized%20APO1%20precursor,programs%20available%20in%20public%20databases">pmc.ncbi.nlm.nih.gov</a>). The mature protein (~42 kDa) consists almost entirely of the domain of unknown function <strong>DUF794</strong>, which is a plant-specific protein domain implicated in RNA binding (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3082255/#:~:text=This%20study%20demonstrates%20that%20APO1%2C,domain%20harboring%20zinc%20binding%20motifs">pmc.ncbi.nlm.nih.gov</a>). DUF794 comprises two tandem, highly conserved motifs of ~100 amino acids each (often referred to as APO motif 1 and APO motif 2) separated by a variable spacer (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC527200/#:~:text=of%20photosystem%20I%20,In%20particular">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC527200/#:~:text=All%20members%20of%20the%20previously,is%20followed%20by%20a%20short">pmc.ncbi.nlm.nih.gov</a>). Both motifs share a characteristic <strong>Cys/His-rich consensus</strong>. In APO1 (group 1 of the APO family), the conserved signature can be summarized as: C–x₂–C–x₃–(H/Q)–x₄–GH–x₄–C–x₁₁–H–x–W–x₆–D–x₈–H–x₂₀₋₂₆–PA–x₂–E(L/I)C–x₃–G (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC527200/#:~:text=stretch%20containing%20positive%20charges%20in,addition%2C%20APO%20motif%202%20contains">pmc.ncbi.nlm.nih.gov</a>). The repeated presence of cysteine and histidine residues in these motifs suggested that DUF794 might coordinate metal cofactors (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC527200/#:~:text=family%20in%20vascular%20plants%2C%20can,Figure%207">pmc.ncbi.nlm.nih.gov</a>). Initially, it was postulated these cysteines could bind a [4Fe-4S] cluster as part of APO1’s function (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC527200/#:~:text=family%20in%20vascular%20plants%2C%20can,Figure%207">pmc.ncbi.nlm.nih.gov</a>). <strong>Later evidence showed that DUF794 instead binds zinc ions and is a bona fide RNA-binding domain</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3082255/#:~:text=This%20study%20demonstrates%20that%20APO1%2C,domain%20harboring%20zinc%20binding%20motifs">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3082255/#:~:text=several%20other%20introns%20is%20compromised,specific%20RNA%20binding">pmc.ncbi.nlm.nih.gov</a>). The two APO1 motifs each resemble zinc-finger motifs: indeed, purified APO1 was shown to specifically bind Zn²⁺, and site-directed mutagenesis of the cysteine/histidine motifs abolishes zinc binding and APO1 function (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3082255/#:~:text=several%20other%20introns%20is%20compromised,specific%20RNA%20binding">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3082255/#:~:text=role%20for%20APO1%20in%20%5BFe,specific%20RNA">pmc.ncbi.nlm.nih.gov</a>). Thus, APO1 contains <strong>two plant-specific Cys/His-rich zinc-binding modules</strong> that together form an RNA-binding domain (DUF794). This domain enables APO1 to bind intron RNA with high affinity, explaining its role in splicing (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3082255/#:~:text=several%20other%20introns%20is%20compromised,specific%20RNA%20binding">pmc.ncbi.nlm.nih.gov</a>). Apart from the DUF794 repeats, APO1 has no other well-defined domains or enzyme motifs; database searches confirm it is unrelated to characterized RNA-binding families outside plants (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC527200/#:~:text=The%20APO1%20gene%20encodes%20a,97%2C%20the%20protein%20is%20classified">pmc.ncbi.nlm.nih.gov</a>). The predicted secondary structure of APO1 is largely random coil (~58%) with some α-helix (~28%) and β-strand content (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC527200/#:~:text=http%3A%2F%2Fus,structures%20%28theoretical%20pI%209.27">pmc.ncbi.nlm.nih.gov</a>), suggesting a flexible structure typical of many RNA-binding proteins. The DUF794 family defines a <strong>novel class of plant-specific RNA-binding zinc-finger proteins</strong>, and APO1 is the founding member. In summary, APO1’s key structural features are its chloroplast targeting peptide and the DUF794 tandem zinc-binding motifs, which form the core of its RNA-binding activity (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3082255/#:~:text=This%20study%20demonstrates%20that%20APO1%2C,domain%20harboring%20zinc%20binding%20motifs">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3082255/#:~:text=maize%20and%20Arabidopsis%20binds%20RNA,organellar%20coevolution">pmc.ncbi.nlm.nih.gov</a>).  </p>
+<h1 id="expression-patterns-and-regulation">Expression Patterns and Regulation</h1>
+<p>The expression of <em>APO1</em> is relatively low but detectable in most tissues, and it is developmentally and environmentally regulated. Steady-state <em>APO1</em> mRNA is present in green tissues (leaves) as well as non-photosynthetic organs such as roots, stems, siliques, and flowers (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC527200/#:~:text=PCR%20using%2018S%20rRNA%20for,and%20also%20in%20nonphotosynthetic%20tissues">pmc.ncbi.nlm.nih.gov</a>). Quantitative RT-PCR showed that dark-grown Arabidopsis seedlings have about 20–30% of the <em>APO1</em> transcript level seen in light-grown seedlings, indicating <strong>expression is upregulated by light (photomorphogenesis)</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC527200/#:~:text=PCR%20using%2018S%20rRNA%20for,and%20also%20in%20nonphotosynthetic%20tissues">pmc.ncbi.nlm.nih.gov</a>). Upon illumination, <em>APO1</em> transcript levels rise, consistent with its role in assembling the photosynthetic machinery during chloroplast development (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC527200/#:~:text=PCR%20using%2018S%20rRNA%20for,and%20also%20in%20nonphotosynthetic%20tissues">pmc.ncbi.nlm.nih.gov</a>). Nonetheless, the presence of significant <em>APO1</em> expression in dark-grown seedlings and roots suggests APO1 also serves important functions even in low-light or nonphotosynthetic contexts (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC527200/#:~:text=siliques%2C%20and%20flowers%20was%2028,and%20also%20in%20nonphotosynthetic%20tissues">pmc.ncbi.nlm.nih.gov</a>). This could relate to roles in basal chloroplast functions or mitochondrion-related roles of APO family members in those tissues. The <em>APO1</em> transcripts are low-abundance overall, which initially made detection difficult; Northern blots required high RNA load or more sensitive methods to confirm transcript presence (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC527200/#:~:text=APO1%20transcripts%20of%201,expression%20of%20APO1%20appears%20to">pmc.ncbi.nlm.nih.gov</a>). At the protein level, APO1 is presumed to be expressed in young, developing chloroplasts (e.g., in expanding leaves) where active splicing of chloroplast introns is needed; however, specific protein accumulation data are not widely reported, likely due to lack of a specific antibody in early studies. Regulation of <em>APO1</em> expression appears to be tied to developmental cues: as chloroplasts differentiate in light, <em>APO1</em> expression increases, which aligns with the need for PSI assembly and intron splicing during chloroplast biogenesis (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC527200/#:~:text=PCR%20using%2018S%20rRNA%20for,and%20also%20in%20nonphotosynthetic%20tissues">pmc.ncbi.nlm.nih.gov</a>). There is no evidence that <em>APO1</em> is strongly stress-inducible; instead, it seems to be part of the housekeeping toolkit for organelle biogenesis. In summary, <em>APO1</em> is expressed at low levels in most organs of the plant, with <strong>highest expression in light-grown leaves</strong> and significant baseline expression even in darkness or roots, implying that its function is both light-responsive and required for fundamental chloroplast (and possibly general organelle) gene expression processes (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC527200/#:~:text=PCR%20using%2018S%20rRNA%20for,and%20also%20in%20nonphotosynthetic%20tissues">pmc.ncbi.nlm.nih.gov</a>).  </p>
+<h1 id="evolutionary-conservation">Evolutionary Conservation</h1>
+<p>APO1 is a member of a <strong>plant-specific gene family (the APO family)</strong> that is found only in vascular plants. Comparative genomics indicates that homologs of <em>APO1</em> (and the related <em>APO2, APO3, APO4</em> genes) are present in both dicots and monocots, including <em>Arabidopsis</em> and <em>Oryza sativa</em> (rice), but are absent from algae, mosses, and non-plant lineages (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC527200/#:~:text=of%20photosystem%20I%20,In%20particular">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC527200/#:~:text=The%20APO1%20gene%20encodes%20a,97%2C%20the%20protein%20is%20classified">pmc.ncbi.nlm.nih.gov</a>). In <em>Arabidopsis thaliana</em>, there are four paralogous genes: <em>APO1</em> (At1g64810) and three additional homologs <em>APO2</em> (At5g57930), <em>APO3</em> (At5g61930), and <em>APO4</em> (At3g21740) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC527200/#:~:text=of%20photosystem%20I%20,In%20particular">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC527200/#:~:text=,in%20the%20chloroplast%20as%20well">pmc.ncbi.nlm.nih.gov</a>). Each of these belongs to one of four distinct clades of the APO family, and notably each clade has a counterpart in rice, indicating the gene family was established before the divergence of monocots and dicots (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC527200/#:~:text=,in%20the%20chloroplast%20as%20well">pmc.ncbi.nlm.nih.gov</a>). The APO proteins are all predicted to target either chloroplasts or mitochondria, suggesting that this family evolved to fulfill organelle-specific functions in plant lineage (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC527200/#:~:text=distinguishable%20groups%20that%20are%20present,mitochondrial%20protein%20in%20both%20organisms">pmc.ncbi.nlm.nih.gov</a>). For instance, both Arabidopsis and rice APO1 and APO2 are predicted chloroplast proteins, whereas APO3 and APO4 are predicted to function in mitochondria in some species (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC527200/#:~:text=dicotyledonae,mitochondrial%20protein%20in%20both%20organisms">pmc.ncbi.nlm.nih.gov</a>). This diversification implies that while the APO family shares the conserved DUF794 RNA-binding domain, different members may specialize in splicing introns in chloroplasts versus mitochondria (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC527200/#:~:text=dicotyledonae,mitochondrial%20protein%20in%20both%20organisms">pmc.ncbi.nlm.nih.gov</a>). Evolutionarily, the lack of APO homologs in cyanobacteria, green algae (e.g. <em>Chlamydomonas</em>), or non-plant eukaryotes suggests that the APO family arose in the <strong>land plant lineage after endosymbiosis</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC527200/#:~:text=The%20APO1%20gene%20encodes%20a,97%2C%20the%20protein%20is%20classified">pmc.ncbi.nlm.nih.gov</a>). It may have evolved to meet new regulatory needs for organelle gene expression – such as splicing of introns that were retained in plant organelle genomes and required novel nuclear-encoded splicing factors (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3082255/#:~:text=Phenotype,of%20different%20intron%20subsets%20and">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3082255/#:~:text=DUF794%2C%20the%20domain%20of%20unknown,specific%20RNA">pmc.ncbi.nlm.nih.gov</a>). The APO family thus represents an example of a de novo evolution of RNA-binding proteins in plants to support chloroplast and mitochondrial gene regulation. Within vascular plants, APO1 orthologs are highly conserved in sequence, especially across the DUF794 motifs, underscoring the critical nature of its function. For example, maize <strong>Zm-APO1</strong> is ~79% identical to Arabidopsis APO1 in the DUF794 region and can be identified by cross-species sequence searches (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3082255/#:~:text=facilitate%20the%20incorporation%20of%20%5B4Fe,affinity%20in%20vitro%2C%20demonstrating%20that">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3082255/#:~:text=identified%20its%20maize%20,up%20the%20entirety%20of%20mature">pmc.ncbi.nlm.nih.gov</a>). This conservation allowed <em>Zm-APO1</em> to be co-purified with known chloroplast splicing complexes, leading to the discovery of APO1’s splicing role (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3082255/#:~:text=facilitate%20the%20incorporation%20of%20%5B4Fe,affinity%20in%20vitro%2C%20demonstrating%20that">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3082255/#:~:text=In%20this%20study%2C%20we%20identify,in%20a%20coimmunoprecipitate%20with%20the">pmc.ncbi.nlm.nih.gov</a>). In summary, APO1 is conserved among higher plants but does not occur outside the plant kingdom, reflecting an evolutionary innovation in vascular plants to aid organelle intron splicing and photosystem assembly (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC527200/#:~:text=of%20photosystem%20I%20,In%20particular">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC527200/#:~:text=The%20APO1%20gene%20encodes%20a,97%2C%20the%20protein%20is%20classified">pmc.ncbi.nlm.nih.gov</a>).  </p>
+<h1 id="key-experimental-evidence-and-literature">Key Experimental Evidence and Literature</h1>
+<p>The function of APO1 has been elucidated through a series of genetic and biochemical studies in Arabidopsis and other plants. The gene was first identified by <strong>Amann et al. (2004)</strong> in a screen for high-chlorophyll-fluorescence (hcf) mutants impaired in Photosystem I (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC527200/#:~:text=In%20a%20systematic%20screen%20for,we%20identified%20Arabidopsis%20mutants%20incapable">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC527200/#:~:text=The%20T,Under%20moderate%20light">pmc.ncbi.nlm.nih.gov</a>). A T-DNA insertion <em>apo1</em> mutant was found to completely lack PSI activity and could not survive under autotrophic conditions (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC527200/#:~:text=match%20at%20L146%20The%20T,Under%20moderate%20light">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC527200/#:~:text=a%20hardly%20detectable%20shoulder%20in,fails%20to%20accumulate%20in%20apo1">pmc.ncbi.nlm.nih.gov</a>). Map-based cloning pinpointed the mutation to a novel nuclear gene (At1g64810), and the mutant phenotype was fully rescued by introducing a wild-type <em>APO1</em> cDNA driven by the 35S promoter (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC527200/#:~:text=The%20kanamycin%20resistance%20conferred%20by,is%20consistent%20with">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC527200/#:~:text=cosegregates%20strictly%20with%20the%20apo1,fully%20green%20seedlings%20which%20grew">pmc.ncbi.nlm.nih.gov</a>). This seminal study characterized the mutant’s physiology (chlorophyll fluorescence, P700 absorbance changes) and chloroplast ultrastructure, concluding that APO1 is <strong>essential for PSI accumulation and for the stability of other [4Fe-4S] cluster-containing complexes</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC527200/#:~:text=residues%20that%20could%20potentially%20provide,is%20specifically%20arrested%20in%20the">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC527200/#:~:text=cluster%E2%80%93containing%20complexes%20and%20proteins%20,Meurer%2C%202004%20%3B%20%2023">pmc.ncbi.nlm.nih.gov</a>). Amann et al. also noted that polysome loading on psaA/B transcripts was abnormal in the mutant and that translation elongation appeared stalled, hinting at a role in co-translational cofactor insertion or assembly feedback (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC527200/#:~:text=loading%20of%20psaA,ribosomes%20in%20the%20mutant">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC527200/#:~:text=The%20findings%20that%20ribosomal%20loading,72%20Kiley%20and">pmc.ncbi.nlm.nih.gov</a>). They proposed that APO1 might facilitate assembly of the Fe-S clusters into PSI during its synthesis, thereby linking its molecular function to the biogenesis of the photosynthetic apparatus (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC527200/#:~:text=Synthesis%20or%20supply%20of%20chlorophyll,loss%20of%20grana%20stacking%20in">pmc.ncbi.nlm.nih.gov</a>).  </p>
+<p>A major advance came with the work of <strong>Watkins et al. (2011)</strong>, who revisited APO1’s function using a combination of biochemical and reverse-genetic approaches (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3082255/#:~:text=This%20study%20demonstrates%20that%20APO1%2C,domain%20harboring%20zinc%20binding%20motifs">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3082255/#:~:text=levels%20of%20two%20complexes%20harboring,high%20affinity%20in%20vitro%2C%20that">pmc.ncbi.nlm.nih.gov</a>). Their study was prompted by the discovery of the maize APO1 ortholog in a complex with known chloroplast RNA splicing factors, suggesting APO1 could be involved in RNA processing (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3082255/#:~:text=facilitate%20the%20incorporation%20of%20%5B4Fe,affinity%20in%20vitro%2C%20demonstrating%20that">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3082255/#:~:text=In%20this%20study%2C%20we%20identify,in%20a%20coimmunoprecipitate%20with%20the">pmc.ncbi.nlm.nih.gov</a>). Watkins et al. demonstrated that Arabidopsis <em>apo1</em> mutants have specific defects in <strong>chloroplast group II intron splicing</strong>: most strikingly, the second intron of <em>ycf3</em> is completely unspliced, and intron-containing transcripts for <em>petD</em>, <em>clpP</em>, and NDH genes are inefficiently spliced in the absence of APO1 (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3082255/#:~:text=involved%20in%20chloroplast%20RNA%20splicing,evidence%20that%20DUF794%20harbors%20two">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3082255/#:~:text=fail%20to%20splice%20the%20second,Arabidopsis%20genomes%20encode%20four%20proteins">pmc.ncbi.nlm.nih.gov</a>). They showed that these RNA defects fully explain the loss of PSI and NDH complexes in <em>apo1</em> (since unspliced <em>ycf3</em> prevents PSI assembly, etc.), thereby refuting a direct role in Fe-S cluster biogenesis (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3082255/#:~:text=levels%20of%20two%20complexes%20harboring,high%20affinity%20in%20vitro%2C%20that">pmc.ncbi.nlm.nih.gov</a>). Biochemical assays in the same study confirmed that APO1 binds RNA with high affinity, and that the DUF794 domain binds Zn²⁺ and is required for the RNA-binding activity (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3082255/#:~:text=several%20other%20introns%20is%20compromised,specific%20RNA%20binding">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3082255/#:~:text=role%20for%20APO1%20in%20%5BFe,specific%20RNA">pmc.ncbi.nlm.nih.gov</a>). Mutations of the conserved cysteine motifs in DUF794 abolished APO1’s function in vivo, highlighting the importance of those zinc-binding motifs (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3082255/#:~:text=several%20other%20introns%20is%20compromised,specific%20RNA%20binding">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3082255/#:~:text=role%20for%20APO1%20in%20%5BFe,specific%20RNA">pmc.ncbi.nlm.nih.gov</a>). Thus, Watkins et al. redefined APO1 as a <strong>plant-specific organellar RNA splicing factor</strong> rather than a direct assembly factor for Fe-S proteins. This clarified model has been widely accepted and incorporated into gene annotations (e.g., APO1 is noted as an “APO RNA-binding protein” in databases) (<a href="https://www.ncbi.nlm.nih.gov/gene?Cmd=DetailsSearch&amp;Db=gene&amp;Term=842789#:~:text=Official%20Symbol%20APO1%20Official%20Full,Locus%20tag%20AT1G64810%20See%20related">www.ncbi.nlm.nih.gov</a>) (<a href="https://www.ncbi.nlm.nih.gov/gene?Cmd=DetailsSearch&amp;Db=gene&amp;Term=842789#:~:text=CONTAINS%20InterPro%20DOMAIN%2Fs%3A%20Protein%20of,22429">www.ncbi.nlm.nih.gov</a>). </p>
+<p>Other supporting evidence includes the localization of APO1 to plastid nucleoids (demonstrated by Meurer and colleagues in 2004), which is consistent with a role in plastid gene expression (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC527200/#:~:text=chloroplasts%20consistent%20with%20the%20findings,It%20is">pmc.ncbi.nlm.nih.gov</a>). Additionally, transcriptomic and proteomic surveys of chloroplast biogenesis have placed <em>APO1</em> in networks of nucleus-encoded factors required for proper chloroplast development (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3082255/#:~:text=Phenotype,of%20different%20intron%20subsets%20and">pmc.ncbi.nlm.nih.gov</a>). No enzymatic activity is known for APO1 – its role is that of a nuclear-encoded <strong>auxiliary protein</strong> that ensures proper processing of chloroplast RNAs and assembly of photosynthetic complexes. The key literature establishing APO1’s function and mechanism are the two Plant Cell papers (Amann <em>et al.</em> 2004 (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC527200/#:~:text=To%20investigate%20the%20nuclear,Unlike%20other">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC527200/#:~:text=experiments%20and%20analyses%20of%20polysome,cluster%E2%80%93containing%20complexes%20of%20chloroplasts%20and">pmc.ncbi.nlm.nih.gov</a>) and Watkins <em>et al.</em> 2011 (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3082255/#:~:text=Arabidopsis%20thaliana%20APO1%20is%20required,defects%20can%20account%20for%20the">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3082255/#:~:text=levels%20of%20two%20complexes%20harboring,high%20affinity%20in%20vitro%2C%20that">pmc.ncbi.nlm.nih.gov</a>)), which together provide a comprehensive view from mutant phenotype to molecular function. These studies serve as the basis for current Gene Ontology annotations of APO1. Ongoing research continues to explore the broader APO family (e.g., roles of APO2-APO4 in mitochondria and chloroplasts) and how these splicing factors co-evolved with organelle genomes (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3082255/#:~:text=DUF794%2C%20the%20domain%20of%20unknown,specific%20RNA">pmc.ncbi.nlm.nih.gov</a>). APO1 stands out as a critical example of a nucleus-encoded factor that integrates <strong>post-transcriptional gene regulation with the assembly of core photosynthetic machinery</strong> in plants.  </p>
+<h1 id="relevant-go-terms-for-apo1">Relevant GO Terms for APO1</h1>
+<ul>
+<li><strong>Biological Process:</strong> <em>chloroplast group II intron RNA splicing</em> (APO1 promotes splicing of several chloroplast group II introns) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3082255/#:~:text=involved%20in%20chloroplast%20RNA%20splicing,evidence%20that%20DUF794%20harbors%20two">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3082255/#:~:text=fail%20to%20splice%20the%20second,Arabidopsis%20genomes%20encode%20four%20proteins">pmc.ncbi.nlm.nih.gov</a>); <em>photosystem I assembly</em> (required for PSI complex accumulation) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC527200/#:~:text=outer%20antenna%20subunits%20of%20PSI,encoded">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC527200/#:~:text=a%20hardly%20detectable%20shoulder%20in,fails%20to%20accumulate%20in%20apo1">pmc.ncbi.nlm.nih.gov</a>); <em>photosynthetic electron transport in photosystem I</em> (indirectly affected via loss of PSI) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC527200/#:~:text=a%20hardly%20detectable%20shoulder%20in,fails%20to%20accumulate%20in%20apo1">pmc.ncbi.nlm.nih.gov</a>); <em>chloroplast NDH complex assembly</em> (affects NDH stability via intron splicing of NDH subunits) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC527200/#:~:text=cluster%E2%80%93containing%20complexes%20and%20proteins%20,Meurer%2C%202004%20%3B%20%2023">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3082255/#:~:text=levels%20of%20two%20complexes%20harboring,high%20affinity%20in%20vitro%2C%20that">pmc.ncbi.nlm.nih.gov</a>).  </li>
+<li><strong>Molecular Function:</strong> <em>RNA binding</em> (DUF794 domain binds intron RNAs with high affinity) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3082255/#:~:text=several%20other%20introns%20is%20compromised,specific%20RNA%20binding">pmc.ncbi.nlm.nih.gov</a>); <em>zinc ion binding</em> (conserved Cys/His motifs coordinate Zn²⁺ essential for function) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3082255/#:~:text=several%20other%20introns%20is%20compromised,specific%20RNA%20binding">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3082255/#:~:text=role%20for%20APO1%20in%20%5BFe,specific%20RNA">pmc.ncbi.nlm.nih.gov</a>).  </li>
+<li><strong>Cellular Component:</strong> <em>chloroplast stroma</em> (localized in chloroplast interior) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC527200/#:~:text=In%20vitro%20synthesized%20APO1%20precursor,programs%20available%20in%20public%20databases">pmc.ncbi.nlm.nih.gov</a>); <em>plastid nucleoid</em> (concentrated in nucleoid foci within chloroplasts) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC527200/#:~:text=chloroplasts%20consistent%20with%20the%20findings,It%20is">pmc.ncbi.nlm.nih.gov</a>); <em>chloroplast thylakoid</em> (functional association, since APO1 loss impacts thylakoid complexes, though APO1 itself is stromal).  </li>
+</ul>
+<p>Each of these GO terms reflects experimentally supported aspects of APO1’s role in the plant cell, making APO1 a notable case where a nuclear-encoded factor links RNA processing to the assembly of photosynthetic protein complexes. (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3082255/#:~:text=Arabidopsis%20thaliana%20APO1%20is%20required,defects%20can%20account%20for%20the">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC527200/#:~:text=experiments%20and%20analyses%20of%20polysome,probably%20in%20association%20with%20plastid">pmc.ncbi.nlm.nih.gov</a>)</p>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Perplexity Lite</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(Q9XIR4-deep-research-perplexity-lite.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9XIR4" data-a="DOC: Deep Research Perplexity Lite" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: perplexity<br />
+model: sonar-pro<br />
+cached: false<br />
+start_time: '2025-10-19T15:11:08.981741'<br />
+end_time: '2025-10-19T15:11:20.355199'<br />
+duration_seconds: 11.37<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    reasoning_effort: low<br />
+    search_recency_filter: month<br />
+    search_domain_filter: []<br />
+    return_citations: true<br />
+    temperature: 0.1</p>
+<hr />
+<h2 id="question">Question</h2>
+<p>Research the Q9XIR4 gene in ARATH, focusing on its molecular function, biological processes, and cellular localization. Include information about protein domains, known interactions, and any disease associations.</p>
+<h2 id="output">Output</h2>
+<p>The <strong>Q9XIR4 gene in Arabidopsis thaliana (ARATH)</strong> encodes the protein <strong>APO protein 1, chloroplastic (APO1)</strong>, with UniProt accession Q9XIR4[5]. Current data indicate its molecular function, biological processes, and cellular localization as follows:</p>
+<p><strong>Molecular Function</strong><br />
+- The precise molecular function of APO1 is not fully characterized in available databases. It is annotated as a chloroplastic protein, suggesting a role in chloroplast-associated processes[5].<br />
+- No specific enzymatic activity or binding function is listed in recent proteomics or domain databases for Q9XIR4[5].</p>
+<p><strong>Biological Processes</strong><br />
+- There is no direct Gene Ontology (GO) annotation for biological processes involving Q9XIR4/APO1 in the latest proteomics resources[5].<br />
+- Given its chloroplastic localization, it may be involved in photosynthesis-related or chloroplast maintenance processes, but this is an inference based on localization rather than direct experimental evidence[5].</p>
+<p><strong>Cellular Localization</strong><br />
+- <strong>Chloroplast</strong>: APO1 is localized to the chloroplast, as indicated by proteomics data[5]. This suggests its function is likely tied to chloroplast biology.</p>
+<p><strong>Protein Domains</strong><br />
+- No characterized protein domains are listed for Q9XIR4/APO1 in major domain databases (Pfam, InterPro, SMART) as of the latest updates[5].<br />
+- The absence of annotated domains implies either a novel or uncharacterized structure, or that it may belong to a protein family not yet well defined in Arabidopsis.</p>
+<p><strong>Known Interactions</strong><br />
+- There are no experimentally validated protein-protein interactions for Q9XIR4/APO1 in current interaction databases such as STRING or ProteomicsDB[5].<br />
+- The lack of interaction data suggests APO1 is either not well studied or does not participate in large, well-characterized protein complexes.</p>
+<p><strong>Disease Associations</strong><br />
+- No disease associations are reported for Q9XIR4/APO1 in Arabidopsis or other organisms[5].<br />
+- In plants, disease associations typically refer to roles in stress response or pathogen defense, but there is no evidence linking APO1 to such processes.</p>
+<p><strong>Summary Table</strong></p>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Q9XIR4/APO1 (ARATH) Details</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Molecular Function</td>
+<td>Unknown; chloroplastic protein</td>
+</tr>
+<tr>
+<td>Biological Processes</td>
+<td>Not annotated; likely chloroplast-related</td>
+</tr>
+<tr>
+<td>Cellular Localization</td>
+<td>Chloroplast</td>
+</tr>
+<tr>
+<td>Protein Domains</td>
+<td>None characterized</td>
+</tr>
+<tr>
+<td>Known Interactions</td>
+<td>None reported</td>
+</tr>
+<tr>
+<td>Disease Associations</td>
+<td>None reported</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Additional Notes</strong><br />
+- The lack of detailed annotation for Q9XIR4/APO1 highlights a gap in current Arabidopsis proteomics and genomics research. Proteins with uncharacterized domains and unknown interactions are common in plant genomes and represent targets for future functional studies[5].<br />
+- If you require information on homologous proteins or indirect evidence from related species, further literature review or experimental data may be necessary.</p>
+<p><strong>Source:</strong> ProteomicsDB, UniProt entry Q9XIR4/APO1_ARATH, accessed October 2025[5].</p>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q9XIR4
+gene_symbol: APO1
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:3702
+  label: Arabidopsis thaliana
+description: &#39;APO1 (Accumulation of Photosystem One 1) is a chloroplast-localized, plant-specific RNA-binding protein that promotes splicing of specific chloroplast group II introns. It contains tandem DUF794 zinc-binding motifs that enable high-affinity RNA binding. APO1 is essential for splicing of the ycf3 intron 2 and several other chloroplast introns (petD, clpP, ndhA/B), thereby indirectly enabling photosystem I assembly and NDH complex formation.&#39;
+existing_annotations:
+- term:
+    id: GO:0003723
+    label: RNA binding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &#39;APO1 is a bona fide RNA-binding protein with direct experimental evidence&#39;
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:21421812
+      supporting_text: &#39;recombinant APO1 binds RNA with high affinity in vitro&#39;
+- term:
+    id: GO:0003723
+    label: RNA binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &#39;Computational annotation based on InterPro domain, supported by experimental evidence&#39;
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:21421812
+      supporting_text: &#39;recombinant APO1 binds RNA with high affinity in vitro&#39;
+- term:
+    id: GO:0009507
+    label: chloroplast
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: &#39;Correct - computational prediction of chloroplast localization supported by experimental evidence&#39;
+    action: ACCEPT
+    reason: &#39;The IDA annotation from PMID:15494558 provides experimental support for chloroplast localization&#39;
+- term:
+    id: GO:0000373
+    label: Group II intron splicing
+  evidence_type: IMP
+  original_reference_id: PMID:21421812
+  review:
+    summary: &#39;Core function - APO1 promotes splicing of specific chloroplast group II introns&#39;
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:21421812
+      supporting_text: &#39;in Arabidopsis apo1 mutants, ycf3-intron 2 remains completely unspliced, petD intron splicing is strongly reduced, and the splicing of several other introns is compromised&#39;
+    - reference_id: file:ARATH/Q9XIR4/Q9XIR4-deep-research.md
+      supporting_text: &#39;APO1 promotes the splicing of the second intron of ycf3 (a gene encoding a PSI assembly factor) and several other chloroplast introns&#39;
+- term:
+    id: GO:0003723
+    label: RNA binding
+  evidence_type: IDA
+  original_reference_id: PMID:21421812
+  review:
+    summary: &#39;Core molecular function - direct experimental evidence for RNA binding&#39;
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:21421812
+      supporting_text: &#39;recombinant APO1 binds RNA with high affinity in vitro&#39;
+- term:
+    id: GO:0008270
+    label: zinc ion binding
+  evidence_type: IDA
+  original_reference_id: PMID:21421812
+  review:
+    summary: &#39;Core molecular function - zinc binding essential for RNA-binding activity&#39;
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:21421812
+      supporting_text: &#39;DUF794, the domain of unknown function that makes up the entirety of mature APO1, harbors motifs resembling zinc fingers, and that DUF794 binds zinc&#39;
+- term:
+    id: GO:0009507
+    label: chloroplast
+  evidence_type: IDA
+  original_reference_id: PMID:15494558
+  review:
+    summary: &#39;Direct experimental evidence for chloroplast localization&#39;
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:15494558
+      supporting_text: &#39;Members of the APO gene family are only found in vascular plants so far and are predicted to be localized in chloroplasts&#39;
+- term:
+    id: GO:0009658
+    label: chloroplast organization
+  evidence_type: IMP
+  original_reference_id: PMID:15494558
+  review:
+    summary: &#39;Too general - this is a consequence of loss of intron splicing function&#39;
+    action: KEEP_AS_NON_CORE
+    reason: &#39;apo1 mutants have severely disrupted chloroplast ultrastructure with loss of grana stacks, but this is a pleiotropic phenotype secondary to the core RNA splicing function&#39;
+    supported_by:
+    - reference_id: PMID:15494558
+      supporting_text: &#39;apo1 fails to accumulate significant amounts of the outer antenna subunits of PSI and PSII and to form grana stacks&#39;
+- term:
+    id: GO:0010468
+    label: regulation of gene expression
+  evidence_type: IMP
+  original_reference_id: PMID:21421812
+  review:
+    summary: &#39;Too general - should use more specific RNA processing term&#39;
+    action: MODIFY
+    reason: &#39;APO1 regulates gene expression through RNA splicing, not transcriptional regulation. The more specific term &#34;chloroplast group II intron splicing&#34; (GO:0000373) better captures the mechanism&#39;
+    proposed_replacement_terms:
+    - id: GO:0006397
+      label: mRNA processing
+- term:
+    id: GO:0015979
+    label: photosynthesis
+  evidence_type: IMP
+  original_reference_id: PMID:15494558
+  review:
+    summary: &#39;Indirect involvement - APO1 is required for photosynthesis but not directly involved&#39;
+    action: KEEP_AS_NON_CORE
+    reason: &#39;APO1 mutants cannot perform photosynthesis due to loss of PSI, but APO1 itself does not directly participate in photosynthetic electron transport. Its core function is RNA splicing that enables expression of photosynthetic components&#39;
+    supported_by:
+    - reference_id: PMID:15494558
+      supporting_text: &#39;APO1 is essentially required for photoautotrophic growth, and levels of PSI core subunits are below the limit of detection in the apo1 mutant&#39;
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms.
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt.
+  findings: []
+- id: PMID:15494558
+  title: ACCUMULATION OF PHOTOSYSTEM ONE1, a member of a novel gene family, is required
+    for accumulation of [4Fe-4S] cluster-containing chloroplast complexes and antenna
+    proteins.
+  findings: []
+- id: PMID:21421812
+  title: APO1 promotes the splicing of chloroplast group II introns and harbors a
+    plant-specific zinc-dependent RNA binding domain.
+  findings: []
+core_functions:
+- description: &#39;APO1 binds chloroplast group II intron RNAs via its zinc-binding DUF794 domain and promotes their splicing&#39;
+  molecular_function:
+    id: GO:0003723
+    label: RNA binding
+  directly_involved_in:
+  - id: GO:0000373
+    label: Group II intron splicing
+  locations:
+  - id: GO:0009507
+    label: chloroplast
+  supported_by:
+  - reference_id: PMID:21421812
+    supporting_text: &#39;recombinant APO1 binds RNA with high affinity in vitro&#39;
+  - reference_id: PMID:21421812
+    supporting_text: &#39;in Arabidopsis apo1 mutants, ycf3-intron 2 remains completely unspliced, petD intron splicing is strongly reduced, and the splicing of several other introns is compromised&#39;
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
