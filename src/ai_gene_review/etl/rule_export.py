@@ -180,7 +180,7 @@ def rule_to_rows(rule_json: dict, rule_type: str) -> list[dict]:
 
     # Process each condition set
     main_rule = rule_json.get("mainRule", {})
-    for cs_index, cs in enumerate(main_rule.get("conditionSets", []), start=1):
+    for cs_index, cs in enumerate(main_rule.get("conditionSets", [])):
         row = {
             "rule_id": rule_id,
             "rule_type": rule_type,

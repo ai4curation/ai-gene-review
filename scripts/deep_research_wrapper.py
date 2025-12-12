@@ -179,8 +179,9 @@ def run_deep_research(
                 cmd.extend(["--var", f"gene_info={uniprot_context['gene_info']}"])
             if uniprot_context.get('organism_full'):
                 cmd.extend(["--var", f"organism_full={uniprot_context['organism_full']}"])
-            if uniprot_context.get('protein_family'):
-                cmd.extend(["--var", f"protein_family={uniprot_context['protein_family']}"])
+            # Provide default for protein_family if not available
+            protein_family = uniprot_context.get('protein_family') or "Not specified in UniProt"
+            cmd.extend(["--var", f"protein_family={protein_family}"])
             if uniprot_context.get('protein_domains'):
                 domains_str = '; '.join(uniprot_context['protein_domains'])
                 cmd.extend(["--var", f"protein_domains={domains_str}"])
