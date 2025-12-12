@@ -31,6 +31,10 @@ from ai_gene_review.validation.validation_report import (
 )
 from ai_gene_review.validation.term_validator import TermValidator
 from ai_gene_review.validation.publication_validator import PublicationValidator
+
+# Import linkml-term-validator plugins for ontology term validation
+from linkml.validator import Validator as LinkMLValidator
+from linkml_term_validator.plugins import BindingValidationPlugin
 from ai_gene_review.validation.goa_validator import GOAValidator
 from ai_gene_review.validation.supporting_text_validator import (
     SupportingTextValidator,
@@ -242,44 +246,133 @@ def check_best_practices_rules(
     if progress_callback:
         progress_callback("Validating ontology terms")
 
-    # Validate ontology terms
-    term_validator = TermValidator()
-    term_results = term_validator.validate_terms_in_data(data)
+    # Use linkml-term-validator plugins for term validation
+    # These provide three-tier caching (in-memory → file-based CSV → lazy OAK)
+    # and validate against dynamic enums defined in the schema
+    schema_path = get_schema_path()
+    cache_dir = schema_path.parent.parent.parent.parent / "cache"  # project root/cache
 
-    for result in term_results:
-        if not result.is_valid:
+    # Note: DynamicEnumPlugin is intentionally omitted here because:
+    # 1. It's very slow (~7s) as it queries OAK for all GO descendants on every run
+    # 2. GO branch validation is already handled by the legacy TermValidator below,
+    #    which uses a persistent pickle cache for descendants
+    # 3. BindingValidationPlugin handles label validation for all terms
+    #
+    # The oak_config.yaml file specifies which prefixes to skip (TEMP, PMID, etc.)
+    # to avoid 404 errors when trying to download non-existent ontologies
+    oak_config_path = schema_path.parent.parent.parent.parent / "config" / "oak_config.yaml"
+    term_validation_plugins = [
+        BindingValidationPlugin(
+            validate_labels=True,
+            cache_dir=str(cache_dir),
+            oak_config_path=str(oak_config_path) if oak_config_path.exists() else None,
+        ),
+    ]
+
+    term_validator = LinkMLValidator(
+        schema=str(schema_path),
+        validation_plugins=term_validation_plugins,
+    )
+
+    # Validate the data using linkml-term-validator
+    term_report = term_validator.validate(data, target_class="GeneReview")
+
+    # Process results from linkml-term-validator
+    if term_report and term_report.results:
+        for result in term_report.results:
+            message = result.message if hasattr(result, "message") else str(result)
+            severity_str = result.severity.name if hasattr(result, "severity") else "ERROR"
+
+            # Map severity
+            if severity_str == "WARNING":
+                severity = ValidationSeverity.WARNING
+            elif severity_str == "INFO":
+                severity = ValidationSeverity.INFO
+            else:
+                severity = ValidationSeverity.ERROR
+
+            report.add_issue(
+                severity,
+                message,
+                path=result.source_path if hasattr(result, "source_path") else None,
+                validation_category="TermValidator",
+                check_type="term_validation"
+            )
+
+    # GO branch validation for core_functions
+    # This is needed because linkml-term-validator's BindingValidationPlugin skips
+    # dynamic enums (those with reachable_from), expecting DynamicEnumPlugin to handle
+    # them. But DynamicEnumPlugin only checks direct slot ranges, not bindings.
+    # So bindings referencing dynamic enums are not validated by either plugin.
+    # TODO: Fix this gap in linkml-term-validator library
+    legacy_term_validator = TermValidator()
+    core_function_results = legacy_term_validator.validate_terms_in_core_functions(data)
+    for result in core_function_results:
+        if not result.is_valid and result.error_message:
+            # Only report branch errors (label mismatches are already handled by BindingValidationPlugin)
+            if "branch but should be in" in result.error_message:
+                report.add_issue(
+                    ValidationSeverity.ERROR,
+                    result.error_message,
+                    path=result.path,
+                    validation_category="TermValidator",
+                    check_type="go_branch_validation"
+                )
+
+    # Check for obsolete terms and unrecognized prefixes using persistent cache only (no OAK fallback)
+    # This avoids triggering OAK downloads for obsolete checking
+    legacy_validator = TermValidator()
+    legacy_validator._load_persistent_cache()  # Ensure cache is loaded
+
+    # Use the legacy validator's EXCLUDED_PREFIXES set to avoid duplication
+    # This includes PMID, PMC, DOI, UniProt, PDB, EC, Reactome, etc.
+    SKIP_PREFIX_VALIDATION = legacy_validator.EXCLUDED_PREFIXES
+
+    # Extract all term IDs from the data
+    def extract_term_ids(obj: Any, path: str = "") -> List[Tuple[str, str, bool]]:
+        """Extract (term_id, path, is_known_prefix) tuples from nested data."""
+        results = []
+        if isinstance(obj, dict):
+            if "id" in obj and isinstance(obj["id"], str) and ":" in obj["id"]:
+                term_id = obj["id"]
+                prefix = term_id.split(":")[0]
+                # Skip non-ontology prefixes
+                if prefix not in SKIP_PREFIX_VALIDATION:
+                    is_known = prefix in legacy_validator.ONTOLOGY_MAP
+                    results.append((term_id, path, is_known))
+            for key, value in obj.items():
+                new_path = f"{path}.{key}" if path else key
+                results.extend(extract_term_ids(value, new_path))
+        elif isinstance(obj, list):
+            for i, item in enumerate(obj):
+                results.extend(extract_term_ids(item, f"{path}[{i}]"))
+        return results
+
+    for term_id, path, is_known_prefix in extract_term_ids(data):
+        prefix = term_id.split(":")[0]
+
+        # Check for unrecognized prefixes
+        if not is_known_prefix:
             report.add_issue(
                 ValidationSeverity.ERROR,
-                result.error_message or f"Invalid term: {result.term_id}",
-                path=result.path,
-                suggestion=f"Use correct label: '{result.correct_label}'"
-                if result.correct_label
-                else None,
+                f"Unrecognized identifier prefix '{prefix}' in {term_id}. Valid ontology prefixes are: {', '.join(sorted(legacy_validator.ONTOLOGY_MAP.keys()))}",
+                path=path,
                 validation_category="TermValidator",
-                check_type="invalid_term_label"
+                check_type="unrecognized_prefix"
             )
-        elif result.is_obsolete:
-            report.add_issue(
-                ValidationSeverity.WARNING,
-                f"Term {result.term_id} is obsolete",
-                path=result.path,
-                suggestion="Consider using a non-obsolete term",
-                validation_category="TermValidator",
-                check_type="obsolete_term"
-            )
+            continue  # Skip further checks for unknown prefixes
 
-    # Validate GO branch constraints in core_functions
-    core_func_results = term_validator.validate_terms_in_core_functions(data)
-    for result in core_func_results:
-        if not result.is_valid:
-            report.add_issue(
-                ValidationSeverity.ERROR,
-                result.error_message or f"Invalid term: {result.term_id}",
-                path=result.path,
-                suggestion=f"Use correct label: '{result.correct_label}'"
-                if result.correct_label
-                else None,
-            )
+        # Only check persistent cache for obsolete status
+        if term_id in legacy_validator._persistent_cache:
+            if legacy_validator._persistent_cache[term_id].get("is_obsolete", False):
+                report.add_issue(
+                    ValidationSeverity.WARNING,
+                    f"Term {term_id} is obsolete",
+                    path=path,
+                    suggestion="Consider using a non-obsolete term",
+                    validation_category="TermValidator",
+                    check_type="obsolete_term"
+                )
 
     if progress_callback:
         progress_callback("Validating publications")
@@ -1016,11 +1109,15 @@ def check_best_practices_rules(
             # Report invalid supporting texts using substring validation
             for st_result in substring_report.results:
                 if not st_result.is_valid:
-                    # Use ERROR severity for substring validator
-                    severity = ValidationSeverity.ERROR
-
-                    # Add a prefix to distinguish from fuzzy validator
                     error_msg = st_result.error_message or "Supporting text not found in referenced publication"
+
+                    # Distinguish between missing supporting_text (WARNING) vs incorrect quote (ERROR)
+                    # Missing supporting_text is a recommendation, not a requirement
+                    if "without supporting_text" in error_msg:
+                        severity = ValidationSeverity.WARNING
+                    else:
+                        # Actual quote that doesn't match source is an error
+                        severity = ValidationSeverity.ERROR
 
                     report.add_issue(
                         severity,
