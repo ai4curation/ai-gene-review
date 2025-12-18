@@ -1,0 +1,106 @@
+name: ARBA Issue Monitor
+
+on:
+  schedule:
+    # Run daily at 6 AM UTC
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry run - only report found ARBAs without reviewing'
+        required: false
+        default: 'false'
+        type: boolean
+      max_issues:
+        description: 'Maximum number of issues to scan'
+        required: false
+        default: '50'
+        type: string
+
+jobs:
+  scan-arba-issues:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      arba_ids: ${{ steps.search_issues.outputs.arba_ids }}
+      has_arbas: ${{ steps.search_issues.outputs.has_arbas }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Search for ARBA mentions in go-annotation issues
+        id: search_issues
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          uv run scripts/scan_arba_issues.py --max-issues ${{ inputs.max_issues || '50' }} --output github
+
+  claude-arba-review:
+    needs: scan-arba-issues
+    if: needs.scan-arba-issues.outputs.has_arbas == 'true' && inputs.dry_run != 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Run Claude ARBA Review
+        uses: anthropics/claude-code-action@beta
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+
+          direct_prompt: |
+            You are reviewing ARBA rules that were mentioned in the geneontology/go-annotation issue tracker.
+            This indicates GO curators have raised concerns or questions about these rules.
+
+            ARBA IDs to review: ${{ needs.scan-arba-issues.outputs.arba_ids }}
+
+            ## Your Task
+
+            For each ARBA ID listed above:
+
+            1. **Check for existing review**: Look for an existing review file at `rules/arba/{ARBA_ID}/{ARBA_ID}-review.yaml`
+               - If it exists and status is COMPLETE, summarize the existing findings
+               - If it doesn't exist or is incomplete, create/update the review
+
+            2. **Analyze the rule**: For rules needing review:
+               - Fetch the rule details from UniProt: https://www.uniprot.org/arba/{ARBA_ID}
+               - Evaluate the GO terms being assigned
+               - Assess condition sets (InterPro domains, CATH FunFams, etc.)
+               - Check taxonomic scope appropriateness
+               - Look for redundancies with existing InterPro2GO mappings
+
+            3. **Key questions to answer**:
+               - Are the GO terms appropriate for the conditions?
+               - Is the taxonomic scope too broad (causing false positives)?
+               - Are there better, more specific GO terms that should be used?
+               - Is this rule redundant with manual InterPro2GO curation?
+
+            4. **Create/update review file**: Following the schema used by other ARBA reviews in `rules/arba/`
+
+            5. **Summarize findings**: Provide a clear summary of your analysis and recommendations
+
+            Be thorough but concise. Reference specific evidence for conclusions.
+            If a rule is problematic, explain why clearly.
+            If a rule is sound, also explain the supporting evidence.
+
+          allowed_tools: "Read,Write,Edit,Glob,Grep,Bash(uv run:*),Bash(just:*),WebFetch,WebSearch,Task"
