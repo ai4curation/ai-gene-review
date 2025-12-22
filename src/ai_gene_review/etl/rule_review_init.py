@@ -72,7 +72,7 @@ def init_rule_review(
         rule = client.fetch_rule(rule_id)
 
         print(f"Enriching rule {rule_id}...")
-        enriched_rule = enrich_rule_json(rule, enricher=None)
+        enriched_rule = enrich_rule_json(rule.to_json(), enricher=None)
 
         # Save enriched rule
         with open(enriched_path, 'w') as f:

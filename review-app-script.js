@@ -1,6 +1,8 @@
 /**
  * Google Apps Script for Gene Review Voting System
  *
+ * Sheet: https://docs.google.com/spreadsheets/d/1uGKRdDjwRsrE5F5IOIQnKSxAA05V9PDDMUb1Sei2pL0/edit
+ *
  * Setup:
  * 1. Create a Google Sheet with columns: Timestamp | Gene_ID | Annotation_ID | Ref_ID | Action | Vote | User_IP | Session_ID
  * 2. Go to Extensions → Apps Script

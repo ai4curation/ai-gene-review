@@ -65,6 +65,12 @@ window.searchSchema = {
       "sortBy": "count"
     },
     {
+      "field": "deep_research",
+      "label": "Research",
+      "type": "array",
+      "sortBy": "count"
+    },
+    {
       "field": "term_label",
       "label": "Term",
       "type": "string",

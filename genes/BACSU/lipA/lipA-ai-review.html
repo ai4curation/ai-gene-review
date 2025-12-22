@@ -1,0 +1,2608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>lipA - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>lipA</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/O32129" target="_blank" class="term-link">
+                        O32129
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Bacillus subtilis (strain 168)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-in-progress">
+                    IN PROGRESS
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "lipA";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="O32129" data-a="DESCRIPTION: LipA (also known as yutB) is a lipoyl synthase bel..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>LipA (also known as yutB) is a lipoyl synthase belonging to the radical SAM superfamily that catalyzes the final step of de novo lipoate biosynthesis in Bacillus subtilis. The enzyme inserts two sulfur atoms into the C6 and C8 positions of protein-bound octanoyl groups (attached to lipoyl domains of acceptor proteins such as GcvH and E2 subunits of 2-oxoacid dehydrogenase complexes), converting them to lipoyl cofactors. LipA contains two [4Fe-4S] clusters: a radical-SAM cluster for generating 5&#39;-deoxyadenosyl radicals from S-adenosyl-L-methionine, and an auxiliary cluster that serves as the sacrificial sulfur donor. In B. subtilis, LipA functions in a pathway where LipM first transfers octanoyl from ACP to GcvH, LipA then inserts sulfurs to form lipoyl-GcvH, and LipL transfers the lipoyl moiety to E2 domains. Disruption of lipA causes lipoate auxotrophy and severely impairs growth in minimal medium due to defective lipoate-dependent enzymes, leading to impaired branched-chain fatty acid biosynthesis.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003824" target="_blank" class="term-link">
+                                    GO:0003824
+                                </a>
+                            </span>
+                            <span class="term-label">catalytic activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="O32129" data-a="GO:0003824" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation from InterPro mapping assigns the very general term &#34;catalytic activity&#34; based on the presence of radical SAM domains. LipA is indeed a catalyst (lipoyl synthase, EC 2.8.1.8), but this term is far too general and uninformative.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> LipA has well-established lipoyl synthase activity (EC 2.8.1.8). The term &#34;catalytic activity&#34; is overly broad and should be replaced with the specific molecular function term GO:0016992 (lipoate synthase activity) which accurately describes LipA&#39;s enzymatic function.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016992" target="_blank" class="term-link">
+                                    lipoate synthase activity
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O32129" data-a="GO:0005737" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation assigns cytoplasmic localization based on UniProt subcellular location annotation and UniRule. In B. subtilis (a Gram-positive bacterium lacking membrane-bound organelles), LipA and partner enzymes function in the cytosol where they act on soluble lipoyl domains of central metabolic complexes.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Cytoplasmic localization is correct for B. subtilis LipA. The enzyme acts on cytosolic acceptor proteins including GcvH and E2 subunits of pyruvate dehydrogenase, 2-oxoglutarate dehydrogenase, and branched-chain 2-oxoacid dehydrogenase complexes (Cronan 2024; Christensen 2011).
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19820084" target="_blank" class="term-link">
+                                        PMID:19820084
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The function of lipA was inferred from the results of genetic and physiological experiments</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009107" target="_blank" class="term-link">
+                                    GO:0009107
+                                </a>
+                            </span>
+                            <span class="term-label">lipoate biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O32129" data-a="GO:0009107" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This IEA annotation assigns involvement in lipoate biosynthesis based on InterPro lipoyl synthase domain and UniRule mapping. LipA catalyzes the final step of de novo lipoate biosynthesis by inserting sulfur atoms into octanoyl groups.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> LipA is the key enzyme for de novo lipoate biosynthesis, catalyzing sulfur insertion into protein-bound octanoyl groups. This is the core biological process of the enzyme and is well supported by the literature (Cronan 2024; Christensen 2010).
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19820084" target="_blank" class="term-link">
+                                        PMID:19820084
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We report the characterization of a Bacillus subtilis mutant obtained by disruption of the lipA (yutB) gene, which encodes lipoyl synthase (LipA), the enzyme that catalyzes the final step in the de novo biosynthesis of this cofactor.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009249" target="_blank" class="term-link">
+                                    GO:0009249
+                                </a>
+                            </span>
+                            <span class="term-label">protein lipoylation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000104
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O32129" data-a="GO:0009249" data-r="GO_REF:0000104" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation assigns involvement in protein lipoylation based on UniRule transfer. LipA directly modifies protein-bound octanoyl groups on lipoyl domains, converting them to lipoyl groups covalently attached to lysine residues.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> LipA functions specifically on protein substrates (octanoyl-GcvH, octanoyl-E2), not free octanoate, and its product is a protein-bound lipoyl cofactor. This annotation accurately reflects the enzyme&#39;s role in the post-translational lipoylation of proteins (Douglas 2008; Cronan 2024).
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19820084" target="_blank" class="term-link">
+                                        PMID:19820084
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">lipoyl synthase (LipA), the enzyme that catalyzes the final step in the de novo biosynthesis of this cofactor</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016740" target="_blank" class="term-link">
+                                    GO:0016740
+                                </a>
+                            </span>
+                            <span class="term-label">transferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O32129" data-a="GO:0016740" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation assigns transferase activity based on UniProt keyword mapping (Transferase KW-0808). LipA is classified as EC 2.8.1.8, which is a sulfurtransferase that transfers sulfur atoms to octanoyl groups.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> LipA is a sulfurtransferase (EC 2.8.1.8) and thus correctly annotated as having transferase activity. While this is a general parent term, it is accurate and provides useful hierarchical information complementing the more specific lipoate synthase activity annotation.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016783" target="_blank" class="term-link">
+                                    GO:0016783
+                                </a>
+                            </span>
+                            <span class="term-label">sulfurtransferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000104
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O32129" data-a="GO:0016783" data-r="GO_REF:0000104" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation assigns sulfurtransferase activity based on UniRule mapping. LipA inserts sulfur atoms from its auxiliary [4Fe-4S] cluster into octanoyl substrates at C6 and C8 positions, making it a sulfurtransferase by definition.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> LipA is classified as EC 2.8.1.8 (sulfurtransferase class). The enzyme transfers sulfur atoms from its sacrificial auxiliary [4Fe-4S] cluster to the C6 and C8 positions of protein-bound octanoyl groups (Cronan 2024; Lee et al. 2008).
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016992" target="_blank" class="term-link">
+                                    GO:0016992
+                                </a>
+                            </span>
+                            <span class="term-label">lipoate synthase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O32129" data-a="GO:0016992" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This IEA annotation assigns lipoate synthase activity based on InterPro domain mapping and UniRule. This is the correct, specific molecular function term for LipA.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GO:0016992 (lipoate synthase activity) is the most specific and accurate molecular function term for LipA. The enzyme catalyzes sulfur insertion into octanoyl groups to form lipoyl cofactors (EC 2.8.1.8). This is a core function annotation (Cronan 2024).
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19820084" target="_blank" class="term-link">
+                                        PMID:19820084
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">lipoyl synthase (LipA), the enzyme that catalyzes the final step in the de novo biosynthesis of this cofactor</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046872" target="_blank" class="term-link">
+                                    GO:0046872
+                                </a>
+                            </span>
+                            <span class="term-label">metal ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O32129" data-a="GO:0046872" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation assigns metal ion binding based on UniProt keyword mapping. LipA binds two [4Fe-4S] clusters which contain iron ions.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> LipA binds iron as part of its two [4Fe-4S] clusters. The annotation is correct but general; it is complemented by the more specific iron-sulfur cluster binding annotations which provide better functional context.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051536" target="_blank" class="term-link">
+                                    GO:0051536
+                                </a>
+                            </span>
+                            <span class="term-label">iron-sulfur cluster binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O32129" data-a="GO:0051536" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation assigns iron-sulfur cluster binding based on InterPro radical SAM domains and UniProt keyword. LipA contains two distinct [4Fe-4S] clusters essential for its catalytic mechanism.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> LipA binds two [4Fe-4S] clusters: a radical-SAM cluster coordinated by a CysXXXCysXXCys motif for generating 5&#39;-deoxyadenosyl radicals, and an auxiliary cluster that serves as the sulfur donor (Lee et al. 2008; Lanz 2015). This is a core property of the enzyme.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051539" target="_blank" class="term-link">
+                                    GO:0051539
+                                </a>
+                            </span>
+                            <span class="term-label">4 iron, 4 sulfur cluster binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O32129" data-a="GO:0051539" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation specifically assigns [4Fe-4S] cluster binding based on InterPro lipoyl synthase domain and UniProt keywords. LipA contains two [4Fe-4S] clusters.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> LipA specifically binds [4Fe-4S] clusters, not other iron-sulfur cluster types. One cluster is the radical-SAM cluster (coordinated with 3 cysteines and exchangeable SAM), and the other is the auxiliary cluster that is consumed during catalysis as the sulfur source. Both are [4Fe-4S] clusters (Lee et al. 2008; Cronan 2024).
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:O32129
+                                    
+                                </span>
+                                
+                                <div class="support-text">Binds 2 [4Fe-4S] clusters per subunit. One cluster is coordinated with 3 cysteines and an exchangeable S-adenosyl-L-methionine.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009107" target="_blank" class="term-link">
+                                    GO:0009107
+                                </a>
+                            </span>
+                            <span class="term-label">lipoate biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IGI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19820084" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19820084
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A lipA (yutB) mutant, encoding lipoic acid synthase, provide...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O32129" data-a="GO:0009107" data-r="PMID:19820084" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This experimental annotation (IGI - Inferred from Genetic Interaction) assigns involvement in lipoate biosynthesis based on the lipA mutant study by Martin et al. (2009). Disruption of lipA interrupted lipoate-dependent reactions in B. subtilis.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The Martin et al. (2009) study directly demonstrated that disruption of lipA eliminates de novo lipoate biosynthesis in B. subtilis, causing lipoate auxotrophy. The IGI evidence is strong experimental support for this core biological process.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19820084" target="_blank" class="term-link">
+                                        PMID:19820084
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We report the characterization of a Bacillus subtilis mutant obtained by disruption of the lipA (yutB) gene, which encodes lipoyl synthase (LipA), the enzyme that catalyzes the final step in the de novo biosynthesis of this cofactor.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009249" target="_blank" class="term-link">
+                                    GO:0009249
+                                </a>
+                            </span>
+                            <span class="term-label">protein lipoylation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IGI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19820084" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19820084
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A lipA (yutB) mutant, encoding lipoic acid synthase, provide...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O32129" data-a="GO:0009249" data-r="PMID:19820084" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This experimental annotation assigns involvement in protein lipoylation based on the lipA mutant study. The loss of LipA function led to interruption of lipoate-dependent reactions, which require lipoylated proteins.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The Martin et al. (2009) study showed that lipA disruption interrupts lipoate-dependent reactions, which implies loss of protein lipoylation. LipA acts directly on protein-bound octanoyl substrates to generate protein-bound lipoyl cofactors.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19820084" target="_blank" class="term-link">
+                                        PMID:19820084
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Interrupting lipoate-dependent reactions strongly inhibits growth in minimal medium</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016992" target="_blank" class="term-link">
+                                    GO:0016992
+                                </a>
+                            </span>
+                            <span class="term-label">lipoate synthase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IGI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19820084" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19820084
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A lipA (yutB) mutant, encoding lipoic acid synthase, provide...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O32129" data-a="GO:0016992" data-r="PMID:19820084" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This experimental annotation assigns lipoate synthase activity based on the lipA mutant study. The gene was identified as encoding the lipoyl synthase responsible for the final step in lipoate biosynthesis.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The Martin et al. (2009) study identified lipA (yutB) as encoding lipoyl synthase and demonstrated through mutant analysis that the gene product is required for lipoate biosynthesis, consistent with lipoate synthase activity.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19820084" target="_blank" class="term-link">
+                                        PMID:19820084
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">the lipA (yutB) gene, which encodes lipoyl synthase (LipA), the enzyme that catalyzes the final step in the de novo biosynthesis of this cofactor</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>LipA is a radical SAM enzyme that catalyzes the insertion of two sulfur atoms into protein-bound octanoyl groups at C6 and C8 positions to generate lipoyl cofactors. This is the defining enzymatic activity of the protein (EC 2.8.1.8). Demonstrated by mutant analysis in B. subtilis (PMID:19820084) and extensive biochemical characterization in related systems.</h3>
+                <span class="vote-buttons" data-g="O32129" data-a="FUNCTION: LipA is a radical SAM enzyme that catalyzes the in..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016992" target="_blank" class="term-link">
+                            lipoate synthase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009107" target="_blank" class="term-link">
+                                lipoate biosynthetic process
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009249" target="_blank" class="term-link">
+                                protein lipoylation
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19820084" target="_blank" class="term-link">
+                                PMID:19820084
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">the lipA (yutB) gene, which encodes lipoyl synthase (LipA), the enzyme that catalyzes the final step in the de novo biosynthesis of this cofactor</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19820084" target="_blank" class="term-link">
+                            PMID:19820084
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A lipA (yutB) mutant, encoding lipoic acid synthase, provides insight into the interplay between branched-chain and unsaturated fatty acid biosynthesis in Bacillus subtilis.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Identified lipA (yutB) as encoding lipoyl synthase in B. subtilis</div>
+                        
+                        <div class="finding-text">"the lipA (yutB) gene, which encodes lipoyl synthase (LipA), the enzyme that catalyzes the final step in the de novo biosynthesis of this cofactor"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Disruption of lipA causes lipoate auxotrophy and growth defects in minimal medium</div>
+                        
+                        <div class="finding-text">"Interrupting lipoate-dependent reactions strongly inhibits growth in minimal medium"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">lipA mutants show impaired branched-chain fatty acid biosynthesis</div>
+                        
+                        <div class="finding-text">"impairing the generation of branched-chain fatty acids"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">lipA mutants accumulate straight-chain saturated fatty acids</div>
+                        
+                        <div class="finding-text">"leading to accumulation of copious amounts of straight-chain saturated fatty acids in B. subtilis membranes"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        DOI:10.1128/mmbr.00005-24
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Lipoic acid attachment to proteins: stimulating new developments</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Comprehensive 2024 review of lipoate biosynthesis and attachment mechanisms</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Details the radical SAM mechanism with auxiliary [4Fe-4S] cluster as sulfur donor</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Describes the B. subtilis pathway architecture (LipM/LipL/LplJ/GcvH)</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Explains Fe-S carrier protein roles in auxiliary cluster regeneration</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        DOI:10.1021/bi101215f
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Lipoic acid synthesis: a new family of octanoyltransferases generally annotated as lipoate protein ligases</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Identified LipM as the B. subtilis octanoyltransferase (distinct from E. coli LipB)</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">LipM transfers octanoyl from ACP to GcvH</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Established the pathway order in B. subtilis de novo lipoate biosynthesis</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What are the specific Fe-S carrier proteins (analogous to E. coli NfuA) that regenerate the auxiliary [4Fe-4S] cluster of LipA in B. subtilis?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="O32129" data-a="Q: What are the specific Fe-S carrier proteins (analo..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the order of sulfur insertion (C6 first or C8 first) for B. subtilis LipA?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="O32129" data-a="Q: What is the order of sulfur insertion (C6 first or..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(lipA-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="O32129" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2025-12-18T08:26:45.648348'<br />
+end_time: '2025-12-18T08:34:11.791391'<br />
+duration_seconds: 446.14<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: BACSU<br />
+  gene_id: lipA<br />
+  gene_symbol: lipA<br />
+  uniprot_accession: O32129<br />
+  protein_description: 'RecName: Full=Lipoyl synthase {ECO:0000255|HAMAP-Rule:MF_00206};<br />
+    EC=2.8.1.8 {ECO:0000255|HAMAP-Rule:MF_00206}; AltName: Full=Lip-syn {ECO:0000255|HAMAP-Rule:MF_00206};<br />
+    Short=LS {ECO:0000255|HAMAP-Rule:MF_00206}; AltName: Full=Lipoate synthase {ECO:0000255|HAMAP-Rule:MF_00206};<br />
+    AltName: Full=Lipoic acid synthase {ECO:0000255|HAMAP-Rule:MF_00206}; AltName:<br />
+    Full=Sulfur insertion protein LipA {ECO:0000255|HAMAP-Rule:MF_00206};'<br />
+  gene_info: Name=lipA {ECO:0000255|HAMAP-Rule:MF_00206}; Synonyms=yutB; OrderedLocusNames=BSU32330;<br />
+  organism_full: Bacillus subtilis (strain 168).<br />
+  protein_family: Belongs to the radical SAM superfamily. Lipoyl synthase<br />
+  protein_domains: Aldolase_TIM. (IPR013785); Elp3/MiaA/NifB-like_rSAM. (IPR006638);<br />
+    LIAS_N. (IPR031691); Lipoyl_synth. (IPR003698); rSAM. (IPR007197)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 25</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> O32129</li>
+<li><strong>Protein Description:</strong> RecName: Full=Lipoyl synthase {ECO:0000255|HAMAP-Rule:MF_00206}; EC=2.8.1.8 {ECO:0000255|HAMAP-Rule:MF_00206}; AltName: Full=Lip-syn {ECO:0000255|HAMAP-Rule:MF_00206}; Short=LS {ECO:0000255|HAMAP-Rule:MF_00206}; AltName: Full=Lipoate synthase {ECO:0000255|HAMAP-Rule:MF_00206}; AltName: Full=Lipoic acid synthase {ECO:0000255|HAMAP-Rule:MF_00206}; AltName: Full=Sulfur insertion protein LipA {ECO:0000255|HAMAP-Rule:MF_00206};</li>
+<li><strong>Gene Information:</strong> Name=lipA {ECO:0000255|HAMAP-Rule:MF_00206}; Synonyms=yutB; OrderedLocusNames=BSU32330;</li>
+<li><strong>Organism (full):</strong> Bacillus subtilis (strain 168).</li>
+<li><strong>Protein Family:</strong> Belongs to the radical SAM superfamily. Lipoyl synthase</li>
+<li><strong>Key Domains:</strong> Aldolase_TIM. (IPR013785); Elp3/MiaA/NifB-like_rSAM. (IPR006638); LIAS_N. (IPR031691); Lipoyl_synth. (IPR003698); rSAM. (IPR007197)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "lipA" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Bacillus subtilis (strain 168).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'lipA' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>lipA</strong> (gene ID: lipA, UniProt: O32129) in BACSU.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> O32129</li>
+<li><strong>Protein Description:</strong> RecName: Full=Lipoyl synthase {ECO:0000255|HAMAP-Rule:MF_00206}; EC=2.8.1.8 {ECO:0000255|HAMAP-Rule:MF_00206}; AltName: Full=Lip-syn {ECO:0000255|HAMAP-Rule:MF_00206}; Short=LS {ECO:0000255|HAMAP-Rule:MF_00206}; AltName: Full=Lipoate synthase {ECO:0000255|HAMAP-Rule:MF_00206}; AltName: Full=Lipoic acid synthase {ECO:0000255|HAMAP-Rule:MF_00206}; AltName: Full=Sulfur insertion protein LipA {ECO:0000255|HAMAP-Rule:MF_00206};</li>
+<li><strong>Gene Information:</strong> Name=lipA {ECO:0000255|HAMAP-Rule:MF_00206}; Synonyms=yutB; OrderedLocusNames=BSU32330;</li>
+<li><strong>Organism (full):</strong> Bacillus subtilis (strain 168).</li>
+<li><strong>Protein Family:</strong> Belongs to the radical SAM superfamily. Lipoyl synthase</li>
+<li><strong>Key Domains:</strong> Aldolase_TIM. (IPR013785); Elp3/MiaA/NifB-like_rSAM. (IPR006638); LIAS_N. (IPR031691); Lipoyl_synth. (IPR003698); rSAM. (IPR007197)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "lipA" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Bacillus subtilis (strain 168).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'lipA' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>lipA</strong> (gene ID: lipA, UniProt: O32129) in BACSU.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<p>Plan<br />
+- Verified identity of Bacillus subtilis 168 lipA (UniProt O32129) as the radical SAM lipoyl synthase acting in the B. subtilis lipoate assembly network (LipM/LipL/LplJ/GcvH). Cross-checked domain/family expectations and ruled out symbol ambiguity (see citations). (cronan2024lipoicacidattachment pages 2-4, christensen2010lipoicacidsynthesis pages 1-2, christensen2011enzymaticdiversityin pages 99-102)<br />
+- Gathered authoritative and recent sources emphasizing 2023–2024 developments (Cronan 2024; Tanabe et al. 2023) and foundational mechanistic work on radical SAM LipA and its auxiliary [4Fe-4S] cluster. (cronan2024lipoicacidattachment pages 2-4, cronan2024lipoicacidattachment pages 12-14, tanabe2023identificationofa pages 7-10, tanabe2023identificationofa pages 1-2, lee2008lipoicacidbiosynthesis pages 26-28)<br />
+- Integrated B. subtilis–specific pathway context, localization, substrate specificity, and phenotypes; compiled quantitative/mechanistic details and applied use cases where available. (christensen2011enzymaticdiversityin pages 126-130, cronan2024lipoicacidattachment pages 2-4, christensen2010lipoicacidsynthesis pages 1-2, christensen2011enzymaticdiversityin pages 99-102, douglas2008investigatingthechemistry pages 28-30)</p>
+<p>Research report: Bacillus subtilis lipA (O32129) — Lipoyl synthase (radical SAM)</p>
+<p>1) Key concepts and definitions with current understanding<br />
+- Molecular identity and function: Bacillus subtilis lipA encodes lipoyl synthase (LipA), a radical S-adenosyl-L-methionine (SAM) enzyme that catalyzes the final step of de novo lipoate biosynthesis by inserting two sulfur atoms into the C6 and C8 positions of an octanoyl group that is covalently attached to a conserved lysine within a lipoyl domain on acceptor proteins (e.g., GcvH of the glycine cleavage system and E2 subunits of 2-oxoacid dehydrogenase complexes). LipA performs sequential sulfur insertions, first at C6 then at C8, to yield a reduced dithiolane that is subsequently oxidized to the lipoyl cofactor. The enzyme houses two [4Fe-4S] clusters: the radical-SAM cluster for 5′-deoxyadenosyl radical generation and an auxiliary cluster that serves as the sacrificial sulfur source for the two insertions. (Cronan 2024, MMBR, DOI:10.1128/mmbr.00005-24, June 2024; Lee et al. 2008; Lanz 2015) (cronan2024lipoicacidattachment pages 2-4, cronan2024lipoicacidattachment pages 12-14, lee2008lipoicacidbiosynthesis pages 26-28, lanz2015theroleof pages 21-25)<br />
+- Substrate and specificity: LipA recognizes protein-bound octanoyl groups on lipoyl domains (octanoyl-GcvH or octanoyl-E2) and does not act efficiently on octanoyl-ACP or free octanoate. This domain-level specificity has been demonstrated biochemically by comparing SAM turnover and product formation with octanoyl-ACP versus octanoyl-E2 substrates. (Douglas 2008) (douglas2008investigatingthechemistry pages 28-30)<br />
+- Cellular localization: In B. subtilis (a Gram-positive bacterium), LipA and partner enzymes are cytosolic, acting on soluble lipoyl domains of central metabolic complexes (PDH, OGDH, BCKDH, and GcvH) located in the cytosol. (Cronan 2024; Christensen 2011) (cronan2024lipoicacidattachment pages 2-4, christensen2011enzymaticdiversityin pages 99-102)<br />
+- B. subtilis pathway architecture: The de novo pathway uses octanoyl-ACP from fatty acid synthesis as precursor. B. subtilis lacks LipB; instead, LipM (an LplA-like octanoyltransferase) transfers octanoyl from ACP to GcvH. LipA converts octanoyl-GcvH to lipoyl-GcvH. LipL (an amidotransferase) then transfers octanoyl or lipoyl groups from GcvH to E2 lipoyl domains. LplJ is the salvage ligase for exogenous lipoate/octanoate, with a narrow acceptor specificity. (Christensen &amp; Cronan 2010, Biochemistry, DOI:10.1021/bi101215f; Christensen 2011; Cronan 2024) (christensen2010lipoicacidsynthesis pages 1-2, christensen2011enzymaticdiversityin pages 99-102, cronan2024lipoicacidattachment pages 2-4)</p>
+<p>2) Recent developments and latest research (prioritize 2023–2024 sources)<br />
+- Fe–S auxiliary cluster dynamics and turnover: Recent synthesis of prior work highlights that in vitro, LipA often exhibits ≤1 turnover due to consumption of its auxiliary [4Fe-4S] cluster as the sulfur donor; however, in vivo multiple turnovers are supported by Fe–S carrier proteins (e.g., NfuA and, less efficiently, IscU) that repair/reconstitute the auxiliary cluster. Analogous requirements exist for human LIAS (NFU1). This mechanistic understanding underpins LipA’s sacrificial auxiliary cluster model and its physiological regeneration. (Cronan 2024) (cronan2024lipoicacidattachment pages 12-14)<br />
+- Emergence of an alternative two-enzyme lipoyl synthase system: A 2023 study identified a widespread, noncanonical lipoate assembly route in bacteria and archaea using two radical SAM enzymes, LipS2 and LipS1, which insert sulfurs sequentially but as two separate polypeptides. In the archaeal exemplar (Thermococcus), LipS2 installs the first sulfur at C8, and LipS1 installs the second at C6; these systems often co-occur with specialized ligases (sLpl(AB)) and, in bacteria, with LipM. Phylogenomic analyses point to an archaeal origin for the LipS1/LipS2 system followed by extensive horizontal gene transfer and modular mixing with ligases and octanoyltransferases. This expands the known diversity beyond canonical single-enzyme LipA, including implications for the evolution of lipoate assembly. (Tanabe et al. 2023, PLOS Biology, DOI:10.1371/journal.pbio.3002177, June 2023; Cronan 2024) (tanabe2023identificationofa pages 7-10, tanabe2023identificationofa pages 2-4, tanabe2023identificationofa pages 5-7, tanabe2023identificationofa pages 10-13, tanabe2023identificationofa pages 4-5, tanabe2023identificationofa pages 1-2, cronan2024lipoicacidattachment pages 10-12, cronan2024lipoicacidattachment pages 16-18)</p>
+<p>3) Current applications and real-world implementations<br />
+- Tool development using ligases: Engineered LplA enzymes have been widely used as biochemical tools for site-specific labeling and imaging in cell biology; recent reviews discuss adapting bacterial ligases for lipoylation or delipoylation studies, and for probing protein interactions and localization. These applications exploit the salvage arm (LplA/LplJ family) rather than LipA directly but are integral to the lipoate modification field. (Cronan 2024) (cronan2024lipoicacidattachment pages 2-4)<br />
+- Pathway engineering and cross-species complementation: The B. subtilis octanoyltransferase LipM was identified by complementing an E. coli ΔlipB strain; this discovery has informed heterologous pathway reconstruction and comparative enzymology across taxa. (Christensen &amp; Cronan 2010) (christensen2010lipoicacidsynthesis pages 1-2)</p>
+<p>4) Expert opinions and analysis from authoritative sources<br />
+- Consensus on mechanism: Authoritative reviews converge that LipA is a radical SAM enzyme that installs sulfur atoms sequentially at C6 then C8 on protein-bound octanoyl groups, with the auxiliary [4Fe-4S] cluster acting as the sacrificial sulfur source; cluster repair in vivo enables catalytic cycles. The B. subtilis system is a canonical Gram-positive variant that uses LipM (GcvH-specific octanoyltransferase) and LipL (GcvH→E2 amidotransfer), plus LplJ for salvage. (Cronan 2024; Lee et al. 2008; Lanz 2015; Christensen 2010/2011) (cronan2024lipoicacidattachment pages 2-4, cronan2024lipoicacidattachment pages 12-14, lee2008lipoicacidbiosynthesis pages 26-28, lanz2015theroleof pages 21-25, christensen2010lipoicacidsynthesis pages 1-2, christensen2011enzymaticdiversityin pages 99-102)<br />
+- Evolutionary landscape: The 2023 discovery of LipS1/LipS2 underscores multiple evolutionary solutions to lipoyl sulfur insertion and suggests archaeal origins with subsequent horizontal transfers. This does not alter the assignment of B. subtilis lipA as a canonical LipA-type enzyme but broadens comparative context and annotation caution. (Tanabe 2023; Cronan 2024) (tanabe2023identificationofa pages 7-10, tanabe2023identificationofa pages 2-4, tanabe2023identificationofa pages 5-7, tanabe2023identificationofa pages 10-13, cronan2024lipoicacidattachment pages 16-18)</p>
+<p>5) Relevant statistics and data from recent studies<br />
+- Turnover and auxiliary cluster consumption: Purified LipA commonly shows ≤1 catalytic turnover due to loss of the auxiliary cluster’s sulfurs; Fe–S carrier proteins (NfuA &gt; IscU) enable multiple turnovers by reconstituting the auxiliary cluster. These observations integrate biochemical and physiological data, and parallel human LIAS requirements (NFU1). (Cronan 2024) (cronan2024lipoicacidattachment pages 12-14)<br />
+- Substrate preference: Comparative assays demonstrate robust SAM turnover and lipoylation when LipA acts on octanoyl-E2/domain substrates, whereas octanoyl-ACP gives little to no productive activity under similar conditions, reinforcing that LipA’s physiological substrates are protein-bound octanoyl domains. (Douglas 2008) (douglas2008investigatingthechemistry pages 28-30)<br />
+- B. subtilis gene dependencies: In B. subtilis, ΔgcvH, ΔlipM, or ΔlipA strains are lipoic acid auxotrophs; GcvH is required in vivo as the initial octanoyl acceptor. ΔlipL strains cannot grow in minimal medium and are only partially rescued by exogenous lipoate due to the narrow substrate scope of LplJ; lipoyl-GcvH accumulates when LipL is missing, indicating LipL’s role in transferring (octanoyl/lipoyl) from GcvH to E2 domains. (Christensen 2011; Cronan 2024) (christensen2011enzymaticdiversityin pages 99-102, cronan2024lipoicacidattachment pages 2-4)</p>
+<p>Detailed mechanistic notes for B. subtilis LipA (O32129)<br />
+- Reaction: 2.8.1.8 lipoyl synthase; converts protein-bound octanoyl lysine to protein-bound lipoyl lysine by sulfur insertion at C6 and C8 via radical chemistry; dihydrolipoyl intermediates are oxidized to lipoyl. (Lee et al. 2008; Cronan 2024) (lee2008lipoicacidbiosynthesis pages 26-28, cronan2024lipoicacidattachment pages 2-4)<br />
+- Radical SAM machinery: A CysXXXCysXXCys motif binds the radical-SAM [4Fe-4S] cluster generating 5′-deoxyadenosyl radicals from SAM; a separate conserved Cys triad ligates the auxiliary [4Fe-4S] cluster that serves as the sulfur source and is consumed. (Lee et al. 2008; Lanz 2015) (lee2008lipoicacidbiosynthesis pages 26-28, lanz2015theroleof pages 21-25)<br />
+- Order of insertion: In canonical bacterial LipA (including B. subtilis), insertion proceeds C6 then C8; the archaeal/bacterial LipS2→LipS1 system installs C8 first then C6 as two separate enzymes. (Cronan 2024; Tanabe 2023) (cronan2024lipoicacidattachment pages 2-4, tanabe2023identificationofa pages 7-10)<br />
+- Substrates: Requires octanoyl-GcvH or octanoyl-E2 lipoyl domains; not octanoyl-ACP/free octanoate. (Douglas 2008; Cronan 2024) (douglas2008investigatingthechemistry pages 28-30, cronan2024lipoicacidattachment pages 2-4)</p>
+<p>Pathway and localization in B. subtilis<br />
+- De novo: Octanoyl-ACP (FAS) → LipM transfers octanoyl to GcvH → LipA inserts two sulfurs to form lipoyl-GcvH → LipL transfers (octanoyl/lipoyl) from GcvH to E2 lipoyl domains (PDH, OGDH, BCKDH). All steps occur in the cytosol. (Christensen 2010/2011; Cronan 2024) (christensen2010lipoicacidsynthesis pages 1-2, christensen2011enzymaticdiversityin pages 99-102, cronan2024lipoicacidattachment pages 2-4)<br />
+- Salvage: LplJ ligates free lipoate or octanoate to select E2 lipoyl domains via adenylate intermediates, with a narrow substrate preference that creates LipL dependence for modifying other E2s. (Christensen 2011; Cronan 2024) (christensen2011enzymaticdiversityin pages 99-102, cronan2024lipoicacidattachment pages 2-4)</p>
+<p>Mutant phenotypes and essentiality<br />
+- ΔlipA (or loss of lipoate synthesis) causes lipoate auxotrophy and defects in aerobic metabolism due to failure to lipoylate key enzyme complexes; exogenous lipoate can rescue when ligase specificity permits. (Lanz 2015; Christensen 2011) (lanz2015theroleof pages 21-25, christensen2011enzymaticdiversityin pages 99-102)<br />
+- ΔgcvH and ΔlipM are auxotrophs, confirming the requirement for GcvH as the first acceptor and LipM as the octanoyltransferase; ΔlipL accumulates lipoyl-GcvH and exhibits growth defects in minimal media, only partly alleviated by salvage owing to LplJ specificity. (Christensen 2011) (christensen2011enzymaticdiversityin pages 99-102)</p>
+<p>Implications and outlook<br />
+- The canonical B. subtilis LipA-centric pathway remains the correct model for Firmicutes; however, discovery of LipS1/LipS2 emphasizes evolutionary plasticity and cautions against sole reliance on sequence length or simple homology for annotation. Co-occurrence patterns and gene neighborhoods (LipM/LipL/LplJ vs. sLpl(AB)/LipS1/LipS2) are informative. (Tanabe 2023; Cronan 2024) (tanabe2023identificationofa pages 7-10, tanabe2023identificationofa pages 5-7, cronan2024lipoicacidattachment pages 16-18)<br />
+- Mechanistic regeneration of LipA’s auxiliary cluster by Fe–S carrier proteins is increasingly recognized as central to physiological catalysis, aligning bacterial and mitochondrial systems. This may inform antibacterial target validation and strategies that disrupt Fe–S delivery rather than LipA’s radical chemistry alone. (Cronan 2024) (cronan2024lipoicacidattachment pages 12-14)</p>
+<p>Key sources with URLs and dates<br />
+- Cronan JE. Lipoic acid attachment to proteins: stimulating new developments. Microbiol Mol Biol Rev. 2024 Jun; DOI:10.1128/mmbr.00005-24. https://doi.org/10.1128/mmbr.00005-24 (cronan2024lipoicacidattachment pages 2-4, cronan2024lipoicacidattachment pages 12-14, cronan2024lipoicacidattachment pages 10-12, cronan2024lipoicacidattachment pages 16-18)<br />
+- Tanabe TS et al. Identification of a novel lipoic acid biosynthesis pathway reveals the complex evolution of lipoate assembly in prokaryotes. PLOS Biol. 2023 Jun;21:e3002177. https://doi.org/10.1371/journal.pbio.3002177 (tanabe2023identificationofa pages 7-10, tanabe2023identificationofa pages 2-4, tanabe2023identificationofa pages 5-7, tanabe2023identificationofa pages 10-13, tanabe2023identificationofa pages 4-5, tanabe2023identificationofa pages 1-2)<br />
+- Christensen QH, Cronan JE. Lipoic acid synthesis: a new family of octanoyltransferases generally annotated as lipoate protein ligases. Biochemistry. 2010 Nov;49:10024–36. https://doi.org/10.1021/bi101215f (christensen2010lipoicacidsynthesis pages 1-2)<br />
+- Christensen QH. Enzymatic diversity in lipoic acid modification of proteins. 2011. (includes B. subtilis genetics and enzyme functions) (christensen2011enzymaticdiversityin pages 99-102)<br />
+- Lee KH et al. Lipoic Acid Biosynthesis. Oxidative Stress and Disease. 2008 Mar. https://doi.org/10.1201/9781420045390.ch2 (lee2008lipoicacidbiosynthesis pages 26-28)<br />
+- Lanz ND. The role of the auxiliary iron-sulfur cluster of lipoyl synthase in the biosynthesis of the lipoyl cofactor. 2015. (mechanistic review) (lanz2015theroleof pages 21-25)<br />
+- Douglas P. Investigating the chemistry of lipoyl synthase. 2008. (substrate specificity for octanoyl domains) (douglas2008investigatingthechemistry pages 28-30)</p>
+<p>Conclusion<br />
+B. subtilis lipA (O32129) encodes a cytosolic radical SAM lipoyl synthase that converts octanoyl groups on lipoyl domains to lipoyl cofactors by sequential sulfur insertion (C6→C8) using a sacrificial auxiliary [4Fe-4S] cluster. In B. subtilis, LipM supplies octanoyl-GcvH, LipA installs sulfurs to make lipoyl-GcvH, and LipL transfers the moiety to E2 domains; LplJ mediates salvage with narrow specificity. Recent (2023–2024) advances expand the evolutionary landscape via the two-enzyme LipS2/LipS1 system and reinforce the importance of Fe–S carrier–mediated auxiliary-cluster repair for LipA catalysis in vivo. Together, these findings define the function, pathway context, and modern understanding of LipA in B. subtilis, with clear mechanistic and evolutionary benchmarks. (cronan2024lipoicacidattachment pages 2-4, christensen2010lipoicacidsynthesis pages 1-2, christensen2011enzymaticdiversityin pages 99-102, lee2008lipoicacidbiosynthesis pages 26-28, lanz2015theroleof pages 21-25, tanabe2023identificationofa pages 7-10, cronan2024lipoicacidattachment pages 12-14)</p>
+<p>References</p>
+<ol>
+<li>
+<p>(cronan2024lipoicacidattachment pages 2-4): John E. Cronan. Lipoic acid attachment to proteins: stimulating new developments. Microbiology and Molecular Biology Reviews, Jun 2024. URL: https://doi.org/10.1128/mmbr.00005-24, doi:10.1128/mmbr.00005-24. This article has 16 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(christensen2010lipoicacidsynthesis pages 1-2): Quin H. Christensen and John E. Cronan. Lipoic acid synthesis: a new family of octanoyltransferases generally annotated as lipoate protein ligases. Biochemistry, 49 46:10024-36, Nov 2010. URL: https://doi.org/10.1021/bi101215f, doi:10.1021/bi101215f. This article has 62 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(christensen2011enzymaticdiversityin pages 99-102): QH Christensen. Enzymatic diversity in lipoic acid modification of proteins. Unknown journal, 2011.</p>
+</li>
+<li>
+<p>(cronan2024lipoicacidattachment pages 12-14): John E. Cronan. Lipoic acid attachment to proteins: stimulating new developments. Microbiology and Molecular Biology Reviews, Jun 2024. URL: https://doi.org/10.1128/mmbr.00005-24, doi:10.1128/mmbr.00005-24. This article has 16 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(tanabe2023identificationofa pages 7-10): Tomohisa Sebastian Tanabe, Martina Grosser, Lea Hahn, Carolin Kümpel, Hanna Hartenfels, Evelyn Vtulkin, Wanda Flegler, and Christiane Dahl. Identification of a novel lipoic acid biosynthesis pathway reveals the complex evolution of lipoate assembly in prokaryotes. PLOS Biology, 21:e3002177, Jun 2023. URL: https://doi.org/10.1371/journal.pbio.3002177, doi:10.1371/journal.pbio.3002177. This article has 12 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(tanabe2023identificationofa pages 1-2): Tomohisa Sebastian Tanabe, Martina Grosser, Lea Hahn, Carolin Kümpel, Hanna Hartenfels, Evelyn Vtulkin, Wanda Flegler, and Christiane Dahl. Identification of a novel lipoic acid biosynthesis pathway reveals the complex evolution of lipoate assembly in prokaryotes. PLOS Biology, 21:e3002177, Jun 2023. URL: https://doi.org/10.1371/journal.pbio.3002177, doi:10.1371/journal.pbio.3002177. This article has 12 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lee2008lipoicacidbiosynthesis pages 26-28): Kyung-Hoon Lee, Squire Booker, Robert Cicchillo, Tyler Grove, and Natasha Nesbitt. Lipoic acid biosynthesis. Oxidative Stress and Disease, Mar 2008. URL: https://doi.org/10.1201/9781420045390.ch2, doi:10.1201/9781420045390.ch2. This article has 18 citations.</p>
+</li>
+<li>
+<p>(christensen2011enzymaticdiversityin pages 126-130): QH Christensen. Enzymatic diversity in lipoic acid modification of proteins. Unknown journal, 2011.</p>
+</li>
+<li>
+<p>(douglas2008investigatingthechemistry pages 28-30): P Douglas. Investigating the chemistry of lipoyl synthase. Unknown journal, 2008.</p>
+</li>
+<li>
+<p>(lanz2015theroleof pages 21-25): ND Lanz. The role of the auxiliary iron-sulfur cluster of lipoyl synthase in the biosynthesis of the lipoyl cofactor. Unknown journal, 2015.</p>
+</li>
+<li>
+<p>(tanabe2023identificationofa pages 2-4): Tomohisa Sebastian Tanabe, Martina Grosser, Lea Hahn, Carolin Kümpel, Hanna Hartenfels, Evelyn Vtulkin, Wanda Flegler, and Christiane Dahl. Identification of a novel lipoic acid biosynthesis pathway reveals the complex evolution of lipoate assembly in prokaryotes. PLOS Biology, 21:e3002177, Jun 2023. URL: https://doi.org/10.1371/journal.pbio.3002177, doi:10.1371/journal.pbio.3002177. This article has 12 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(tanabe2023identificationofa pages 5-7): Tomohisa Sebastian Tanabe, Martina Grosser, Lea Hahn, Carolin Kümpel, Hanna Hartenfels, Evelyn Vtulkin, Wanda Flegler, and Christiane Dahl. Identification of a novel lipoic acid biosynthesis pathway reveals the complex evolution of lipoate assembly in prokaryotes. PLOS Biology, 21:e3002177, Jun 2023. URL: https://doi.org/10.1371/journal.pbio.3002177, doi:10.1371/journal.pbio.3002177. This article has 12 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(tanabe2023identificationofa pages 10-13): Tomohisa Sebastian Tanabe, Martina Grosser, Lea Hahn, Carolin Kümpel, Hanna Hartenfels, Evelyn Vtulkin, Wanda Flegler, and Christiane Dahl. Identification of a novel lipoic acid biosynthesis pathway reveals the complex evolution of lipoate assembly in prokaryotes. PLOS Biology, 21:e3002177, Jun 2023. URL: https://doi.org/10.1371/journal.pbio.3002177, doi:10.1371/journal.pbio.3002177. This article has 12 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(tanabe2023identificationofa pages 4-5): Tomohisa Sebastian Tanabe, Martina Grosser, Lea Hahn, Carolin Kümpel, Hanna Hartenfels, Evelyn Vtulkin, Wanda Flegler, and Christiane Dahl. Identification of a novel lipoic acid biosynthesis pathway reveals the complex evolution of lipoate assembly in prokaryotes. PLOS Biology, 21:e3002177, Jun 2023. URL: https://doi.org/10.1371/journal.pbio.3002177, doi:10.1371/journal.pbio.3002177. This article has 12 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(cronan2024lipoicacidattachment pages 10-12): John E. Cronan. Lipoic acid attachment to proteins: stimulating new developments. Microbiology and Molecular Biology Reviews, Jun 2024. URL: https://doi.org/10.1128/mmbr.00005-24, doi:10.1128/mmbr.00005-24. This article has 16 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(cronan2024lipoicacidattachment pages 16-18): John E. Cronan. Lipoic acid attachment to proteins: stimulating new developments. Microbiology and Molecular Biology Reviews, Jun 2024. URL: https://doi.org/10.1128/mmbr.00005-24, doi:10.1128/mmbr.00005-24. This article has 16 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>douglas2008investigatingthechemistry pages 28-30</li>
+<li>cronan2024lipoicacidattachment pages 12-14</li>
+<li>cronan2024lipoicacidattachment pages 2-4</li>
+<li>christensen2010lipoicacidsynthesis pages 1-2</li>
+<li>christensen2011enzymaticdiversityin pages 99-102</li>
+<li>lee2008lipoicacidbiosynthesis pages 26-28</li>
+<li>lanz2015theroleof pages 21-25</li>
+<li>tanabe2023identificationofa pages 7-10</li>
+<li>tanabe2023identificationofa pages 1-2</li>
+<li>christensen2011enzymaticdiversityin pages 126-130</li>
+<li>tanabe2023identificationofa pages 2-4</li>
+<li>tanabe2023identificationofa pages 5-7</li>
+<li>tanabe2023identificationofa pages 10-13</li>
+<li>tanabe2023identificationofa pages 4-5</li>
+<li>cronan2024lipoicacidattachment pages 10-12</li>
+<li>cronan2024lipoicacidattachment pages 16-18</li>
+<li>4Fe-4S</li>
+<li>https://doi.org/10.1128/mmbr.00005-24</li>
+<li>https://doi.org/10.1371/journal.pbio.3002177</li>
+<li>https://doi.org/10.1021/bi101215f</li>
+<li>https://doi.org/10.1201/9781420045390.ch2</li>
+<li>https://doi.org/10.1128/mmbr.00005-24,</li>
+<li>https://doi.org/10.1021/bi101215f,</li>
+<li>https://doi.org/10.1371/journal.pbio.3002177,</li>
+<li>https://doi.org/10.1201/9781420045390.ch2,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: O32129
+gene_symbol: lipA
+product_type: PROTEIN
+status: IN_PROGRESS
+taxon:
+  id: NCBITaxon:224308
+  label: Bacillus subtilis (strain 168)
+description: &gt;-
+  LipA (also known as yutB) is a lipoyl synthase belonging to the radical SAM superfamily
+  that catalyzes the final step of de novo lipoate biosynthesis in Bacillus subtilis.
+  The enzyme inserts two sulfur atoms into the C6 and C8 positions of protein-bound
+  octanoyl groups (attached to lipoyl domains of acceptor proteins such as GcvH and E2
+  subunits of 2-oxoacid dehydrogenase complexes), converting them to lipoyl cofactors.
+  LipA contains two [4Fe-4S] clusters: a radical-SAM cluster for generating 5&#39;-deoxyadenosyl
+  radicals from S-adenosyl-L-methionine, and an auxiliary cluster that serves as the
+  sacrificial sulfur donor. In B. subtilis, LipA functions in a pathway where LipM first
+  transfers octanoyl from ACP to GcvH, LipA then inserts sulfurs to form lipoyl-GcvH,
+  and LipL transfers the lipoyl moiety to E2 domains. Disruption of lipA causes lipoate
+  auxotrophy and severely impairs growth in minimal medium due to defective lipoate-dependent
+  enzymes, leading to impaired branched-chain fatty acid biosynthesis.
+existing_annotations:
+- term:
+    id: GO:0003824
+    label: catalytic activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      This annotation from InterPro mapping assigns the very general term &#34;catalytic activity&#34;
+      based on the presence of radical SAM domains. LipA is indeed a catalyst (lipoyl synthase,
+      EC 2.8.1.8), but this term is far too general and uninformative.
+    action: MODIFY
+    reason: &gt;-
+      LipA has well-established lipoyl synthase activity (EC 2.8.1.8). The term &#34;catalytic activity&#34;
+      is overly broad and should be replaced with the specific molecular function term
+      GO:0016992 (lipoate synthase activity) which accurately describes LipA&#39;s enzymatic function.
+    proposed_replacement_terms:
+      - id: GO:0016992
+        label: lipoate synthase activity
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      This annotation assigns cytoplasmic localization based on UniProt subcellular location
+      annotation and UniRule. In B. subtilis (a Gram-positive bacterium lacking membrane-bound
+      organelles), LipA and partner enzymes function in the cytosol where they act on soluble
+      lipoyl domains of central metabolic complexes.
+    action: ACCEPT
+    reason: &gt;-
+      Cytoplasmic localization is correct for B. subtilis LipA. The enzyme acts on
+      cytosolic acceptor proteins including GcvH and E2 subunits of pyruvate dehydrogenase,
+      2-oxoglutarate dehydrogenase, and branched-chain 2-oxoacid dehydrogenase complexes
+      (Cronan 2024; Christensen 2011).
+    supported_by:
+      - reference_id: PMID:19820084
+        supporting_text: &#34;The function of lipA was inferred from the results of genetic and physiological experiments&#34;
+- term:
+    id: GO:0009107
+    label: lipoate biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      This IEA annotation assigns involvement in lipoate biosynthesis based on InterPro
+      lipoyl synthase domain and UniRule mapping. LipA catalyzes the final step of de novo
+      lipoate biosynthesis by inserting sulfur atoms into octanoyl groups.
+    action: ACCEPT
+    reason: &gt;-
+      LipA is the key enzyme for de novo lipoate biosynthesis, catalyzing sulfur insertion
+      into protein-bound octanoyl groups. This is the core biological process of the enzyme
+      and is well supported by the literature (Cronan 2024; Christensen 2010).
+    supported_by:
+      - reference_id: PMID:19820084
+        supporting_text: &#34;We report the characterization of a Bacillus subtilis mutant obtained by disruption of the lipA (yutB) gene, which encodes lipoyl synthase (LipA), the enzyme that catalyzes the final step in the de novo biosynthesis of this cofactor.&#34;
+- term:
+    id: GO:0009249
+    label: protein lipoylation
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  review:
+    summary: &gt;-
+      This annotation assigns involvement in protein lipoylation based on UniRule transfer.
+      LipA directly modifies protein-bound octanoyl groups on lipoyl domains, converting
+      them to lipoyl groups covalently attached to lysine residues.
+    action: ACCEPT
+    reason: &gt;-
+      LipA functions specifically on protein substrates (octanoyl-GcvH, octanoyl-E2), not
+      free octanoate, and its product is a protein-bound lipoyl cofactor. This annotation
+      accurately reflects the enzyme&#39;s role in the post-translational lipoylation of proteins
+      (Douglas 2008; Cronan 2024).
+    supported_by:
+      - reference_id: PMID:19820084
+        supporting_text: &#34;lipoyl synthase (LipA), the enzyme that catalyzes the final step in the de novo biosynthesis of this cofactor&#34;
+- term:
+    id: GO:0016740
+    label: transferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;-
+      This annotation assigns transferase activity based on UniProt keyword mapping
+      (Transferase KW-0808). LipA is classified as EC 2.8.1.8, which is a sulfurtransferase
+      that transfers sulfur atoms to octanoyl groups.
+    action: ACCEPT
+    reason: &gt;-
+      LipA is a sulfurtransferase (EC 2.8.1.8) and thus correctly annotated as having
+      transferase activity. While this is a general parent term, it is accurate and
+      provides useful hierarchical information complementing the more specific lipoate
+      synthase activity annotation.
+- term:
+    id: GO:0016783
+    label: sulfurtransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  review:
+    summary: &gt;-
+      This annotation assigns sulfurtransferase activity based on UniRule mapping.
+      LipA inserts sulfur atoms from its auxiliary [4Fe-4S] cluster into octanoyl
+      substrates at C6 and C8 positions, making it a sulfurtransferase by definition.
+    action: ACCEPT
+    reason: &gt;-
+      LipA is classified as EC 2.8.1.8 (sulfurtransferase class). The enzyme transfers
+      sulfur atoms from its sacrificial auxiliary [4Fe-4S] cluster to the C6 and C8
+      positions of protein-bound octanoyl groups (Cronan 2024; Lee et al. 2008).
+- term:
+    id: GO:0016992
+    label: lipoate synthase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      This IEA annotation assigns lipoate synthase activity based on InterPro domain
+      mapping and UniRule. This is the correct, specific molecular function term for LipA.
+    action: ACCEPT
+    reason: &gt;-
+      GO:0016992 (lipoate synthase activity) is the most specific and accurate molecular
+      function term for LipA. The enzyme catalyzes sulfur insertion into octanoyl groups
+      to form lipoyl cofactors (EC 2.8.1.8). This is a core function annotation (Cronan 2024).
+    supported_by:
+      - reference_id: PMID:19820084
+        supporting_text: &#34;lipoyl synthase (LipA), the enzyme that catalyzes the final step in the de novo biosynthesis of this cofactor&#34;
+- term:
+    id: GO:0046872
+    label: metal ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;-
+      This annotation assigns metal ion binding based on UniProt keyword mapping.
+      LipA binds two [4Fe-4S] clusters which contain iron ions.
+    action: ACCEPT
+    reason: &gt;-
+      LipA binds iron as part of its two [4Fe-4S] clusters. The annotation is correct
+      but general; it is complemented by the more specific iron-sulfur cluster binding
+      annotations which provide better functional context.
+- term:
+    id: GO:0051536
+    label: iron-sulfur cluster binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      This annotation assigns iron-sulfur cluster binding based on InterPro radical SAM
+      domains and UniProt keyword. LipA contains two distinct [4Fe-4S] clusters essential
+      for its catalytic mechanism.
+    action: ACCEPT
+    reason: &gt;-
+      LipA binds two [4Fe-4S] clusters: a radical-SAM cluster coordinated by a CysXXXCysXXCys
+      motif for generating 5&#39;-deoxyadenosyl radicals, and an auxiliary cluster that serves
+      as the sulfur donor (Lee et al. 2008; Lanz 2015). This is a core property of the enzyme.
+- term:
+    id: GO:0051539
+    label: 4 iron, 4 sulfur cluster binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      This annotation specifically assigns [4Fe-4S] cluster binding based on InterPro
+      lipoyl synthase domain and UniProt keywords. LipA contains two [4Fe-4S] clusters.
+    action: ACCEPT
+    reason: &gt;-
+      LipA specifically binds [4Fe-4S] clusters, not other iron-sulfur cluster types.
+      One cluster is the radical-SAM cluster (coordinated with 3 cysteines and exchangeable
+      SAM), and the other is the auxiliary cluster that is consumed during catalysis as the
+      sulfur source. Both are [4Fe-4S] clusters (Lee et al. 2008; Cronan 2024).
+    supported_by:
+      - reference_id: UniProt:O32129
+        supporting_text: &#34;Binds 2 [4Fe-4S] clusters per subunit. One cluster is coordinated with 3 cysteines and an exchangeable S-adenosyl-L-methionine.&#34;
+- term:
+    id: GO:0009107
+    label: lipoate biosynthetic process
+  evidence_type: IGI
+  original_reference_id: PMID:19820084
+  review:
+    summary: &gt;-
+      This experimental annotation (IGI - Inferred from Genetic Interaction) assigns
+      involvement in lipoate biosynthesis based on the lipA mutant study by Martin et al.
+      (2009). Disruption of lipA interrupted lipoate-dependent reactions in B. subtilis.
+    action: ACCEPT
+    reason: &gt;-
+      The Martin et al. (2009) study directly demonstrated that disruption of lipA
+      eliminates de novo lipoate biosynthesis in B. subtilis, causing lipoate auxotrophy.
+      The IGI evidence is strong experimental support for this core biological process.
+    supported_by:
+      - reference_id: PMID:19820084
+        supporting_text: &#34;We report the characterization of a Bacillus subtilis mutant obtained by disruption of the lipA (yutB) gene, which encodes lipoyl synthase (LipA), the enzyme that catalyzes the final step in the de novo biosynthesis of this cofactor.&#34;
+- term:
+    id: GO:0009249
+    label: protein lipoylation
+  evidence_type: IGI
+  original_reference_id: PMID:19820084
+  review:
+    summary: &gt;-
+      This experimental annotation assigns involvement in protein lipoylation based on
+      the lipA mutant study. The loss of LipA function led to interruption of
+      lipoate-dependent reactions, which require lipoylated proteins.
+    action: ACCEPT
+    reason: &gt;-
+      The Martin et al. (2009) study showed that lipA disruption interrupts lipoate-dependent
+      reactions, which implies loss of protein lipoylation. LipA acts directly on
+      protein-bound octanoyl substrates to generate protein-bound lipoyl cofactors.
+    supported_by:
+      - reference_id: PMID:19820084
+        supporting_text: &#34;Interrupting lipoate-dependent reactions strongly inhibits growth in minimal medium&#34;
+- term:
+    id: GO:0016992
+    label: lipoate synthase activity
+  evidence_type: IGI
+  original_reference_id: PMID:19820084
+  review:
+    summary: &gt;-
+      This experimental annotation assigns lipoate synthase activity based on the
+      lipA mutant study. The gene was identified as encoding the lipoyl synthase
+      responsible for the final step in lipoate biosynthesis.
+    action: ACCEPT
+    reason: &gt;-
+      The Martin et al. (2009) study identified lipA (yutB) as encoding lipoyl synthase
+      and demonstrated through mutant analysis that the gene product is required for
+      lipoate biosynthesis, consistent with lipoate synthase activity.
+    supported_by:
+      - reference_id: PMID:19820084
+        supporting_text: &#34;the lipA (yutB) gene, which encodes lipoyl synthase (LipA), the enzyme that catalyzes the final step in the de novo biosynthesis of this cofactor&#34;
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+- id: GO_REF:0000104
+  title: Electronic Gene Ontology annotations created by transferring manual GO annotations
+    between related proteins based on shared sequence features
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:19820084
+  title: A lipA (yutB) mutant, encoding lipoic acid synthase, provides insight into
+    the interplay between branched-chain and unsaturated fatty acid biosynthesis in
+    Bacillus subtilis.
+  findings:
+    - statement: Identified lipA (yutB) as encoding lipoyl synthase in B. subtilis
+      supporting_text: &#34;the lipA (yutB) gene, which encodes lipoyl synthase (LipA), the enzyme that catalyzes the final step in the de novo biosynthesis of this cofactor&#34;
+    - statement: Disruption of lipA causes lipoate auxotrophy and growth defects in minimal medium
+      supporting_text: &#34;Interrupting lipoate-dependent reactions strongly inhibits growth in minimal medium&#34;
+    - statement: lipA mutants show impaired branched-chain fatty acid biosynthesis
+      supporting_text: &#34;impairing the generation of branched-chain fatty acids&#34;
+    - statement: lipA mutants accumulate straight-chain saturated fatty acids
+      supporting_text: &#34;leading to accumulation of copious amounts of straight-chain saturated fatty acids in B. subtilis membranes&#34;
+- id: DOI:10.1128/mmbr.00005-24
+  title: &#34;Lipoic acid attachment to proteins: stimulating new developments&#34;
+  findings:
+    - statement: Comprehensive 2024 review of lipoate biosynthesis and attachment mechanisms
+    - statement: Details the radical SAM mechanism with auxiliary [4Fe-4S] cluster as sulfur donor
+    - statement: Describes the B. subtilis pathway architecture (LipM/LipL/LplJ/GcvH)
+    - statement: Explains Fe-S carrier protein roles in auxiliary cluster regeneration
+- id: DOI:10.1021/bi101215f
+  title: &#34;Lipoic acid synthesis: a new family of octanoyltransferases generally annotated as lipoate protein ligases&#34;
+  findings:
+    - statement: Identified LipM as the B. subtilis octanoyltransferase (distinct from E. coli LipB)
+    - statement: LipM transfers octanoyl from ACP to GcvH
+    - statement: Established the pathway order in B. subtilis de novo lipoate biosynthesis
+core_functions:
+  - molecular_function:
+      id: GO:0016992
+      label: lipoate synthase activity
+    description: &gt;-
+      LipA is a radical SAM enzyme that catalyzes the insertion of two sulfur atoms
+      into protein-bound octanoyl groups at C6 and C8 positions to generate lipoyl
+      cofactors. This is the defining enzymatic activity of the protein (EC 2.8.1.8).
+      Demonstrated by mutant analysis in B. subtilis (PMID:19820084) and extensive
+      biochemical characterization in related systems.
+    directly_involved_in:
+      - id: GO:0009107
+        label: lipoate biosynthetic process
+      - id: GO:0009249
+        label: protein lipoylation
+    locations:
+      - id: GO:0005737
+        label: cytoplasm
+    supported_by:
+      - reference_id: PMID:19820084
+        supporting_text: &#34;the lipA (yutB) gene, which encodes lipoyl synthase (LipA), the enzyme that catalyzes the final step in the de novo biosynthesis of this cofactor&#34;
+proposed_new_terms: []
+suggested_questions:
+  - question: &gt;-
+      What are the specific Fe-S carrier proteins (analogous to E. coli NfuA) that
+      regenerate the auxiliary [4Fe-4S] cluster of LipA in B. subtilis?
+  - question: &gt;-
+      What is the order of sulfur insertion (C6 first or C8 first) for B. subtilis LipA?
+suggested_experiments: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

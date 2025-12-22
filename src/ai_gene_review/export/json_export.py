@@ -1,6 +1,7 @@
 """JSON exporter for gene review data."""
 
 import json
+import re
 import yaml
 from pathlib import Path
 from typing import Dict, List, Any, Union, Optional
@@ -125,6 +126,9 @@ class JSONExporter:
         row["pathway_link"] = self._generate_pathway_link(gene_review)
         row["review_html_link"] = self._generate_review_html_link(gene_review)
 
+        # Deep research methods available for this gene
+        row["deep_research"] = self._find_deep_research_methods(gene_review)
+
         # Term information
         if annotation.term:
             row["term_id"] = annotation.term.id
@@ -217,6 +221,93 @@ class JSONExporter:
             row["review.additional_reference_ids"] = None
 
         return row
+
+    def _find_deep_research_methods(self, gene_review: GeneReview) -> List[str]:
+        """
+        Find which deep research methods are available for a gene.
+
+        Looks for files matching pattern: GENE-deep-research[-METHOD].md
+        If no METHOD suffix, assumes 'openai'.
+
+        Args:
+            gene_review: The GeneReview object
+
+        Returns:
+            List of method names (e.g., ['openai', 'perplexity', 'gemini'])
+        """
+        if not gene_review.gene_symbol:
+            return []
+
+        methods = []
+
+        # Find the gene directory
+        gene_dir = self._find_gene_directory(gene_review)
+        if not gene_dir or not gene_dir.exists():
+            return []
+
+        # Pattern: GENE-deep-research[-METHOD].md
+        gene_symbol = gene_review.gene_symbol
+        pattern = re.compile(
+            rf"^{re.escape(gene_symbol)}-deep-research(?:-([a-zA-Z0-9-]+))?\.md$"
+        )
+
+        for file_path in gene_dir.iterdir():
+            if not file_path.is_file():
+                continue
+            match = pattern.match(file_path.name)
+            if match:
+                method = match.group(1)
+                if method is None:
+                    methods.append("openai")
+                else:
+                    methods.append(method)
+
+        return sorted(set(methods))
+
+    def _find_gene_directory(self, gene_review: GeneReview) -> Optional[Path]:
+        """
+        Find the directory for a gene based on its taxon.
+
+        Args:
+            gene_review: The GeneReview object
+
+        Returns:
+            Path to the gene directory, or None if not found
+        """
+        if not gene_review.gene_symbol:
+            return None
+
+        organism_mapping = {
+            "NCBITaxon:9606": "human",
+            "NCBITaxon:10090": "mouse",
+            "NCBITaxon:559292": "yeast",
+            "NCBITaxon:4896": "pombe",
+            "NCBITaxon:7227": "fly",
+            "NCBITaxon:6239": "worm",
+            "NCBITaxon:10116": "rat",
+            "NCBITaxon:3702": "ARATH",
+        }
+
+        gene_symbol = gene_review.gene_symbol
+
+        # Try mapped organism directory first
+        if gene_review.taxon and gene_review.taxon.id:
+            organism_dir = organism_mapping.get(gene_review.taxon.id)
+            if organism_dir:
+                gene_path = Path("genes") / organism_dir / gene_symbol
+                if gene_path.exists():
+                    return gene_path
+
+        # Search all organism directories
+        genes_root = Path("genes")
+        if genes_root.exists():
+            for org_path in genes_root.iterdir():
+                if org_path.is_dir():
+                    gene_path = org_path / gene_symbol
+                    if gene_path.exists():
+                        return gene_path
+
+        return None
 
     def _find_reference_title(
         self, gene_review: GeneReview, ref_id: str
