@@ -1,0 +1,3119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>secA - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>secA</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P28366" target="_blank" class="term-link">
+                        P28366
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Bacillus subtilis (strain 168)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "secA";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P28366" data-a="DESCRIPTION: SecA is the essential ATP-driven motor protein of ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>SecA is the essential ATP-driven motor protein of the bacterial Sec translocase (EC 7.4.2.8) that powers post-translational protein secretion through the SecYEG channel. As a P-type polypeptide translocase ATPase, SecA couples ATP binding and hydrolysis to mechanical translocation of preproteins bearing N-terminal signal peptides across the cytoplasmic membrane. The protein cycles between cytoplasmic and membrane-associated states, interacting with the SecYEG preprotein-conducting channel to drive stepwise translocation of polypeptide chains. SecA undergoes conformational changes upon nucleotide binding and hydrolysis that push polypeptide segments through SecYEG. In B. subtilis, SecA localizes to discrete membrane-proximal &#34;secretion zones&#34; during high-level secretion of proteins like alpha-amylase. The protein functions as part of the holotranslocon complex comprising SecYEG with SecDF-YajC and YidC, and cooperates with TerC family proteins (MeeF/MeeY) for co-translocational metalation of secreted enzymes. SecA binds zinc as a cofactor through a C-terminal SEC-C motif and contains helicase-like ATP-binding domains characteristic of the superfamily 2 helicases. The protein can exist as both monomers and various homodimeric forms, with a single SecA monomer interacting with SecY in the functional translocation channel. SecA is essential for bacterial viability and has been proposed as an antibiotic target.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P28366" data-a="GO:0005886" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SecA is a peripheral membrane protein that associates with the plasma membrane on the cytoplasmic side during active protein translocation. UniProt states SecA is localized to Cell membrane as a Peripheral membrane protein on the Cytoplasmic side with experimental evidence from PMID:27362352. The deep research confirms SecA binds to the inner leaflet and SecYEG at the cytoplasmic membrane and cycles into a membrane-inserted state during active translocation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Plasma membrane localization is well-established for SecA as part of its core function in protein translocation. SecA cycles between cytoplasm and membrane, associating with the membrane during translocation via SecYEG interaction. IBA annotation is appropriate and consistent with experimental evidence.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:BACSU/secA/secA-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">SecA is cytosolic but binds to the inner leaflet and SecYEG at the cytoplasmic membrane; it cycles into a membrane-inserted state during active translocation and interacts with anionic phospholipids</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005524" target="_blank" class="term-link">
+                                    GO:0005524
+                                </a>
+                            </span>
+                            <span class="term-label">ATP binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P28366" data-a="GO:0005524" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ATP binding is a core molecular function of SecA. The protein contains well-characterized ATP-binding sites with multiple residues directly involved in nucleotide coordination. Mutagenesis of K106 abolishes activity (PMID:8440733). Crystal structures demonstrate ADP/ATP binding.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> ATP binding is fundamental to SecA function as an ATPase motor. The protein belongs to the superfamily 2 helicases with helicase-like ATP-binding domains (IPR014001, IPR001650). UniProt records multiple ATP binding residues with structural evidence. This is a core function annotation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:P28366
+                                    
+                                </span>
+                                
+                                <div class="support-text">Has a central role in coupling the hydrolysis of ATP to the transfer of proteins into and across the cell membrane</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:BACSU/secA/secA-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">ATP binding/hydrolysis by SecA produces conformational changes that push polypeptide segments through SecYEG</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031522" target="_blank" class="term-link">
+                                    GO:0031522
+                                </a>
+                            </span>
+                            <span class="term-label">cell envelope Sec protein transport complex</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P28366" data-a="GO:0031522" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SecA is an integral component of the Sec protein transport complex. UniProt states SecA is Part of the essential Sec protein translocation apparatus which comprises SecA, SecYEG and auxiliary proteins SecDF. The deep research confirms SecA operates within the holotranslocon as a dynamic secretion machine.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> SecA is definitionally a component of the Sec protein transport complex. This cellular component annotation accurately captures SecA&#39;s localization as part of the functional translocase machinery at the membrane. The IBA annotation is appropriate.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:P28366
+                                    
+                                </span>
+                                
+                                <div class="support-text">Part of the essential Sec protein translocation apparatus which comprises SecA, SecYEG and auxiliary proteins SecDF</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:BACSU/secA/secA-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">The functional secretion unit in Gram-positive bacteria (holotranslocon) comprises SecYEG with SecDF-YajC and YidC; SecA powers translocation into/through SecYEG</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043952" target="_blank" class="term-link">
+                                    GO:0043952
+                                </a>
+                            </span>
+                            <span class="term-label">protein transport by the Sec complex</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P28366" data-a="GO:0043952" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SecA drives protein transport through the Sec complex as the ATP-dependent motor. The deep research states SecA has a central role in coupling the hydrolysis of ATP to the transfer of proteins into and across the cell membrane, serving as an ATP-driven molecular motor driving the stepwise translocation of polypeptide chains across the membrane.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This biological process annotation accurately captures the primary function of SecA - driving protein transport through the Sec translocase. SecA is the motor that powers Sec-dependent translocation. This is a core function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:P28366
+                                    
+                                </span>
+                                
+                                <div class="support-text">Has a central role in coupling the hydrolysis of ATP to the transfer of proteins into and across the cell membrane, serving as an ATP-driven molecular motor driving the stepwise translocation of polypeptide chains across the membrane</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:BACSU/secA/secA-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">SecA is the ATP-driven motor of the bacterial Sec translocase that post-translationally drives preprotein movement through the SecYEG channel</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000166" target="_blank" class="term-link">
+                                    GO:0000166
+                                </a>
+                            </span>
+                            <span class="term-label">nucleotide binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P28366" data-a="GO:0000166" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SecA binds nucleotides (ATP/ADP) as part of its catalytic cycle. This IEA annotation from UniProtKB keyword mapping is accurate but too general compared to the more specific GO:0005524 (ATP binding) annotations also present.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While this annotation is correct, it is broader than the ATP binding annotations already present. Since duplicates with different evidence codes are acceptable and this IEA provides complementary computational evidence, it can be retained. The annotation is not wrong, just less specific than the IBA ATP binding annotation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:P28366
+                                    
+                                </span>
+                                
+                                <div class="support-text">Has a central role in coupling the hydrolysis of ATP to the transfer of proteins into and across the cell membrane</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005524" target="_blank" class="term-link">
+                                    GO:0005524
+                                </a>
+                            </span>
+                            <span class="term-label">ATP binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P28366" data-a="GO:0005524" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is a duplicate ATP binding annotation with IEA evidence from combined automated annotation. The IBA annotation with the same GO ID provides phylogenetically-based evidence for the same function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Duplicate annotations with different evidence codes are acceptable. This IEA annotation provides complementary computational support for the core ATP binding function of SecA.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:P28366
+                                    
+                                </span>
+                                
+                                <div class="support-text">Has a central role in coupling the hydrolysis of ATP to the transfer of proteins into and across the cell membrane, serving as an ATP-driven molecular motor</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P28366" data-a="GO:0005737" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SecA is a cytoplasmic protein that cycles to the membrane during active translocation. UniProt states subcellular location includes Cytoplasm with the note Distribution is 50-50 between cytoplasm and membrane. The deep research confirms SecA is cytosolic but binds to the inner leaflet and SecYEG at the cytoplasmic membrane.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Cytoplasmic localization is accurate - SecA exists in equilibrium between cytoplasm and membrane. The protein is soluble in the cytoplasm and peripherally associates with the membrane during translocation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:P28366
+                                    
+                                </span>
+                                
+                                <div class="support-text">Note=Distribution is 50-50</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:BACSU/secA/secA-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">SecA is cytosolic but binds to the inner leaflet and SecYEG at the cytoplasmic membrane; it cycles into a membrane-inserted state during active translocation</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P28366" data-a="GO:0005886" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is a duplicate plasma membrane annotation with IEA evidence. The IBA annotation with the same GO ID is also present with phylogenetic evidence.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Duplicate annotations with different evidence codes are acceptable. Both IBA and IEA evidence support plasma membrane localization as a core aspect of SecA function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:BACSU/secA/secA-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">SecA is cytosolic but binds to the inner leaflet and SecYEG at the cytoplasmic membrane</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006605" target="_blank" class="term-link">
+                                    GO:0006605
+                                </a>
+                            </span>
+                            <span class="term-label">protein targeting</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P28366" data-a="GO:0006605" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SecA is involved in targeting preproteins to the translocation apparatus. The protein recognizes signal peptide-bearing preproteins and delivers them to SecYEG for translocation. This is part of the broader Sec-dependent secretion pathway.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Protein targeting is a valid biological process for SecA, as it recognizes and directs preproteins to the SecYEG channel. This is broader than but consistent with the more specific &#34;protein transport by the Sec complex&#34; annotation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:BACSU/secA/secA-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">SecA recognizes preproteins with N-terminal signal peptides that engage the lateral gate of SecY</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006886" target="_blank" class="term-link">
+                                    GO:0006886
+                                </a>
+                            </span>
+                            <span class="term-label">intracellular protein transport</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P28366" data-a="GO:0006886" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SecA participates in intracellular protein transport by moving preproteins from the cytoplasm to the membrane/extracellular space via SecYEG. This InterPro-derived annotation captures the transport function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation is accurate but very general. SecA does participate in intracellular protein transport as part of the Sec pathway. The more specific annotation &#34;protein transport by the Sec complex&#34; (GO:0043952) better captures the specificity of SecA function, but this broader term is not incorrect.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:P28366
+                                    
+                                </span>
+                                
+                                <div class="support-text">Has a central role in coupling the hydrolysis of ATP to the transfer of proteins into and across the cell membrane</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008564" target="_blank" class="term-link">
+                                    GO:0008564
+                                </a>
+                            </span>
+                            <span class="term-label">protein-exporting ATPase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000003
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P28366" data-a="GO:0008564" data-r="GO_REF:0000003" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the most specific and accurate molecular function annotation for SecA. EC 7.4.2.8 maps to protein-exporting ATPase activity. UniProt records the catalytic activity with experimental evidence from PMID:8440733.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the core molecular function of SecA. The EC number 7.4.2.8 corresponds to protein-translocating ATPase activity. SecA couples ATP hydrolysis to the mechanical work of pushing polypeptides through SecYEG. This annotation should be retained as a core function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:P28366
+                                    
+                                </span>
+                                
+                                <div class="support-text">Reaction=ATP + H2O + cellular proteinSide 1 = ADP + phosphate + cellular proteinSide 2.; EC=7.4.2.8</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:BACSU/secA/secA-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">SecA is a P-type polypeptide translocase ATPase (EC 7.4.2.8) that couples ATP hydrolysis to mechanical translocation of mostly unfolded preproteins bearing N-terminal signal peptides across the cytoplasmic membrane via SecYEG</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015031" target="_blank" class="term-link">
+                                    GO:0015031
+                                </a>
+                            </span>
+                            <span class="term-label">protein transport</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P28366" data-a="GO:0015031" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SecA is involved in protein transport as the motor driving secretion through SecYEG. This annotation is accurate but very general compared to the more specific &#34;protein transport by the Sec complex&#34; (GO:0043952).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This general protein transport annotation is accurate. SecA mediates protein transport across membranes. While less specific than GO:0043952, it is not incorrect and provides keyword-based evidence.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:P28366
+                                    
+                                </span>
+                                
+                                <div class="support-text">Has a central role in coupling the hydrolysis of ATP to the transfer of proteins into and across the cell membrane, serving as an ATP-driven molecular motor driving the stepwise translocation of polypeptide chains across the membrane</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P28366" data-a="GO:0016020" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SecA associates with membranes as a peripheral membrane protein. This InterPro-derived annotation is accurate but very general - the more specific GO:0005886 (plasma membrane) annotations are also present.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This general membrane annotation is technically correct but less informative than the specific plasma membrane annotations. It can be retained as complementary evidence from InterPro.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:BACSU/secA/secA-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">SecA is cytosolic but binds to the inner leaflet and SecYEG at the cytoplasmic membrane</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0017038" target="_blank" class="term-link">
+                                    GO:0017038
+                                </a>
+                            </span>
+                            <span class="term-label">protein import</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="P28366" data-a="GO:0017038" data-r="GO_REF:0000002" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation appears to be an error or overly generic mapping from InterPro. SecA is involved in protein EXPORT (secretion) not import. The Sec pathway translocates proteins from the cytoplasm to the periplasm/extracellular space, which is export, not import.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> SecA is a protein EXPORTER, not importer. The Sec translocase moves preproteins from the cytoplasm out through the membrane. &#34;Protein import&#34; implies movement into the cytoplasm, which is the opposite of SecA&#39;s function. This annotation should be removed as it is misleading.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:P28366
+                                    
+                                </span>
+                                
+                                <div class="support-text">Reaction=ATP + H2O + cellular proteinSide 1 = ADP + phosphate + cellular proteinSide 2.; EC=7.4.2.8</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:BACSU/secA/secA-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">SecA is a P-type polypeptide translocase ATPase that couples ATP hydrolysis to mechanical translocation of mostly unfolded preproteins bearing N-terminal signal peptides across the cytoplasmic membrane</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045121" target="_blank" class="term-link">
+                                    GO:0045121
+                                </a>
+                            </span>
+                            <span class="term-label">membrane raft</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P28366" data-a="GO:0045121" data-r="GO_REF:0000044" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> UniProt records membrane raft localization based on PMID:27362352, which studied flotillin-associated membrane microdomains in B. subtilis. However, the UniProt subunit comment notes SecA only shows some colocalization with FloA or FloT membrane assemblies suggesting limited association with lipid rafts.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The annotation is based on experimental evidence from PMID:27362352, but the evidence indicates only partial colocalization with membrane rafts. This is not a core localization for SecA function - the primary functional location is at SecYEG translocon sites. The membrane raft association may represent a subset of SecA molecules or a regulatory aspect.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:P28366
+                                    
+                                </span>
+                                
+                                <div class="support-text">Only shows some colocalization with FloA or FloT membrane assemblies (PubMed:27362352)</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046872" target="_blank" class="term-link">
+                                    GO:0046872
+                                </a>
+                            </span>
+                            <span class="term-label">metal ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P28366" data-a="GO:0046872" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SecA binds zinc through its C-terminal SEC-C motif. UniProt records that SecA may bind 1 zinc ion per subunit through conserved cysteine residues.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Metal ion binding (specifically zinc) is a documented property of SecA. The SEC-C motif at the C-terminus contains conserved cysteines that coordinate zinc. While the precise functional role of zinc binding is less clear than the ATPase activity, this is a legitimate molecular function annotation based on structural and sequence evidence.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:P28366
+                                    
+                                </span>
+                                
+                                <div class="support-text">May bind 1 zinc ion per subunit</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0065002" target="_blank" class="term-link">
+                                    GO:0065002
+                                </a>
+                            </span>
+                            <span class="term-label">intracellular protein transmembrane transport</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000104
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P28366" data-a="GO:0065002" data-r="GO_REF:0000104" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SecA drives transmembrane transport of proteins through SecYEG. This annotation captures the essence of SecA function - moving proteins across the membrane. The term is appropriate for SecA&#39;s role in translocation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation accurately describes SecA&#39;s function in driving protein transport across the cytoplasmic membrane. SecA powers the movement of preproteins through the SecYEG channel, which is intracellular protein transmembrane transport.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:P28366
+                                    
+                                </span>
+                                
+                                <div class="support-text">Has a central role in coupling the hydrolysis of ATP to the transfer of proteins into and across the cell membrane</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:BACSU/secA/secA-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">SecA couples ATP hydrolysis to mechanical translocation of mostly unfolded preproteins bearing N-terminal signal peptides across the cytoplasmic membrane via SecYEG</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>SecA is the ATP-driven motor (EC 7.4.2.8) that powers post-translational protein translocation through SecYEG. Multiple crystal structures show ATP binding sites; mutagenesis of K106 abolishes function (PMID:8440733).</h3>
+                <span class="vote-buttons" data-g="P28366" data-a="FUNCTION: SecA is the ATP-driven motor (EC 7.4.2.8) that pow..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008564" target="_blank" class="term-link">
+                            protein-exporting ATPase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043952" target="_blank" class="term-link">
+                                protein transport by the Sec complex
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                plasma membrane
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031522" target="_blank" class="term-link">
+                            cell envelope Sec protein transport complex
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            UniProt:P28366
+                            
+                        </span>
+                        
+                        <div class="finding-text">Reaction=ATP + H2O + cellular proteinSide 1 = ADP + phosphate + cellular proteinSide 2.; EC=7.4.2.8</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:BACSU/secA/secA-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">SecA is a P-type polypeptide translocase ATPase (EC 7.4.2.8) that couples ATP hydrolysis to mechanical translocation of mostly unfolded preproteins</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000003.md" target="_blank" class="term-link">
+                            GO_REF:0000003
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on Enzyme Commission mapping</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">EC 7.4.2.8 maps to protein-exporting ATPase activity</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">IBA annotations for SecA based on PANTHER family PTHR30612</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:BACSU/secA/secA-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep research on SecA function in Bacillus subtilis</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Comprehensive review of SecA structure and mechanism</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">SecA cycles between cytoplasm and membrane during translocation</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">ATP hydrolysis drives conformational changes pushing polypeptides through SecYEG</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/8440733" target="_blank" class="term-link">
+                            PMID:8440733
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Lysine 106 of the putative catalytic ATP-binding site of the Bacillus subtilis SecA protein is required for functional complementation of Escherichia coli secA mutants in vivo.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Mutagenesis demonstrates K106 is essential for SecA ATPase activity</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Experimental evidence for catalytic activity EC 7.4.2.8</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12242434" target="_blank" class="term-link">
+                            PMID:12242434
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Nucleotide control of interdomain interactions in the conformational reaction cycle of SecA.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Crystal structure of SecA with and without ADP</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Reveals conformational changes upon nucleotide binding</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/27362352" target="_blank" class="term-link">
+                            PMID:27362352
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Super Resolution Fluorescence Microscopy and Tracking of Bacterial Flotillin (Reggie) Paralogs Provide Evidence for Defined-Sized Protein Microdomains within the Bacterial Membrane but Absence of Clusters Containing Detergent-Resistant Proteins.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">SecA shows some colocalization with FloA/FloT membrane assemblies</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Experimental evidence for membrane raft localization</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(secA-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P28366" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2025-12-17T23:25:28.470565'<br />
+end_time: '2025-12-17T23:31:46.010467'<br />
+duration_seconds: 377.54<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: BACSU<br />
+  gene_id: secA<br />
+  gene_symbol: secA<br />
+  uniprot_accession: P28366<br />
+  protein_description: 'RecName: Full=Protein translocase subunit SecA {ECO:0000255|HAMAP-Rule:MF_01382};<br />
+    EC=7.4.2.8 {ECO:0000255|HAMAP-Rule:MF_01382, ECO:0000305|PubMed:8440733};'<br />
+  gene_info: Name=secA {ECO:0000255|HAMAP-Rule:MF_01382}; Synonyms=div+; OrderedLocusNames=BSU35300;<br />
+  organism_full: Bacillus subtilis (strain 168).<br />
+  protein_family: Belongs to the SecA family. {ECO:0000255|HAMAP-<br />
+  protein_domains: Helicase_ATP-bd. (IPR014001); Helicase_C-like. (IPR001650); P-loop_NTPase.<br />
+    (IPR027417); SEC_C_motif. (IPR004027); SecA. (IPR000185)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 21</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> P28366</li>
+<li><strong>Protein Description:</strong> RecName: Full=Protein translocase subunit SecA {ECO:0000255|HAMAP-Rule:MF_01382}; EC=7.4.2.8 {ECO:0000255|HAMAP-Rule:MF_01382, ECO:0000305|PubMed:8440733};</li>
+<li><strong>Gene Information:</strong> Name=secA {ECO:0000255|HAMAP-Rule:MF_01382}; Synonyms=div+; OrderedLocusNames=BSU35300;</li>
+<li><strong>Organism (full):</strong> Bacillus subtilis (strain 168).</li>
+<li><strong>Protein Family:</strong> Belongs to the SecA family. {ECO:0000255|HAMAP-</li>
+<li><strong>Key Domains:</strong> Helicase_ATP-bd. (IPR014001); Helicase_C-like. (IPR001650); P-loop_NTPase. (IPR027417); SEC_C_motif. (IPR004027); SecA. (IPR000185)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "secA" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Bacillus subtilis (strain 168).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'secA' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>secA</strong> (gene ID: secA, UniProt: P28366) in BACSU.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> P28366</li>
+<li><strong>Protein Description:</strong> RecName: Full=Protein translocase subunit SecA {ECO:0000255|HAMAP-Rule:MF_01382}; EC=7.4.2.8 {ECO:0000255|HAMAP-Rule:MF_01382, ECO:0000305|PubMed:8440733};</li>
+<li><strong>Gene Information:</strong> Name=secA {ECO:0000255|HAMAP-Rule:MF_01382}; Synonyms=div+; OrderedLocusNames=BSU35300;</li>
+<li><strong>Organism (full):</strong> Bacillus subtilis (strain 168).</li>
+<li><strong>Protein Family:</strong> Belongs to the SecA family. {ECO:0000255|HAMAP-</li>
+<li><strong>Key Domains:</strong> Helicase_ATP-bd. (IPR014001); Helicase_C-like. (IPR001650); P-loop_NTPase. (IPR027417); SEC_C_motif. (IPR004027); SecA. (IPR000185)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "secA" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Bacillus subtilis (strain 168).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'secA' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>secA</strong> (gene ID: secA, UniProt: P28366) in BACSU.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<p>Plan and verification<br />
+- Identity check: secA in Bacillus subtilis (strain 168) encodes the cytosolic/peripheral membrane ATPase motor (SecA) of the general Sec protein translocation machinery, consistent with UniProt P28366, EC 7.4.2.8. Mechanistic and structural reviews and Bacillus-focused experimental studies confirm SecA’s role at the SecYEG channel in B. subtilis and other bacteria (nijeholt2012thebacterialsectranslocase pages 3-5, strach2023proteinsecretionzones pages 1-2). The protein operates at the cytoplasmic membrane, cycles on/off SecYEG, and binds anionic phospholipids, in line with a peripheral membrane ATPase motor; this matches the UniProt functional annotation and family assignment (SecA) (nijeholt2012thebacterialsectranslocase pages 5-6, nijeholt2012thebacterialsectranslocase pages 3-5).</p>
+<p>Comprehensive research report</p>
+<p>1) Key concepts and definitions with current understanding<br />
+- Core role of SecA: SecA is the ATP-driven motor of the bacterial Sec translocase that post-translationally drives preprotein movement through the SecYEG channel. ATP binding/hydrolysis by SecA produces conformational changes that push polypeptide segments through SecYEG; SecA’s oligomeric state (monomer/dimer) and lipid interactions modulate activity (Philosophical Transactions R. Soc. B, 2012, https://doi.org/10.1098/rstb.2011.0201, Apr 2012) (nijeholt2012thebacterialsectranslocase pages 13-14, nijeholt2012thebacterialsectranslocase pages 5-6, nijeholt2012thebacterialsectranslocase pages 3-5).<br />
+- Translocon architecture: SecY forms the protein-conducting channel with a hydrophobic constriction and a movable plug; the lateral gate opens to accept signal peptides or transmembrane segments. Constraining the lateral gate impairs translocation and alters SecA ATPase activity, evidencing tight allosteric coupling between SecA’s catalytic cycle and SecY gating (Philosophical Transactions R. Soc. B, 2012, https://doi.org/10.1098/rstb.2011.0201, Apr 2012) (nijeholt2012thebacterialsectranslocase pages 3-5, nijeholt2012thebacterialsectranslocase pages 5-6).<br />
+- Holotranslocon and accessory partners: The functional secretion unit in Gram-positive bacteria (holotranslocon) comprises SecYEG with SecDF–YajC and YidC; SecA powers translocation into/through SecYEG. Bacillus subtilis TerC family proteins MeeF (YceF) and MeeY (YkoY) physically associate with this complex and facilitate co-translocational metalation of secreted enzymes (Nature Communications, 2023, https://doi.org/10.1038/s41467-023-41896-1, Oct 2023) (he2023tercproteinsfunction pages 6-8).<br />
+- Localization: In B. subtilis, SecA localizes at discrete membrane-proximal “secretion zones” during high-level secretion; single-molecule tracking reveals multiple diffusive states, consistent with SecA cycling between substrate-bound, translocon-bound, and free states (BMC Biology, 2023, https://doi.org/10.1186/s12915-023-01684-1, Oct 2023) (strach2023proteinsecretionzones pages 1-2).</p>
+<p>2) Recent developments and latest research (2023–2024 prioritized)<br />
+- Spatial secretion zones and SecA dynamics in B. subtilis: Overexpression of the secreted α-amylase (AmyE) reveals stable secretion patches within the Gram-positive cell wall that overlap SecA signals. SecA exhibits three diffusive states whose populations shift with secretion load, yet without overwhelming the translocase, refining our view of how SecA is deployed in vivo (BMC Biology, 2023, https://doi.org/10.1186/s12915-023-01684-1, Oct 2023) (strach2023proteinsecretionzones pages 1-2).<br />
+- Co-translocational metalation via TerC proteins: Deletion of MeeF and MeeY impairs protein export and reduces Mn in the secreted proteome; MeeF/MeeY co-purify with Sec pathway components, indicating a SecA/SecYEG/SecDF–YajC–YidC–TerC functional unit that supports maturation of Mn-dependent extracytoplasmic enzymes (Nature Communications, 2023, https://doi.org/10.1038/s41467-023-41896-1, Oct 2023) (he2023tercproteinsfunction pages 6-8).<br />
+- Translational arrest-peptide regulation of Sec components: High-resolution work on arrest peptides shows how regulatory nascent chains stall translation to modulate expression of Sec machinery components. For SecM in E. coli, a 2.0 Å structure reveals stabilization of the A-site Pro-tRNA that prevents peptide bond formation; relief occurs when mechanical pulling forces (e.g., by SecA/translocon) act on the nascent chain. RAPP-motif arrest peptides were structurally defined in both B. subtilis and E. coli, demonstrating a conserved “short-circuit” of peptidyltransferase activity that likely tunes Sec-related gene expression in Firmicutes (Nature Communications, 2024, https://doi.org/10.1038/s41467-024-46762-2, Mar 2024; Nature Communications, 2024, https://doi.org/10.1038/s41467-024-46761-3, Mar 2024) (jensen2025incelldiscoveryand pages 25-27).<br />
+- Review integration for Gram-positives: A 2024 expert review synthesizes emerging links between Sec-dependent export and extracytoplasmic metalation, highlighting SecA and SecDF as central elements in maintaining envelope homeostasis and the function of metal-dependent exoenzymes (Annual Review of Microbiology, 2024, https://doi.org/10.1146/annurev-micro-041522-091507, Nov 2024) (he2023tercproteinsfunction pages 6-8).</p>
+<p>3) Current applications and real-world implementations<br />
+- Industrial secretion in Bacillus: Bacillus spp. are major hosts for secreted enzyme production. In a high-yield B. subtilis mutant for nattokinase, transcriptomics indicated upregulation of Sec pathway components correlating with higher extracellular enzyme titers, aligning with the concept that tuning SecA/SecDF/associated factors boosts secretion capacity (Foods, 2025, https://doi.org/10.3390/foods14050898, Mar 2025). The study reported 300.0 ± 4.7 FU/mL nattokinase activity in the engineered strain, a 1.84-fold increase over the parent (guo2025genomicandtranscriptomic pages 19-19). Complementary microscopy in B. subtilis shows secretion zones overlapping SecA signals during high amylase production, providing spatial targets for engineering secretion efficiency (BMC Biology, 2023, https://doi.org/10.1186/s12915-023-01684-1, Oct 2023) (strach2023proteinsecretionzones pages 1-2).<br />
+- Accessory folding support: The lipoprotein foldase PrsA is critical for post-translocation folding and secretion of enzymes like α-amylase, indicating that SecA-driven export must be matched by extracytoplasmic folding capacity for industrial performance (BMC Biology, 2023, https://doi.org/10.1186/s12915-023-01684-1, Oct 2023) (strach2023proteinsecretionzones pages 1-2).</p>
+<p>4) Expert opinions and analysis from authoritative sources<br />
+- Mechanism: Structural-mechanistic analyses converge on a model where SecA cycles at SecYEG, with ATPase activity allosterically coupled to lateral-gate opening and polypeptide diffusion through the hydrophobic constriction. These insights provide a robust mechanistic framework for Gram-positive SecA, including B. subtilis (Philosophical Transactions R. Soc. B, 2012, https://doi.org/10.1098/rstb.2011.0201, Apr 2012) (nijeholt2012thebacterialsectranslocase pages 3-5, nijeholt2012thebacterialsectranslocase pages 5-6).<br />
+- System-level integration: Recent expert synthesis emphasizes the holotranslocon (SecYEG–SecDF–YajC–YidC) as a dynamic secretion machine, with TerC family proteins interfacing co-translocational metalation and quality control. This positions SecA’s activity within a broader envelope homeostasis network in B. subtilis (Nature Communications, 2023, https://doi.org/10.1038/s41467-023-41896-1, Oct 2023) (he2023tercproteinsfunction pages 6-8).<br />
+- Regulatory logic: Structural work on SecM and RAPP-like arrest peptides illustrates a conserved feedback where force generated by SecA-dependent translocation can relieve stalls, thereby coupling translocase workload to expression of its components. This is increasingly seen as a general regulatory motif across bacteria, including B. subtilis (Nature Communications, 2024, https://doi.org/10.1038/s41467-024-46762-2, Mar 2024; Nature Communications, 2024, https://doi.org/10.1038/s41467-024-46761-3, Mar 2024) (jensen2025incelldiscoveryand pages 25-27).</p>
+<p>5) Relevant statistics and data from recent studies<br />
+- Secretion dynamics in vivo: B. subtilis shows discrete, long-lived secretion zones during AmyE overexpression; SecA displays three distinct diffusive states whose distributions shift with secretion demand, indicating regulated allocation of SecA to translocon engagement versus free states (BMC Biology, 2023, https://doi.org/10.1186/s12915-023-01684-1, Oct 2023) (strach2023proteinsecretionzones pages 1-2).<br />
+- TerC–dependent metalation: ΔmeeF ΔmeeY mutants exhibit reduced export capacity and a large reduction of Mn in the secreted proteome, providing quantitative proteomic evidence that the Sec translocase cooperates with metal-handling factors during export (Nature Communications, 2023, https://doi.org/10.1038/s41467-023-41896-1, Oct 2023) (he2023tercproteinsfunction pages 6-8).<br />
+- Bioprocess titers: Engineered B. subtilis for nattokinase showed 300.0 ± 4.7 FU/mL and a 1.84× increase over the starting strain; genes of the Sec pathway were broadly upregulated, consistent with increased export throughput (Foods, 2025, https://doi.org/10.3390/foods14050898, Mar 2025) (guo2025genomicandtranscriptomic pages 19-19).</p>
+<p>Mechanism, substrates, and localization of B. subtilis SecA (functional annotation)<br />
+- Primary function and reaction: SecA is a P-type polypeptide translocase ATPase (EC 7.4.2.8) that couples ATP hydrolysis to mechanical translocation of mostly unfolded preproteins bearing N-terminal signal peptides across the cytoplasmic membrane via SecYEG (Philosophical Transactions R. Soc. B, 2012, https://doi.org/10.1098/rstb.2011.0201, Apr 2012) (nijeholt2012thebacterialsectranslocase pages 3-5, nijeholt2012thebacterialsectranslocase pages 13-14).<br />
+- Substrate specificity: SecA recognizes preproteins with N-terminal signal peptides that engage the lateral gate of SecY; signal peptides are cleaved by signal peptidases after translocation initiation, with subsequent folding often assisted by extracytoplasmic factors (Philosophical Transactions R. Soc. B, 2012, https://doi.org/10.1098/rstb.2011.0201, Apr 2012; BMC Biology, 2023, https://doi.org/10.1186/s12915-023-01684-1, Oct 2023) (nijeholt2012thebacterialsectranslocase pages 3-5, strach2023proteinsecretionzones pages 1-2).<br />
+- Localization: SecA is cytosolic but binds to the inner leaflet and SecYEG at the cytoplasmic membrane; it cycles into a membrane-inserted state during active translocation and interacts with anionic phospholipids. In B. subtilis, SecA signal overlaps discrete secretion zones near/within the cell wall during high secretion (Philosophical Transactions R. Soc. B, 2012, https://doi.org/10.1098/rstb.2011.0201, Apr 2012; BMC Biology, 2023, https://doi.org/10.1186/s12915-023-01684-1, Oct 2023) (nijeholt2012thebacterialsectranslocase pages 5-6, strach2023proteinsecretionzones pages 1-2).<br />
+- Pathway context and interacting partners: SecA functions with SecYEG, SecDF–YajC, and YidC; in B. subtilis, PrsA assists post-translocation folding, and TerC proteins (MeeF/MeeY) participate in co-translocational metalation and interface with envelope homeostasis (Nature Communications, 2023, https://doi.org/10.1038/s41467-023-41896-1, Oct 2023; BMC Biology, 2023, https://doi.org/10.1186/s12915-023-01684-1, Oct 2023) (he2023tercproteinsfunction pages 6-8, strach2023proteinsecretionzones pages 1-2).<br />
+- Regulation: Translation arrest peptides (e.g., SecM-like and RAPP-type) provide feedback that can modulate SecA/Sec machinery expression by stalling elongation; mechanical pulling by translocation relieves stalling, coordinating expression with translocase workload (Nature Communications, 2024, https://doi.org/10.1038/s41467-024-46762-2, Mar 2024; Nature Communications, 2024, https://doi.org/10.1038/s41467-024-46761-3, Mar 2024) (jensen2025incelldiscoveryand pages 25-27).</p>
+<p>Embedded summary table<br />
+| Topic | Specific finding/claim | Organism / context | Key quantitative / mechanistic detail | Year | Source (journal) | URL | Citation ID |<br />
+|---|---|---:|---|---:|---|---|---|<br />
+| SecA identity &amp; catalytic role | SecA is the ATP-driven motor of the Sec translocase (EC 7.4.2.8), delivering preproteins to the SecYEG channel and using ATP hydrolysis to power translocation | General bacteria (including Bacillus subtilis) | ATP-dependent cycles of SecA binding/hydrolysis drive conformational changes that push polypeptides through SecYEG; SecA oligomeric state (dimer/monomer) modulates activity | 2012 | Philosophical Transactions R. Soc. B | https://doi.org/10.1098/rstb.2011.0201 | (nijeholt2012thebacterialsectranslocase pages 13-14) |<br />
+| SecA dynamics &amp; "secretion zones" | SecA localizes to membrane-associated secretion zones during high AmyE expression; single-molecule tracking reveals multiple diffusive states of SecA that change with secretion load | Bacillus subtilis (AmyE overexpression) | Discrete low-dynamics secretion zones in cell wall overlap SecA signals; single-particle tracking shows three diffusive states of SecA without system saturation | 2023 | BMC Biology | https://doi.org/10.1186/s12915-023-01684-1 | (strach2023proteinsecretionzones pages 1-2) |<br />
+| Holotranslocon composition &amp; TerC association | The holotranslocon comprises SecYEG + SecDF-YajC + YidC; TerC family proteins (MeeF/MeeY) associate with the complex and facilitate co-translocational metalation and efficient secretion | Bacillus subtilis | ΔmeeF ΔmeeY strains show reduced protein export and decreased Mn in the secreted proteome; TerC proteins co-purify with Sec pathway components, implicating a role in co-translocational metalation | 2023 | Nature Communications | https://doi.org/10.1038/s41467-023-41896-1 | (he2023tercproteinsfunction pages 6-8) |<br />
+| Metalation &amp; envelope homeostasis (sec-linked) | Metalation of extracytoplasmic enzymes is coupled to Sec-dependent export; SecDF and associated factors support translocation and maturation of metallo-exoenzymes | Gram-positive bacteria (notably Bacillus subtilis) | Lipoteichoic acid (LTA) synthesis enzymes require Mn; exporters/chaperones and translocon-associated factors enable co-translocational metalation to ensure active exoenzymes | 2023 | Nature Communications / review context | https://doi.org/10.1038/s41467-023-41896-1 | (he2023tercproteinsfunction pages 6-8) |<br />
+| Translation-arrest peptides regulate SecA expression | Monitoring peptides (e.g., SecM, RAPP-containing motifs) induce translational stalling that controls expression of Sec components and responds to pulling forces from SecA to relieve arrest | Bacillus subtilis and other bacteria (comparative structural evidence) | Cryo-EM + MD show arrest motifs stabilize A/P-site tRNA geometry to prevent peptide-bond formation; mechanical pulling (by SecA/translocon) can relieve stall and feedback-regulate SecA expression | 2024 | Nature Communications (structural studies on arrest peptides) | https://doi.org/10.1038/s41467-024-46762-2 | (jensen2025incelldiscoveryand pages 25-27, jensen2025incelldiscoveryand pages 27-29) |<br />
+| SecYEG channel architecture &amp; coupling to SecA | SecY contains a plug helix, hydrophobic constriction and lateral gate (TMS2/7); lateral-gate opening is allosterically coupled to SecA ATPase activity during translocation | Various bacterial systems (structural/mechanistic studies including B. subtilis context) | Crosslinking of lateral gate residues affects SecA ATP hydrolysis and translocation; lateral gate opening accommodates signal peptides and membrane segments | 2012 | Philosophical Transactions R. Soc. B | https://doi.org/10.1098/rstb.2011.0201 | (nijeholt2012thebacterialsectranslocase pages 3-5) |<br />
+| Industrial secretion &amp; pathway tuning | Bacillus spp. are industrial secretion hosts; tuning Sec pathway components (SecA, SecDF, PrsA) and understanding secretion zones can improve heterologous protein yields | Bacillus subtilis and industrial Bacillus spp. | High-yield strains show upregulation of Sec-pathway genes; secretion-zone biology (spatial localization) provides targets for engineering secretion efficiency | 2023–2025 | BMC Biology; Genomic/transcriptomic studies (Foods) | https://doi.org/10.1186/s12915-023-01684-1 ; https://doi.org/10.3390/foods14050898 | (strach2023proteinsecretionzones pages 1-2, guo2025genomicandtranscriptomic pages 19-19) |<br />
+| Accessory foldase PrsA requirement | PrsA (membrane-anchored foldase/chaperone) is required for efficient post-translocation folding and high-level secretion (e.g., α-amylase) in B. subtilis | Bacillus subtilis | PrsA copes with secreted protein folding load; absence/reduction of PrsA limits secretion capacity and enzyme activity at cell surface | 2023 | BMC Biology (experimental context referencing PrsA) | https://doi.org/10.1186/s12915-023-01684-1 | (strach2023proteinsecretionzones pages 1-2) |</p>
+<p><em>Table: Compact, evidence-linked summary of functional annotation and recent findings for Bacillus subtilis SecA (UniProt P28366), combining mechanistic, structural, regulatory, and applied (industrial/metalation) literature for rapid reference.</em></p>
+<p>Notes on antibiotic targeting<br />
+- Although SecA has long been proposed as an antibiotic target, the most directly supported, recent Bacillus-subtilis–centric advances here are indirect, via the emerging understanding of SecA’s integration in the holotranslocon and its coupling to metalation/quality control. Direct, recent inhibitor studies specific to B. subtilis SecA were not identified in the curated 2023–2024 evidence above; thus, we refrain from making specific inhibitor claims while noting the rationale (essentiality, centrality to secretion) (he2023tercproteinsfunction pages 6-8, strach2023proteinsecretionzones pages 1-2).</p>
+<p>Conclusion<br />
+- Collectively, the recent literature refines the functional annotation of B. subtilis SecA (P28366): a peripheral membrane ATPase motor that powers Sec-dependent protein export at SecYEG, operating within a holotranslocon that includes SecDF–YajC and YidC and interfaces with TerC-dependent metalation. New live-cell and structural studies in 2023–2024 have added spatial (secretion zones), systems (metalation/quality control), and regulatory (arrest peptides) layers to this core function, with clear implications for industrial secretion engineering in Bacillus (strach2023proteinsecretionzones pages 1-2, he2023tercproteinsfunction pages 6-8, jensen2025incelldiscoveryand pages 25-27, nijeholt2012thebacterialsectranslocase pages 3-5).</p>
+<p>References</p>
+<ol>
+<li>
+<p>(nijeholt2012thebacterialsectranslocase pages 3-5): Jelger A. Lycklama a Nijeholt and Arnold J. M. Driessen. The bacterial sec-translocase: structure and mechanism. Philosophical Transactions of the Royal Society B: Biological Sciences, 367:1016-1028, Apr 2012. URL: https://doi.org/10.1098/rstb.2011.0201, doi:10.1098/rstb.2011.0201. This article has 235 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(strach2023proteinsecretionzones pages 1-2): Manuel Strach, Felicitas Koch, Svenja Fiedler, Klaus Liebeton, and Peter L. Graumann. Protein secretion zones during overexpression of amylase within the gram-positive cell wall. BMC Biology, Oct 2023. URL: https://doi.org/10.1186/s12915-023-01684-1, doi:10.1186/s12915-023-01684-1. This article has 10 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(nijeholt2012thebacterialsectranslocase pages 5-6): Jelger A. Lycklama a Nijeholt and Arnold J. M. Driessen. The bacterial sec-translocase: structure and mechanism. Philosophical Transactions of the Royal Society B: Biological Sciences, 367:1016-1028, Apr 2012. URL: https://doi.org/10.1098/rstb.2011.0201, doi:10.1098/rstb.2011.0201. This article has 235 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(nijeholt2012thebacterialsectranslocase pages 13-14): Jelger A. Lycklama a Nijeholt and Arnold J. M. Driessen. The bacterial sec-translocase: structure and mechanism. Philosophical Transactions of the Royal Society B: Biological Sciences, 367:1016-1028, Apr 2012. URL: https://doi.org/10.1098/rstb.2011.0201, doi:10.1098/rstb.2011.0201. This article has 235 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(he2023tercproteinsfunction pages 6-8): Bixi He, Ankita J. Sachla, and John D. Helmann. Terc proteins function during protein secretion to metalate exoenzymes. Nature Communications, Oct 2023. URL: https://doi.org/10.1038/s41467-023-41896-1, doi:10.1038/s41467-023-41896-1. This article has 22 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(jensen2025incelldiscoveryand pages 25-27): Rasmus K. Jensen, Liang Xue, Federico Marotta, Joseph C. Somody, Joel Selkrig, Swantje Lenz, Juri Rappsilber, Mikhail M. Savitski, Jan Kosinski, Athanasios Typas, Maria Zimmermann-Kogadeeva, Peer Bork, and Julia Mahamid. In-cell discovery and characterization of a non-canonical bacterial protein translocation-folding complex. bioRxiv, Apr 2025. URL: https://doi.org/10.1101/2025.04.25.650208, doi:10.1101/2025.04.25.650208. This article has 2 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(guo2025genomicandtranscriptomic pages 19-19): Liuyu Guo, Yang Chen, Zhiyong He, Zhaojun Wang, Qiuming Chen, Jie Chen, Fatih Oz, Zhimin Xu, and Maomao Zeng. Genomic and transcriptomic analysis of mutant bacillus subtilis with enhanced nattokinase production via artp mutagenesis. Foods, 14:898, Mar 2025. URL: https://doi.org/10.3390/foods14050898, doi:10.3390/foods14050898. This article has 4 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(jensen2025incelldiscoveryand pages 27-29): Rasmus K. Jensen, Liang Xue, Federico Marotta, Joseph C. Somody, Joel Selkrig, Swantje Lenz, Juri Rappsilber, Mikhail M. Savitski, Jan Kosinski, Athanasios Typas, Maria Zimmermann-Kogadeeva, Peer Bork, and Julia Mahamid. In-cell discovery and characterization of a non-canonical bacterial protein translocation-folding complex. bioRxiv, Apr 2025. URL: https://doi.org/10.1101/2025.04.25.650208, doi:10.1101/2025.04.25.650208. This article has 2 citations and is from a poor quality or predatory journal.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>he2023tercproteinsfunction pages 6-8</li>
+<li>strach2023proteinsecretionzones pages 1-2</li>
+<li>jensen2025incelldiscoveryand pages 25-27</li>
+<li>guo2025genomicandtranscriptomic pages 19-19</li>
+<li>nijeholt2012thebacterialsectranslocase pages 13-14</li>
+<li>nijeholt2012thebacterialsectranslocase pages 3-5</li>
+<li>nijeholt2012thebacterialsectranslocase pages 5-6</li>
+<li>jensen2025incelldiscoveryand pages 27-29</li>
+<li>https://doi.org/10.1098/rstb.2011.0201,</li>
+<li>https://doi.org/10.1038/s41467-023-41896-1,</li>
+<li>https://doi.org/10.1186/s12915-023-01684-1,</li>
+<li>https://doi.org/10.1038/s41467-024-46762-2,</li>
+<li>https://doi.org/10.1038/s41467-024-46761-3,</li>
+<li>https://doi.org/10.1146/annurev-micro-041522-091507,</li>
+<li>https://doi.org/10.3390/foods14050898,</li>
+<li>https://doi.org/10.1098/rstb.2011.0201</li>
+<li>https://doi.org/10.1186/s12915-023-01684-1</li>
+<li>https://doi.org/10.1038/s41467-023-41896-1</li>
+<li>https://doi.org/10.1038/s41467-024-46762-2</li>
+<li>https://doi.org/10.3390/foods14050898</li>
+<li>https://doi.org/10.1101/2025.04.25.650208,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P28366
+gene_symbol: secA
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:224308
+  label: Bacillus subtilis (strain 168)
+description: &gt;-
+  SecA is the essential ATP-driven motor protein of the bacterial Sec translocase
+  (EC 7.4.2.8) that powers post-translational protein secretion through the SecYEG
+  channel. As a P-type polypeptide translocase ATPase, SecA couples ATP binding and
+  hydrolysis to mechanical translocation of preproteins bearing N-terminal signal
+  peptides across the cytoplasmic membrane. The protein cycles between cytoplasmic
+  and membrane-associated states, interacting with the SecYEG preprotein-conducting
+  channel to drive stepwise translocation of polypeptide chains. SecA undergoes
+  conformational changes upon nucleotide binding and hydrolysis that push polypeptide
+  segments through SecYEG. In B. subtilis, SecA localizes to discrete membrane-proximal
+  &#34;secretion zones&#34; during high-level secretion of proteins like alpha-amylase.
+  The protein functions as part of the holotranslocon complex comprising SecYEG
+  with SecDF-YajC and YidC, and cooperates with TerC family proteins (MeeF/MeeY)
+  for co-translocational metalation of secreted enzymes. SecA binds zinc as a
+  cofactor through a C-terminal SEC-C motif and contains helicase-like ATP-binding
+  domains characteristic of the superfamily 2 helicases. The protein can exist as
+  both monomers and various homodimeric forms, with a single SecA monomer interacting
+  with SecY in the functional translocation channel. SecA is essential for bacterial
+  viability and has been proposed as an antibiotic target.
+existing_annotations:
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      SecA is a peripheral membrane protein that associates with the plasma membrane
+      on the cytoplasmic side during active protein translocation. UniProt states
+      SecA is localized to Cell membrane as a Peripheral membrane protein on the
+      Cytoplasmic side with experimental evidence from PMID:27362352. The deep research
+      confirms SecA binds to the inner leaflet and SecYEG at the cytoplasmic membrane
+      and cycles into a membrane-inserted state during active translocation.
+    action: ACCEPT
+    reason: &gt;-
+      Plasma membrane localization is well-established for SecA as part of its core
+      function in protein translocation. SecA cycles between cytoplasm and membrane,
+      associating with the membrane during translocation via SecYEG interaction.
+      IBA annotation is appropriate and consistent with experimental evidence.
+    supported_by:
+      - reference_id: file:BACSU/secA/secA-deep-research-falcon.md
+        supporting_text: &#34;SecA is cytosolic but binds to the inner leaflet and SecYEG at the cytoplasmic membrane; it cycles into a membrane-inserted state during active translocation and interacts with anionic phospholipids&#34;
+- term:
+    id: GO:0005524
+    label: ATP binding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      ATP binding is a core molecular function of SecA. The protein contains
+      well-characterized ATP-binding sites with multiple residues directly
+      involved in nucleotide coordination. Mutagenesis of K106 abolishes activity
+      (PMID:8440733). Crystal structures demonstrate ADP/ATP binding.
+    action: ACCEPT
+    reason: &gt;-
+      ATP binding is fundamental to SecA function as an ATPase motor. The protein
+      belongs to the superfamily 2 helicases with helicase-like ATP-binding domains
+      (IPR014001, IPR001650). UniProt records multiple ATP binding residues with
+      structural evidence. This is a core function annotation.
+    supported_by:
+      - reference_id: UniProt:P28366
+        supporting_text: &#34;Has a central role in coupling the hydrolysis of ATP to the transfer of proteins into and across the cell membrane&#34;
+      - reference_id: file:BACSU/secA/secA-deep-research-falcon.md
+        supporting_text: &#34;ATP binding/hydrolysis by SecA produces conformational changes that push polypeptide segments through SecYEG&#34;
+- term:
+    id: GO:0031522
+    label: cell envelope Sec protein transport complex
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      SecA is an integral component of the Sec protein transport complex. UniProt
+      states SecA is Part of the essential Sec protein translocation apparatus
+      which comprises SecA, SecYEG and auxiliary proteins SecDF. The deep research
+      confirms SecA operates within the holotranslocon as a dynamic secretion machine.
+    action: ACCEPT
+    reason: &gt;-
+      SecA is definitionally a component of the Sec protein transport complex.
+      This cellular component annotation accurately captures SecA&#39;s localization
+      as part of the functional translocase machinery at the membrane. The IBA
+      annotation is appropriate.
+    supported_by:
+      - reference_id: UniProt:P28366
+        supporting_text: &#34;Part of the essential Sec protein translocation apparatus which comprises SecA, SecYEG and auxiliary proteins SecDF&#34;
+      - reference_id: file:BACSU/secA/secA-deep-research-falcon.md
+        supporting_text: &#34;The functional secretion unit in Gram-positive bacteria (holotranslocon) comprises SecYEG with SecDF-YajC and YidC; SecA powers translocation into/through SecYEG&#34;
+- term:
+    id: GO:0043952
+    label: protein transport by the Sec complex
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      SecA drives protein transport through the Sec complex as the ATP-dependent
+      motor. The deep research states SecA has a central role in coupling the
+      hydrolysis of ATP to the transfer of proteins into and across the cell
+      membrane, serving as an ATP-driven molecular motor driving the stepwise
+      translocation of polypeptide chains across the membrane.
+    action: ACCEPT
+    reason: &gt;-
+      This biological process annotation accurately captures the primary function
+      of SecA - driving protein transport through the Sec translocase. SecA is
+      the motor that powers Sec-dependent translocation. This is a core function.
+    supported_by:
+      - reference_id: UniProt:P28366
+        supporting_text: &#34;Has a central role in coupling the hydrolysis of ATP to the transfer of proteins into and across the cell membrane, serving as an ATP-driven molecular motor driving the stepwise translocation of polypeptide chains across the membrane&#34;
+      - reference_id: file:BACSU/secA/secA-deep-research-falcon.md
+        supporting_text: &#34;SecA is the ATP-driven motor of the bacterial Sec translocase that post-translationally drives preprotein movement through the SecYEG channel&#34;
+- term:
+    id: GO:0000166
+    label: nucleotide binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;-
+      SecA binds nucleotides (ATP/ADP) as part of its catalytic cycle. This IEA
+      annotation from UniProtKB keyword mapping is accurate but too general
+      compared to the more specific GO:0005524 (ATP binding) annotations also present.
+    action: ACCEPT
+    reason: &gt;-
+      While this annotation is correct, it is broader than the ATP binding annotations
+      already present. Since duplicates with different evidence codes are acceptable
+      and this IEA provides complementary computational evidence, it can be retained.
+      The annotation is not wrong, just less specific than the IBA ATP binding annotation.
+    supported_by:
+      - reference_id: UniProt:P28366
+        supporting_text: &#34;Has a central role in coupling the hydrolysis of ATP to the transfer of proteins into and across the cell membrane&#34;
+- term:
+    id: GO:0005524
+    label: ATP binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      This is a duplicate ATP binding annotation with IEA evidence from combined
+      automated annotation. The IBA annotation with the same GO ID provides
+      phylogenetically-based evidence for the same function.
+    action: ACCEPT
+    reason: &gt;-
+      Duplicate annotations with different evidence codes are acceptable. This
+      IEA annotation provides complementary computational support for the core
+      ATP binding function of SecA.
+    supported_by:
+      - reference_id: UniProt:P28366
+        supporting_text: &#34;Has a central role in coupling the hydrolysis of ATP to the transfer of proteins into and across the cell membrane, serving as an ATP-driven molecular motor&#34;
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: &gt;-
+      SecA is a cytoplasmic protein that cycles to the membrane during active
+      translocation. UniProt states subcellular location includes Cytoplasm
+      with the note Distribution is 50-50 between cytoplasm and membrane.
+      The deep research confirms SecA is cytosolic but binds to the inner
+      leaflet and SecYEG at the cytoplasmic membrane.
+    action: ACCEPT
+    reason: &gt;-
+      Cytoplasmic localization is accurate - SecA exists in equilibrium between
+      cytoplasm and membrane. The protein is soluble in the cytoplasm and
+      peripherally associates with the membrane during translocation.
+    supported_by:
+      - reference_id: UniProt:P28366
+        supporting_text: &#34;Note=Distribution is 50-50&#34;
+      - reference_id: file:BACSU/secA/secA-deep-research-falcon.md
+        supporting_text: &#34;SecA is cytosolic but binds to the inner leaflet and SecYEG at the cytoplasmic membrane; it cycles into a membrane-inserted state during active translocation&#34;
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      This is a duplicate plasma membrane annotation with IEA evidence. The IBA
+      annotation with the same GO ID is also present with phylogenetic evidence.
+    action: ACCEPT
+    reason: &gt;-
+      Duplicate annotations with different evidence codes are acceptable. Both
+      IBA and IEA evidence support plasma membrane localization as a core
+      aspect of SecA function.
+    supported_by:
+      - reference_id: file:BACSU/secA/secA-deep-research-falcon.md
+        supporting_text: &#34;SecA is cytosolic but binds to the inner leaflet and SecYEG at the cytoplasmic membrane&#34;
+- term:
+    id: GO:0006605
+    label: protein targeting
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      SecA is involved in targeting preproteins to the translocation apparatus.
+      The protein recognizes signal peptide-bearing preproteins and delivers
+      them to SecYEG for translocation. This is part of the broader Sec-dependent
+      secretion pathway.
+    action: ACCEPT
+    reason: &gt;-
+      Protein targeting is a valid biological process for SecA, as it recognizes
+      and directs preproteins to the SecYEG channel. This is broader than but
+      consistent with the more specific &#34;protein transport by the Sec complex&#34;
+      annotation.
+    supported_by:
+      - reference_id: file:BACSU/secA/secA-deep-research-falcon.md
+        supporting_text: &#34;SecA recognizes preproteins with N-terminal signal peptides that engage the lateral gate of SecY&#34;
+- term:
+    id: GO:0006886
+    label: intracellular protein transport
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      SecA participates in intracellular protein transport by moving preproteins
+      from the cytoplasm to the membrane/extracellular space via SecYEG. This
+      InterPro-derived annotation captures the transport function.
+    action: ACCEPT
+    reason: &gt;-
+      This annotation is accurate but very general. SecA does participate in
+      intracellular protein transport as part of the Sec pathway. The more
+      specific annotation &#34;protein transport by the Sec complex&#34; (GO:0043952)
+      better captures the specificity of SecA function, but this broader term
+      is not incorrect.
+    supported_by:
+      - reference_id: UniProt:P28366
+        supporting_text: &#34;Has a central role in coupling the hydrolysis of ATP to the transfer of proteins into and across the cell membrane&#34;
+- term:
+    id: GO:0008564
+    label: protein-exporting ATPase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000003
+  review:
+    summary: &gt;-
+      This is the most specific and accurate molecular function annotation for
+      SecA. EC 7.4.2.8 maps to protein-exporting ATPase activity. UniProt
+      records the catalytic activity with experimental evidence from PMID:8440733.
+    action: ACCEPT
+    reason: &gt;-
+      This is the core molecular function of SecA. The EC number 7.4.2.8
+      corresponds to protein-translocating ATPase activity. SecA couples ATP
+      hydrolysis to the mechanical work of pushing polypeptides through SecYEG.
+      This annotation should be retained as a core function.
+    supported_by:
+      - reference_id: UniProt:P28366
+        supporting_text: &#34;Reaction=ATP + H2O + cellular proteinSide 1 = ADP + phosphate + cellular proteinSide 2.; EC=7.4.2.8&#34;
+      - reference_id: file:BACSU/secA/secA-deep-research-falcon.md
+        supporting_text: &#34;SecA is a P-type polypeptide translocase ATPase (EC 7.4.2.8) that couples ATP hydrolysis to mechanical translocation of mostly unfolded preproteins bearing N-terminal signal peptides across the cytoplasmic membrane via SecYEG&#34;
+- term:
+    id: GO:0015031
+    label: protein transport
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;-
+      SecA is involved in protein transport as the motor driving secretion
+      through SecYEG. This annotation is accurate but very general compared
+      to the more specific &#34;protein transport by the Sec complex&#34; (GO:0043952).
+    action: ACCEPT
+    reason: &gt;-
+      This general protein transport annotation is accurate. SecA mediates
+      protein transport across membranes. While less specific than GO:0043952,
+      it is not incorrect and provides keyword-based evidence.
+    supported_by:
+      - reference_id: UniProt:P28366
+        supporting_text: &#34;Has a central role in coupling the hydrolysis of ATP to the transfer of proteins into and across the cell membrane, serving as an ATP-driven molecular motor driving the stepwise translocation of polypeptide chains across the membrane&#34;
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      SecA associates with membranes as a peripheral membrane protein. This
+      InterPro-derived annotation is accurate but very general - the more
+      specific GO:0005886 (plasma membrane) annotations are also present.
+    action: ACCEPT
+    reason: &gt;-
+      This general membrane annotation is technically correct but less
+      informative than the specific plasma membrane annotations. It can be
+      retained as complementary evidence from InterPro.
+    supported_by:
+      - reference_id: file:BACSU/secA/secA-deep-research-falcon.md
+        supporting_text: &#34;SecA is cytosolic but binds to the inner leaflet and SecYEG at the cytoplasmic membrane&#34;
+- term:
+    id: GO:0017038
+    label: protein import
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      This annotation appears to be an error or overly generic mapping from
+      InterPro. SecA is involved in protein EXPORT (secretion) not import.
+      The Sec pathway translocates proteins from the cytoplasm to the
+      periplasm/extracellular space, which is export, not import.
+    action: REMOVE
+    reason: &gt;-
+      SecA is a protein EXPORTER, not importer. The Sec translocase moves
+      preproteins from the cytoplasm out through the membrane. &#34;Protein import&#34;
+      implies movement into the cytoplasm, which is the opposite of SecA&#39;s
+      function. This annotation should be removed as it is misleading.
+    supported_by:
+      - reference_id: UniProt:P28366
+        supporting_text: &#34;Reaction=ATP + H2O + cellular proteinSide 1 = ADP + phosphate + cellular proteinSide 2.; EC=7.4.2.8&#34;
+      - reference_id: file:BACSU/secA/secA-deep-research-falcon.md
+        supporting_text: &#34;SecA is a P-type polypeptide translocase ATPase that couples ATP hydrolysis to mechanical translocation of mostly unfolded preproteins bearing N-terminal signal peptides across the cytoplasmic membrane&#34;
+- term:
+    id: GO:0045121
+    label: membrane raft
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: &gt;-
+      UniProt records membrane raft localization based on PMID:27362352, which
+      studied flotillin-associated membrane microdomains in B. subtilis.
+      However, the UniProt subunit comment notes SecA only shows some
+      colocalization with FloA or FloT membrane assemblies suggesting
+      limited association with lipid rafts.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      The annotation is based on experimental evidence from PMID:27362352,
+      but the evidence indicates only partial colocalization with membrane
+      rafts. This is not a core localization for SecA function - the primary
+      functional location is at SecYEG translocon sites. The membrane raft
+      association may represent a subset of SecA molecules or a regulatory
+      aspect.
+    supported_by:
+      - reference_id: UniProt:P28366
+        supporting_text: &#34;Only shows some colocalization with FloA or FloT membrane assemblies (PubMed:27362352)&#34;
+- term:
+    id: GO:0046872
+    label: metal ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;-
+      SecA binds zinc through its C-terminal SEC-C motif. UniProt records that
+      SecA may bind 1 zinc ion per subunit through conserved cysteine residues.
+    action: ACCEPT
+    reason: &gt;-
+      Metal ion binding (specifically zinc) is a documented property of SecA.
+      The SEC-C motif at the C-terminus contains conserved cysteines that
+      coordinate zinc. While the precise functional role of zinc binding is
+      less clear than the ATPase activity, this is a legitimate molecular
+      function annotation based on structural and sequence evidence.
+    supported_by:
+      - reference_id: UniProt:P28366
+        supporting_text: &#34;May bind 1 zinc ion per subunit&#34;
+- term:
+    id: GO:0065002
+    label: intracellular protein transmembrane transport
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  review:
+    summary: &gt;-
+      SecA drives transmembrane transport of proteins through SecYEG. This
+      annotation captures the essence of SecA function - moving proteins
+      across the membrane. The term is appropriate for SecA&#39;s role in
+      translocation.
+    action: ACCEPT
+    reason: &gt;-
+      This annotation accurately describes SecA&#39;s function in driving protein
+      transport across the cytoplasmic membrane. SecA powers the movement of
+      preproteins through the SecYEG channel, which is intracellular protein
+      transmembrane transport.
+    supported_by:
+      - reference_id: UniProt:P28366
+        supporting_text: &#34;Has a central role in coupling the hydrolysis of ATP to the transfer of proteins into and across the cell membrane&#34;
+      - reference_id: file:BACSU/secA/secA-deep-research-falcon.md
+        supporting_text: &#34;SecA couples ATP hydrolysis to mechanical translocation of mostly unfolded preproteins bearing N-terminal signal peptides across the cytoplasmic membrane via SecYEG&#34;
+core_functions:
+  - molecular_function:
+      id: GO:0008564
+      label: protein-exporting ATPase activity
+    description: &gt;-
+      SecA is the ATP-driven motor (EC 7.4.2.8) that powers post-translational
+      protein translocation through SecYEG. Multiple crystal structures show ATP
+      binding sites; mutagenesis of K106 abolishes function (PMID:8440733).
+    directly_involved_in:
+      - id: GO:0043952
+        label: protein transport by the Sec complex
+    locations:
+      - id: GO:0005886
+        label: plasma membrane
+    in_complex:
+      id: GO:0031522
+      label: cell envelope Sec protein transport complex
+    supported_by:
+      - reference_id: UniProt:P28366
+        supporting_text: &#34;Reaction=ATP + H2O + cellular proteinSide 1 = ADP + phosphate + cellular proteinSide 2.; EC=7.4.2.8&#34;
+      - reference_id: file:BACSU/secA/secA-deep-research-falcon.md
+        supporting_text: &#34;SecA is a P-type polypeptide translocase ATPase (EC 7.4.2.8) that couples ATP hydrolysis to mechanical translocation of mostly unfolded preproteins&#34;
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000003
+  title: Gene Ontology annotation based on Enzyme Commission mapping
+  findings:
+    - statement: EC 7.4.2.8 maps to protein-exporting ATPase activity
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings:
+    - statement: IBA annotations for SecA based on PANTHER family PTHR30612
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000104
+  title: Electronic Gene Ontology annotations created by transferring manual GO annotations
+    between related proteins based on shared sequence features
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:BACSU/secA/secA-deep-research-falcon.md
+  title: Deep research on SecA function in Bacillus subtilis
+  findings:
+    - statement: Comprehensive review of SecA structure and mechanism
+    - statement: SecA cycles between cytoplasm and membrane during translocation
+    - statement: ATP hydrolysis drives conformational changes pushing polypeptides through SecYEG
+- id: PMID:8440733
+  title: Lysine 106 of the putative catalytic ATP-binding site of the Bacillus subtilis SecA protein is required for functional complementation of Escherichia coli secA mutants in vivo.
+  full_text_unavailable: true
+  findings:
+    - statement: Mutagenesis demonstrates K106 is essential for SecA ATPase activity
+    - statement: Experimental evidence for catalytic activity EC 7.4.2.8
+- id: PMID:12242434
+  title: Nucleotide control of interdomain interactions in the conformational reaction cycle of SecA.
+  full_text_unavailable: true
+  findings:
+    - statement: Crystal structure of SecA with and without ADP
+    - statement: Reveals conformational changes upon nucleotide binding
+- id: PMID:27362352
+  title: Super Resolution Fluorescence Microscopy and Tracking of Bacterial Flotillin (Reggie) Paralogs Provide Evidence for Defined-Sized Protein Microdomains within the Bacterial Membrane but Absence of Clusters Containing Detergent-Resistant Proteins.
+  full_text_unavailable: true
+  findings:
+    - statement: SecA shows some colocalization with FloA/FloT membrane assemblies
+    - statement: Experimental evidence for membrane raft localization
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

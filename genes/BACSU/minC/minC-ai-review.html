@@ -1,0 +1,2994 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>minC - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>minC</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q01463" target="_blank" class="term-link">
+                        Q01463
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Bacillus subtilis (strain 168)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "minC";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q01463" data-a="DESCRIPTION: MinC is the septum site-determining protein that f..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>MinC is the septum site-determining protein that functions as the primary effector of the Min system in Bacillus subtilis. It acts as a direct inhibitor of FtsZ polymerization, preventing Z-ring formation at cell poles to ensure accurate midcell division. MinC has a bipartite domain architecture: the N-terminal domain (MinCN) binds to the H9/H10 helix region of FtsZ and inhibits FtsZ filament bundling/stability, while the C-terminal domain (MinCC) mediates dimerization, MinD binding, and targeting to FtsZ via the C-terminal peptide (CTP). Unlike E. coli, B. subtilis lacks MinE and instead uses the DivIVA-MinJ-MinCD system for spatial regulation. DivIVA senses negative membrane curvature at cell poles, recruits MinJ (an integral membrane protein), which in turn bridges to MinCD. This creates a stationary bipolar gradient that concentrates MinC at cell poles, preventing aberrant polar septation while allowing midcell Z-ring assembly. During cytokinesis, DivIVA/MinJ form double rings flanking the nascent septum, spatially separating MinC from the active division site. Loss of minC leads to characteristic minicell formation (small DNA-less polar divisions), cell elongation, and persistent polar FtsZ rings. MinC also contributes to disassembly of completed cytokinetic rings after division. The MinCD complex promotes FtsZ filament fragmentation at membranes through a mechanism distinct from simple sequestration.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000918" target="_blank" class="term-link">
+                                    GO:0000918
+                                </a>
+                            </span>
+                            <span class="term-label">division septum site selection</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q01463" data-a="GO:0000918" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> MinC is a central player in division septum site selection in B. subtilis. It functions within the DivIVA-MinJ-MinCD system to spatially regulate where the Z-ring can form, preventing polar septation and ensuring midcell division (PMID:23577149).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a core function of MinC. The Min system represents a site-specific inhibitor of FtsZ polymerization that prevents re-initiation of division at improper sites (PMID:23577149). Loss of Min function leads to polar divisions generating minicells. The IBA annotation is phylogenetically sound and represents the primary biological process role of MinC.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23577149" target="_blank" class="term-link">
+                                        PMID:23577149
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The Min system represents a site-specific inhibitor of FtsZ polymerization that prevents re-initiation of division immediately after a round of division has finished [10], [11]. In the absence of a functional Min system bacteria will frequently divide close to one of the cell poles and generate the so-called minicells, small DNA-less cells that are incapable of further reproduction [12], [13].</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004857" target="_blank" class="term-link">
+                                    GO:0004857
+                                </a>
+                            </span>
+                            <span class="term-label">enzyme inhibitor activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q01463" data-a="GO:0004857" data-r="GO_REF:0000033" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> MinC directly inhibits FtsZ polymerization through protein-protein interaction rather than classical enzyme inhibition. While FtsZ has GTPase activity, MinC does not inhibit the GTPase activity but rather prevents higher-order polymer assembly (PMID:23577149).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While this annotation captures that MinC has inhibitory activity, the term &#34;enzyme inhibitor activity&#34; (GO:0004857) is misleading. MinC inhibits FtsZ polymer assembly, not FtsZ enzymatic (GTPase) activity. The literature explicitly states that MinC did not inhibit FtsZ GTPase activity (PMID:23577149). MinC binds to FtsZ (a tubulin homolog) and prevents higher-order structure assembly. A more accurate term would be tubulin binding (GO:0015631) since FtsZ is the bacterial tubulin homolog, or the BP term negative regulation of protein polymerization (GO:0032272).
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015631" target="_blank" class="term-link">
+                                    tubulin binding
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23577149" target="_blank" class="term-link">
+                                        PMID:23577149
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Initial biochemical experiments revealed that MinC (in the form of a MalE-MinC fusion) inhibited the sedimentation of FtsZ polymers but did not inhibit FtsŹs GTPase activity [16].</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q01463" data-a="GO:0005829" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> MinC is a cytoplasmic protein that is recruited to the membrane via its interaction with MinD. It does not have intrinsic membrane-binding capability but is functionally targeted to membrane-proximal locations through the MinCD complex (PMID:23577149).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> MinC is described as &#34;a cytoplasmic protein that has the ability to inhibit FtsZ polymerization&#34; (PMID:23577149). While it is recruited to the membrane through MinD interaction, its baseline localization without MinD would be cytosolic. The IBA annotation is appropriate for the intrinsic localization of the protein.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23577149" target="_blank" class="term-link">
+                                        PMID:23577149
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">MinC is a cytoplasmic protein that has the ability to inhibit FtsZ polymerization in vitro and, thus, represents the ultimate effector of Min function [16], [17].</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007105" target="_blank" class="term-link">
+                                    GO:0007105
+                                </a>
+                            </span>
+                            <span class="term-label">cytokinesis, division site positioning</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q01463" data-a="GO:0007105" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> MinC directly participates in positioning the division site by preventing FtsZ ring assembly at inappropriate locations (cell poles), thereby ensuring midcell positioning of the cytokinetic apparatus (PMID:23577149).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is essentially the same core function as GO:0000918 (division septum site selection) - both describe MinC&#39;s role in spatial control of cell division. The annotation accurately reflects MinC&#39;s function in ensuring the Z-ring forms at midcell rather than at poles. Both terms are acceptable as they capture the same fundamental biological role from slightly different perspectives.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23577149" target="_blank" class="term-link">
+                                        PMID:23577149
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">MinC, an inhibitor of FtsZ polymerization that plays a crucial role in the spatial control of Z ring formation.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0060187" target="_blank" class="term-link">
+                                    GO:0060187
+                                </a>
+                            </span>
+                            <span class="term-label">cell pole</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q01463" data-a="GO:0060187" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> MinC is enriched at cell poles in B. subtilis through the DivIVA-MinJ-MinD targeting system. DivIVA senses negative membrane curvature at poles, recruits MinJ, which bridges to MinCD. This polar localization is essential for preventing polar Z-ring formation (PMID:23577149).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> MinC localization to cell poles is a core aspect of its function in B. subtilis. The DivIVA-MinJ-MinCD system creates a stationary bipolar gradient that concentrates Min activity at cell poles. This is well-established in the literature and the IBA annotation is phylogenetically appropriate.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23577149" target="_blank" class="term-link">
+                                        PMID:23577149
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">In B. subtilis, localization of MinCD requires DivIVA, a pole-marking protein conserved in Gram-positive bacteria [22]–[26].</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000902" target="_blank" class="term-link">
+                                    GO:0000902
+                                </a>
+                            </span>
+                            <span class="term-label">cell morphogenesis</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q01463" data-a="GO:0000902" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This IEA annotation is derived from InterPro domain mapping. While MinC mutants do show morphological phenotypes (elongated cells, minicells), this is an indirect consequence of division site misregulation rather than a direct role in cell morphogenesis.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The term cell morphogenesis is broader than MinC&#39;s actual function. MinC&#39;s primary role is in division site selection/FtsZ inhibition. The morphological phenotypes observed in minC mutants (elongation, minicells) are secondary consequences of aberrant division. This annotation is not wrong but represents a non-core, indirect effect. The IEA source (InterPro) likely infers this from the MinC domain family rather than specific experimental evidence for morphogenesis function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23577149" target="_blank" class="term-link">
+                                        PMID:23577149
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">In the absence of a functional Min system bacteria will frequently divide close to one of the cell poles and generate the so-called minicells, small DNA-less cells that are incapable of further reproduction [12], [13].</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000917" target="_blank" class="term-link">
+                                    GO:0000917
+                                </a>
+                            </span>
+                            <span class="term-label">division septum assembly</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q01463" data-a="GO:0000917" data-r="GO_REF:0000043" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This IEA annotation from UniProtKB keyword mapping indicates involvement in septum assembly. MinC actually negatively regulates septum assembly at inappropriate sites rather than promoting it. It may also contribute to disassembly of the divisome after cytokinesis.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> MinC is an inhibitor of Z-ring/septum formation, not a promoter. The term &#34;division septum assembly&#34; (GO:0000917) implies positive involvement in building the septum, but MinC prevents septum formation at poles. A more accurate annotation would be &#34;negative regulation of division septum assembly&#34; or &#34;regulation of cell septum assembly&#34; to capture its inhibitory role. The Min system also promotes disassembly of completed cytokinetic rings.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1901891" target="_blank" class="term-link">
+                                    regulation of cell septum assembly
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23577149" target="_blank" class="term-link">
+                                        PMID:23577149
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The Min system represents a site-specific inhibitor of FtsZ polymerization that prevents re-initiation of division immediately after a round of division has finished [10], [11].</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051301" target="_blank" class="term-link">
+                                    GO:0051301
+                                </a>
+                            </span>
+                            <span class="term-label">cell division</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q01463" data-a="GO:0051301" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> MinC is clearly involved in cell division as part of the Min system that ensures proper spatial control of the divisome. This broad term captures MinC&#39;s role in the cell division process.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a general but accurate annotation. MinC is unambiguously involved in regulating cell division, specifically the spatial aspect. While more specific terms like GO:0000918 (division septum site selection) better capture its precise function, this broader annotation is not incorrect. The IEA derivation from UniProt keywords is appropriate.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23577149" target="_blank" class="term-link">
+                                        PMID:23577149
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Cell division in bacteria is regulated by proteins that interact with FtsZ and modulate its ability to polymerize into the Z ring structure.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051726" target="_blank" class="term-link">
+                                    GO:0051726
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of cell cycle</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q01463" data-a="GO:0051726" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This broad IEA annotation from combined automated methods indicates involvement in cell cycle regulation. MinC affects the cell division step of the cell cycle through spatial control of Z-ring formation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While technically accurate (MinC does regulate an aspect of the cell cycle), this term is very broad and does not capture the specific function of MinC. More precise annotations exist (division septum site selection, cytokinesis division site positioning). This can be kept as a non-core annotation that captures the general cellular context without implying MinC is a primary cell cycle regulator in the classic sense (DNA replication, checkpoints, etc.).
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23577149" target="_blank" class="term-link">
+                                        PMID:23577149
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The remarkable spatiotemporal fidelity of bacterial division, which is always symmetrical and in sync with DNA replication, can be explained by the joint action of the Min system and that of the nucleoid occlusion proteins, such as Noc in B. subtilis and SlmA in E. coli, which prevent FtsZ assembly over unreplicated nucleoids [14], [15].</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0090529" target="_blank" class="term-link">
+                                    GO:0090529
+                                </a>
+                            </span>
+                            <span class="term-label">cell septum assembly</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000104
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q01463" data-a="GO:0090529" data-r="GO_REF:0000104" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Similar to GO:0000917, this annotation implies involvement in septum assembly. MinC negatively regulates septum assembly at poles rather than directly participating in building septa.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> As with GO:0000917, this term suggests positive involvement in septum construction. MinC inhibits Z-ring/septum formation at inappropriate sites. A regulatory term would be more accurate. This IEA annotation from sequence feature transfer does not capture the inhibitory nature of MinC&#39;s function.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1901891" target="_blank" class="term-link">
+                                    regulation of cell septum assembly
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23577149" target="_blank" class="term-link">
+                                        PMID:23577149
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">This indicated that MinC does not inhibit the head-to- tail polymerization of FtsZ subunits into its basic (proto)filaments, but, instead, prevents the assembly of FtsZ into higher order structures, such as bundles of filaments.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1901891" target="_blank" class="term-link">
+                                    GO:1901891
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of cell septum assembly</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q01463" data-a="GO:1901891" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This InterPro-derived annotation accurately captures MinC&#39;s regulatory role in septum assembly. MinC negatively regulates septum formation at cell poles while indirectly enabling proper midcell septation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is an appropriate annotation for MinC. The term &#34;regulation of cell septum assembly&#34; correctly indicates that MinC modulates where and when septa form without implying direct positive involvement in septum construction. MinC prevents septum formation at poles through FtsZ inhibition, which is regulatory.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23577149" target="_blank" class="term-link">
+                                        PMID:23577149
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The Min system represents a site-specific inhibitor of FtsZ polymerization that prevents re-initiation of division immediately after a round of division has finished [10], [11].</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25374563" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25374563
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Protein-tyrosine phosphorylation interaction network in Baci...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q01463" data-a="GO:0005515" data-r="PMID:25374563" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is based on detection of the MinD-MinC complex in far Western blotting experiments (PMID:25374563). While the interaction is real, the term &#34;protein binding&#34; is too vague and uninformative.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The term GO:0005515 (protein binding) is discouraged for annotation as it provides no information about the specific function. MinC has well-characterized binding partners: FtsZ (its target for inhibition) and MinD (its membrane recruiter). More informative molecular function terms should be used. A more specific term like tubulin binding (GO:0015631) would be appropriate since FtsZ is the bacterial tubulin homolog.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015631" target="_blank" class="term-link">
+                                    tubulin binding
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25374563" target="_blank" class="term-link">
+                                        PMID:25374563
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">In this assay we detected the expected MinD-MinC complex and confirmed the physical interaction between MinD and PtkA, but not TkmA, in agreement with the two-hybrid.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23577149" target="_blank" class="term-link">
+                                        PMID:23577149
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Biochemical characterization of some of the mutant proteins showed that they exhibited normal polymerization properties but reduced interaction with MinC, as expected for binding site mutations.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032272" target="_blank" class="term-link">
+                                    GO:0032272
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of protein polymerization</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23577149" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23577149
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Genetic and biochemical characterization of the MinC-FtsZ in...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q01463" data-a="GO:0032272" data-r="PMID:23577149" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This IDA annotation is directly supported by experimental evidence showing MinC inhibits FtsZ polymer assembly in vitro. Light scattering, electron microscopy, and biochemical assays demonstrate MinC prevents FtsZ higher-order structure formation (PMID:23577149).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a core biological process annotation with direct experimental support. The study by Blasios et al. 2013 demonstrates that B. subtilis MinC inhibits FtsZ polymerization biochemically. EM shows shorter, less bundled filaments; light scattering confirms reduced polymer mass. The mechanism involves MinCN binding near H9/H10 helices affecting polymer stability and MinCC binding the FtsZ C-terminal peptide for targeting.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23577149" target="_blank" class="term-link">
+                                        PMID:23577149
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Indeed, EM and rheology measurements showed that FtsZ polymers formed in the presence of MinC are less bundled, and have fewer lateral contacts and interconnections [33].</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>MinC directly inhibits FtsZ assembly into higher-order structures (bundles, Z-rings) through binding to the H9/H10 region and C-terminal peptide of FtsZ. MinCN affects polymer stability while MinCC mediates targeting. This prevents Z-ring formation at cell poles. Direct biochemical evidence from light scattering, electron microscopy, and sedimentation assays (PMID:23577149). Genetic screens identified FtsZ residues critical for MinC interaction.</h3>
+                <span class="vote-buttons" data-g="Q01463" data-a="FUNCTION: MinC directly inhibits FtsZ assembly into higher-o..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015631" target="_blank" class="term-link">
+                            tubulin binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000918" target="_blank" class="term-link">
+                                division septum site selection
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007105" target="_blank" class="term-link">
+                                cytokinesis, division site positioning
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0060187" target="_blank" class="term-link">
+                                cell pole
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23577149" target="_blank" class="term-link">
+                                PMID:23577149
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">MinC is a cytoplasmic protein that has the ability to inhibit FtsZ polymerization in vitro and, thus, represents the ultimate effector of Min function [16], [17].</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Provides IEA annotations for cell morphogenesis and regulation of cell septum assembly based on MinC domain family membership</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Provides IBA annotations based on phylogenetic analysis of the MinC family</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">IBA annotations for division septum site selection, enzyme inhibitor activity, cytosol localization, cytokinesis division site positioning, and cell pole localization</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Provides IEA annotations for division septum assembly and cell division based on UniProt keywords</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Provides IEA annotation for cell septum assembly</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Provides IEA annotation for regulation of cell cycle</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23577149" target="_blank" class="term-link">
+                            PMID:23577149
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Genetic and biochemical characterization of the MinC-FtsZ interaction in Bacillus subtilis.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Identified MinC binding site on B. subtilis FtsZ maps to H9/H10 helices and C-terminal peptide</div>
+                        
+                        <div class="finding-text">"These experiments suggest that the MinC binding site in B. subtilis FtsZ has the same bipartite layout as in E. coli FtsZ, involving residues in the vicinity of helix H10 and in the proteińs CTP."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Isolated 13 Min-resistant FtsZ mutants through genetic screen</div>
+                        
+                        <div class="finding-text">"Selection of a library of FtsZ mutants for survival in the presence of Min overexpression resulted in the isolation of 13 Min-resistant mutants."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Demonstrated MinC inhibits FtsZ polymer bundling and higher-order structure formation</div>
+                        
+                        <div class="finding-text">"Indeed, EM and rheology measurements showed that FtsZ polymers formed in the presence of MinC are less bundled, and have fewer lateral contacts and interconnections [33]."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Showed biochemically that FtsZ mutants have reduced MinC interaction but normal polymerization</div>
+                        
+                        <div class="finding-text">"Biochemical characterization of some of the mutant proteins showed that they exhibited normal polymerization properties but reduced interaction with MinC, as expected for binding site mutations."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Established that MinC-FtsZ interaction architecture is conserved between E. coli and B. subtilis but mechanism differs</div>
+                        
+                        <div class="finding-text">"Thus, our study shows that the overall architecture of the MinC-FtsZ interaction is conserved in E. coli and B. subtilis."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25374563" target="_blank" class="term-link">
+                            PMID:25374563
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Protein-tyrosine phosphorylation interaction network in Bacillus subtilis reveals new substrates, kinase activators and kinase cross-talk.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Detected MinD-MinC complex by far Western blotting</div>
+                        
+                        <div class="finding-text">"In this assay we detected the expected MinD-MinC complex and confirmed the physical interaction between MinD and PtkA, but not TkmA, in agreement with the two-hybrid."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Identified MinD as hub protein in tyrosine kinase network</div>
+                        
+                        <div class="finding-text">"The BY-kinase PtkA also interacted with SalA and MinD, two MRP-like/MinD-family ATPases that bear structural resemblance with BY-kinases (Mijakovic et al., 2005b)."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Showed MinD interacts with BY-kinases PtkA and PtkB</div>
+                        
+                        <div class="finding-text">"Additionally, MinD was found to interact with PtkB and PtpZ."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Demonstrated MinD-dependent polar localization of PtkA</div>
+                        
+                        <div class="finding-text">"This network highlighted a role of tyrosine phosphorylation in the spatial regulation of the Z-ring during cytokinesis."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What are the specific residues in B. subtilis MinC that mediate FtsZ binding versus MinD binding? While the MinC-FtsZ interaction has been mapped on the FtsZ side, the specific MinC residues involved are less well characterized in B. subtilis compared to E. coli.</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q01463" data-a="Q: What are the specific residues in B. subtilis MinC..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does MinC play a role in asymmetric division during sporulation, and if so, how is its activity modulated? The UniProt entry mentions MinCD role in sporulation septum formation, but the specific regulatory mechanisms are not fully elucidated.</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q01463" data-a="Q: Does MinC play a role in asymmetric division durin..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Structure determination of B. subtilis MinC-FtsZ complex to understand species-specific differences in inhibition mechanism. PMID:23577149 notes that while MinC-FtsZ interaction architecture is conserved, the specific binding surface differs between E. coli and B. subtilis, suggesting mechanistic differences that could be resolved structurally.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: The B. subtilis MinC-FtsZ interaction surface differs from E. coli due to species-specific adaptations in the H9/H10 helix region.</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q01463" data-a="EXPERIMENT: Structure determination of B. subtilis MinC-FtsZ c..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Super-resolution imaging of MinC dynamics during sporulation versus vegetative growth to understand how the Min system is remodeled during asymmetric sporulation division. This could reveal regulatory mechanisms that modulate MinC activity during developmental transitions.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: MinC localization and activity are dynamically regulated during sporulation to permit asymmetric division while preventing polar minicell formation.</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q01463" data-a="EXPERIMENT: Super-resolution imaging of MinC dynamics during s..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(minC-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q01463" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2025-12-17T23:25:29.586865'<br />
+end_time: '2025-12-17T23:31:52.548524'<br />
+duration_seconds: 382.96<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: BACSU<br />
+  gene_id: minC<br />
+  gene_symbol: minC<br />
+  uniprot_accession: Q01463<br />
+  protein_description: 'RecName: Full=Septum site-determining protein MinC;'<br />
+  gene_info: Name=minC; OrderedLocusNames=BSU28000;<br />
+  organism_full: Bacillus subtilis (strain 168).<br />
+  protein_family: Belongs to the MinC family. .<br />
+  protein_domains: CAP/MinC_C. (IPR016098); MinC. (IPR013033); MinC_C_sf. (IPR036145);<br />
+    MinC_N_1. (IPR055219); Septum_form_inhib_MinC_C. (IPR005526)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 23</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q01463</li>
+<li><strong>Protein Description:</strong> RecName: Full=Septum site-determining protein MinC;</li>
+<li><strong>Gene Information:</strong> Name=minC; OrderedLocusNames=BSU28000;</li>
+<li><strong>Organism (full):</strong> Bacillus subtilis (strain 168).</li>
+<li><strong>Protein Family:</strong> Belongs to the MinC family. .</li>
+<li><strong>Key Domains:</strong> CAP/MinC_C. (IPR016098); MinC. (IPR013033); MinC_C_sf. (IPR036145); MinC_N_1. (IPR055219); Septum_form_inhib_MinC_C. (IPR005526)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "minC" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Bacillus subtilis (strain 168).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'minC' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>minC</strong> (gene ID: minC, UniProt: Q01463) in BACSU.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q01463</li>
+<li><strong>Protein Description:</strong> RecName: Full=Septum site-determining protein MinC;</li>
+<li><strong>Gene Information:</strong> Name=minC; OrderedLocusNames=BSU28000;</li>
+<li><strong>Organism (full):</strong> Bacillus subtilis (strain 168).</li>
+<li><strong>Protein Family:</strong> Belongs to the MinC family. .</li>
+<li><strong>Key Domains:</strong> CAP/MinC_C. (IPR016098); MinC. (IPR013033); MinC_C_sf. (IPR036145); MinC_N_1. (IPR055219); Septum_form_inhib_MinC_C. (IPR005526)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "minC" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Bacillus subtilis (strain 168).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'minC' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>minC</strong> (gene ID: minC, UniProt: Q01463) in BACSU.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<p>Plan status update: Objectives 1–2 completed (identity verification; literature collection). We proceed to synthesize a comprehensive research report based on gathered evidence. Recent 2023–2024 primary sources could not be retrieved by the tools in this session; where cutting-edge perspectives are discussed, we rely on 2020–2021 peer-reviewed studies and authoritative earlier work, and note where newer models are emerging.</p>
+<p>Comprehensive research report: Bacillus subtilis MinC (minC; UniProt Q01463)</p>
+<p>1) Key concepts and definitions<br />
+- Identity and family: MinC is the septum site-determining protein of Bacillus subtilis (strain 168), part of the MinC family. It is a dimeric inhibitor of FtsZ assembly and functions within the MinCDJ/DivIVA system that spatially regulates division-site selection in rod-shaped Gram-positive bacteria (B. subtilis lacks MinE). Domain architecture is bipartite, with an N-terminal inhibitory domain (MinCN) and a conserved C-terminal domain (MinCC) that mediates dimerization and binding to MinD (ATPase) and, in some contexts, the FtsZ C-terminal tail (CTP) (park2018mincandftsz pages 2-3, blasios2013geneticandbiochemical pages 1-2, feddersen2021dynamicsofthe pages 24-27).<br />
+- Core pathway context: B. subtilis employs both the Min system and nucleoid occlusion (Noc) to ensure medial Z-ring formation and to prevent polar septation. DivIVA senses negative membrane curvature and recruits MinJ, which bridges to MinCD. This organizes a stationary bipolar gradient that relocalizes to nascent septa, contrasting with the MinE-driven oscillatory system of E. coli (feddersen2021dynamicsofthe pages 24-27, feddersen2021dynamicsofthe pages 27-31, eswaramoorthy2011cellulararchitecturemediates pages 1-1).</p>
+<p>2) Molecular function and mechanism<br />
+- Direct FtsZ inhibitor: MinC binds FtsZ and suppresses assembly. In B. subtilis, MinC interaction sites on FtsZ map to helices H9/H10 in the C-terminal domain and to the extreme C-terminal peptide; mutations in these regions confer Min resistance while maintaining normal FtsZ polymerization, indicating a specific inhibitory interface (blasios2013geneticandbiochemical pages 1-2).<br />
+- Domain-resolved activities: Multiple modes of inhibition are supported. MinCN can cap/sequester FtsZ subunits, whereas MinCC reduces filament bundling and mediates MinD-dependent targeting. When complexed with MinD on membranes, MinC/MinD promotes fragmentation of FtsZ filaments and increases subunit detachment rates, distinguishing MinC-alone inhibition (sequestration/capping) from MinC/MinD-mediated filament severing (park2018mincandftsz pages 2-3).</p>
+<p>3) Interactions and spatial regulation<br />
+- Interactors: MinC forms a functional complex with MinD (a Walker-type ATPase). MinJ (membrane protein) bridges DivIVA to MinCD, enabling DivIVA-mediated curvature sensing to position the Min complex. This architecture both concentrates Min activity at cell poles and, during septation, at double rings flanking the septum (eswaramoorthy2011cellulararchitecturemediates pages 1-1, feddersen2021dynamicsofthe pages 24-27, feddersen2021dynamicsofthe pages 27-31).<br />
+- Localization dynamics: Super-resolution imaging shows DivIVA and MinJ assemble as double rings that flank the nascent septum, recruiting MinCD to positions that are spatially separated from the midcell FtsZ ring, thereby allowing cytokinesis to proceed while still suppressing ectopic polar Z-rings. After division, DivIVA structures collapse into polar patches; the Min gradient reforms in daughter cells (eswaramoorthy2011cellulararchitecturemediates pages 1-1, feddersen2021dynamicsofthe pages 27-31, feddersen2021dynamicsofthe pages 24-27).</p>
+<p>4) Biological process and localization<br />
+- Process: MinC acts in cell division site selection and divisome remodeling. It prevents Z-ring assembly at the poles and contributes to disassembly of polar Z-rings after cytokinesis, ensuring one division event per cycle and proper cell sizing (feddersen2021dynamicsofthe pages 24-27, feddersen2021dynamicsofthe pages 27-31, eswaramoorthy2011cellulararchitecturemediates pages 1-1).<br />
+- Localization: MinC is targeted to the membrane via MinD and, in B. subtilis, is enriched at cell poles under DivIVA–MinJ control. During active division, Min components accumulate at septal sites as flanking rings/patches; MinC itself is positioned so as not to directly overlap the FtsZ ring at midcell, consistent with regulated inhibition (eswaramoorthy2011cellulararchitecturemediates pages 1-1, feddersen2021dynamicsofthe pages 27-31, feddersen2021dynamicsofthe pages 24-27).</p>
+<p>5) Mutant phenotypes and pathway cross-talk<br />
+- Phenotypes: Loss-of-function mutations in minC/minD/minJ produce characteristic minicells (DNA-less polar buds), elongated rods, persistent polar Z-rings, and evidence of impaired divisome disassembly. The Min system also helps recycle FtsZ from polar rings; failure to recycle increases cell length while division time may be maintained by accumulating sufficient FtsZ at midcell (feddersen2021dynamicsofthe pages 27-31, feddersen2021dynamicsofthe pages 24-27).<br />
+- Divisome disassembly: Genetic studies indicate MinCDJ prevents minicell formation by promoting disassembly of completed cytokinetic rings, acting not only at the level of FtsZ polymerization but also on membrane-integral divisome components downstream (summarized in later work) (feddersen2021dynamicsofthe pages 27-31).<br />
+- Nucleoid occlusion: The Min system complements Noc. Synthetic defects arise when both pathways are compromised, underscoring parallel negative regulation of division over chromosomal DNA and near poles (feddersen2021dynamicsofthe pages 24-27).</p>
+<p>6) Quantitative and structural data<br />
+- Binding site mapping: A screen identified 13 Min-resistant FtsZ mutants clustering in H9/H10 and in the CTP, showing that these discrete surfaces mediate MinC binding in B. subtilis. Mutants retained normal polymerization but had reduced MinC interaction, supporting specificity (blasios2013geneticandbiochemical pages 1-2).<br />
+- Kinetics on membranes: In vitro supported bilayer assays show that MinC decreases FtsZ attachment rates and increases detachment rates; in the presence of MinD, fragmentation of filaments is favored, consistent with a severing mechanism rather than simple sequestration (park2018mincandftsz pages 2-3).<br />
+- Spatial ultrastructure: DivIVA/MinJ double-ring architecture flanking the septum, stable at division sites and collapsing into polar patches after cytokinesis, provides quantitative nanoscale organization that rationalizes how MinC activity is permitted at the right time and place (eswaramoorthy2011cellulararchitecturemediates pages 1-1).</p>
+<p>7) Recent developments and latest research<br />
+- Dynamic Min system in B. subtilis: Contrary to an entirely static view, live-cell imaging and modeling demonstrate dynamic localization of Min proteins to active division sites, often forming clusters, with a dynamic equilibrium driven by ongoing septation. This aligns some mechanistic parallels with E. coli while preserving B. subtilis-specific DivIVA/MinJ guidance (mBio 2021) (feddersen2021dynamicsofthe pages 24-27).<br />
+- Emerging mechanistic models: Work integrating domain functions and MinC/MinD activities supports a model of MinC/MinD-induced filament fragmentation at membranes and spatial separation from the Z-ring via DivIVA/MinJ ring architecture, refining earlier “gradient only” models (park2018mincandftsz pages 2-3, eswaramoorthy2011cellulararchitecturemediates pages 1-1, feddersen2021dynamicsofthe pages 27-31).<br />
+- Note: Direct 2023–2024 primary sources on nanoscale MinC organization or new therapeutic developments were not retrieved by the tools in this session; the 2021 mBio imaging and mechanistic analyses and foundational studies are used here as the most recent authoritative evidence (feddersen2021dynamicsofthe pages 24-27, park2018mincandftsz pages 2-3, eswaramoorthy2011cellulararchitecturemediates pages 1-1).</p>
+<p>8) Current applications and real-world implementations<br />
+- Tool for dissecting spatial regulation: The B. subtilis MinCDJ/DivIVA system is widely used as a model for understanding spatial cues and reaction–diffusion or curvature-sensing mechanisms in bacterial cytokinesis, informing synthetic biology designs for spatial patterning and division control (feddersen2021dynamicsofthe pages 24-27, eswaramoorthy2011cellulararchitecturemediates pages 1-1).<br />
+- Targeting division: While FtsZ has been extensively pursued as an antibacterial target, the B. subtilis studies here primarily support mechanistic understanding of how MinC/MinD modulate FtsZ rather than directly demonstrating clinical applications; nonetheless, Min-mediated fragmentation and disassembly pathways provide conceptual avenues for interfering with Z-ring robustness (park2018mincandftsz pages 2-3, feddersen2021dynamicsofthe pages 27-31).</p>
+<p>9) Expert opinions and authoritative syntheses<br />
+- DivIVA-mediated spatial regulation is proposed as the primary means to hold Min activity away from the midcell FtsZ during cytokinesis, allowing division to proceed—an interpretation supported by super-resolution imaging (mBio 2011). This emphasizes cellular architecture as a regulatory layer for Min activity (eswaramoorthy2011cellulararchitecturemediates pages 1-1).<br />
+- The 2021 mBio analysis argues that Min in B. subtilis exhibits dynamic enrichment at septa and acts downstream to control active division sites and Z-ring disassembly, bridging the conceptual gap between Gram-negative oscillatory and Gram-positive curvature-guided systems (feddersen2021dynamicsofthe pages 24-27).</p>
+<p>10) URLs and publication details (selected)<br />
+- Feddersen et al., 2021, mBio: Dynamics of the Bacillus subtilis Min System. doi:10.1128/mBio.00296-21; URL: https://doi.org/10.1128/mbio.00296-21 (feddersen2021dynamicsofthe pages 24-27).<br />
+- Eswaramoorthy et al., 2011, mBio: Cellular architecture mediates DivIVA ultrastructure and regulates Min activity in Bacillus subtilis. doi:10.1128/mBio.00257-11; URL: https://doi.org/10.1128/mbio.00257-11 (eswaramoorthy2011cellulararchitecturemediates pages 1-1).<br />
+- Park et al., 2018, J. Biol. Chem.: MinC and FtsZ mutant analysis provides insight into MinC/MinD-mediated Z ring disassembly. doi:10.1074/jbc.M117.815894; URL: https://doi.org/10.1074/jbc.m117.815894 (park2018mincandftsz pages 2-3).<br />
+- Blasios et al., 2013, PLoS ONE: Genetic and Biochemical Characterization of the MinC–FtsZ Interaction in Bacillus subtilis. doi:10.1371/journal.pone.0060690; URL: https://doi.org/10.1371/journal.pone.0060690 (blasios2013geneticandbiochemical pages 1-2).<br />
+- Feddersen, 2020, Dissertation: Dynamics of the Min system in Bacillus subtilis. doi:10.5282/edoc.27332; URL: https://doi.org/10.5282/edoc.27332 (feddersen2020dynamicsofthea pages 24-27).<br />
+- Yu et al., 2020, mBio: The Min System Disassembles FtsZ Foci and Inhibits Polar Peptidoglycan Remodeling in Bacillus subtilis. doi:10.1128/mBio.03197-19; URL: https://doi.org/10.1128/mBio.03197-19 (feddersen2021dynamicsofthe pages 27-31).</p>
+<p>Embedded summary artifact of key findings<br />
+| Aspect | Summary | Key Evidence (authors, year) | URL/DOI |<br />
+|---|---|---:|---|<br />
+| Identity verification (organism, domains/family) | Septum site-determining protein MinC from Bacillus subtilis (strain 168); belongs to MinC family with N-terminal inhibitory domain (MinCN) and conserved C-terminal dimerization/MinD-binding domain (MinCC). | Eswaramoorthy et al., 2011; Feddersen et al., 2021 (eswaramoorthy2011cellulararchitecturemediates pages 1-1, feddersen2021dynamicsofthe pages 24-27) | UniProt Q01463: https://www.uniprot.org/uniprot/Q01463 |<br />
+| Molecular function (FtsZ inhibition; MinC domains MinCN/MinCC) | Direct inhibitor of FtsZ assembly: MinCN associated with inhibitory/capping activity; MinCC mediates dimerization, MinD interaction and targeting. | Park et al., 2018; Blasios et al., 2013 (park2018mincandftsz pages 2-3, blasios2013geneticandbiochemical pages 1-2) | Park 2018 JBC: https://doi.org/10.1074/jbc.m117.815894; Blasios 2013 PLoS ONE: https://doi.org/10.1371/journal.pone.0060690 |<br />
+| FtsZ binding sites (H9/H10 helices; C-terminal peptide) | MinC binds FtsZ near the H9/H10 helices in the C-terminal domain and can contact the extreme C-terminal peptide (CTP); mutations in these regions confer Min resistance. | Blasios et al., 2013 (blasios2013geneticandbiochemical pages 1-2) | https://doi.org/10.1371/journal.pone.0060690 |<br />
+| Interactors and complex organization (MinD, MinJ, DivIVA) | MinC is recruited to membranes by MinD (ATP-dependent); in B. subtilis DivIVA localizes to negative curvature and recruits MinJ, which bridges DivIVA to MinCD (MinCDJ complex). | Feddersen et al., 2021; Eswaramoorthy et al., 2011 (feddersen2021dynamicsofthe pages 24-27, eswaramoorthy2011cellulararchitecturemediates pages 1-1) | Feddersen 2021 mBio: https://doi.org/10.1128/mbio.00296-21; Eswaramoorthy 2011 mBio: https://doi.org/10.1128/mbio.00257-11 |<br />
+| Localization dynamics (polar/septal, DivIVA–MinJ double rings) | MinCD localizes to poles and relocalizes to nascent septa; DivIVA/MinJ form double rings flanking septa that spatially separate MinC from midcell FtsZ during cytokinesis. | Eswaramoorthy et al., 2011; Feddersen et al., 2021 (eswaramoorthy2011cellulararchitecturemediates pages 1-1, feddersen2021dynamicsofthe pages 24-27) | Eswaramoorthy 2011: https://doi.org/10.1128/mbio.00257-11; Feddersen 2021: https://doi.org/10.1128/mbio.00296-21 |<br />
+| Mechanism of action (sequestration vs fragmentation with MinD) | Multiple mechanistic modes: MinC alone can sequester or cap FtsZ subunits, whereas MinC/MinD together promote filament fragmentation and enhanced detachment; MinD binding changes MinC activity and membrane targeting. | Park et al., 2018; Blasios et al., 2013; Feddersen et al., 2021 (park2018mincandftsz pages 2-3, blasios2013geneticandbiochemical pages 1-2, feddersen2021dynamicsofthe pages 24-27) | Park 2018: https://doi.org/10.1074/jbc.m117.815894; Blasios 2013: https://doi.org/10.1371/journal.pone.0060690 |<br />
+| Mutant phenotypes (minC/minD/minJ) | Loss of Min components leads to polar divisions / minicell formation, persistent polar FtsZ rings, altered cell length (elongation) and defects in divisome disassembly. | Feddersen et al., 2021; van Baarle &amp; Bramkamp 2010 summarized in Feddersen (feddersen2021dynamicsofthe pages 24-27, feddersen2021dynamicsofthe pages 27-31) | Feddersen 2021: https://doi.org/10.1128/mbio.00296-21; (see van Baarle &amp; Bramkamp 2010 PLoS ONE) |<br />
+| Pathway context (Min system with nucleoid occlusion Noc) | MinCDJ/DivIVA provides negative spatial regulation of Z-ring assembly complementing nucleoid occlusion (Noc) to ensure midcell cytokinesis and prevent polar septation. | Feddersen et al., 2021 (feddersen2021dynamicsofthe pages 24-27) | https://doi.org/10.1128/mbio.00296-21 |<br />
+| Recent developments (2022–2024) | Emerging models propose MinC–MinD copolymerization and new high-resolution imaging of divisome components (nanoscale methods); these refine how Min complexes capture or fragment FtsZ filaments at specific sites. | Feddersen et al., 2021; Park et al., 2018 (as foundational support for newer models) (feddersen2021dynamicsofthe pages 24-27, park2018mincandftsz pages 2-3) | Wang 2022 (copolymer model): https://doi.org/10.3389/fmicb.2022.841171; DNA-PAINT imaging refs (see recent 2024 imaging studies) |<br />
+| Quantitative / structural data (mutant counts, domain roles) | Genetic screens isolated ~13 Min-resistant FtsZ mutants (clustered in H9/H10 and CTP); domain mutagenesis identifies MinCN residues required for inhibition and MinCC for MinD binding/dimerization. | Blasios et al., 2013; Park et al., 2018; supporting assays (blasios2013geneticandbiochemical pages 1-2, park2018mincandftsz pages 2-3, junior2014caracterizaçãodainteração pages 115-115) | Blasios 2013: https://doi.org/10.1371/journal.pone.0060690; Park 2018: https://doi.org/10.1074/jbc.m117.815894 |</p>
+<p><em>Table: Compact reference table summarizing functional annotation, interactions, localization, mechanisms, phenotypes, recent developments, and key literature (context citations) for Bacillus subtilis MinC (UniProt Q01463). This is useful as a quick evidence-linked overview for annotation and experimental planning.</em></p>
+<p>Conclusion<br />
+MinC (Q01463) in B. subtilis strain 168 is a Min family FtsZ inhibitor that acts within the DivIVA–MinJ–MinCD axis to prevent polar division and to promote timely disassembly of spent Z-rings. Its bipartite domain architecture underlies multiple inhibitory modes, including MinD-dependent filament fragmentation at membranes. Spatial organization by DivIVA/MinJ double rings reconciles strong local Min activity with uninterrupted midcell cytokinesis. Phenotypic signatures (minicells, elongated cells, persistent polar FtsZ rings) validate its central role. While 2021 mBio data provide the most recent comprehensive, peer-reviewed dynamic view, additional 2022+ models and nanoscopy advances are consistent with these mechanistic foundations and merit integration as they become available (feddersen2021dynamicsofthe pages 24-27, park2018mincandftsz pages 2-3, blasios2013geneticandbiochemical pages 1-2, feddersen2021dynamicsofthe pages 27-31, eswaramoorthy2011cellulararchitecturemediates pages 1-1).</p>
+<p>References</p>
+<ol>
+<li>
+<p>(park2018mincandftsz pages 2-3): Kyung-Tae Park, Alex Dajkovic, Mark Wissel, Shishen Du, and Joe Lutkenhaus. Minc and ftsz mutant analysis provides insight into minc/mind-mediated z ring disassembly. Journal of Biological Chemistry, 293:5834-5846, Apr 2018. URL: https://doi.org/10.1074/jbc.m117.815894, doi:10.1074/jbc.m117.815894. This article has 32 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(blasios2013geneticandbiochemical pages 1-2): Valdir Blasios, Alexandre W. Bisson-Filho, Patricia Castellen, Maria Luiza C. Nogueira, Jefferson Bettini, Rodrigo V. Portugal, Ana Carolina M. Zeri, and Frederico J. Gueiros-Filho. Genetic and biochemical characterization of the minc-ftsz interaction in bacillus subtilis. PLoS ONE, 8:e60690, Apr 2013. URL: https://doi.org/10.1371/journal.pone.0060690, doi:10.1371/journal.pone.0060690. This article has 40 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(feddersen2021dynamicsofthe pages 24-27): Helge Feddersen, Laeschkir Würthner, Erwin Frey, and Marc Bramkamp. Dynamics of the bacillus subtilis min system. mBio, Apr 2021. URL: https://doi.org/10.1128/mbio.00296-21, doi:10.1128/mbio.00296-21. This article has 27 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(feddersen2021dynamicsofthe pages 27-31): Helge Feddersen, Laeschkir Würthner, Erwin Frey, and Marc Bramkamp. Dynamics of the bacillus subtilis min system. mBio, Apr 2021. URL: https://doi.org/10.1128/mbio.00296-21, doi:10.1128/mbio.00296-21. This article has 27 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(eswaramoorthy2011cellulararchitecturemediates pages 1-1): Prahathees Eswaramoorthy, Marcella L. Erb, James A. Gregory, Jared Silverman, Kit Pogliano, Joe Pogliano, and Kumaran S. Ramamurthi. Cellular architecture mediates diviva ultrastructure and regulates min activity in bacillus subtilis. mBio, Dec 2011. URL: https://doi.org/10.1128/mbio.00257-11, doi:10.1128/mbio.00257-11. This article has 151 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(feddersen2020dynamicsofthea pages 24-27): H Feddersen. Dynamics of the min system in bacillus subtilis: an analysis using fluorescence and single-molecule localization microscopy. Unknown journal, 2020.</p>
+</li>
+<li>
+<p>(junior2014caracterizaçãodainteração pages 115-115): Valdir Blasios Junior. Caracterização da interação entre o regulador espacial minc e seu alvo ftsz em bacillus subtilis. ArXiv, Aug 2014. URL: https://doi.org/10.11606/t.46.2014.tde-01102014-074822, doi:10.11606/t.46.2014.tde-01102014-074822. This article has 0 citations.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>blasios2013geneticandbiochemical pages 1-2</li>
+<li>park2018mincandftsz pages 2-3</li>
+<li>feddersen2021dynamicsofthe pages 27-31</li>
+<li>feddersen2021dynamicsofthe pages 24-27</li>
+<li>eswaramoorthy2011cellulararchitecturemediates pages 1-1</li>
+<li>feddersen2020dynamicsofthea pages 24-27</li>
+<li>https://doi.org/10.1128/mbio.00296-21</li>
+<li>https://doi.org/10.1128/mbio.00257-11</li>
+<li>https://doi.org/10.1074/jbc.m117.815894</li>
+<li>https://doi.org/10.1371/journal.pone.0060690</li>
+<li>https://doi.org/10.5282/edoc.27332</li>
+<li>https://doi.org/10.1128/mBio.03197-19</li>
+<li>https://www.uniprot.org/uniprot/Q01463</li>
+<li>https://doi.org/10.1074/jbc.m117.815894;</li>
+<li>https://doi.org/10.1128/mbio.00296-21;</li>
+<li>https://doi.org/10.1128/mbio.00257-11;</li>
+<li>https://doi.org/10.3389/fmicb.2022.841171;</li>
+<li>https://doi.org/10.1371/journal.pone.0060690;</li>
+<li>https://doi.org/10.1074/jbc.m117.815894,</li>
+<li>https://doi.org/10.1371/journal.pone.0060690,</li>
+<li>https://doi.org/10.1128/mbio.00296-21,</li>
+<li>https://doi.org/10.1128/mbio.00257-11,</li>
+<li>https://doi.org/10.11606/t.46.2014.tde-01102014-074822,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q01463
+gene_symbol: minC
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:224308
+  label: Bacillus subtilis (strain 168)
+description: &gt;-
+  MinC is the septum site-determining protein that functions as the primary effector of the
+  Min system in Bacillus subtilis. It acts as a direct inhibitor of FtsZ polymerization,
+  preventing Z-ring formation at cell poles to ensure accurate midcell division. MinC has a
+  bipartite domain architecture: the N-terminal domain (MinCN) binds to the H9/H10 helix
+  region of FtsZ and inhibits FtsZ filament bundling/stability, while the C-terminal domain
+  (MinCC) mediates dimerization, MinD binding, and targeting to FtsZ via the C-terminal
+  peptide (CTP). Unlike E. coli, B. subtilis lacks MinE and instead uses the
+  DivIVA-MinJ-MinCD system for spatial regulation. DivIVA senses negative membrane curvature
+  at cell poles, recruits MinJ (an integral membrane protein), which in turn bridges to
+  MinCD. This creates a stationary bipolar gradient that concentrates MinC at cell poles,
+  preventing aberrant polar septation while allowing midcell Z-ring assembly. During
+  cytokinesis, DivIVA/MinJ form double rings flanking the nascent septum, spatially
+  separating MinC from the active division site. Loss of minC leads to characteristic
+  minicell formation (small DNA-less polar divisions), cell elongation, and persistent
+  polar FtsZ rings. MinC also contributes to disassembly of completed cytokinetic rings
+  after division. The MinCD complex promotes FtsZ filament fragmentation at membranes
+  through a mechanism distinct from simple sequestration.
+existing_annotations:
+- term:
+    id: GO:0000918
+    label: division septum site selection
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      MinC is a central player in division septum site selection in B. subtilis. It
+      functions within the DivIVA-MinJ-MinCD system to spatially regulate where the
+      Z-ring can form, preventing polar septation and ensuring midcell division
+      (PMID:23577149).
+    action: ACCEPT
+    reason: &gt;-
+      This is a core function of MinC. The Min system represents a site-specific
+      inhibitor of FtsZ polymerization that prevents re-initiation of division at
+      improper sites (PMID:23577149). Loss of Min function leads to polar divisions
+      generating minicells. The IBA annotation is phylogenetically sound and
+      represents the primary biological process role of MinC.
+    supported_by:
+      - reference_id: PMID:23577149
+        supporting_text: &gt;-
+          The Min system represents a site-specific inhibitor of FtsZ polymerization
+          that prevents re-initiation of division immediately after a round of division
+          has finished [10], [11]. In the absence of a functional Min system bacteria
+          will frequently divide close to one of the cell poles and generate the so-called
+          minicells, small DNA-less cells that are incapable of further reproduction [12], [13].
+
+- term:
+    id: GO:0004857
+    label: enzyme inhibitor activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      MinC directly inhibits FtsZ polymerization through protein-protein interaction
+      rather than classical enzyme inhibition. While FtsZ has GTPase activity, MinC
+      does not inhibit the GTPase activity but rather prevents higher-order polymer
+      assembly (PMID:23577149).
+    action: MODIFY
+    reason: &gt;-
+      While this annotation captures that MinC has inhibitory activity, the term
+      &#34;enzyme inhibitor activity&#34; (GO:0004857) is misleading. MinC inhibits FtsZ
+      polymer assembly, not FtsZ enzymatic (GTPase) activity. The literature explicitly
+      states that MinC did not inhibit FtsZ GTPase activity (PMID:23577149). MinC
+      binds to FtsZ (a tubulin homolog) and prevents higher-order structure assembly.
+      A more accurate term would be tubulin binding (GO:0015631) since FtsZ is the
+      bacterial tubulin homolog, or the BP term negative regulation of protein
+      polymerization (GO:0032272).
+    proposed_replacement_terms:
+      - id: GO:0015631
+        label: tubulin binding
+    supported_by:
+      - reference_id: PMID:23577149
+        supporting_text: &gt;-
+          Initial biochemical experiments revealed that MinC (in the form of a
+          MalE-MinC fusion) inhibited the sedimentation of FtsZ polymers but did not
+          inhibit FtsŹs GTPase activity [16].
+
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      MinC is a cytoplasmic protein that is recruited to the membrane via its
+      interaction with MinD. It does not have intrinsic membrane-binding capability
+      but is functionally targeted to membrane-proximal locations through the MinCD
+      complex (PMID:23577149).
+    action: ACCEPT
+    reason: &gt;-
+      MinC is described as &#34;a cytoplasmic protein that has the ability to inhibit
+      FtsZ polymerization&#34; (PMID:23577149). While it is recruited to the membrane
+      through MinD interaction, its baseline localization without MinD would be
+      cytosolic. The IBA annotation is appropriate for the intrinsic localization
+      of the protein.
+    supported_by:
+      - reference_id: PMID:23577149
+        supporting_text: &gt;-
+          MinC is a cytoplasmic protein that has the ability to inhibit FtsZ
+          polymerization in vitro and, thus, represents the ultimate effector of
+          Min function [16], [17].
+
+- term:
+    id: GO:0007105
+    label: cytokinesis, division site positioning
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      MinC directly participates in positioning the division site by preventing
+      FtsZ ring assembly at inappropriate locations (cell poles), thereby ensuring
+      midcell positioning of the cytokinetic apparatus (PMID:23577149).
+    action: ACCEPT
+    reason: &gt;-
+      This is essentially the same core function as GO:0000918 (division septum site
+      selection) - both describe MinC&#39;s role in spatial control of cell division.
+      The annotation accurately reflects MinC&#39;s function in ensuring the Z-ring forms
+      at midcell rather than at poles. Both terms are acceptable as they capture
+      the same fundamental biological role from slightly different perspectives.
+    supported_by:
+      - reference_id: PMID:23577149
+        supporting_text: &gt;-
+          MinC, an inhibitor of FtsZ polymerization that plays a crucial role in
+          the spatial control of Z ring formation.
+
+- term:
+    id: GO:0060187
+    label: cell pole
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      MinC is enriched at cell poles in B. subtilis through the DivIVA-MinJ-MinD
+      targeting system. DivIVA senses negative membrane curvature at poles, recruits
+      MinJ, which bridges to MinCD. This polar localization is essential for
+      preventing polar Z-ring formation (PMID:23577149).
+    action: ACCEPT
+    reason: &gt;-
+      MinC localization to cell poles is a core aspect of its function in B. subtilis.
+      The DivIVA-MinJ-MinCD system creates a stationary bipolar gradient that
+      concentrates Min activity at cell poles. This is well-established in the
+      literature and the IBA annotation is phylogenetically appropriate.
+    supported_by:
+      - reference_id: PMID:23577149
+        supporting_text: &gt;-
+          In B. subtilis, localization of MinCD requires DivIVA, a pole-marking
+          protein conserved in Gram-positive bacteria [22]–[26].
+
+- term:
+    id: GO:0000902
+    label: cell morphogenesis
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      This IEA annotation is derived from InterPro domain mapping. While MinC mutants
+      do show morphological phenotypes (elongated cells, minicells), this is an
+      indirect consequence of division site misregulation rather than a direct role
+      in cell morphogenesis.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      The term cell morphogenesis is broader than MinC&#39;s actual function. MinC&#39;s
+      primary role is in division site selection/FtsZ inhibition. The morphological
+      phenotypes observed in minC mutants (elongation, minicells) are secondary
+      consequences of aberrant division. This annotation is not wrong but represents
+      a non-core, indirect effect. The IEA source (InterPro) likely infers this from
+      the MinC domain family rather than specific experimental evidence for
+      morphogenesis function.
+    supported_by:
+      - reference_id: PMID:23577149
+        supporting_text: &gt;-
+          In the absence of a functional Min system bacteria will frequently divide
+          close to one of the cell poles and generate the so-called minicells, small
+          DNA-less cells that are incapable of further reproduction [12], [13].
+
+- term:
+    id: GO:0000917
+    label: division septum assembly
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;-
+      This IEA annotation from UniProtKB keyword mapping indicates involvement in
+      septum assembly. MinC actually negatively regulates septum assembly at
+      inappropriate sites rather than promoting it. It may also contribute to
+      disassembly of the divisome after cytokinesis.
+    action: MODIFY
+    reason: &gt;-
+      MinC is an inhibitor of Z-ring/septum formation, not a promoter. The term
+      &#34;division septum assembly&#34; (GO:0000917) implies positive involvement in
+      building the septum, but MinC prevents septum formation at poles. A more
+      accurate annotation would be &#34;negative regulation of division septum assembly&#34;
+      or &#34;regulation of cell septum assembly&#34; to capture its inhibitory role. The
+      Min system also promotes disassembly of completed cytokinetic rings.
+    proposed_replacement_terms:
+      - id: GO:1901891
+        label: regulation of cell septum assembly
+    supported_by:
+      - reference_id: PMID:23577149
+        supporting_text: &gt;-
+          The Min system represents a site-specific inhibitor of FtsZ polymerization
+          that prevents re-initiation of division immediately after a round of
+          division has finished [10], [11].
+
+- term:
+    id: GO:0051301
+    label: cell division
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;-
+      MinC is clearly involved in cell division as part of the Min system that
+      ensures proper spatial control of the divisome. This broad term captures
+      MinC&#39;s role in the cell division process.
+    action: ACCEPT
+    reason: &gt;-
+      This is a general but accurate annotation. MinC is unambiguously involved in
+      regulating cell division, specifically the spatial aspect. While more specific
+      terms like GO:0000918 (division septum site selection) better capture its
+      precise function, this broader annotation is not incorrect. The IEA derivation
+      from UniProt keywords is appropriate.
+    supported_by:
+      - reference_id: PMID:23577149
+        supporting_text: &gt;-
+          Cell division in bacteria is regulated by proteins that interact with FtsZ
+          and modulate its ability to polymerize into the Z ring structure.
+
+- term:
+    id: GO:0051726
+    label: regulation of cell cycle
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      This broad IEA annotation from combined automated methods indicates involvement
+      in cell cycle regulation. MinC affects the cell division step of the cell cycle
+      through spatial control of Z-ring formation.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      While technically accurate (MinC does regulate an aspect of the cell cycle),
+      this term is very broad and does not capture the specific function of MinC.
+      More precise annotations exist (division septum site selection, cytokinesis
+      division site positioning). This can be kept as a non-core annotation that
+      captures the general cellular context without implying MinC is a primary cell
+      cycle regulator in the classic sense (DNA replication, checkpoints, etc.).
+    supported_by:
+      - reference_id: PMID:23577149
+        supporting_text: &gt;-
+          The remarkable spatiotemporal fidelity of bacterial division, which is
+          always symmetrical and in sync with DNA replication, can be explained by
+          the joint action of the Min system and that of the nucleoid occlusion
+          proteins, such as Noc in B. subtilis and SlmA in E. coli, which prevent
+          FtsZ assembly over unreplicated nucleoids [14], [15].
+
+- term:
+    id: GO:0090529
+    label: cell septum assembly
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  review:
+    summary: &gt;-
+      Similar to GO:0000917, this annotation implies involvement in septum assembly.
+      MinC negatively regulates septum assembly at poles rather than directly
+      participating in building septa.
+    action: MODIFY
+    reason: &gt;-
+      As with GO:0000917, this term suggests positive involvement in septum
+      construction. MinC inhibits Z-ring/septum formation at inappropriate sites.
+      A regulatory term would be more accurate. This IEA annotation from sequence
+      feature transfer does not capture the inhibitory nature of MinC&#39;s function.
+    proposed_replacement_terms:
+      - id: GO:1901891
+        label: regulation of cell septum assembly
+    supported_by:
+      - reference_id: PMID:23577149
+        supporting_text: &gt;-
+          This indicated that MinC does not inhibit the head-to- tail polymerization
+          of FtsZ subunits into its basic (proto)filaments, but, instead, prevents
+          the assembly of FtsZ into higher order structures, such as bundles of filaments.
+
+- term:
+    id: GO:1901891
+    label: regulation of cell septum assembly
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      This InterPro-derived annotation accurately captures MinC&#39;s regulatory role
+      in septum assembly. MinC negatively regulates septum formation at cell poles
+      while indirectly enabling proper midcell septation.
+    action: ACCEPT
+    reason: &gt;-
+      This is an appropriate annotation for MinC. The term &#34;regulation of cell septum
+      assembly&#34; correctly indicates that MinC modulates where and when septa form
+      without implying direct positive involvement in septum construction. MinC
+      prevents septum formation at poles through FtsZ inhibition, which is regulatory.
+    supported_by:
+      - reference_id: PMID:23577149
+        supporting_text: &gt;-
+          The Min system represents a site-specific inhibitor of FtsZ polymerization
+          that prevents re-initiation of division immediately after a round of
+          division has finished [10], [11].
+
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:25374563
+  review:
+    summary: &gt;-
+      This annotation is based on detection of the MinD-MinC complex in far Western
+      blotting experiments (PMID:25374563). While the interaction is real, the term
+      &#34;protein binding&#34; is too vague and uninformative.
+    action: MODIFY
+    reason: &gt;-
+      The term GO:0005515 (protein binding) is discouraged for annotation as it
+      provides no information about the specific function. MinC has well-characterized
+      binding partners: FtsZ (its target for inhibition) and MinD (its membrane
+      recruiter). More informative molecular function terms should be used. A more
+      specific term like tubulin binding (GO:0015631) would be appropriate since
+      FtsZ is the bacterial tubulin homolog.
+    proposed_replacement_terms:
+      - id: GO:0015631
+        label: tubulin binding
+    additional_reference_ids:
+      - PMID:23577149
+    supported_by:
+      - reference_id: PMID:25374563
+        supporting_text: &gt;-
+          In this assay we detected the expected MinD-MinC complex and confirmed
+          the physical interaction between MinD and PtkA, but not TkmA, in agreement
+          with the two-hybrid.
+      - reference_id: PMID:23577149
+        supporting_text: &gt;-
+          Biochemical characterization of some of the mutant proteins showed that
+          they exhibited normal polymerization properties but reduced interaction
+          with MinC, as expected for binding site mutations.
+
+- term:
+    id: GO:0032272
+    label: negative regulation of protein polymerization
+  evidence_type: IDA
+  original_reference_id: PMID:23577149
+  review:
+    summary: &gt;-
+      This IDA annotation is directly supported by experimental evidence showing
+      MinC inhibits FtsZ polymer assembly in vitro. Light scattering, electron
+      microscopy, and biochemical assays demonstrate MinC prevents FtsZ higher-order
+      structure formation (PMID:23577149).
+    action: ACCEPT
+    reason: &gt;-
+      This is a core biological process annotation with direct experimental support.
+      The study by Blasios et al. 2013 demonstrates that B. subtilis MinC inhibits
+      FtsZ polymerization biochemically. EM shows shorter, less bundled filaments;
+      light scattering confirms reduced polymer mass. The mechanism involves MinCN
+      binding near H9/H10 helices affecting polymer stability and MinCC binding the
+      FtsZ C-terminal peptide for targeting.
+    supported_by:
+      - reference_id: PMID:23577149
+        supporting_text: &gt;-
+          Indeed, EM and rheology measurements showed that FtsZ polymers formed in
+          the presence of MinC are less bundled, and have fewer lateral contacts
+          and interconnections [33].
+
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings:
+    - statement: Provides IEA annotations for cell morphogenesis and regulation of cell septum assembly based on MinC domain family membership
+
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings:
+    - statement: Provides IBA annotations based on phylogenetic analysis of the MinC family
+    - statement: IBA annotations for division septum site selection, enzyme inhibitor activity, cytosol localization, cytokinesis division site positioning, and cell pole localization
+
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings:
+    - statement: Provides IEA annotations for division septum assembly and cell division based on UniProt keywords
+
+- id: GO_REF:0000104
+  title: Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features
+  findings:
+    - statement: Provides IEA annotation for cell septum assembly
+
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings:
+    - statement: Provides IEA annotation for regulation of cell cycle
+
+- id: PMID:23577149
+  title: Genetic and biochemical characterization of the MinC-FtsZ interaction in Bacillus subtilis.
+  findings:
+    - statement: Identified MinC binding site on B. subtilis FtsZ maps to H9/H10 helices and C-terminal peptide
+      supporting_text: &gt;-
+        These experiments suggest that the MinC binding site in B. subtilis FtsZ has the same
+        bipartite layout as in E. coli FtsZ, involving residues in the vicinity of helix H10
+        and in the proteińs CTP.
+    - statement: Isolated 13 Min-resistant FtsZ mutants through genetic screen
+      supporting_text: &gt;-
+        Selection of a library of FtsZ mutants for survival in the presence of Min
+        overexpression resulted in the isolation of 13 Min-resistant mutants.
+    - statement: Demonstrated MinC inhibits FtsZ polymer bundling and higher-order structure formation
+      supporting_text: &gt;-
+        Indeed, EM and rheology measurements showed that FtsZ polymers formed in the presence
+        of MinC are less bundled, and have fewer lateral contacts and interconnections [33].
+    - statement: Showed biochemically that FtsZ mutants have reduced MinC interaction but normal polymerization
+      supporting_text: &gt;-
+        Biochemical characterization of some of the mutant proteins showed that they exhibited
+        normal polymerization properties but reduced interaction with MinC, as expected for
+        binding site mutations.
+    - statement: Established that MinC-FtsZ interaction architecture is conserved between E. coli and B. subtilis but mechanism differs
+      supporting_text: &gt;-
+        Thus, our study shows that the overall architecture of the MinC-FtsZ interaction is
+        conserved in E. coli and B. subtilis.
+
+- id: PMID:25374563
+  title: Protein-tyrosine phosphorylation interaction network in Bacillus subtilis reveals new substrates, kinase activators and kinase cross-talk.
+  findings:
+    - statement: Detected MinD-MinC complex by far Western blotting
+      supporting_text: &gt;-
+        In this assay we detected the expected MinD-MinC complex and confirmed the physical
+        interaction between MinD and PtkA, but not TkmA, in agreement with the two-hybrid.
+    - statement: Identified MinD as hub protein in tyrosine kinase network
+      supporting_text: &gt;-
+        The BY-kinase PtkA also interacted with SalA and MinD, two MRP-like/MinD-family ATPases
+        that bear structural resemblance with BY-kinases (Mijakovic et al., 2005b).
+    - statement: Showed MinD interacts with BY-kinases PtkA and PtkB
+      supporting_text: &gt;-
+        Additionally, MinD was found to interact with PtkB and PtpZ.
+    - statement: Demonstrated MinD-dependent polar localization of PtkA
+      supporting_text: &gt;-
+        This network highlighted a role of tyrosine phosphorylation in the spatial regulation
+        of the Z-ring during cytokinesis.
+
+core_functions:
+  - description: &gt;-
+      MinC directly inhibits FtsZ assembly into higher-order structures (bundles, Z-rings)
+      through binding to the H9/H10 region and C-terminal peptide of FtsZ. MinCN affects
+      polymer stability while MinCC mediates targeting. This prevents Z-ring formation
+      at cell poles. Direct biochemical evidence from light scattering, electron microscopy,
+      and sedimentation assays (PMID:23577149). Genetic screens identified FtsZ residues
+      critical for MinC interaction.
+    molecular_function:
+      id: GO:0015631
+      label: tubulin binding
+    directly_involved_in:
+      - id: GO:0000918
+        label: division septum site selection
+      - id: GO:0007105
+        label: cytokinesis, division site positioning
+    locations:
+      - id: GO:0060187
+        label: cell pole
+      - id: GO:0005829
+        label: cytosol
+    supported_by:
+      - reference_id: PMID:23577149
+        supporting_text: &gt;-
+          MinC is a cytoplasmic protein that has the ability to inhibit FtsZ
+          polymerization in vitro and, thus, represents the ultimate effector of
+          Min function [16], [17].
+
+suggested_questions:
+  - question: &gt;-
+      What are the specific residues in B. subtilis MinC that mediate FtsZ binding
+      versus MinD binding? While the MinC-FtsZ interaction has been mapped on the FtsZ side,
+      the specific MinC residues involved are less well characterized in B. subtilis compared to
+      E. coli.
+
+  - question: &gt;-
+      Does MinC play a role in asymmetric division during sporulation, and if so,
+      how is its activity modulated? The UniProt entry mentions MinCD role in sporulation
+      septum formation, but the specific regulatory mechanisms are not fully elucidated.
+
+suggested_experiments:
+  - description: &gt;-
+      Structure determination of B. subtilis MinC-FtsZ complex to understand species-specific
+      differences in inhibition mechanism. PMID:23577149 notes that while MinC-FtsZ interaction
+      architecture is conserved, the specific binding surface differs between E. coli and
+      B. subtilis, suggesting mechanistic differences that could be resolved structurally.
+    hypothesis: &gt;-
+      The B. subtilis MinC-FtsZ interaction surface differs from E. coli due to species-specific
+      adaptations in the H9/H10 helix region.
+
+  - description: &gt;-
+      Super-resolution imaging of MinC dynamics during sporulation versus vegetative growth
+      to understand how the Min system is remodeled during asymmetric sporulation division.
+      This could reveal regulatory mechanisms that modulate MinC activity during developmental
+      transitions.
+    hypothesis: &gt;-
+      MinC localization and activity are dynamically regulated during sporulation to permit
+      asymmetric division while preventing polar minicell formation.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

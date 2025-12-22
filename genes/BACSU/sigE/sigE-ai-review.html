@@ -1,0 +1,2359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>sigE - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>sigE</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P06222" target="_blank" class="term-link">
+                        P06222
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Bacillus subtilis (strain 168)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "sigE";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P06222" data-a="DESCRIPTION: SigE (also known as SpoIIGB) encodes the RNA polym..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>SigE (also known as SpoIIGB) encodes the RNA polymerase sigma-E factor, a member of the sigma-70 family of alternative sigma factors that is specifically activated in the mother cell compartment during Bacillus subtilis sporulation. SigE is synthesized as an inactive precursor (P31, 239 amino acids) and is proteolytically cleaved at the N-terminus by the membrane-associated protease SpoIIGA to yield the active sigma-29 factor (residues 30-239). This proteolytic activation mechanism differs from the partner-switching mechanism used to activate the forespore-specific sigma factor SigF. The protein contains conserved sigma-70 regions including a helix-turn-helix DNA-binding motif (residues 206-225) that recognizes specific promoter sequences. As with all sigma factors, SigE functions as an initiation factor that promotes the attachment of RNA polymerase to specific initiation sites and is then released during elongation. SigE directs transcription of mother cell-specific sporulation genes and is part of the crisscross signaling network between the forespore and mother cell compartments that orchestrates spore development. The sequential activation of compartment-specific sigma factors (SigF in forespore, SigE in mother cell, followed by SigG and SigK) coordinates the complex developmental program of sporulation.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003677" target="_blank" class="term-link">
+                                    GO:0003677
+                                </a>
+                            </span>
+                            <span class="term-label">DNA binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P06222" data-a="GO:0003677" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SigE binds DNA as part of the RNAP holoenzyme to recognize promoter sequences. SigE contains a characterized helix-turn-helix DNA-binding motif (residues 206-225 per UniProt) that mediates sequence-specific recognition of SigE-dependent promoters in the mother cell compartment.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This IEA annotation is appropriate for SigE. Sigma factors bind DNA as part of the holoenzyme to recognize and position RNA polymerase at specific promoters. UniProt documents an H-T-H DNA-binding motif in residues 206-225. While more specific terms exist (e.g., transcription cis-regulatory region binding), this general DNA binding annotation is not incorrect and can be retained.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:P06222
+                                    
+                                </span>
+                                
+                                <div class="support-text">DNA_BIND 206..225 /note=&#34;H-T-H motif&#34;</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:P06222
+                                    
+                                </span>
+                                
+                                <div class="support-text">InterPro; IPR001387; Cro/C1-type_HTH</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003700" target="_blank" class="term-link">
+                                    GO:0003700
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-binding transcription factor activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P06222" data-a="GO:0003700" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This term is intended for sequence-specific DNA-binding transcription factors that regulate transcription by binding to cis-regulatory elements. While sigma factors do bind DNA and regulate transcription, they function mechanistically differently from classical transcription factors. Sigma factors confer promoter recognition to the RNA polymerase core enzyme rather than acting as independent regulatory factors that modulate transcription of genes they are not directly transcribing.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The term GO:0003700 is designed for classical transcription factors that independently bind DNA regulatory elements and activate or repress transcription. Sigma factors have a distinct mechanism - they are subunits of the RNAP holoenzyme that confer promoter specificity and enable transcription initiation. The more appropriate and specific term is GO:0016987 (sigma factor activity), which is already annotated. This IEA annotation from InterPro mapping conflates sigma factors with classical transcription factors.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016987" target="_blank" class="term-link">
+                                    sigma factor activity
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:P06222
+                                    
+                                </span>
+                                
+                                <div class="support-text">Sigma factors are initiation factors that promote the attachment of RNA polymerase to specific initiation sites and are then released</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006351" target="_blank" class="term-link">
+                                    GO:0006351
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-templated transcription</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P06222" data-a="GO:0006351" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SigE participates in DNA-templated transcription as the sigma subunit of the RNA polymerase holoenzyme. As a sigma factor, it enables transcription initiation at SigE-dependent promoters during sporulation, specifically in the mother cell compartment.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This biological process annotation correctly captures SigE&#39;s involvement in transcription. As a sigma factor, SigE is directly involved in the transcription process by conferring promoter specificity to RNAP and enabling transcription initiation of mother cell-specific genes.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:P06222
+                                    
+                                </span>
+                                
+                                <div class="support-text">Sigma factors are initiation factors that promote the attachment of RNA polymerase to specific initiation sites</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:P06222
+                                    
+                                </span>
+                                
+                                <div class="support-text">This sigma factor is responsible for the expression of sporulation specific genes</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006352" target="_blank" class="term-link">
+                                    GO:0006352
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-templated transcription initiation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P06222" data-a="GO:0006352" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SigE is specifically involved in transcription initiation - sigma factors function at the initiation step to position RNA polymerase at promoters and enable formation of the open complex. After initiation, sigma factors are typically released from the elongating polymerase.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation is highly appropriate for SigE. Sigma factors function specifically at the transcription initiation step - they enable promoter recognition and open complex formation but are released during the transition to elongation. UniProt explicitly states that sigma factors are &#34;initiation factors&#34; that are &#34;then released&#34; after promoting attachment to initiation sites. This term accurately captures the specific stage of transcription where sigma factors act.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:P06222
+                                    
+                                </span>
+                                
+                                <div class="support-text">Sigma factors are initiation factors that promote the attachment of RNA polymerase to specific initiation sites and are then released</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006355" target="_blank" class="term-link">
+                                    GO:0006355
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of DNA-templated transcription</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P06222" data-a="GO:0006355" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SigE regulates transcription by conferring promoter specificity to RNA polymerase, thereby activating a specific set of mother cell genes during sporulation. SigE directs expression of numerous sporulation-specific genes in the mother cell compartment.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> As an alternative sigma factor, SigE fundamentally regulates transcription by determining which promoters the RNAP holoenzyme can recognize. SigE-dependent transcription activates the mother cell developmental program. This is a core function of sigma factors and is well-documented for SigE.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:P06222
+                                    
+                                </span>
+                                
+                                <div class="support-text">This sigma factor is responsible for the expression of sporulation specific genes</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016987" target="_blank" class="term-link">
+                                    GO:0016987
+                                </a>
+                            </span>
+                            <span class="term-label">sigma factor activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P06222" data-a="GO:0016987" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SigE is a well-characterized sigma factor of the sigma-70 family. It contains conserved sigma-70 regions (regions 2, 3, and 4) that mediate core RNAP binding and promoter recognition. UniProt explicitly classifies SigE as belonging to the sigma-70 factor family and describes its function as an initiation factor that promotes RNAP attachment to specific initiation sites.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the primary molecular function of SigE. The sigma factor activity annotation accurately captures SigE&#39;s role in conferring promoter specificity to RNA polymerase. This is supported by UniProt family classification, domain analysis showing conserved sigma-70 regions, and the functional description as an initiation factor.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:P06222
+                                    
+                                </span>
+                                
+                                <div class="support-text">Sigma factors are initiation factors that promote the attachment of RNA polymerase to specific initiation sites and are then released</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:P06222
+                                    
+                                </span>
+                                
+                                <div class="support-text">Belongs to the sigma-70 factor family</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030435" target="_blank" class="term-link">
+                                    GO:0030435
+                                </a>
+                            </span>
+                            <span class="term-label">sporulation resulting in formation of a cellular spore</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P06222" data-a="GO:0030435" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SigE plays an essential role in sporulation. It is the mother cell-specific sigma factor activated during sporulation and initiates the mother cell transcriptional program. SigE activation follows SigF activation in the forespore, and together these compartment-specific sigma factors orchestrate the complex developmental program of spore formation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This biological process annotation appropriately captures SigE&#39;s essential role in sporulation. SigE is absolutely required for spore formation - it directs the mother cell developmental program that ultimately leads to engulfment of the forespore and completion of spore morphogenesis. UniProt specifically describes SigE as responsible for &#34;the expression of sporulation specific genes.&#34;
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:P06222
+                                    
+                                </span>
+                                
+                                <div class="support-text">This sigma factor is responsible for the expression of sporulation specific genes</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:P06222
+                                    
+                                </span>
+                                
+                                <div class="support-text">Stage II sporulation protein GB</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:2000142" target="_blank" class="term-link">
+                                    GO:2000142
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of DNA-templated transcription initiation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000108
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P06222" data-a="GO:2000142" data-r="GO_REF:0000108" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SigE specifically regulates transcription at the initiation step. As a sigma factor, it enables recognition of specific promoters and formation of the initiation complex. This term is more specific than the general regulation of transcription term and accurately reflects sigma factor function at the initiation stage.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation correctly captures that sigma factors regulate transcription specifically at the initiation step. SigE enables RNAP to recognize and initiate transcription from SigE-dependent promoters in the mother cell. This is a precise characterization of sigma factor function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:P06222
+                                    
+                                </span>
+                                
+                                <div class="support-text">Sigma factors are initiation factors that promote the attachment of RNA polymerase to specific initiation sites</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>SigE is the primary mother cell-specific sigma factor that confers promoter recognition specificity to RNA polymerase, enabling transcription of mother cell genes during sporulation. As a member of the sigma-70 family, SigE binds to the RNAP core and directs the holoenzyme to SigE-dependent promoters characterized by specific -10 and -35 elements. SigE is activated by proteolytic cleavage of the P31 precursor by the membrane protease SpoIIGA, in contrast to the partner-switching mechanism used for SigF activation.</h3>
+                <span class="vote-buttons" data-g="P06222" data-a="FUNCTION: SigE is the primary mother cell-specific sigma fac..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016987" target="_blank" class="term-link">
+                            sigma factor activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006352" target="_blank" class="term-link">
+                                DNA-templated transcription initiation
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030435" target="_blank" class="term-link">
+                                sporulation resulting in formation of a cellular spore
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            UniProt:P06222
+                            
+                        </span>
+                        
+                        <div class="finding-text">Sigma factors are initiation factors that promote the attachment of RNA polymerase to specific initiation sites and are then released</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            UniProt:P06222
+                            
+                        </span>
+                        
+                        <div class="finding-text">Proteolytically cleaved in the N-terminus by SpoIIGA to yield the active peptide</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000108.md" target="_blank" class="term-link">
+                            GO_REF:0000108
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Automatic assignment of GO terms using logical inference, based on inter-ontology links</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        UniProt:P06222
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">UniProt entry for RNA polymerase sigma-E factor (sigE/spoIIGB)</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">SigE is synthesized as a precursor P31 that is proteolytically cleaved by SpoIIGA to yield the active sigma-29 factor</div>
+                        
+                        <div class="finding-text">"Proteolytically cleaved in the N-terminus by SpoIIGA to yield the active peptide"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">SigE contains a helix-turn-helix DNA-binding motif at residues 206-225</div>
+                        
+                        <div class="finding-text">"DNA_BIND 206..225 /note=&#34;H-T-H motif&#34;"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">SigE belongs to the sigma-70 factor family</div>
+                        
+                        <div class="finding-text">"Belongs to the sigma-70 factor family"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Sigma factors are initiation factors that promote attachment of RNA polymerase to specific initiation sites and are then released</div>
+                        
+                        <div class="finding-text">"Sigma factors are initiation factors that promote the attachment of RNA polymerase to specific initiation sites and are then released"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/6438529" target="_blank" class="term-link">
+                            PMID:6438529
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A developmental gene product of Bacillus subtilis homologous to the sigma factor of Escherichia coli</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Original identification of sigE (spoIIGB) as a sigma factor homolog</div>
+                        
+                        <div class="finding-text">"This gene encodes a polypeptide with a predicted relative molecular mass of 27,652 which contains a 65-amino acid region highly homologous to an internal part of the Escherichia coli sigma factor"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/3104904" target="_blank" class="term-link">
+                            PMID:3104904
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Sporulation-specific sigma factor sigma 29 of Bacillus subtilis is synthesized from a precursor protein, P31</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Demonstrated that the mature sigma-29 factor is derived by proteolytic cleavage of a P31 precursor</div>
+                        
+                        <div class="finding-text">"sigma 29, is synthesized as an inactive precursor (P31) and that its activation occurs by a developmentally regulated cleavage of 29 amino acids from the P31 amino terminus"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the complete SigE regulon and how many mother cell-specific genes does it directly control?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P06222" data-a="Q: What is the complete SigE regulon and how many mot..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How does SigE promoter recognition specificity differ from that of the housekeeping sigma factor SigA?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P06222" data-a="Q: How does SigE promoter recognition specificity dif..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the precise signal that triggers SpoIIGA-mediated proteolytic activation of SigE?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P06222" data-a="Q: What is the precise signal that triggers SpoIIGA-m..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> ChIP-seq analysis of SigE binding during sporulation would enable genome-wide identification of SigE binding sites, comprehensively defining the SigE regulon and revealing any previously uncharacterized target promoters in the mother cell.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: SigE binds to specific promoter sequences genome-wide to activate a defined mother cell transcriptional program</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: ChIP-seq</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P06222" data-a="EXPERIMENT: ChIP-seq analysis of SigE binding during sporulati..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Structure-function analysis of the SpoIIGA protease and the SigE propeptide cleavage site would illuminate the molecular mechanism of compartment-specific sigma factor activation by proteolysis.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: SpoIIGA recognizes a specific sequence motif in the SigE propeptide for proteolytic cleavage</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: Biochemical assay</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P06222" data-a="EXPERIMENT: Structure-function analysis of the SpoIIGA proteas..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(sigE-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P06222" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2025-12-18T08:26:33.951259'<br />
+end_time: '2025-12-18T08:36:13.164826'<br />
+duration_seconds: 579.21<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: BACSU<br />
+  gene_id: sigE<br />
+  gene_symbol: sigE<br />
+  uniprot_accession: P06222<br />
+  protein_description: 'RecName: Full=RNA polymerase sigma-E factor; AltName: Full=P31;<br />
+    AltName: Full=Sigma-29; AltName: Full=Stage II sporulation protein GB; Flags:<br />
+    Precursor;'<br />
+  gene_info: Name=sigE; Synonyms=spoIIGB; OrderedLocusNames=BSU15320;<br />
+  organism_full: Bacillus subtilis (strain 168).<br />
+  protein_family: Belongs to the sigma-70 factor family. .<br />
+  protein_domains: Cro/C1-type_HTH. (IPR001387); RNA_pol_sigma-70_dom. (IPR014284);<br />
+    RNA_pol_sigma-E. (IPR014200); RNA_pol_sigma70. (IPR000943); RNA_pol_sigma70_r2.<br />
+    (IPR007627)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 24</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> P06222</li>
+<li><strong>Protein Description:</strong> RecName: Full=RNA polymerase sigma-E factor; AltName: Full=P31; AltName: Full=Sigma-29; AltName: Full=Stage II sporulation protein GB; Flags: Precursor;</li>
+<li><strong>Gene Information:</strong> Name=sigE; Synonyms=spoIIGB; OrderedLocusNames=BSU15320;</li>
+<li><strong>Organism (full):</strong> Bacillus subtilis (strain 168).</li>
+<li><strong>Protein Family:</strong> Belongs to the sigma-70 factor family. .</li>
+<li><strong>Key Domains:</strong> Cro/C1-type_HTH. (IPR001387); RNA_pol_sigma-70_dom. (IPR014284); RNA_pol_sigma-E. (IPR014200); RNA_pol_sigma70. (IPR000943); RNA_pol_sigma70_r2. (IPR007627)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "sigE" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Bacillus subtilis (strain 168).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'sigE' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>sigE</strong> (gene ID: sigE, UniProt: P06222) in BACSU.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> P06222</li>
+<li><strong>Protein Description:</strong> RecName: Full=RNA polymerase sigma-E factor; AltName: Full=P31; AltName: Full=Sigma-29; AltName: Full=Stage II sporulation protein GB; Flags: Precursor;</li>
+<li><strong>Gene Information:</strong> Name=sigE; Synonyms=spoIIGB; OrderedLocusNames=BSU15320;</li>
+<li><strong>Organism (full):</strong> Bacillus subtilis (strain 168).</li>
+<li><strong>Protein Family:</strong> Belongs to the sigma-70 factor family. .</li>
+<li><strong>Key Domains:</strong> Cro/C1-type_HTH. (IPR001387); RNA_pol_sigma-70_dom. (IPR014284); RNA_pol_sigma-E. (IPR014200); RNA_pol_sigma70. (IPR000943); RNA_pol_sigma70_r2. (IPR007627)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "sigE" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Bacillus subtilis (strain 168).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'sigE' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>sigE</strong> (gene ID: sigE, UniProt: P06222) in BACSU.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<p>Comprehensive research report: sigE (spoIIGB) in Bacillus subtilis (strain 168)</p>
+<p>Mandatory verification of identity and context<br />
+- Gene/protein match: The target is Bacillus subtilis mother-cell sporulation sigma factor sigma-E (SigE), encoded by sigE (also referred to as spoIIGB) and produced as an inactive pro-sigmaE that is proteolytically activated; this aligns with UniProt P06222 and the names provided (sigma-E/sigma-29/P31). Foundational sources explicitly describe sigma-E as the mother-cell-specific sporulation sigma factor of B. subtilis (strain 168 laboratory reference) (eichenberger2003thesigmaeregulon pages 1-2, phillips2002bacillussubtilissporulation pages 7-9).<br />
+- Organism: All evidence cited below (unless otherwise noted as comparative) pertains to Bacillus subtilis, the model spore-former (strain 168 lineage). Reviews and primary work here specifically center on B. subtilis (eichenberger2003thesigmaeregulon pages 1-2, phillips2002bacillussubtilissporulation pages 7-9).<br />
+- Family/domains: SigE is an alternative sigma factor in the sigma-70 family with canonical regions used for promoter recognition (e.g., σ2 for −10 element; σ4 HTH for −35). Recent structural analysis of B. subtilis sigma factors, including SigE, and reviews on sporulation sigma-factor regulation corroborate this family placement and domain organization (fimlaid2015diversemechanismsregulate pages 1-3, collins2023structuralanalysisof pages 1-2, collins2023structuralanalysisof pages 7-9).</p>
+<p>1) Key concepts and definitions with current understanding<br />
+- Definition and primary function: SigE is the mother-cell-specific RNA polymerase sigma factor that controls a large transcriptional program during early sporulation after asymmetric septation. It is produced as pro-sigmaE before septation and activated post-translationally, then directs expression of genes required for engulfment, envelope remodeling, and initiation of cortex and coat assembly in the mother cell (Journal of Molecular Biology, 17 April 2003, https://doi.org/10.1016/S0022-2836(03)00205-5; Cellular and Molecular Life Sciences, March 2002, https://doi.org/10.1007/s00018-002-8431-9) (eichenberger2003thesigmaeregulon pages 1-2, eichenberger2003thesigmaeregulon pages 2-3, phillips2002bacillussubtilissporulation pages 7-9).<br />
+- Mechanism of sigma-factor action: As a σ70-family factor, SigE provides promoter specificity to RNAP. Region 2 mediates recognition of the −10 element and melting; region 4 contains a helix-turn-helix (HTH) for −35 recognition. Structural analyses and reviews of B. subtilis sigma factors reinforce these mechanistic features (Microorganisms, 20 April 2023, https://doi.org/10.3390/microorganisms11041077; Current Opinion in Microbiology, April 2015, https://doi.org/10.1016/j.mib.2015.01.006) (collins2023structuralanalysisof pages 1-2, collins2023structuralanalysisof pages 7-9, fimlaid2015diversemechanismsregulate pages 1-3).<br />
+- Spatial compartment: SigE acts exclusively in the mother cell, the larger compartment generated by polar division (J Mol Biol, 2003, https://doi.org/10.1016/S0022-2836(03)00205-5) (eichenberger2003thesigmaeregulon pages 1-2, eichenberger2003thesigmaeregulon pages 2-3).</p>
+<p>2) Activation pathway and biochemical signaling context<br />
+- Activation mechanism and timing: Pro-sigmaE is synthesized prior to asymmetric septation but remains inactive until after polar septation. Activation requires intercellular signaling from the forespore: σF becomes active in the forespore and induces spoIIR; SpoIIR is secreted into the septal intermembrane space, where it activates the intramembrane protease SpoIIGA to cleave pro-sigmaE, releasing active SigE in the mother cell. This activation aligns temporally with the onset of engulfment and is essential for mother-cell-specific gene expression (CMLS, March 2002, https://doi.org/10.1007/s00018-002-8431-9; Current Opinion in Microbiology, April 2015, https://doi.org/10.1016/j.mib.2015.01.006) (phillips2002bacillussubtilissporulation pages 7-9, fimlaid2015diversemechanismsregulate pages 1-3).<br />
+- Consequences of loss-of-function: In sigE mutants, development arrests after asymmetric septation; cells commonly attempt a second polar septation (disporic phenotype), engulfment fails, and downstream sigma factors (σG in the forespore; σK in the mother cell) fail to activate appropriately (J Mol Biol, 2003, https://doi.org/10.1016/S0022-2836(03)00205-5) (eichenberger2003thesigmaeregulon pages 2-3).</p>
+<p>3) Regulon, promoter recognition, and downstream processes<br />
+- Regulon size and composition: Genome-wide profiling identified approximately 253 SigE-controlled genes organized in ~157 operons, with 181 genes (~121 operons) newly assigned by Eichenberger et al. The SigE regulon comprises modules for engulfment/septal peptidoglycan remodeling, cortex biosynthesis, and coat assembly; localization of several SigE-dependent proteins shows enrichment at the mother-cell membrane around the forespore and in distinct spore coat layers (J Mol Biol, 17 April 2003, https://doi.org/10.1016/S0022-2836(03)00205-5) (eichenberger2003thesigmaeregulon pages 1-2, eichenberger2003thesigmaeregulon pages 2-3, eichenberger2003thesigmaeregulon pages 3-4).<br />
+- Representative functional targets: Engulfment machinery genes include spoIID and spoIIM (with spoIIP cooperating in septal peptidoglycan removal), while cortex synthesis includes spoVE and spoVD; coat morphogenesis includes cot genes such as cotE; SigE also induces the DNA-binding regulator SpoIIID that remodels the mother-cell transcriptional program (J Mol Biol, 2003, https://doi.org/10.1016/S0022-2836(03)00205-5) (eichenberger2003thesigmaeregulon pages 3-4, eichenberger2003thesigmaeregulon pages 2-3).<br />
+- Promoter features and σ70 family: Reviews and structural work support that SigE recognizes promoter elements consistent with σ70-family architecture, with region 2 and region 4 engaging −10/−35 elements; structural fragments of SigE map the σ2 domain, including residues implicated in −10 DNA binding (Microorganisms, 20 April 2023, https://doi.org/10.3390/microorganisms11041077; Current Opinion in Microbiology, April 2015, https://doi.org/10.1016/j.mib.2015.01.006) (collins2023structuralanalysisof pages 7-9, fimlaid2015diversemechanismsregulate pages 1-3).</p>
+<p>4) Cross-regulation and pathway transitions<br />
+- SpoIIID and GerE: SigE induces SpoIIID, which subsequently modulates the transition to late mother-cell gene expression and supports activation of σK. This cascade establishes temporal control of coat and maturation genes and helps repress subsets of early genes as development proceeds (J Mol Biol, 2003, https://doi.org/10.1016/S0022-2836(03)00205-5) (eichenberger2003thesigmaeregulon pages 2-3).<br />
+- Anti-sigma factor CsfB: The anti-sigma factor CsfB (Gin) influences the timing and cell-type specificity by binding to sporulation sigma factors, including SigE and SigG, thereby reinforcing proper compartmentalization and transitions between early/late programs. Structural considerations and review discussions link CsfB interactions to conserved residues in sigma domain 2 that mediate discrimination (Microorganisms, 20 April 2023, https://doi.org/10.3390/microorganisms11041077; Current Opinion in Microbiology, April 2015, https://doi.org/10.1016/j.mib.2015.01.006) (collins2023structuralanalysisof pages 1-2, fimlaid2015diversemechanismsregulate pages 1-3).</p>
+<p>5) Localization and cellular context of function<br />
+- Cellular site of action: SigE functions in the mother-cell cytoplasm and at the membrane adjacent to the forespore; many SigE-regulated proteins localize to the engulfing membranes or to developing spore layers, matching their roles in envelope remodeling and coat assembly (J Mol Biol, 2003, https://doi.org/10.1016/S0022-2836(03)00205-5) (eichenberger2003thesigmaeregulon pages 3-4).</p>
+<p>6) Recent developments and latest research (prioritizing 2023–2024)<br />
+- Structural insights into SigE: A 2023 structural analysis reported an X-ray crystal structure covering SigE residues approximately 17–133, capturing the σ2 core features (including putative −10 recognition residues), and noted agreement with AlphaFold2 full-length models for core regions while highlighting flexibility/overprediction in loops. The study also references NMR data for σ2 and notes CsfB as an anti-sigma interacting partner. AlphaFold models for all B. subtilis sigma factors, including SigE, are publicly available and support mapping of functional motifs and interaction surfaces (Microorganisms, 20 April 2023, https://doi.org/10.3390/microorganisms11041077) (collins2023structuralanalysisof pages 9-11, collins2023structuralanalysisof pages 7-9, collins2023structuralanalysisof pages 1-2).<br />
+- Ongoing expansion of engulfment gene sets: While comprehensive high-throughput additions predate 2023, recent perspectives and cumulative studies sustain the view that the SigE-controlled engulfment program integrates multiple PG hydrolases, synthesis enzymes, and envelope complex components, reinforcing the centrality of SigE to efficient engulfment (review synthesis and genetic context) (fimlaid2015diversemechanismsregulate pages 1-3, eichenberger2003thesigmaeregulon pages 2-3, eichenberger2003thesigmaeregulon pages 3-4).</p>
+<p>7) Current applications and real-world implementations<br />
+- Reporter systems and synthetic circuits: SigE-dependent promoters serve as mother-cell/timing-specific reporters during sporulation, enabling compartment-resolved fluorescent readouts and controlled expression in the mother cell. Eichenberger et al. used GFP fusions to visualize localization of SigE-dependent proteins; such promoters are used to engineer mother-cell-specific expression (J Mol Biol, 17 April 2003, https://doi.org/10.1016/S0022-2836(03)00205-5) (eichenberger2003thesigmaeregulon pages 3-4).<br />
+- Engineering sporulation traits: Knowledge of SigE regulon targets in cortex and coat biosynthesis informs manipulation of spore surface properties for industrial or biosurveillance applications; structural information (AlphaFold + fragment crystal structures) assists rational promoter/sigma-interface choices for transcriptional control in synthetic biology (Microorganisms, 20 April 2023, https://doi.org/10.3390/microorganisms11041077; J Mol Biol, 2003, https://doi.org/10.1016/S0022-2836(03)00205-5) (collins2023structuralanalysisof pages 1-2, collins2023structuralanalysisof pages 9-11, eichenberger2003thesigmaeregulon pages 3-4).</p>
+<p>8) Expert opinions and analysis from authoritative sources<br />
+- Authoritative consensus: Foundational genetic and genome-wide transcriptional profiling studies (Losick/Eichenberger lineage) established SigE as the mother-cell master regulator of early sporulation, with a large regulon central to engulfment and the initiation of coat/cortex synthesis. Expert reviews highlight conserved regulatory logic across spore-formers, with organism-specific rewiring of regulon content and signaling details (J Mol Biol, 2003, https://doi.org/10.1016/S0022-2836(03)00205-5; Current Biology, 20 September 2010, https://doi.org/10.1016/j.cub.2010.06.031; Current Opinion in Microbiology, April 2015, https://doi.org/10.1016/j.mib.2015.01.006) (eichenberger2003thesigmaeregulon pages 2-3, hoon2010hierarchicalevolutionof pages 10-11, fimlaid2015diversemechanismsregulate pages 1-3).</p>
+<p>9) Relevant statistics and data from recent and classic studies<br />
+- Regulon scope: ~253 genes in ~157 operons under SigE control; 181 genes in ~121 operons newly assigned in the profiling work (J Mol Biol, 2003, https://doi.org/10.1016/S0022-2836(03)00205-5) (eichenberger2003thesigmaeregulon pages 1-2, eichenberger2003thesigmaeregulon pages 2-3).<br />
+- Localization trends: Majority of characterized SigE-dependent proteins localize to the membrane surrounding the developing spore or spore coat layers, matching functions in envelope remodeling and morphogenesis (J Mol Biol, 2003, https://doi.org/10.1016/S0022-2836(03)00205-5) (eichenberger2003thesigmaeregulon pages 3-4).<br />
+- Activation sequence: σF activity precedes and is required to trigger σE activation via SpoIIR→SpoIIGA; pro-sigmaE is made before septation but processed after asymmetric septation (CMLS, 2002, https://doi.org/10.1007/s00018-002-8431-9; Curr Opin Microbiol, 2015, https://doi.org/10.1016/j.mib.2015.01.006) (phillips2002bacillussubtilissporulation pages 7-9, fimlaid2015diversemechanismsregulate pages 1-3).</p>
+<p>10) Evolutionary and comparative context<br />
+- Conservation of regulatory logic: The sequential cascade of compartment-specific sporulation sigma factors and associated signaling is strongly conserved among Firmicutes, though regulon content can differ (Current Biology, 20 September 2010, https://doi.org/10.1016/j.cub.2010.06.031) (hoon2010hierarchicalevolutionof pages 10-11).</p>
+<p>Concise summary table<br />
+| Aspect | Key details | Representative genes / features | Recent advances (2022–2024) | Primary sources (journal, year, URL) |<br />
+|---|---|---|---|---|<br />
+| Identity verification | sigE (spoIIGB); UniProt P06222; mother-cell sporulation sigma factor (sigma-E / sigma-29) in Bacillus subtilis strain 168 | Gene name: sigE / spoIIGB; product: pro-sigmaE (processed to active sigmaE) | — | Eichenberger et al., J Mol Biol, 2003; https://doi.org/10.1016/S0022-2836(03)00205-5 (eichenberger2003thesigmaeregulon pages 1-2) |<br />
+| Protein family &amp; domains | Member of sigma-70 family (sigma-70-like; conserved region 2/4 HTH motifs); Cro/C1-type HTH noted in domain annotations | RNAP sigma-70 family features (region 2 for -10 recognition; region 4 HTH for -35) | AlphaFold full-length models available aiding interpretation of flexible regions (see structural work) | Fimlaid &amp; Shen, Curr Opin Microbiol, 2015; https://doi.org/10.1016/j.mib.2015.01.006 (fimlaid2015diversemechanismsregulate pages 1-3); Eichenberger et al., 2003 (eichenberger2003thesigmaeregulon pages 2-3) |<br />
+| Activation mechanism | Post-translational activation: pro-sigmaE is proteolytically processed by SpoIIGA; SpoIIR (forespore-produced, σF-dependent) activates SpoIIGA in intermembrane space | SpoIIR → SpoIIGA → pro-σE cleavage → active σE in mother cell | Timing: pro-σE produced before septation but processed after polar septation/engulfment initiation | Phillips &amp; Strauch, CMLS, 2002; https://doi.org/10.1007/s00018-002-8431-9 (phillips2002bacillussubtilissporulation pages 7-9); Fimlaid &amp; Shen (fimlaid2015diversemechanismsregulate pages 1-3) |<br />
+| Temporal / morphological context | σE activity restricted to the mother cell after asymmetric division (stage II → stage III transition); required for successful engulfment and prevention of aberrant second polar septation (disporic phenotype) | Phenotype: sigE mutants arrest after polar septation; defective engulfment | Genetic and cytological evidence from mutant and profiling studies; checkpoints enforce compartmentalization | Eichenberger et al., J Mol Biol, 2003 (eichenberger2003thesigmaeregulon pages 2-3, eichenberger2003thesigmaeregulon pages 3-4) |<br />
+| Cellular compartment &amp; localization | Active in mother-cell cytoplasm and membrane-proximal compartments; many σE-controlled proteins localize to mother-cell membrane and spore coat layers | Localization: membrane/coat-targeted proteins; involvement in envelope remodeling around forespore | GFP-fusion localization data in genome-wide study | Eichenberger et al., 2003 (eichenberger2003thesigmaeregulon pages 3-4) |<br />
+| Regulon size &amp; major functional modules | ~253 σE-controlled genes organized in ~157 operons (genome-wide transcription profiling) | Major modules: (1) engulfment / septal PG remodeling (spoIID, spoIIM, spoIIP), (2) cortex biosynthesis (spoVE, spoVD), (3) coat assembly (cot genes), (4) regulatory proteins (spoIIID) | Quantitative microarray profiling and operon mapping defined the regulon and identified many previously unrecognized targets | Eichenberger et al., J Mol Biol, 2003; https://doi.org/10.1016/S0022-2836(03)00205-5 (eichenberger2003thesigmaeregulon pages 1-2, eichenberger2003thesigmaeregulon pages 2-3) |<br />
+| Representative exemplar genes (functional groups) | Engulfment: spoIID, spoIIM, spoIIP; Cortex/sporulation morphogenesis: spoVE, spoVD, spoVB; Coat assembly: cotE, cotJA/B/C; Regulators: spoIIID, sigK (downstream) | spoIID / spoIIM / spoIIP; spoVE / spoVD; cotE; spoIIID | Many of these were validated by targeted mutagenesis and localization assays in Eichenberger et al. | Eichenberger et al., 2003 (eichenberger2003thesigmaeregulon pages 3-4) |<br />
+| Cross-regulation &amp; anti-sigma factors | σE directs transcription of SpoIIID (DNA-binding mother-cell regulator) and influences later σK/ GerE pathways; anti-sigma factors (e.g., CsfB) help ensure cell-type specificity and timing | Cross-regulators: SpoIIID, GerE; anti-sigma: CsfB (inhibits σE/σG in specific contexts) | Structural/functional studies of CsfB and its discrimination of sigma pairs inform regulatory specificity | Eichenberger et al., 2003 (eichenberger2003thesigmaeregulon pages 2-3), Serrano-type regulatory analyses summarized in reviews (fimlaid2015diversemechanismsregulate pages 1-3); CsfB structural notes in Collins 2023 (collins2023structuralanalysisof pages 1-2) |<br />
+| Structural insights (2022–2024) | Experimental fragment structures + AlphaFold models: X-ray crystal structure reported for SigE fragment (residues ~17–133; PDB deposition reported) and NMR data for region(s); AlphaFold agrees with core but flexible loops remain uncertain | Structural features: 4-helix/HTH core in region 2; alignment to other sigma cores (RpoS/RpoD) | Crystal fragment PDB entry reported (PDB ID cited in structural report), AlphaFold full-length models available; structural data improve mapping of DNA- and anti-sigma-binding surfaces | Collins et al., Microorganisms, 2023; https://doi.org/10.3390/microorganisms11041077 (collins2023structuralanalysisof pages 1-2, collins2023structuralanalysisof pages 9-11, collins2023structuralanalysisof pages 7-9) |<br />
+| Newly identified genes / engulfment modifiers (recent genetic screens) | High-throughput genetic screens continue to expand the list of sporulation/engulfment factors; studies have revealed additional envelope/remodeling factors impacting efficient engulfment | Examples reported in recent screens include factors affecting PG precursor synthesis and hydrolases (reports name MurAB paralogs and YrvJ as contributors to efficient engulfment in targeted screens) | Genetic screens (Tn-seq, synthetic screens) 2016–2022 identified new players; follow-up work refines roles in peptidoglycan synthesis/hydrolysis during engulfment | High-throughput and genetic screens summarized in Meeske et al., PLoS Biology, 2016; https://doi.org/10.1371/journal.pbio.1002341 (hoon2010hierarchicalevolutionof pages 10-11) and genetic-screen literature (hoon2010hierarchicalevolutionof pages 10-11) |<br />
+| Applications &amp; practical uses | σE-dependent promoters used as mother-cell / sporulation-specific reporters and for timed expression in synthetic biology circuits; σE regulon knowledge enables targeted manipulation of spore coat / cortex traits | Experimental uses: reporter fusions (GFP) under σE promoters; genetic modulation of coat/cortex genes for altered spore properties | Structural models (AlphaFold + fragment crystal data) and detailed regulon maps support promoter selection and engineering | Eichenberger et al., 2003 (regulon map) (eichenberger2003thesigmaeregulon pages 1-2); Collins 2023 structural context (collins2023structuralanalysisof pages 1-2) |</p>
+<p><em>Table: Concise, citable summary of key facts about Bacillus subtilis SigE (sigE/spoIIGB; UniProt P06222), covering identity, domains, activation mechanism, compartmental activity, regulon size/functions, cross-regulation, structural advances, new engulfment-related genes, and primary sources for each item.</em></p>
+<p>Full citations with URLs and publication dates<br />
+- Eichenberger P. et al. The sigmaE regulon and the identification of additional sporulation genes in Bacillus subtilis. Journal of Molecular Biology. 17 April 2003. https://doi.org/10.1016/S0022-2836(03)00205-5 (eichenberger2003thesigmaeregulon pages 1-2, eichenberger2003thesigmaeregulon pages 2-3, eichenberger2003thesigmaeregulon pages 3-4)<br />
+- Phillips ZEV, Strauch MA. Bacillus subtilis sporulation and stationary phase gene expression. Cellular and Molecular Life Sciences. March 2002. https://doi.org/10.1007/s00018-002-8431-9 (phillips2002bacillussubtilissporulation pages 7-9)<br />
+- Fimlaid KA, Shen A. Diverse mechanisms regulate sporulation sigma factor activity in the Firmicutes. Current Opinion in Microbiology. April 2015. https://doi.org/10.1016/j.mib.2015.01.006 (fimlaid2015diversemechanismsregulate pages 1-3)<br />
+- de Hoon MJL, Eichenberger P, Vitkup D. Hierarchical evolution of the bacterial sporulation network. Current Biology. 20 September 2010. https://doi.org/10.1016/j.cub.2010.06.031 (hoon2010hierarchicalevolutionof pages 10-11)<br />
+- Collins KM. et al. Structural analysis of Bacillus subtilis sigma factors. Microorganisms. 20 April 2023. https://doi.org/10.3390/microorganisms11041077 (collins2023structuralanalysisof pages 1-2, collins2023structuralanalysisof pages 2-4, collins2023structuralanalysisof pages 9-11, collins2023structuralanalysisof pages 7-9)<br />
+- Doğan BA. 2024 thesis/report excerpts referencing σE-regulated engulfment/cortex and SpoIIID cross-regulation (contextual, not primary peer-reviewed); 2024 (dogan2024…ofbacilysina pages 70-74, dogan2024…ofbacilysinb pages 70-74)</p>
+<p>Notes on scope and limitations<br />
+- We prioritized peer-reviewed, authoritative sources for core functional annotation and supplemented with a 2023 structural study offering new SigE structural details. Some very recent genetic additions to engulfment pathways are best captured in cumulative reviews and high-throughput screens; when specific 2022–2024 primary discoveries were not available in accessible context, we refrained from over-claiming and focused on validated paradigms (fimlaid2015diversemechanismsregulate pages 1-3, eichenberger2003thesigmaeregulon pages 2-3, eichenberger2003thesigmaeregulon pages 3-4).</p>
+<p>References</p>
+<ol>
+<li>
+<p>(eichenberger2003thesigmaeregulon pages 1-2): Patrick Eichenberger, Shane T. Jensen, Erin M. Conlon, Christiaan van Ooij, Jessica Silvaggi, José-Eduardo González-Pastor, Masaya Fujita, Sigal Ben-Yehuda, Patrick Stragier, Jun S. Liu, and Richard Losick. The sigmae regulon and the identification of additional sporulation genes in bacillus subtilis. Journal of molecular biology, 327 5:945-72, Apr 2003. URL: https://doi.org/10.1016/s0022-2836(03)00205-5, doi:10.1016/s0022-2836(03)00205-5. This article has 308 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(phillips2002bacillussubtilissporulation pages 7-9): Z. E. V. Phillips and M. A. Strauch. Bacillus subtilis sporulation and stationary phase gene expression. Cellular and Molecular Life Sciences CMLS, 59:392-402, Mar 2002. URL: https://doi.org/10.1007/s00018-002-8431-9, doi:10.1007/s00018-002-8431-9. This article has 275 citations.</p>
+</li>
+<li>
+<p>(fimlaid2015diversemechanismsregulate pages 1-3): Kelly A Fimlaid and Aimee Shen. Diverse mechanisms regulate sporulation sigma factor activity in the firmicutes. Current opinion in microbiology, 24:88-95, Apr 2015. URL: https://doi.org/10.1016/j.mib.2015.01.006, doi:10.1016/j.mib.2015.01.006. This article has 161 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(collins2023structuralanalysisof pages 1-2): Katherine M. Collins, Nicola J. Evans, James H. Torpey, Jonathon M. Harris, Bethany A. Haynes, Amy H. Camp, and Rivka L. Isaacson. Structural analysis of bacillus subtilis sigma factors. Microorganisms, 11:1077, Apr 2023. URL: https://doi.org/10.3390/microorganisms11041077, doi:10.3390/microorganisms11041077. This article has 7 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(collins2023structuralanalysisof pages 7-9): Katherine M. Collins, Nicola J. Evans, James H. Torpey, Jonathon M. Harris, Bethany A. Haynes, Amy H. Camp, and Rivka L. Isaacson. Structural analysis of bacillus subtilis sigma factors. Microorganisms, 11:1077, Apr 2023. URL: https://doi.org/10.3390/microorganisms11041077, doi:10.3390/microorganisms11041077. This article has 7 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(eichenberger2003thesigmaeregulon pages 2-3): Patrick Eichenberger, Shane T. Jensen, Erin M. Conlon, Christiaan van Ooij, Jessica Silvaggi, José-Eduardo González-Pastor, Masaya Fujita, Sigal Ben-Yehuda, Patrick Stragier, Jun S. Liu, and Richard Losick. The sigmae regulon and the identification of additional sporulation genes in bacillus subtilis. Journal of molecular biology, 327 5:945-72, Apr 2003. URL: https://doi.org/10.1016/s0022-2836(03)00205-5, doi:10.1016/s0022-2836(03)00205-5. This article has 308 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(eichenberger2003thesigmaeregulon pages 3-4): Patrick Eichenberger, Shane T. Jensen, Erin M. Conlon, Christiaan van Ooij, Jessica Silvaggi, José-Eduardo González-Pastor, Masaya Fujita, Sigal Ben-Yehuda, Patrick Stragier, Jun S. Liu, and Richard Losick. The sigmae regulon and the identification of additional sporulation genes in bacillus subtilis. Journal of molecular biology, 327 5:945-72, Apr 2003. URL: https://doi.org/10.1016/s0022-2836(03)00205-5, doi:10.1016/s0022-2836(03)00205-5. This article has 308 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(collins2023structuralanalysisof pages 9-11): Katherine M. Collins, Nicola J. Evans, James H. Torpey, Jonathon M. Harris, Bethany A. Haynes, Amy H. Camp, and Rivka L. Isaacson. Structural analysis of bacillus subtilis sigma factors. Microorganisms, 11:1077, Apr 2023. URL: https://doi.org/10.3390/microorganisms11041077, doi:10.3390/microorganisms11041077. This article has 7 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(hoon2010hierarchicalevolutionof pages 10-11): Michiel J.L. de Hoon, Patrick Eichenberger, and Dennis Vitkup. Hierarchical evolution of the bacterial sporulation network. Current Biology, 20:R735-R745, Sep 2010. URL: https://doi.org/10.1016/j.cub.2010.06.031, doi:10.1016/j.cub.2010.06.031. This article has 301 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(collins2023structuralanalysisof pages 2-4): Katherine M. Collins, Nicola J. Evans, James H. Torpey, Jonathon M. Harris, Bethany A. Haynes, Amy H. Camp, and Rivka L. Isaacson. Structural analysis of bacillus subtilis sigma factors. Microorganisms, 11:1077, Apr 2023. URL: https://doi.org/10.3390/microorganisms11041077, doi:10.3390/microorganisms11041077. This article has 7 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(dogan2024…ofbacilysina pages 70-74): BA Doğan. … of bacilysin production and rescue of sporulation defects in a bacilysin negative strain by the sporulation transcription factors gerr and spovt in bacillus subtilis. Unknown journal, 2024.</p>
+</li>
+<li>
+<p>(dogan2024…ofbacilysinb pages 70-74): BA Doğan. … of bacilysin production and rescue of sporulation defects in a bacilysin negative strain by the sporulation transcription factors gerr and spovt in bacillus subtilis. Unknown journal, 2024.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>eichenberger2003thesigmaeregulon pages 2-3</li>
+<li>eichenberger2003thesigmaeregulon pages 3-4</li>
+<li>hoon2010hierarchicalevolutionof pages 10-11</li>
+<li>eichenberger2003thesigmaeregulon pages 1-2</li>
+<li>fimlaid2015diversemechanismsregulate pages 1-3</li>
+<li>phillips2002bacillussubtilissporulation pages 7-9</li>
+<li>collins2023structuralanalysisof pages 1-2</li>
+<li>collins2023structuralanalysisof pages 7-9</li>
+<li>collins2023structuralanalysisof pages 9-11</li>
+<li>collins2023structuralanalysisof pages 2-4</li>
+<li>https://doi.org/10.1016/S0022-2836(03</li>
+<li>https://doi.org/10.1007/s00018-002-8431-9</li>
+<li>https://doi.org/10.3390/microorganisms11041077;</li>
+<li>https://doi.org/10.1016/j.mib.2015.01.006</li>
+<li>https://doi.org/10.1007/s00018-002-8431-9;</li>
+<li>https://doi.org/10.3390/microorganisms11041077</li>
+<li>https://doi.org/10.1016/j.cub.2010.06.031;</li>
+<li>https://doi.org/10.1016/j.cub.2010.06.031</li>
+<li>https://doi.org/10.1371/journal.pbio.1002341</li>
+<li>https://doi.org/10.1016/s0022-2836(03</li>
+<li>https://doi.org/10.1007/s00018-002-8431-9,</li>
+<li>https://doi.org/10.1016/j.mib.2015.01.006,</li>
+<li>https://doi.org/10.3390/microorganisms11041077,</li>
+<li>https://doi.org/10.1016/j.cub.2010.06.031,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P06222
+gene_symbol: sigE
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:224308
+  label: Bacillus subtilis (strain 168)
+description: &gt;-
+  SigE (also known as SpoIIGB) encodes the RNA polymerase sigma-E factor, a member of the sigma-70 family
+  of alternative sigma factors that is specifically activated in the mother cell compartment during Bacillus
+  subtilis sporulation. SigE is synthesized as an inactive precursor (P31, 239 amino acids) and is
+  proteolytically cleaved at the N-terminus by the membrane-associated protease SpoIIGA to yield the
+  active sigma-29 factor (residues 30-239). This proteolytic activation mechanism differs from the
+  partner-switching mechanism used to activate the forespore-specific sigma factor SigF. The protein
+  contains conserved sigma-70 regions including a helix-turn-helix DNA-binding motif (residues 206-225)
+  that recognizes specific promoter sequences. As with all sigma factors, SigE functions as an initiation
+  factor that promotes the attachment of RNA polymerase to specific initiation sites and is then released
+  during elongation. SigE directs transcription of mother cell-specific sporulation genes and is part of
+  the crisscross signaling network between the forespore and mother cell compartments that orchestrates
+  spore development. The sequential activation of compartment-specific sigma factors (SigF in forespore,
+  SigE in mother cell, followed by SigG and SigK) coordinates the complex developmental program of
+  sporulation.
+existing_annotations:
+- term:
+    id: GO:0003677
+    label: DNA binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      SigE binds DNA as part of the RNAP holoenzyme to recognize promoter sequences. SigE contains a
+      characterized helix-turn-helix DNA-binding motif (residues 206-225 per UniProt) that mediates
+      sequence-specific recognition of SigE-dependent promoters in the mother cell compartment.
+    action: ACCEPT
+    reason: &gt;-
+      This IEA annotation is appropriate for SigE. Sigma factors bind DNA as part of the holoenzyme
+      to recognize and position RNA polymerase at specific promoters. UniProt documents an H-T-H
+      DNA-binding motif in residues 206-225. While more specific terms exist (e.g., transcription
+      cis-regulatory region binding), this general DNA binding annotation is not incorrect and can
+      be retained.
+    supported_by:
+      - reference_id: UniProt:P06222
+        supporting_text: &#34;DNA_BIND 206..225 /note=\&#34;H-T-H motif\&#34;&#34;
+      - reference_id: UniProt:P06222
+        supporting_text: &#34;InterPro; IPR001387; Cro/C1-type_HTH&#34;
+
+- term:
+    id: GO:0003700
+    label: DNA-binding transcription factor activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      This term is intended for sequence-specific DNA-binding transcription factors that regulate
+      transcription by binding to cis-regulatory elements. While sigma factors do bind DNA and regulate
+      transcription, they function mechanistically differently from classical transcription factors.
+      Sigma factors confer promoter recognition to the RNA polymerase core enzyme rather than acting
+      as independent regulatory factors that modulate transcription of genes they are not directly
+      transcribing.
+    action: MODIFY
+    reason: &gt;-
+      The term GO:0003700 is designed for classical transcription factors that independently bind DNA
+      regulatory elements and activate or repress transcription. Sigma factors have a distinct mechanism -
+      they are subunits of the RNAP holoenzyme that confer promoter specificity and enable transcription
+      initiation. The more appropriate and specific term is GO:0016987 (sigma factor activity), which
+      is already annotated. This IEA annotation from InterPro mapping conflates sigma factors with
+      classical transcription factors.
+    proposed_replacement_terms:
+      - id: GO:0016987
+        label: sigma factor activity
+    supported_by:
+      - reference_id: UniProt:P06222
+        supporting_text: &#34;Sigma factors are initiation factors that promote the attachment of RNA polymerase to specific initiation sites and are then released&#34;
+
+- term:
+    id: GO:0006351
+    label: DNA-templated transcription
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;-
+      SigE participates in DNA-templated transcription as the sigma subunit of the RNA polymerase
+      holoenzyme. As a sigma factor, it enables transcription initiation at SigE-dependent promoters
+      during sporulation, specifically in the mother cell compartment.
+    action: ACCEPT
+    reason: &gt;-
+      This biological process annotation correctly captures SigE&#39;s involvement in transcription. As
+      a sigma factor, SigE is directly involved in the transcription process by conferring promoter
+      specificity to RNAP and enabling transcription initiation of mother cell-specific genes.
+    supported_by:
+      - reference_id: UniProt:P06222
+        supporting_text: &#34;Sigma factors are initiation factors that promote the attachment of RNA polymerase to specific initiation sites&#34;
+      - reference_id: UniProt:P06222
+        supporting_text: &#34;This sigma factor is responsible for the expression of sporulation specific genes&#34;
+
+- term:
+    id: GO:0006352
+    label: DNA-templated transcription initiation
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      SigE is specifically involved in transcription initiation - sigma factors function at the
+      initiation step to position RNA polymerase at promoters and enable formation of the open
+      complex. After initiation, sigma factors are typically released from the elongating polymerase.
+    action: ACCEPT
+    reason: &gt;-
+      This annotation is highly appropriate for SigE. Sigma factors function specifically at the
+      transcription initiation step - they enable promoter recognition and open complex formation
+      but are released during the transition to elongation. UniProt explicitly states that sigma
+      factors are &#34;initiation factors&#34; that are &#34;then released&#34; after promoting attachment to
+      initiation sites. This term accurately captures the specific stage of transcription where
+      sigma factors act.
+    supported_by:
+      - reference_id: UniProt:P06222
+        supporting_text: &#34;Sigma factors are initiation factors that promote the attachment of RNA polymerase to specific initiation sites and are then released&#34;
+
+- term:
+    id: GO:0006355
+    label: regulation of DNA-templated transcription
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      SigE regulates transcription by conferring promoter specificity to RNA polymerase, thereby
+      activating a specific set of mother cell genes during sporulation. SigE directs expression
+      of numerous sporulation-specific genes in the mother cell compartment.
+    action: ACCEPT
+    reason: &gt;-
+      As an alternative sigma factor, SigE fundamentally regulates transcription by determining
+      which promoters the RNAP holoenzyme can recognize. SigE-dependent transcription activates
+      the mother cell developmental program. This is a core function of sigma factors and is
+      well-documented for SigE.
+    supported_by:
+      - reference_id: UniProt:P06222
+        supporting_text: &#34;This sigma factor is responsible for the expression of sporulation specific genes&#34;
+
+- term:
+    id: GO:0016987
+    label: sigma factor activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      SigE is a well-characterized sigma factor of the sigma-70 family. It contains conserved sigma-70
+      regions (regions 2, 3, and 4) that mediate core RNAP binding and promoter recognition. UniProt
+      explicitly classifies SigE as belonging to the sigma-70 factor family and describes its function
+      as an initiation factor that promotes RNAP attachment to specific initiation sites.
+    action: ACCEPT
+    reason: &gt;-
+      This is the primary molecular function of SigE. The sigma factor activity annotation accurately
+      captures SigE&#39;s role in conferring promoter specificity to RNA polymerase. This is supported by
+      UniProt family classification, domain analysis showing conserved sigma-70 regions, and the
+      functional description as an initiation factor.
+    supported_by:
+      - reference_id: UniProt:P06222
+        supporting_text: &#34;Sigma factors are initiation factors that promote the attachment of RNA polymerase to specific initiation sites and are then released&#34;
+      - reference_id: UniProt:P06222
+        supporting_text: &#34;Belongs to the sigma-70 factor family&#34;
+
+- term:
+    id: GO:0030435
+    label: sporulation resulting in formation of a cellular spore
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;-
+      SigE plays an essential role in sporulation. It is the mother cell-specific sigma factor
+      activated during sporulation and initiates the mother cell transcriptional program. SigE
+      activation follows SigF activation in the forespore, and together these compartment-specific
+      sigma factors orchestrate the complex developmental program of spore formation.
+    action: ACCEPT
+    reason: &gt;-
+      This biological process annotation appropriately captures SigE&#39;s essential role in sporulation.
+      SigE is absolutely required for spore formation - it directs the mother cell developmental
+      program that ultimately leads to engulfment of the forespore and completion of spore
+      morphogenesis. UniProt specifically describes SigE as responsible for &#34;the expression of
+      sporulation specific genes.&#34;
+    supported_by:
+      - reference_id: UniProt:P06222
+        supporting_text: &#34;This sigma factor is responsible for the expression of sporulation specific genes&#34;
+      - reference_id: UniProt:P06222
+        supporting_text: &#34;Stage II sporulation protein GB&#34;
+
+- term:
+    id: GO:2000142
+    label: regulation of DNA-templated transcription initiation
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000108
+  review:
+    summary: &gt;-
+      SigE specifically regulates transcription at the initiation step. As a sigma factor, it enables
+      recognition of specific promoters and formation of the initiation complex. This term is more
+      specific than the general regulation of transcription term and accurately reflects sigma factor
+      function at the initiation stage.
+    action: ACCEPT
+    reason: &gt;-
+      This annotation correctly captures that sigma factors regulate transcription specifically at
+      the initiation step. SigE enables RNAP to recognize and initiate transcription from SigE-dependent
+      promoters in the mother cell. This is a precise characterization of sigma factor function.
+    supported_by:
+      - reference_id: UniProt:P06222
+        supporting_text: &#34;Sigma factors are initiation factors that promote the attachment of RNA polymerase to specific initiation sites&#34;
+
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+- id: GO_REF:0000108
+  title: Automatic assignment of GO terms using logical inference, based on inter-ontology links
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: UniProt:P06222
+  title: UniProt entry for RNA polymerase sigma-E factor (sigE/spoIIGB)
+  findings:
+    - statement: SigE is synthesized as a precursor P31 that is proteolytically cleaved by SpoIIGA to yield the active sigma-29 factor
+      supporting_text: &#34;Proteolytically cleaved in the N-terminus by SpoIIGA to yield the active peptide&#34;
+    - statement: SigE contains a helix-turn-helix DNA-binding motif at residues 206-225
+      supporting_text: &#34;DNA_BIND 206..225 /note=\&#34;H-T-H motif\&#34;&#34;
+    - statement: SigE belongs to the sigma-70 factor family
+      supporting_text: &#34;Belongs to the sigma-70 factor family&#34;
+    - statement: Sigma factors are initiation factors that promote attachment of RNA polymerase to specific initiation sites and are then released
+      supporting_text: &#34;Sigma factors are initiation factors that promote the attachment of RNA polymerase to specific initiation sites and are then released&#34;
+- id: PMID:6438529
+  title: &#34;A developmental gene product of Bacillus subtilis homologous to the sigma factor of Escherichia coli&#34;
+  full_text_unavailable: true
+  findings:
+    - statement: Original identification of sigE (spoIIGB) as a sigma factor homolog
+      supporting_text: &#34;This gene encodes a polypeptide with a predicted relative molecular mass of 27,652 which contains a 65-amino acid region highly homologous to an internal part of the Escherichia coli sigma factor&#34;
+- id: PMID:3104904
+  title: &#34;Sporulation-specific sigma factor sigma 29 of Bacillus subtilis is synthesized from a precursor protein, P31&#34;
+  full_text_unavailable: true
+  findings:
+    - statement: Demonstrated that the mature sigma-29 factor is derived by proteolytic cleavage of a P31 precursor
+      supporting_text: &#34;sigma 29, is synthesized as an inactive precursor (P31) and that its activation occurs by a developmentally regulated cleavage of 29 amino acids from the P31 amino terminus&#34;
+
+core_functions:
+  - description: &gt;-
+      SigE is the primary mother cell-specific sigma factor that confers promoter recognition specificity
+      to RNA polymerase, enabling transcription of mother cell genes during sporulation. As a member of
+      the sigma-70 family, SigE binds to the RNAP core and directs the holoenzyme to SigE-dependent
+      promoters characterized by specific -10 and -35 elements. SigE is activated by proteolytic
+      cleavage of the P31 precursor by the membrane protease SpoIIGA, in contrast to the partner-switching
+      mechanism used for SigF activation.
+    molecular_function:
+      id: GO:0016987
+      label: sigma factor activity
+    directly_involved_in:
+      - id: GO:0006352
+        label: DNA-templated transcription initiation
+      - id: GO:0030435
+        label: sporulation resulting in formation of a cellular spore
+    supported_by:
+      - reference_id: UniProt:P06222
+        supporting_text: &#34;Sigma factors are initiation factors that promote the attachment of RNA polymerase to specific initiation sites and are then released&#34;
+      - reference_id: UniProt:P06222
+        supporting_text: &#34;Proteolytically cleaved in the N-terminus by SpoIIGA to yield the active peptide&#34;
+
+suggested_questions:
+  - question: What is the complete SigE regulon and how many mother cell-specific genes does it directly control?
+  - question: How does SigE promoter recognition specificity differ from that of the housekeeping sigma factor SigA?
+  - question: What is the precise signal that triggers SpoIIGA-mediated proteolytic activation of SigE?
+
+suggested_experiments:
+  - description: &gt;-
+      ChIP-seq analysis of SigE binding during sporulation would enable genome-wide identification of
+      SigE binding sites, comprehensively defining the SigE regulon and revealing any previously
+      uncharacterized target promoters in the mother cell.
+    hypothesis: SigE binds to specific promoter sequences genome-wide to activate a defined mother cell transcriptional program
+    experiment_type: ChIP-seq
+  - description: &gt;-
+      Structure-function analysis of the SpoIIGA protease and the SigE propeptide cleavage site would
+      illuminate the molecular mechanism of compartment-specific sigma factor activation by proteolysis.
+    hypothesis: SpoIIGA recognizes a specific sequence motif in the SigE propeptide for proteolytic cleavage
+    experiment_type: Biochemical assay
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
