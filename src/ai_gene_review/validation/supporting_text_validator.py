@@ -48,6 +48,11 @@ class SupportingTextValidationReport:
     valid_annotation_supporting_texts: int = 0
     invalid_annotation_supporting_texts: int = 0
 
+    # Track annotations where we COULD validate (PMID with cached full text)
+    # If a PMID has full text available, we expect supporting_text to be present
+    annotations_with_validatable_refs: int = 0
+    validatable_annotations_with_supporting_text: int = 0
+
     @property
     def findings_coverage_rate(self) -> float:
         """Percentage of findings that have supporting_text."""
@@ -61,6 +66,17 @@ class SupportingTextValidationReport:
         if self.total_annotations == 0:
             return 0.0
         return (self.annotations_with_supporting_text / self.total_annotations) * 100
+
+    @property
+    def validatable_annotations_coverage_rate(self) -> float:
+        """Percentage of validatable annotations (PMID with full text) that have supporting_text.
+
+        This is a stricter metric: if a PMID has cached full text, we expect
+        supporting_text to be provided since we can verify quotes.
+        """
+        if self.annotations_with_validatable_refs == 0:
+            return 0.0
+        return (self.validatable_annotations_with_supporting_text / self.annotations_with_validatable_refs) * 100
 
     @property
     def findings_accuracy_rate(self) -> float:
@@ -1099,10 +1115,28 @@ class SupportingTextValidator:
             if not isinstance(annotation, dict):
                 continue
 
+            # Check if this annotation has a PMID reference with available full text
+            # If so, we expect supporting_text to be present
+            original_ref_id = annotation.get("original_reference_id", "")
+            pmid = self.extract_pmid_from_reference(original_ref_id)
+            has_available_fulltext = False
+            if pmid:
+                publication_content = self.load_publication(pmid)
+                has_available_fulltext = publication_content is not None
+
+            # Track validatable annotation (PMID with cached full text)
+            if has_available_fulltext:
+                report.annotations_with_validatable_refs += 1
+
             # Check the supported_by field
             supported_by_results = self.validate_annotation_supported_by(
                 annotation, i, data
             )
+
+            # Track if this validatable annotation has supporting_text
+            if has_available_fulltext and supported_by_results:
+                report.validatable_annotations_with_supporting_text += 1
+
             for sb_result in supported_by_results:
                 report.annotations_with_supporting_text += 1
                 report.results.append(sb_result)

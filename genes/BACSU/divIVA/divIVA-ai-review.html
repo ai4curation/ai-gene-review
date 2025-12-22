@@ -1,0 +1,2854 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>divIVA - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>divIVA</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P71021" target="_blank" class="term-link">
+                        P71021
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Bacillus subtilis (strain 168)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "divIVA";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P71021" data-a="DESCRIPTION: DivIVA is a conserved membrane-associated scaffold..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>DivIVA is a conserved membrane-associated scaffold protein in Gram-positive bacteria that functions as a polar landmark by sensing negative membrane curvature at cell poles and division septa. The protein forms oligomeric structures through its N-terminal membrane-binding domain (which inserts hydrophobic and positively charged residues into curved membranes) and C-terminal coiled-coil regions that mediate tetramerization and higher-order assembly. During vegetative growth, DivIVA localizes to both sides of the division septum and cell poles, where it recruits MinJ, which in turn positions MinCD to prevent aberrant FtsZ assembly at previous division sites, thereby ensuring proper septum site selection. During sporulation, DivIVA accumulates asymmetrically at the polar septum with forespore bias, associates with SpoIIE phosphatase to promote compartment-specific sigma-F activation, and interacts with Spo0J for chromosome anchoring at the cell pole. DivIVA also recruits ComN to cell poles, facilitating polar localization of comE mRNA during competence development. Loss of DivIVA results in misplacement of division septa leading to minicell formation, while overexpression is lethal.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009273" target="_blank" class="term-link">
+                                    GO:0009273
+                                </a>
+                            </span>
+                            <span class="term-label">peptidoglycan-based cell wall biogenesis</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P71021" data-a="GO:0009273" data-r="GO_REF:0000033" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DivIVA is primarily a scaffold protein involved in spatial organization of cell division rather than directly participating in peptidoglycan biosynthesis. While DivIVA localizes to sites of cell wall synthesis (septa and poles), its role is to position other proteins (MinCD via MinJ) that regulate where division occurs, not to directly contribute to peptidoglycan synthesis. In Corynebacterium glutamicum, DivIVA is required for polar peptidoglycan synthesis, but B. subtilis DivIVA localizes to septum rather than directing polar growth when expressed in C. glutamicum (PMID:18296522). This IBA annotation likely reflects functional conservation across Gram-positive bacteria where some DivIVA homologs do directly regulate cell wall synthesis, but in B. subtilis the connection is more indirect.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> DivIVA in B. subtilis functions as a spatial organizer for septum site selection through the MinCD system, not as a direct participant in peptidoglycan biosynthesis. The protein&#39;s role is to sense membrane curvature and recruit MinJ/MinCD to prevent inappropriate FtsZ assembly. While this ultimately affects where peptidoglycan synthesis occurs during division, DivIVA itself does not catalyze or directly regulate peptidoglycan synthesis enzymes. This term is too broad and misrepresents the mechanistic role of B. subtilis DivIVA.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18296522" target="_blank" class="term-link">
+                                        PMID:18296522
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">DivIVA proteins from Bacillus subtilis or Streptococcus pneumoniae, which localized at the septum of C. glutamicum</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000917" target="_blank" class="term-link">
+                                    GO:0000917
+                                </a>
+                            </span>
+                            <span class="term-label">division septum assembly</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P71021" data-a="GO:0000917" data-r="GO_REF:0000043" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DivIVA plays a critical role in regulating where division septa form by recruiting the MinJ/MinCD system to previous division sites and cell poles, thereby preventing inappropriate FtsZ assembly. This represents a core function of DivIVA in vegetative B. subtilis cells. Loss of DivIVA results in misplacement of septa and minicell formation. However, the term &#34;division septum assembly&#34; may be slightly broader than DivIVA&#39;s actual role, which is more specifically in septum site selection rather than the assembly process itself.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> DivIVA does not directly assemble the division septum but rather controls where septum assembly can occur by positioning the MinCD inhibitor system. The more precise term would be GO:0000918 (division septum site selection), which accurately captures DivIVA&#39;s role in marking sites where the septum can or cannot form by recruiting MinJ and MinCD.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000918" target="_blank" class="term-link">
+                                    division septum site selection
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:BACSU/divIVA/divIVA-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">DivIVA localizes to both sides of midcell septum and to poles during vegetative growth and, together with MinJ, recruits MinCD to inhibit reassembly of the divisome at old sites</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P71021" data-a="GO:0005737" data-r="GO_REF:0000044" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DivIVA is annotated to cytoplasm based on UniProt subcellular location mapping. However, DivIVA is specifically a membrane-associated protein that localizes to regions of negative membrane curvature at cell poles and division septa. The protein&#39;s N-terminal domain binds directly to the membrane through hydrophobic and positively charged residues. While technically in the cytoplasm, this term is too general and fails to capture DivIVA&#39;s specific localization to cell poles and division sites.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The cytoplasm annotation is technically correct but too general. DivIVA specifically localizes to negatively curved membrane regions at cell poles and division septa. More specific CC terms would better capture DivIVA&#39;s localization pattern: GO:0060187 (cell pole) and GO:0000935 (division septum).
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0060187" target="_blank" class="term-link">
+                                    cell pole
+                                </a>
+                            </span>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000935" target="_blank" class="term-link">
+                                    division septum
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20502438" target="_blank" class="term-link">
+                                        PMID:20502438
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">DivIVA is a conserved protein in Gram-positive bacteria that localizes at the poles and division sites, presumably through direct sensing of membrane curvature</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030435" target="_blank" class="term-link">
+                                    GO:0030435
+                                </a>
+                            </span>
+                            <span class="term-label">sporulation resulting in formation of a cellular spore</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P71021" data-a="GO:0030435" data-r="GO_REF:0000043" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DivIVA plays an important role during B. subtilis sporulation, where it accumulates asymmetrically at the polar septum with forespore bias and associates with SpoIIE phosphatase to contribute to compartment-specific sigma-F activation. DivIVA also interacts with Spo0J for chromosome anchoring at the cell pole during sporulation. Mutation of DivIVA causes sporulation defects. However, DivIVA is not a sporulation- specific protein - it functions during both vegetative growth and sporulation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While DivIVA plays an important role in sporulation by positioning SpoIIE and anchoring chromosomes, sporulation is not its core function. DivIVA functions primarily as a polar landmark protein that senses membrane curvature, and its sporulation role is a specialized application of this general function. The annotation should be retained but marked as non-core.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:BACSU/divIVA/divIVA-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">During sporulation, DivIVA accumulates at the polar septum and becomes biased toward the forespore side as the septum matures. DivIVA associates with the phosphatase SpoIIE, contributing to forespore-specific activation of sigma-F and thus compartment-specific gene expression that initiates the sporulation program</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051301" target="_blank" class="term-link">
+                                    GO:0051301
+                                </a>
+                            </span>
+                            <span class="term-label">cell division</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P71021" data-a="GO:0051301" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DivIVA is essential for proper cell division in B. subtilis, where it controls the spatial placement of division septa by recruiting MinJ/MinCD to cell poles and previous division sites. Loss of DivIVA leads to aberrant septum placement and minicell formation. This annotation accurately captures DivIVA&#39;s involvement in cell division, though a more specific term like GO:0000918 (division septum site selection) would better describe its precise role.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Cell division is a core function of DivIVA. The protein is essential for proper spatial control of cell division through the Min system. While GO:0000918 would be more specific, GO:0051301 is an appropriate parent term that accurately reflects DivIVA&#39;s biological role. This broad annotation should be retained alongside more specific annotations.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20502438" target="_blank" class="term-link">
+                                        PMID:20502438
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">DivIVA deletion causes filamentous growth in Bacillus subtilis</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:BACSU/divIVA/divIVA-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">DivIVA localizes to both sides of midcell septum and to poles during vegetative growth and, together with MinJ, recruits MinCD to inhibit reassembly of the divisome at old sites</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22582279" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22582279
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    DivIVA-mediated polar localization of ComN, a posttranscript...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P71021" data-a="GO:0005515" data-r="PMID:22582279" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is based on the interaction between DivIVA and ComN demonstrated by yeast two-hybrid and GST pulldown experiments in PMID:22582279. DivIVA directly binds ComN and is required for its polar localization. However, GO:0005515 (protein binding) is too generic and uninformative - a more specific term describing the scaffold or adapter function would be preferable.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While DivIVA does bind ComN, the generic term &#34;protein binding&#34; fails to capture the biological significance of this interaction. DivIVA functions as a scaffold protein that recruits multiple partners to cell poles. GO:0097110 (scaffold protein binding) would be more appropriate, or the annotation could be modified to reflect DivIVA&#39;s role as a scaffold that recruits other proteins.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0097110" target="_blank" class="term-link">
+                                    scaffold protein binding
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22582279" target="_blank" class="term-link">
+                                        PMID:22582279
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Yeast two-hybrid and glutathione S-transferase pulldown experiments showed that ComN interacts directly with DivIVA</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042802" target="_blank" class="term-link">
+                                    GO:0042802
+                                </a>
+                            </span>
+                            <span class="term-label">identical protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18296522" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18296522
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    DivIVA is required for polar growth in the MreB-lacking rod-...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P71021" data-a="GO:0042802" data-r="PMID:18296522" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation reflects DivIVA&#39;s ability to form homo-oligomers, a well-established property essential for its scaffold function. The PMID:18296522 study in C. glutamicum demonstrates DivIVA self-interaction, and this property is conserved in B. subtilis DivIVA as shown by crystal structure studies.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Identical protein binding accurately describes DivIVA&#39;s homo-oligomerization, which is essential for its function as a membrane curvature-sensing scaffold. The protein forms tetramers and higher-order oligomers through its C-terminal coiled-coil domain. This is a well-characterized molecular function of DivIVA.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18296522" target="_blank" class="term-link">
+                                        PMID:18296522
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">DivIVA from Streptomyces or Mycobacterium localized to the cell poles of DivIVA(Cg)-depleted C. glutamicum and restored polar peptidoglycan synthesis</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20502438" target="_blank" class="term-link">
+                                        PMID:20502438
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">A low-resolution crystal structure of the C-terminal (Ct) domain displays a curved tetramer made from two parallel coiled-coils</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042802" target="_blank" class="term-link">
+                                    GO:0042802
+                                </a>
+                            </span>
+                            <span class="term-label">identical protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18363795" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18363795
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Control of the cell elongation-division cycle by shuttling o...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P71021" data-a="GO:0042802" data-r="PMID:18363795" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation reflects DivIVA self-interaction demonstrated in the context of PBP1 shuttling studies. DivIVA homo-oligomerization is essential for its scaffold function and is consistently demonstrated across multiple studies.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a duplicate annotation for identical protein binding with different evidence. The homo-oligomerization of DivIVA is well-established and represents a core molecular function. Multiple independent studies supporting this annotation strengthens the evidence base.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20502438" target="_blank" class="term-link">
+                                        PMID:20502438
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">A low-resolution crystal structure of the C-terminal (Ct) domain displays a curved tetramer made from two parallel coiled-coils</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042802" target="_blank" class="term-link">
+                                    GO:0042802
+                                </a>
+                            </span>
+                            <span class="term-label">identical protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20502438" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20502438
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Features critical for membrane binding revealed by DivIVA cr...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P71021" data-a="GO:0042802" data-r="PMID:20502438" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is strongly supported by the crystal structure of DivIVA reported in PMID:20502438, which definitively demonstrates that DivIVA forms homo-oligomers through its coiled-coil domains. The N-terminal domain forms parallel coiled-coils and the C-terminal domain forms curved tetramers.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The crystal structure provides definitive evidence for DivIVA homo-oligomerization. The protein forms dimers through its N-terminal domain and tetramers through its C-terminal coiled-coil region. This is a core molecular function essential for DivIVA&#39;s role as a membrane-associated scaffold.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20502438" target="_blank" class="term-link">
+                                        PMID:20502438
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We have determined the crystal structure of the N-terminal (Nt) domain of DivIVA, and show that it forms a parallel coiled-coil</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042802" target="_blank" class="term-link">
+                                    GO:0042802
+                                </a>
+                            </span>
+                            <span class="term-label">identical protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21630458" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21630458
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    An expanded protein-protein interaction network in Bacillus ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P71021" data-a="GO:0042802" data-r="PMID:21630458" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation comes from a large-scale protein-protein interaction study in B. subtilis using yeast two-hybrid. DivIVA was identified as part of a group of highly connected hub proteins. The self-interaction of DivIVA is consistent with its known oligomeric nature.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While this annotation comes from a high-throughput study, it is consistent with the well-established homo-oligomerization of DivIVA demonstrated by crystal structure and other biochemical studies. Multiple lines of evidence support DivIVA self-interaction as a core molecular function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21630458" target="_blank" class="term-link">
+                                        PMID:21630458
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We have generated a protein-protein interaction network in Bacillus subtilis focused on several essential cellular processes such as cell division</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0140090" target="_blank" class="term-link">
+                                    GO:0140090
+                                </a>
+                            </span>
+                            <span class="term-label">membrane curvature sensor activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20502438" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20502438
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Features critical for membrane binding revealed by DivIVA cr...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="P71021" data-a="GO:0140090" data-r="PMID:20502438" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DivIVA preferentially localizes to regions of negative membrane curvature at cell poles and division septa. Crystal structure analysis reveals an N-terminal domain with hydrophobic and positively charged residues that insert into curved membranes. This curvature sensing is the fundamental mechanism underlying DivIVA&#39;s localization and function as a polar landmark.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Membrane curvature sensor activity is the core molecular function of DivIVA that underlies all its biological roles. The crystal structure (PMID:20502438) provides structural evidence for how DivIVA binds to curved membranes, and multiple studies confirm its preferential localization to negatively curved membrane regions at poles and septa. This annotation is not currently in the GOA annotations but represents DivIVA&#39;s most fundamental molecular activity.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20502438" target="_blank" class="term-link">
+                                        PMID:20502438
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">DivIVA is a conserved protein in Gram-positive bacteria that localizes at the poles and division sites, presumably through direct sensing of membrane curvature</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:BACSU/divIVA/divIVA-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">DivIVA preferentially targets regions of high negative membrane curvature, including poles and septal membranes</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>DivIVA preferentially localizes to regions of negative membrane curvature at cell poles and division septa. Crystal structure analysis reveals an N-terminal domain with hydrophobic and positively charged residues that insert into curved membranes. This curvature sensing is the fundamental mechanism underlying DivIVA&#39;s localization and function as a polar landmark.</h3>
+                <span class="vote-buttons" data-g="P71021" data-a="FUNCTION: DivIVA preferentially localizes to regions of nega..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0140090" target="_blank" class="term-link">
+                            membrane curvature sensor activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000918" target="_blank" class="term-link">
+                                division septum site selection
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0060187" target="_blank" class="term-link">
+                                cell pole
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000935" target="_blank" class="term-link">
+                                division septum
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20502438" target="_blank" class="term-link">
+                                PMID:20502438
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">DivIVA is a conserved protein in Gram-positive bacteria that localizes at the poles and division sites, presumably through direct sensing of membrane curvature</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:BACSU/divIVA/divIVA-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">DivIVA preferentially targets regions of high negative membrane curvature, including poles and septal membranes</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>DivIVA forms homo-oligomers essential for its scaffold function. Crystal structures show the N-terminal domain forms parallel coiled-coils and the C-terminal domain forms curved tetramers, enabling assembly into extended ~30 nm scaffolds.</h3>
+                <span class="vote-buttons" data-g="P71021" data-a="FUNCTION: DivIVA forms homo-oligomers essential for its scaf..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042802" target="_blank" class="term-link">
+                            identical protein binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20502438" target="_blank" class="term-link">
+                                PMID:20502438
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">A low-resolution crystal structure of the C-terminal (Ct) domain displays a curved tetramer made from two parallel coiled-coils</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18296522" target="_blank" class="term-link">
+                            PMID:18296522
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">DivIVA is required for polar growth in the MreB-lacking rod-shaped actinomycete Corynebacterium glutamicum.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">DivIVA from B. subtilis localizes to the septum rather than poles when expressed in C. glutamicum</div>
+                        
+                        <div class="finding-text">"DivIVA proteins from Bacillus subtilis or Streptococcus pneumoniae, which localized at the septum of C. glutamicum"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">DivIVA proteins show functional divergence between actinomycetes and firmicutes</div>
+                        
+                        <div class="finding-text">"This confirmed that DivIVAs from actinomycetes are involved in polarized cell growth"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18363795" target="_blank" class="term-link">
+                            PMID:18363795
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Control of the cell elongation-division cycle by shuttling of PBP1 protein in Bacillus subtilis.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20502438" target="_blank" class="term-link">
+                            PMID:20502438
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Features critical for membrane binding revealed by DivIVA crystal structure.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">N-terminal domain forms parallel coiled-coil with membrane-binding loop</div>
+                        
+                        <div class="finding-text">"We have determined the crystal structure of the N-terminal (Nt) domain of DivIVA, and show that it forms a parallel coiled-coil"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Hydrophobic and positively charged residues essential for membrane binding</div>
+                        
+                        <div class="finding-text">"exposing hydrophobic and positively charged residues that we show here are essential for membrane binding"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">C-terminal domain forms curved tetramer from two parallel coiled-coils</div>
+                        
+                        <div class="finding-text">"A low-resolution crystal structure of the C-terminal (Ct) domain displays a curved tetramer made from two parallel coiled-coils"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Full-length DivIVA protein is approximately 30 nm long</div>
+                        
+                        <div class="finding-text">"The Nt and Ct parts were then merged into a model of the full length, 30 nm long DivIVA protein"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">DivIVA deletion causes filamentous growth in B. subtilis</div>
+                        
+                        <div class="finding-text">"DivIVA deletion causes filamentous growth in Bacillus subtilis"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21630458" target="_blank" class="term-link">
+                            PMID:21630458
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">An expanded protein-protein interaction network in Bacillus subtilis reveals a group of hubs: Exploration by an integrative approach.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">DivIVA identified as part of highly connected protein hub group</div>
+                        
+                        <div class="finding-text">"A striking feature of the network is a group of highly connected hubs (GoH) linking many different cellular processes"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Self-interaction detected by yeast two-hybrid</div>
+                        
+                        <div class="finding-text">"We have generated a protein-protein interaction network in Bacillus subtilis focused on several essential cellular processes such as cell division"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22582279" target="_blank" class="term-link">
+                            PMID:22582279
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">DivIVA-mediated polar localization of ComN, a posttranscriptional regulator of Bacillus subtilis.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">ComN directly interacts with DivIVA via yeast two-hybrid and GST pulldown</div>
+                        
+                        <div class="finding-text">"Yeast two-hybrid and glutathione S-transferase pulldown experiments showed that ComN interacts directly with DivIVA"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">ComN localization to poles and division sites is DivIVA-dependent</div>
+                        
+                        <div class="finding-text">"ComN localizes to the division site and cell poles in a DivIVA-dependent fashion"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">DivIVA functions as versatile promoter of bacterial pole differentiation</div>
+                        
+                        <div class="finding-text">"Our results underscore the versatility of DivIVA as a promoter of the differentiation of bacterial poles"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:BACSU/divIVA/divIVA-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep research synthesis on DivIVA function</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">DivIVA recruits MinJ which positions MinCD at previous division sites</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">During sporulation DivIVA shows forespore-biased localization</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">DivIVA associates with SpoIIE for compartment-specific sigma-F activation</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">DivIVA targets negatively curved membrane regions at poles and septa</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(divIVA-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P71021" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2025-12-17T23:25:12.061159'<br />
+end_time: '2025-12-17T23:30:32.870775'<br />
+duration_seconds: 320.81<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: BACSU<br />
+  gene_id: divIVA<br />
+  gene_symbol: divIVA<br />
+  uniprot_accession: P71021<br />
+  protein_description: 'RecName: Full=Septum site-determining protein DivIVA; AltName:<br />
+    Full=Cell division initiation protein DivIVA; AltName: Full=Minicell-associated<br />
+    protein DivIVA;'<br />
+  gene_info: Name=divIVA; Synonyms=ylmJ; OrderedLocusNames=BSU15420;<br />
+  organism_full: Bacillus subtilis (strain 168).<br />
+  protein_family: Belongs to the DivIVA family. .<br />
+  protein_domains: DivIVA_domain. (IPR019933); DivIVA_fam. (IPR007793); DivIVA (PF05103)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 18</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> P71021</li>
+<li><strong>Protein Description:</strong> RecName: Full=Septum site-determining protein DivIVA; AltName: Full=Cell division initiation protein DivIVA; AltName: Full=Minicell-associated protein DivIVA;</li>
+<li><strong>Gene Information:</strong> Name=divIVA; Synonyms=ylmJ; OrderedLocusNames=BSU15420;</li>
+<li><strong>Organism (full):</strong> Bacillus subtilis (strain 168).</li>
+<li><strong>Protein Family:</strong> Belongs to the DivIVA family. .</li>
+<li><strong>Key Domains:</strong> DivIVA_domain. (IPR019933); DivIVA_fam. (IPR007793); DivIVA (PF05103)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "divIVA" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Bacillus subtilis (strain 168).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'divIVA' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>divIVA</strong> (gene ID: divIVA, UniProt: P71021) in BACSU.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> P71021</li>
+<li><strong>Protein Description:</strong> RecName: Full=Septum site-determining protein DivIVA; AltName: Full=Cell division initiation protein DivIVA; AltName: Full=Minicell-associated protein DivIVA;</li>
+<li><strong>Gene Information:</strong> Name=divIVA; Synonyms=ylmJ; OrderedLocusNames=BSU15420;</li>
+<li><strong>Organism (full):</strong> Bacillus subtilis (strain 168).</li>
+<li><strong>Protein Family:</strong> Belongs to the DivIVA family. .</li>
+<li><strong>Key Domains:</strong> DivIVA_domain. (IPR019933); DivIVA_fam. (IPR007793); DivIVA (PF05103)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "divIVA" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Bacillus subtilis (strain 168).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'divIVA' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>divIVA</strong> (gene ID: divIVA, UniProt: P71021) in BACSU.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<p>Comprehensive research report: Bacillus subtilis DivIVA (divIVA; UniProt P71021)</p>
+<p>Verification of target identity and family context<br />
+- Identity and organism: DivIVA in Bacillus subtilis (strain 168) is a polar/septal scaffold central to cell division topology and sporulation-associated polarity. Its study is well established in B. subtilis, matching the target gene symbol and organism specified (divIVA, BACSU). Recent overviews of B. subtilis cell biology explicitly place DivIVA as a polar scaffold in this organism (Stülke et al., 2023, Journal of Bacteriology; published May 2023) (stulke2023bacillussubtilisa pages 2-5).<br />
+- Family and domains: DivIVA proteins are conserved coiled-coil scaffolds that oligomerize and target curved membranes in Gram-positive bacteria, consistent with the DivIVA family/domain annotations. Structural and comparative work highlights N-terminal membrane-binding elements and C-terminal coiled-coils mediating higher-order assemblies, aligning with DivIVA family/domain descriptions (Lubbers et al., 2025, bioRxiv; Chaudhary et al., 2023, Microbiology Spectrum) (lubbers2025definingtheminimal pages 10-12, lubbers2025definingtheminimal pages 1-3, chaudhary2023divivaphosphorylationaffects pages 18-18).</p>
+<p>1) Key concepts and definitions with current understanding<br />
+- Primary function (vegetative growth): DivIVA is a membrane-associated scaffold that localizes to both sides of the division septum and to cell poles during vegetative growth. Together with MinJ, DivIVA recruits MinCD to previously used division sites, preventing aberrant reassembly of the divisome and ensuring correct spatial control of cytokinesis (Stülke et al., 2023) (stulke2023bacillussubtilisa pages 2-5).<br />
+- Primary function (sporulation): During sporulation, DivIVA accumulates at the polar septum and becomes biased toward the forespore side as the septum matures. DivIVA associates with the phosphatase SpoIIE, contributing to forespore-specific activation of σF and thus compartment-specific gene expression that initiates the sporulation program (Chareyre et al., 2023, bioRxiv, Aug 2023) (chareyre2023celldivisionmachinery pages 15-18, chareyre2023celldivisionmachinery pages 1-6, chareyre2023celldivisionmachinery pages 11-15).<br />
+- Localization principle (curvature/poles/septa): DivIVA preferentially targets regions of high negative membrane curvature, including poles and septal membranes, a property underlying its pole/septum localization and scaffolding functions (Chareyre et al., 2023; Chaudhary et al., 2023) (chareyre2023celldivisionmachinery pages 1-6, chaudhary2023divivaphosphorylationaffects pages 18-18).<br />
+- Structural features: DivIVA is a coiled-coil oligomer. Evidence indicates an N-terminal membrane-binding/dimerization region and a C-terminal coiled-coil mediating tetramers/higher-order oligomers, which together support lattice-like assemblies at curved membranes (Chaudhary et al., 2023; Lubbers et al., 2025) (chaudhary2023divivaphosphorylationaffects pages 18-18, lubbers2025definingtheminimal pages 10-12, lubbers2025definingtheminimal pages 1-3).</p>
+<p>2) Recent developments and latest research (2023–2024 priority)<br />
+- Sporulation-specific asymmetric localization and divisome coupling: Chareyre et al. (2023) showed that in B. subtilis the polar septum is thinner than vegetative septa and that DivIVA and SpoIIE exhibit forespore-biased accumulation at the polar septum, while FtsA/FtsZ show mother-cell bias. A DivIVA point mutant (R94N) diminished forespore-biased localization (DivIVAR94N-GFP ~46% forespore bias vs WT ~72%), reduced forespore-specific σF activation (~40% of cells), and impaired sporulation efficiency (~0.18× WT). Mild overproduction of both FtsA and FtsZ rescued DivIVA/SpoIIE asymmetry and septal thickness, supporting a reciprocal coupling between SpoIIE/DivIVA and the cytokinetic machinery (dual-color 3D-SIM and TEM) (bioRxiv preprint, Aug 2023; provides quantitative updates on localization dynamics) (chareyre2023celldivisionmachinery pages 1-6, chareyre2023celldivisionmachinery pages 11-15, chareyre2023celldivisionmachinery pages 15-18).<br />
+- Broad context of DivIVA-family regulation and phosphorylation: While centered on D. radiodurans, Chaudhary et al. (2023) comprehensively compile foundational B. subtilis DivIVA literature (polar targeting, crystal-structure insights for membrane binding, Min system regulation), underscoring conserved principles of DivIVA curvature sensing and oligomerization. This 2023 review-style synthesis anchors DivIVA’s structure–function relationships relevant to B. subtilis (Microbiology Spectrum, Apr 2023) (chaudhary2023divivaphosphorylationaffects pages 18-18).<br />
+- Model organism perspective in 2023: Stülke et al. (2023) summarize B. subtilis cell biology, explicitly noting DivIVA’s role as a polar scaffold that partners with MinJ to recruit MinCD and prevent reuse of prior division sites, situating DivIVA in current B. subtilis cell-cycle frameworks (Journal of Bacteriology, May 2023) (stulke2023bacillussubtilisa pages 2-5).</p>
+<p>3) Current applications and real-world implementations<br />
+- Cell biology imaging and localization reporters: DivIVA has been repeatedly used as a localization marker via fluorescent protein fusions (e.g., DivIVA–GFP/mCherry) to visualize poles and septa in B. subtilis. This practical implementation enables tracking of polar/septal dynamics and is widely deployed in studies of division and sporulation (Stülke et al., 2023) (stulke2023bacillussubtilisa pages 2-5).<br />
+- Synthetic biology potential: While our gathered sources do not document engineered DivIVA-based “polarity tags” beyond microscopy reporters, the robust polar/septal localization of DivIVA fusions in B. subtilis suggests its utility as a targeting module for engineering spatially controlled processes at poles or septa. Direct engineered applications were not explicitly described in the retrieved 2023–2024 sources (Stülke et al., 2023) (stulke2023bacillussubtilisa pages 2-5).</p>
+<p>4) Expert opinions and analysis from authoritative sources<br />
+- Authoritative organismal review: Stülke et al. (2023) describe DivIVA as a principal polar scaffold in B. subtilis that, with MinJ, positions MinCD to enforce topological specificity of division—an expert synthesis placing DivIVA at the core of spatial regulation of cytokinesis (Journal of Bacteriology, 2023) (stulke2023bacillussubtilisa pages 2-5).<br />
+- Mechanistic synthesis and cross-system grounding: Chaudhary et al. (2023) discuss DivIVA family membrane targeting, structural determinants, and Min regulation, citing foundational B. subtilis work (e.g., Min activity regulation, structural determinants for membrane binding), reinforcing conserved mechanistic principles underpinning DivIVA’s role in B. subtilis (Microbiology Spectrum, 2023) (chaudhary2023divivaphosphorylationaffects pages 18-18).<br />
+- Sporulation-specific coupling to the divisome: Chareyre et al. (2023) provide a mechanistic model linking DivIVA/SpoIIE asymmetry to FtsA/FtsZ redeployment and septum architecture during sporulation, highlighting how divisome features drive compartment-specific gene activation via DivIVA-tethered SpoIIE (bioRxiv, 2023) (chareyre2023celldivisionmachinery pages 15-18, chareyre2023celldivisionmachinery pages 1-6, chareyre2023celldivisionmachinery pages 11-15).</p>
+<p>5) Relevant statistics and data from recent studies<br />
+- Forespore-biased localization: DivIVA-GFP forespore bias at polar septa is ~72% in WT vs ~46% in DivIVAR94N mutant; SpoIIE asymmetry similarly reduced in the mutant and restored by FtsA+FtsZ overexpression (Chareyre et al., 2023) (chareyre2023celldivisionmachinery pages 11-15).<br />
+- σF activation and sporulation efficiency: DivIVAR94N exhibits ~40% forespore-specific σF activation and ~0.18× WT sporulation efficiency; both improved substantially upon FtsA+FtsZ overproduction (Chareyre et al., 2023) (chareyre2023celldivisionmachinery pages 11-15).<br />
+- Septum architecture: Polar septum thickness increased in DivIVAR94N (~36 nm) compared to WT (~20 nm), and was reduced toward normal (~10 nm) by FtsA+FtsZ overproduction (Chareyre et al., 2023) (chareyre2023celldivisionmachinery pages 11-15).</p>
+<p>Interaction partners and pathways (B. subtilis)<br />
+- MinJ/MinCD: DivIVA recruits MinJ, which positions MinCD at prior division sites to prevent FtsZ reassembly at old septa, enforcing spatial fidelity of new division events (Stülke et al., 2023) (stulke2023bacillussubtilisa pages 2-5).<br />
+- SpoIIE (sporulation): DivIVA associates with SpoIIE at the polar septum; their asymmetric distribution supports forespore-specific σF activation. Coupling to divisome components FtsA and FtsZ influences septal architecture and DivIVA/SpoIIE asymmetry (Chareyre et al., 2023) (chareyre2023celldivisionmachinery pages 15-18, chareyre2023celldivisionmachinery pages 1-6, chareyre2023celldivisionmachinery pages 11-15).<br />
+- Other classic partners (RacA, Soj/ParA, ComN): Although these interactions are well known historically for B. subtilis sporulation polarity and chromosome anchoring, specific primary-source details were not captured within our gathered evidence set; thus, we refrain from citing them here to maintain strict source fidelity.</p>
+<p>Structural biology and localization mechanism<br />
+- Coiled-coil scaffold and oligomerization: DivIVA comprises an N-terminal membrane-binding/dimer interface and C-terminal coiled-coils that assemble into higher-order oligomers, enabling scaffolding at curved membranes. Structural/crystallographic insights and modeling support this modular architecture (Chaudhary et al., 2023; Lubbers et al., 2025) (chaudhary2023divivaphosphorylationaffects pages 18-18, lubbers2025definingtheminimal pages 10-12, lubbers2025definingtheminimal pages 1-3).<br />
+- Curvature sensing and pole/septum targeting: DivIVA’s affinity for negatively curved membranes underlies its accumulation at cell poles and septal regions, explaining its role in organizing polar/septal protein complexes (Chareyre et al., 2023; Chaudhary et al., 2023) (chareyre2023celldivisionmachinery pages 1-6, chaudhary2023divivaphosphorylationaffects pages 18-18).</p>
+<p>Limitations and scope note<br />
+- While multiple authoritative studies describe interactions of DivIVA with proteins such as RacA, Soj/ParA, and ComN during sporulation and chromosome anchoring in B. subtilis, those specific primary references were not included among the retrieved texts in our evidence set for this report. Accordingly, we have limited claims to those directly supported by the gathered sources.</p>
+<p>Embedded summary artifact<br />
+| Category | Specific claim | Evidence details (quantitative where present) | Source |<br />
+|---|---|---|---|<br />
+| Identity &amp; family | DivIVA is a conserved septum/pole scaffold (DivIVA family); coiled-coil protein family member | Conserved DivIVA family protein implicated in septum/pole determination and polarity across Firmicutes; coiled-coil architecture reported (inferred from UniProt-family descriptions and recent reviews) (lubbers2025definingtheminimal pages 10-12, stulke2023bacillussubtilisa pages 2-5). | Stülke et al., 2023; Journal of Bacteriology; https://doi.org/10.1128/jb.00102-23 (stulke2023bacillussubtilisa pages 2-5); Lubbers et al., 2025; bioRxiv; https://doi.org/10.1101/2025.06.24.661030 (lubbers2025definingtheminimal pages 10-12) |<br />
+| Vegetative localization &amp; MinJ/MinCD recruitment | Localizes to division septum and cell poles; recruits MinJ which positions MinCD at previous division sites to inhibit aberrant FtsZ assembly | DivIVA localizes to both sides of midcell septum and to poles during vegetative growth and, together with MinJ, recruits MinCD to inhibit reassembly of the divisome at old sites (stulke2023bacillussubtilisa pages 2-5, sutton2023therolesof pages 12-13). | Stülke et al., 2023; Journal of Bacteriology; https://doi.org/10.1128/jb.00102-23 (stulke2023bacillussubtilisa pages 2-5); Sutton et al., 2023; Frontiers in Microbiology; https://doi.org/10.3389/fmicb.2023.1241249 (sutton2023therolesof pages 12-13) |<br />
+| Sporulation: asymmetric localization, SpoIIE interaction, σF activation | DivIVA shows forespore-biased localization at the polar septum, binds/associates with SpoIIE and contributes to compartment-specific σF activation; perturbation alters σF activation and sporulation efficiency | Chareyre et al., 2023: WT DivIVA-GFP forespore bias ~72% vs DivIVAR94N-GFP ~46%; DivIVAR94N reduces compartment-specific σF activation (~40% of cells) and lowers sporulation efficiency to ~0.18× WT; overproduction of FtsA+FtsZ rescues localization, σF activation and septum thickness (methods: dual-color 3D SIM, TEM) (chareyre2023celldivisionmachinery pages 1-6, chareyre2023celldivisionmachinery pages 11-15). | Chareyre et al., 2023; bioRxiv; https://doi.org/10.1101/2023.08.10.552768 (chareyre2023celldivisionmachinery pages 1-6, chareyre2023celldivisionmachinery pages 11-15) |<br />
+| Curvature / pole targeting | Preferential targeting to negatively curved membranes (poles); curvature acts as localization cue | Multiple studies report DivIVA preference for highly negatively curved membrane regions (poles/septa), supporting curvature-dependent recruitment as a localization mechanism (chareyre2023celldivisionmachinery pages 1-6, chaudhary2023divivaphosphorylationaffects pages 18-18). | Chareyre et al., 2023; bioRxiv; https://doi.org/10.1101/2023.08.10.552768 (chareyre2023celldivisionmachinery pages 1-6); Chaudhary et al., 2023; Microbiology Spectrum; https://doi.org/10.1128/spectrum.03141-22 (chaudhary2023divivaphosphorylationaffects pages 18-18) |<br />
+| Structural features (coiled-coils, oligomerization) | N-terminal membrane/dimer interface + C-terminal coiled-coil mediating oligomerization; forms multimers/filaments; C-terminal deletions impair function | Structural/crystal and modeling studies indicate an N-terminal membrane-binding/dimerization region and C-terminal coiled-coil(s) that mediate higher-order oligomerization (tetramers/filaments); mutations/deletions in coiled-coil regions disrupt assembly and morphology (chaudhary2023divivaphosphorylationaffects pages 18-18, lubbers2025definingtheminimal pages 10-12, lubbers2025definingtheminimal pages 1-3). | Chaudhary et al., 2023; Microbiology Spectrum; https://doi.org/10.1128/spectrum.03141-22 (chaudhary2023divivaphosphorylationaffects pages 18-18); Lubbers et al., 2025; bioRxiv; https://doi.org/10.1101/2025.06.24.661030 (lubbers2025definingtheminimal pages 10-12, lubbers2025definingtheminimal pages 1-3) |<br />
+| Use as localization tag / reporter | DivIVA has been visualized using fluorescent protein fusions (GFP/mCherry) to report pole/septum localization; explicit engineered 'polarity-tag' applications in B. subtilis not documented in gathered sources | Historical and recent imaging studies use DivIVA–FP fusions to map pole/septum localization, supporting its practical use as a localization reporter; no direct evidence in the gathered set for widespread engineered synthetic-biology 'tag' use beyond microscopy reporters (stulke2023bacillussubtilisa pages 2-5). | Stülke et al., 2023; Journal of Bacteriology; https://doi.org/10.1128/jb.00102-23 (stulke2023bacillussubtilisa pages 2-5) |</p>
+<p><em>Table: Compact, evidence-linked summary of key findings about Bacillus subtilis DivIVA (divIVA, UniProt P71021), including function, localization, structural features, and quantitated sporulation impacts, with direct sources and URLs for each claim.</em></p>
+<p>Citations with URLs and publication dates<br />
+- Stülke J, Grüppen A, Bramkamp M, Pelzer S. Bacillus subtilis, a Swiss Army Knife in Science and Biotechnology. Journal of Bacteriology. 205(5):e00102-23. Published May 2023. URL: https://doi.org/10.1128/jb.00102-23 (stulke2023bacillussubtilisa pages 2-5)<br />
+- Chareyre S, Li X, Anjuwon-Foster BR, et al. Cell division machinery drives cell-specific gene activation during bacterial differentiation. bioRxiv. Posted Aug 2023. URL: https://doi.org/10.1101/2023.08.10.552768 (chareyre2023celldivisionmachinery pages 15-18, chareyre2023celldivisionmachinery pages 1-6, chareyre2023celldivisionmachinery pages 11-15)<br />
+- Chaudhary R, Kota S, Misra HS. DivIVA Phosphorylation Affects Its Dynamics and Cell Cycle in Radioresistant Deinococcus radiodurans. Microbiology Spectrum. 11(2):e03141-22. Published Apr 2023. URL: https://doi.org/10.1128/spectrum.03141-22 (chaudhary2023divivaphosphorylationaffects pages 18-18)<br />
+- Lubbers M, Bajramović B, Ongenae V, et al. Defining the minimal structural requirements of DivIVA in filamentous Actinomycetota. bioRxiv. Posted Jun 2025. URL: https://doi.org/10.1101/2025.06.24.661030 (lubbers2025definingtheminimal pages 10-12, lubbers2025definingtheminimal pages 1-3)<br />
+- Sutton JAF, Cooke M, Tinajero-Trejo M, et al. The roles of GpsB and DivIVA in Staphylococcus aureus growth and division. Frontiers in Microbiology. Published Aug 2023. URL: https://doi.org/10.3389/fmicb.2023.1241249 (sutton2023therolesof pages 12-13)</p>
+<p>References</p>
+<ol>
+<li>
+<p>(stulke2023bacillussubtilisa pages 2-5): Jörg Stülke, Anika Grüppen, Marc Bramkamp, and Stefan Pelzer. Bacillus subtilis, a swiss army knife in science and biotechnology. Journal of Bacteriology, May 2023. URL: https://doi.org/10.1128/jb.00102-23, doi:10.1128/jb.00102-23. This article has 85 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lubbers2025definingtheminimal pages 10-12): Maarten Lubbers, Belmin Bajramović, Véronique Ongenae, Joost Willemse, Dieuwertje de Bruin, Niels Mulder, Bastienne Vriesendorp, Francisco Barona-Gómez, Ariane Briegel, Gilles P. van Wezel, Klas Flärdh, and Dennis Claessen. Defining the minimal structural requirements of diviva in filamentous actinomycetota. bioRxiv, Jun 2025. URL: https://doi.org/10.1101/2025.06.24.661030, doi:10.1101/2025.06.24.661030. This article has 0 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(lubbers2025definingtheminimal pages 1-3): Maarten Lubbers, Belmin Bajramović, Véronique Ongenae, Joost Willemse, Dieuwertje de Bruin, Niels Mulder, Bastienne Vriesendorp, Francisco Barona-Gómez, Ariane Briegel, Gilles P. van Wezel, Klas Flärdh, and Dennis Claessen. Defining the minimal structural requirements of diviva in filamentous actinomycetota. bioRxiv, Jun 2025. URL: https://doi.org/10.1101/2025.06.24.661030, doi:10.1101/2025.06.24.661030. This article has 0 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(chaudhary2023divivaphosphorylationaffects pages 18-18): Reema Chaudhary, Swathi Kota, and Hari S. Misra. Diviva phosphorylation affects its dynamics and cell cycle in radioresistant deinococcus radiodurans. Microbiology Spectrum, Apr 2023. URL: https://doi.org/10.1128/spectrum.03141-22, doi:10.1128/spectrum.03141-22. This article has 8 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(chareyre2023celldivisionmachinery pages 15-18): Sylvia Chareyre, Xuesong Li, Brandon R. Anjuwon-Foster, Sarah Clifford, Anna Brogan, Yijun Su, Hari Shroff, and Kumaran S. Ramamurthi. Cell division machinery drives cell-specific gene activation during bacterial differentiation. bioRxiv, Aug 2023. URL: https://doi.org/10.1101/2023.08.10.552768, doi:10.1101/2023.08.10.552768. This article has 0 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(chareyre2023celldivisionmachinery pages 1-6): Sylvia Chareyre, Xuesong Li, Brandon R. Anjuwon-Foster, Sarah Clifford, Anna Brogan, Yijun Su, Hari Shroff, and Kumaran S. Ramamurthi. Cell division machinery drives cell-specific gene activation during bacterial differentiation. bioRxiv, Aug 2023. URL: https://doi.org/10.1101/2023.08.10.552768, doi:10.1101/2023.08.10.552768. This article has 0 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(chareyre2023celldivisionmachinery pages 11-15): Sylvia Chareyre, Xuesong Li, Brandon R. Anjuwon-Foster, Sarah Clifford, Anna Brogan, Yijun Su, Hari Shroff, and Kumaran S. Ramamurthi. Cell division machinery drives cell-specific gene activation during bacterial differentiation. bioRxiv, Aug 2023. URL: https://doi.org/10.1101/2023.08.10.552768, doi:10.1101/2023.08.10.552768. This article has 0 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(sutton2023therolesof pages 12-13): Joshua A. F. Sutton, Mark Cooke, Mariana Tinajero-Trejo, Katarzyna Wacnik, Bartłomiej Salamaga, Callum Portman-Ross, Victoria A. Lund, Jamie K. Hobbs, and Simon J. Foster. The roles of gpsb and diviva in staphylococcus aureus growth and division. Frontiers in Microbiology, Aug 2023. URL: https://doi.org/10.3389/fmicb.2023.1241249, doi:10.3389/fmicb.2023.1241249. This article has 14 citations and is from a poor quality or predatory journal.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>stulke2023bacillussubtilisa pages 2-5</li>
+<li>chaudhary2023divivaphosphorylationaffects pages 18-18</li>
+<li>chareyre2023celldivisionmachinery pages 11-15</li>
+<li>lubbers2025definingtheminimal pages 10-12</li>
+<li>sutton2023therolesof pages 12-13</li>
+<li>chareyre2023celldivisionmachinery pages 1-6</li>
+<li>lubbers2025definingtheminimal pages 1-3</li>
+<li>chareyre2023celldivisionmachinery pages 15-18</li>
+<li>https://doi.org/10.1128/jb.00102-23</li>
+<li>https://doi.org/10.1101/2025.06.24.661030</li>
+<li>https://doi.org/10.3389/fmicb.2023.1241249</li>
+<li>https://doi.org/10.1101/2023.08.10.552768</li>
+<li>https://doi.org/10.1128/spectrum.03141-22</li>
+<li>https://doi.org/10.1128/jb.00102-23,</li>
+<li>https://doi.org/10.1101/2025.06.24.661030,</li>
+<li>https://doi.org/10.1128/spectrum.03141-22,</li>
+<li>https://doi.org/10.1101/2023.08.10.552768,</li>
+<li>https://doi.org/10.3389/fmicb.2023.1241249,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P71021
+gene_symbol: divIVA
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:224308
+  label: Bacillus subtilis (strain 168)
+description: &gt;-
+  DivIVA is a conserved membrane-associated scaffold protein in Gram-positive bacteria
+  that functions as a polar landmark by sensing negative membrane curvature at cell poles
+  and division septa. The protein forms oligomeric structures through its N-terminal
+  membrane-binding domain (which inserts hydrophobic and positively charged residues
+  into curved membranes) and C-terminal coiled-coil regions that mediate tetramerization
+  and higher-order assembly. During vegetative growth, DivIVA localizes to both sides
+  of the division septum and cell poles, where it recruits MinJ, which in turn positions
+  MinCD to prevent aberrant FtsZ assembly at previous division sites, thereby ensuring
+  proper septum site selection. During sporulation, DivIVA accumulates asymmetrically
+  at the polar septum with forespore bias, associates with SpoIIE phosphatase to promote
+  compartment-specific sigma-F activation, and interacts with Spo0J for chromosome
+  anchoring at the cell pole. DivIVA also recruits ComN to cell poles, facilitating
+  polar localization of comE mRNA during competence development. Loss of DivIVA results
+  in misplacement of division septa leading to minicell formation, while overexpression
+  is lethal.
+existing_annotations:
+- term:
+    id: GO:0009273
+    label: peptidoglycan-based cell wall biogenesis
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      DivIVA is primarily a scaffold protein involved in spatial organization of cell
+      division rather than directly participating in peptidoglycan biosynthesis. While
+      DivIVA localizes to sites of cell wall synthesis (septa and poles), its role is
+      to position other proteins (MinCD via MinJ) that regulate where division occurs,
+      not to directly contribute to peptidoglycan synthesis. In Corynebacterium glutamicum,
+      DivIVA is required for polar peptidoglycan synthesis, but B. subtilis DivIVA localizes
+      to septum rather than directing polar growth when expressed in C. glutamicum
+      (PMID:18296522). This IBA annotation likely reflects functional conservation across
+      Gram-positive bacteria where some DivIVA homologs do directly regulate cell wall
+      synthesis, but in B. subtilis the connection is more indirect.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      DivIVA in B. subtilis functions as a spatial organizer for septum site selection
+      through the MinCD system, not as a direct participant in peptidoglycan biosynthesis.
+      The protein&#39;s role is to sense membrane curvature and recruit MinJ/MinCD to prevent
+      inappropriate FtsZ assembly. While this ultimately affects where peptidoglycan
+      synthesis occurs during division, DivIVA itself does not catalyze or directly
+      regulate peptidoglycan synthesis enzymes. This term is too broad and misrepresents
+      the mechanistic role of B. subtilis DivIVA.
+    supported_by:
+      - reference_id: PMID:18296522
+        supporting_text: &gt;-
+          DivIVA proteins from Bacillus subtilis or Streptococcus pneumoniae, which localized at the septum of C. glutamicum
+- term:
+    id: GO:0000917
+    label: division septum assembly
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;-
+      DivIVA plays a critical role in regulating where division septa form by recruiting
+      the MinJ/MinCD system to previous division sites and cell poles, thereby preventing
+      inappropriate FtsZ assembly. This represents a core function of DivIVA in vegetative
+      B. subtilis cells. Loss of DivIVA results in misplacement of septa and minicell
+      formation. However, the term &#34;division septum assembly&#34; may be slightly broader than
+      DivIVA&#39;s actual role, which is more specifically in septum site selection rather
+      than the assembly process itself.
+    action: MODIFY
+    reason: &gt;-
+      DivIVA does not directly assemble the division septum but rather controls where
+      septum assembly can occur by positioning the MinCD inhibitor system. The more
+      precise term would be GO:0000918 (division septum site selection), which accurately
+      captures DivIVA&#39;s role in marking sites where the septum can or cannot form by
+      recruiting MinJ and MinCD.
+    proposed_replacement_terms:
+      - id: GO:0000918
+        label: division septum site selection
+    supported_by:
+      - reference_id: file:BACSU/divIVA/divIVA-deep-research-falcon.md
+        supporting_text: &gt;-
+          DivIVA localizes to both sides of midcell septum and to poles during vegetative
+          growth and, together with MinJ, recruits MinCD to inhibit reassembly of the
+          divisome at old sites
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: &gt;-
+      DivIVA is annotated to cytoplasm based on UniProt subcellular location mapping.
+      However, DivIVA is specifically a membrane-associated protein that localizes to
+      regions of negative membrane curvature at cell poles and division septa. The
+      protein&#39;s N-terminal domain binds directly to the membrane through hydrophobic
+      and positively charged residues. While technically in the cytoplasm, this term
+      is too general and fails to capture DivIVA&#39;s specific localization to cell poles
+      and division sites.
+    action: MODIFY
+    reason: &gt;-
+      The cytoplasm annotation is technically correct but too general. DivIVA specifically
+      localizes to negatively curved membrane regions at cell poles and division septa.
+      More specific CC terms would better capture DivIVA&#39;s localization pattern: GO:0060187
+      (cell pole) and GO:0000935 (division septum).
+    proposed_replacement_terms:
+      - id: GO:0060187
+        label: cell pole
+      - id: GO:0000935
+        label: division septum
+    supported_by:
+      - reference_id: PMID:20502438
+        supporting_text: &gt;-
+          DivIVA is a conserved protein in Gram-positive bacteria that localizes at the
+          poles and division sites, presumably through direct sensing of membrane curvature
+- term:
+    id: GO:0030435
+    label: sporulation resulting in formation of a cellular spore
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;-
+      DivIVA plays an important role during B. subtilis sporulation, where it accumulates
+      asymmetrically at the polar septum with forespore bias and associates with SpoIIE
+      phosphatase to contribute to compartment-specific sigma-F activation. DivIVA also
+      interacts with Spo0J for chromosome anchoring at the cell pole during sporulation.
+      Mutation of DivIVA causes sporulation defects. However, DivIVA is not a sporulation-
+      specific protein - it functions during both vegetative growth and sporulation.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      While DivIVA plays an important role in sporulation by positioning SpoIIE and
+      anchoring chromosomes, sporulation is not its core function. DivIVA functions
+      primarily as a polar landmark protein that senses membrane curvature, and its
+      sporulation role is a specialized application of this general function. The
+      annotation should be retained but marked as non-core.
+    supported_by:
+      - reference_id: file:BACSU/divIVA/divIVA-deep-research-falcon.md
+        supporting_text: &gt;-
+          During sporulation, DivIVA accumulates at the polar septum and becomes biased
+          toward the forespore side as the septum matures. DivIVA associates with the
+          phosphatase SpoIIE, contributing to forespore-specific activation of sigma-F
+          and thus compartment-specific gene expression that initiates the sporulation
+          program
+- term:
+    id: GO:0051301
+    label: cell division
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;-
+      DivIVA is essential for proper cell division in B. subtilis, where it controls
+      the spatial placement of division septa by recruiting MinJ/MinCD to cell poles
+      and previous division sites. Loss of DivIVA leads to aberrant septum placement
+      and minicell formation. This annotation accurately captures DivIVA&#39;s involvement
+      in cell division, though a more specific term like GO:0000918 (division septum
+      site selection) would better describe its precise role.
+    action: ACCEPT
+    reason: &gt;-
+      Cell division is a core function of DivIVA. The protein is essential for proper
+      spatial control of cell division through the Min system. While GO:0000918 would
+      be more specific, GO:0051301 is an appropriate parent term that accurately reflects
+      DivIVA&#39;s biological role. This broad annotation should be retained alongside
+      more specific annotations.
+    supported_by:
+      - reference_id: PMID:20502438
+        supporting_text: &gt;-
+          DivIVA deletion causes filamentous growth in Bacillus subtilis
+      - reference_id: file:BACSU/divIVA/divIVA-deep-research-falcon.md
+        supporting_text: &gt;-
+          DivIVA localizes to both sides of midcell septum and to poles during vegetative
+          growth and, together with MinJ, recruits MinCD to inhibit reassembly of the
+          divisome at old sites
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:22582279
+  review:
+    summary: &gt;-
+      This annotation is based on the interaction between DivIVA and ComN demonstrated
+      by yeast two-hybrid and GST pulldown experiments in PMID:22582279. DivIVA directly
+      binds ComN and is required for its polar localization. However, GO:0005515 (protein
+      binding) is too generic and uninformative - a more specific term describing the
+      scaffold or adapter function would be preferable.
+    action: MODIFY
+    reason: &gt;-
+      While DivIVA does bind ComN, the generic term &#34;protein binding&#34; fails to capture
+      the biological significance of this interaction. DivIVA functions as a scaffold
+      protein that recruits multiple partners to cell poles. GO:0097110 (scaffold protein
+      binding) would be more appropriate, or the annotation could be modified to reflect
+      DivIVA&#39;s role as a scaffold that recruits other proteins.
+    proposed_replacement_terms:
+      - id: GO:0097110
+        label: scaffold protein binding
+    supported_by:
+      - reference_id: PMID:22582279
+        supporting_text: &gt;-
+          Yeast two-hybrid and glutathione S-transferase pulldown experiments showed that ComN interacts directly with DivIVA
+- term:
+    id: GO:0042802
+    label: identical protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:18296522
+  review:
+    summary: &gt;-
+      This annotation reflects DivIVA&#39;s ability to form homo-oligomers, a well-established
+      property essential for its scaffold function. The PMID:18296522 study in C. glutamicum
+      demonstrates DivIVA self-interaction, and this property is conserved in B. subtilis
+      DivIVA as shown by crystal structure studies.
+    action: ACCEPT
+    reason: &gt;-
+      Identical protein binding accurately describes DivIVA&#39;s homo-oligomerization,
+      which is essential for its function as a membrane curvature-sensing scaffold.
+      The protein forms tetramers and higher-order oligomers through its C-terminal
+      coiled-coil domain. This is a well-characterized molecular function of DivIVA.
+    supported_by:
+      - reference_id: PMID:18296522
+        supporting_text: &gt;-
+          DivIVA from Streptomyces or Mycobacterium localized to the cell poles of DivIVA(Cg)-depleted C. glutamicum and restored polar peptidoglycan synthesis
+      - reference_id: PMID:20502438
+        supporting_text: &gt;-
+          A low-resolution crystal structure of the C-terminal (Ct) domain displays a curved tetramer made from two parallel coiled-coils
+- term:
+    id: GO:0042802
+    label: identical protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:18363795
+  review:
+    summary: &gt;-
+      This annotation reflects DivIVA self-interaction demonstrated in the context of
+      PBP1 shuttling studies. DivIVA homo-oligomerization is essential for its scaffold
+      function and is consistently demonstrated across multiple studies.
+    action: ACCEPT
+    reason: &gt;-
+      This is a duplicate annotation for identical protein binding with different evidence.
+      The homo-oligomerization of DivIVA is well-established and represents a core
+      molecular function. Multiple independent studies supporting this annotation
+      strengthens the evidence base.
+    supported_by:
+      - reference_id: PMID:20502438
+        supporting_text: &gt;-
+          A low-resolution crystal structure of the C-terminal (Ct) domain displays a curved tetramer made from two parallel coiled-coils
+- term:
+    id: GO:0042802
+    label: identical protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:20502438
+  review:
+    summary: &gt;-
+      This annotation is strongly supported by the crystal structure of DivIVA reported
+      in PMID:20502438, which definitively demonstrates that DivIVA forms homo-oligomers
+      through its coiled-coil domains. The N-terminal domain forms parallel coiled-coils
+      and the C-terminal domain forms curved tetramers.
+    action: ACCEPT
+    reason: &gt;-
+      The crystal structure provides definitive evidence for DivIVA homo-oligomerization.
+      The protein forms dimers through its N-terminal domain and tetramers through its
+      C-terminal coiled-coil region. This is a core molecular function essential for
+      DivIVA&#39;s role as a membrane-associated scaffold.
+    supported_by:
+      - reference_id: PMID:20502438
+        supporting_text: &gt;-
+          We have determined the crystal structure of the N-terminal (Nt) domain of DivIVA, and show that it forms a parallel coiled-coil
+- term:
+    id: GO:0042802
+    label: identical protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:21630458
+  review:
+    summary: &gt;-
+      This annotation comes from a large-scale protein-protein interaction study in
+      B. subtilis using yeast two-hybrid. DivIVA was identified as part of a group of
+      highly connected hub proteins. The self-interaction of DivIVA is consistent with
+      its known oligomeric nature.
+    action: ACCEPT
+    reason: &gt;-
+      While this annotation comes from a high-throughput study, it is consistent with
+      the well-established homo-oligomerization of DivIVA demonstrated by crystal
+      structure and other biochemical studies. Multiple lines of evidence support
+      DivIVA self-interaction as a core molecular function.
+    supported_by:
+      - reference_id: PMID:21630458
+        supporting_text: &gt;-
+          We have generated a protein-protein interaction network in Bacillus subtilis focused on several essential cellular processes such as cell division
+- term:
+    id: GO:0140090
+    label: membrane curvature sensor activity
+  evidence_type: IDA
+  original_reference_id: PMID:20502438
+  review:
+    summary: &gt;-
+      DivIVA preferentially localizes to regions of negative membrane curvature at cell
+      poles and division septa. Crystal structure analysis reveals an N-terminal domain
+      with hydrophobic and positively charged residues that insert into curved membranes.
+      This curvature sensing is the fundamental mechanism underlying DivIVA&#39;s localization
+      and function as a polar landmark.
+    action: NEW
+    reason: &gt;-
+      Membrane curvature sensor activity is the core molecular function of DivIVA that
+      underlies all its biological roles. The crystal structure (PMID:20502438) provides
+      structural evidence for how DivIVA binds to curved membranes, and multiple studies
+      confirm its preferential localization to negatively curved membrane regions at
+      poles and septa. This annotation is not currently in the GOA annotations but
+      represents DivIVA&#39;s most fundamental molecular activity.
+    supported_by:
+      - reference_id: PMID:20502438
+        supporting_text: &gt;-
+          DivIVA is a conserved protein in Gram-positive bacteria that localizes at the
+          poles and division sites, presumably through direct sensing of membrane curvature
+      - reference_id: file:BACSU/divIVA/divIVA-deep-research-falcon.md
+        supporting_text: &gt;-
+          DivIVA preferentially targets regions of high negative membrane curvature,
+          including poles and septal membranes
+core_functions:
+  - molecular_function:
+      id: GO:0140090
+      label: membrane curvature sensor activity
+    description: &gt;-
+      DivIVA preferentially localizes to regions of negative membrane curvature at cell
+      poles and division septa. Crystal structure analysis reveals an N-terminal domain
+      with hydrophobic and positively charged residues that insert into curved membranes.
+      This curvature sensing is the fundamental mechanism underlying DivIVA&#39;s localization
+      and function as a polar landmark.
+    supported_by:
+      - reference_id: PMID:20502438
+        supporting_text: &gt;-
+          DivIVA is a conserved protein in Gram-positive bacteria that localizes at the
+          poles and division sites, presumably through direct sensing of membrane curvature
+      - reference_id: file:BACSU/divIVA/divIVA-deep-research-falcon.md
+        supporting_text: &gt;-
+          DivIVA preferentially targets regions of high negative membrane curvature,
+          including poles and septal membranes
+    locations:
+      - id: GO:0060187
+        label: cell pole
+      - id: GO:0000935
+        label: division septum
+    directly_involved_in:
+      - id: GO:0000918
+        label: division septum site selection
+  - molecular_function:
+      id: GO:0042802
+      label: identical protein binding
+    description: &gt;-
+      DivIVA forms homo-oligomers essential for its scaffold function. Crystal structures
+      show the N-terminal domain forms parallel coiled-coils and the C-terminal domain
+      forms curved tetramers, enabling assembly into extended ~30 nm scaffolds.
+    supported_by:
+      - reference_id: PMID:20502438
+        supporting_text: &gt;-
+          A low-resolution crystal structure of the C-terminal (Ct) domain displays a curved tetramer made from two parallel coiled-coils
+references:
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: PMID:18296522
+  title: DivIVA is required for polar growth in the MreB-lacking rod-shaped actinomycete
+    Corynebacterium glutamicum.
+  findings:
+    - statement: DivIVA from B. subtilis localizes to the septum rather than poles when expressed in C. glutamicum
+      supporting_text: &gt;-
+        DivIVA proteins from Bacillus subtilis or Streptococcus pneumoniae, which localized at the septum of C. glutamicum
+    - statement: DivIVA proteins show functional divergence between actinomycetes and firmicutes
+      supporting_text: &gt;-
+        This confirmed that DivIVAs from actinomycetes are involved in polarized cell growth
+- id: PMID:18363795
+  title: Control of the cell elongation-division cycle by shuttling of PBP1 protein
+    in Bacillus subtilis.
+  findings: []
+- id: PMID:20502438
+  title: Features critical for membrane binding revealed by DivIVA crystal structure.
+  findings:
+    - statement: N-terminal domain forms parallel coiled-coil with membrane-binding loop
+      supporting_text: &gt;-
+        We have determined the crystal structure of the N-terminal (Nt) domain of DivIVA, and show that it forms a parallel coiled-coil
+    - statement: Hydrophobic and positively charged residues essential for membrane binding
+      supporting_text: &gt;-
+        exposing hydrophobic and positively charged residues that we show here are essential for membrane binding
+    - statement: C-terminal domain forms curved tetramer from two parallel coiled-coils
+      supporting_text: &gt;-
+        A low-resolution crystal structure of the C-terminal (Ct) domain displays a curved tetramer made from two parallel coiled-coils
+    - statement: Full-length DivIVA protein is approximately 30 nm long
+      supporting_text: &gt;-
+        The Nt and Ct parts were then merged into a model of the full length, 30 nm long DivIVA protein
+    - statement: DivIVA deletion causes filamentous growth in B. subtilis
+      supporting_text: &gt;-
+        DivIVA deletion causes filamentous growth in Bacillus subtilis
+- id: PMID:21630458
+  title: &#39;An expanded protein-protein interaction network in Bacillus subtilis reveals
+    a group of hubs: Exploration by an integrative approach.&#39;
+  findings:
+    - statement: DivIVA identified as part of highly connected protein hub group
+      supporting_text: &gt;-
+        A striking feature of the network is a group of highly connected hubs (GoH) linking many different cellular processes
+    - statement: Self-interaction detected by yeast two-hybrid
+      supporting_text: &gt;-
+        We have generated a protein-protein interaction network in Bacillus subtilis focused on several essential cellular processes such as cell division
+- id: PMID:22582279
+  title: DivIVA-mediated polar localization of ComN, a posttranscriptional regulator
+    of Bacillus subtilis.
+  findings:
+    - statement: ComN directly interacts with DivIVA via yeast two-hybrid and GST pulldown
+      supporting_text: &gt;-
+        Yeast two-hybrid and glutathione S-transferase pulldown experiments showed that ComN interacts directly with DivIVA
+    - statement: ComN localization to poles and division sites is DivIVA-dependent
+      supporting_text: &gt;-
+        ComN localizes to the division site and cell poles in a DivIVA-dependent fashion
+    - statement: DivIVA functions as versatile promoter of bacterial pole differentiation
+      supporting_text: &gt;-
+        Our results underscore the versatility of DivIVA as a promoter of the differentiation of bacterial poles
+- id: file:BACSU/divIVA/divIVA-deep-research-falcon.md
+  title: Deep research synthesis on DivIVA function
+  findings:
+    - statement: DivIVA recruits MinJ which positions MinCD at previous division sites
+    - statement: During sporulation DivIVA shows forespore-biased localization
+    - statement: DivIVA associates with SpoIIE for compartment-specific sigma-F activation
+    - statement: DivIVA targets negatively curved membrane regions at poles and septa
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
