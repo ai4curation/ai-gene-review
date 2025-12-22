@@ -1144,13 +1144,34 @@ def check_best_practices_rules(
         if substring_report.total_annotations > 0:
             annotations_coverage = substring_report.annotations_coverage_rate
             if annotations_coverage < 50:
+                # Use WARNING (not INFO) if coverage is 0% - that's a significant gap
+                severity = ValidationSeverity.WARNING if annotations_coverage == 0 else ValidationSeverity.INFO
                 report.add_issue(
-                    ValidationSeverity.INFO,
+                    severity,
                     f"Only {annotations_coverage:.1f}% of existing annotations have supporting_text",
                     path="existing_annotations",
                     suggestion="Consider adding supporting_text to more annotations for better documentation",
                     validation_category="SupportingTextSubstringValidator",
                     check_type="low_annotations_supporting_text_coverage"
+                )
+
+        # Stricter check: if PMIDs have available full text, we expect supporting_text
+        if substring_report.annotations_with_validatable_refs > 0:
+            validatable_coverage = substring_report.validatable_annotations_coverage_rate
+            if validatable_coverage < 100:
+                # This is a WARNING - we have the publications, so supporting_text should be present
+                num_missing = (
+                    substring_report.annotations_with_validatable_refs
+                    - substring_report.validatable_annotations_with_supporting_text
+                )
+                report.add_issue(
+                    ValidationSeverity.WARNING,
+                    f"{num_missing} annotation(s) have PMID references with cached full text but no supporting_text "
+                    f"({validatable_coverage:.1f}% coverage)",
+                    path="existing_annotations",
+                    suggestion="Add supporting_text with quotes from publications to document evidence",
+                    validation_category="SupportingTextSubstringValidator",
+                    check_type="missing_supporting_text_for_validatable_refs"
                 )
 
 

@@ -1,0 +1,2377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>nprE - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>nprE</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P68736" target="_blank" class="term-link">
+                        P68736
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Bacillus subtilis (strain 168)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "nprE";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P68736" data-a="DESCRIPTION: NprE (bacillolysin) is a secreted zinc metalloendo..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>NprE (bacillolysin) is a secreted zinc metalloendopeptidase of the peptidase M4 (thermolysin-like) family. It is one of the two dominant extracellular proteases in stationary-phase B. subtilis culture supernatants, along with AprE (subtilisin). NprE is synthesized as a preproenzyme with an N-terminal Sec signal peptide (residues 1-27), a large propeptide (residues 28-221) that assists folding and transiently inhibits activity, and a mature catalytic domain (residues 222-521). The active site contains the conserved HExxH zinc-binding motif characteristic of M4 family proteases. The enzyme binds one catalytic Zn2+ ion and four structural Ca2+ ions that provide stability. NprE expression is tightly regulated and restricted to post-exponential/ stationary phase through the integrated action of repressors CodY, ScoC, and AbrB, and activator DegU~P. Together with AprE, deletion of nprE accounts for approximately 95% reduction in bulk extracellular protease activity, indicating its major contribution to extracellular proteolysis for nutrient scavenging during stationary phase.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006508" target="_blank" class="term-link">
+                                    GO:0006508
+                                </a>
+                            </span>
+                            <span class="term-label">proteolysis</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P68736" data-a="GO:0006508" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA annotation of proteolysis based on phylogenetic inference from PANTHER (PTN002138658) and thermolysin (UniProtKB:P14756). NprE is a well-characterized metalloendopeptidase that catalyzes hydrolysis of peptide bonds, directly contributing to proteolysis in the extracellular milieu.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a core function of NprE. The enzyme is a secreted zinc metalloprotease that hydrolyzes peptide bonds, directly performing proteolysis. The phylogenetic inference from thermolysin (a closely related M4 family member) is appropriate. Multiple reviews confirm NprE as one of the two dominant extracellular proteases in B. subtilis stationary phase cultures.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:BACSU/nprE/nprE-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">NprE is a secreted zinc metallopeptidase of the peptidase M4 family (thermolysin-like proteases) and is one of the two dominant extracellular proteases in stationary phase culture supernatants (the other is AprE/subtilisin)</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004222" target="_blank" class="term-link">
+                                    GO:0004222
+                                </a>
+                            </span>
+                            <span class="term-label">metalloendopeptidase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P68736" data-a="GO:0004222" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation from InterPro domain mapping (IPR001570, IPR013856, IPR023612). NprE contains the Peptidase_M4 domain and related domains characteristic of thermolysin-like metalloendopeptidases.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the most specific and accurate molecular function term for NprE. The enzyme is a zinc-dependent metalloendopeptidase that hydrolyzes internal peptide bonds using a catalytic mechanism involving Zn2+-activated water. The HExxH motif characteristic of M4 metalloproteases is present, and the catalytic mechanism is well-established for this enzyme family.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:BACSU/nprE/nprE-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Thermolysin-like M4 metalloproteases are &#34;Glu-zincins,&#34; using the conserved HExxH motif to bind Zn2+ (His-His) and a downstream Glu as the third zinc ligand; catalysis proceeds via activation of a zinc-bound water/hydroxide for peptide bond hydrolysis</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P68736" data-a="GO:0005576" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation from UniProtKB subcellular location vocabulary mapping. UniProt records NprE as secreted (ECO:0000250). The protein has an N-terminal signal peptide for Sec-dependent export.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a core localization for NprE. The enzyme is secreted via the Sec pathway and functions in the extracellular milieu. The signal peptide (residues 1-27) directs export, and the mature protease accumulates in stationary-phase culture supernatants.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:BACSU/nprE/nprE-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Mature NprE is extracellular/secreted, accumulating in stationary-phase culture supernatants</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:P68736
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Secreted</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006508" target="_blank" class="term-link">
+                                    GO:0006508
+                                </a>
+                            </span>
+                            <span class="term-label">proteolysis</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P68736" data-a="GO:0006508" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation from combined automated methods (InterPro:IPR023612 Peptidase_M4 and UniProtKB-KW:KW-0645 Protease). This is a duplicate of the IBA annotation for proteolysis.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Duplicate annotation with different evidence source is acceptable. The IEA annotation reinforces the IBA annotation and is based on valid domain and keyword mappings. Both evidence lines correctly identify proteolysis as a core biological process for this enzyme.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:BACSU/nprE/nprE-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Deletion of nprE and aprE together reduces culture supernatant protease activity by ~95% in stationary phase</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008233" target="_blank" class="term-link">
+                                    GO:0008233
+                                </a>
+                            </span>
+                            <span class="term-label">peptidase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P68736" data-a="GO:0008233" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation from UniProtKB keyword mapping (KW-0645 Protease). GO:0008233 peptidase activity is a parent term of GO:0004222 metalloendopeptidase activity.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While this is a more general term than GO:0004222, it is not incorrect. The IEA annotation is based on a valid keyword mapping. Since the more specific term GO:0004222 (metalloendopeptidase activity) is also annotated, this broader term is acceptable as it provides a different evidence lineage and could be useful for hierarchical queries.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:P68736
+                                    
+                                </span>
+                                
+                                <div class="support-text">RecName: Full=Bacillolysin; EC=3.4.24.28</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008237" target="_blank" class="term-link">
+                                    GO:0008237
+                                </a>
+                            </span>
+                            <span class="term-label">metallopeptidase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P68736" data-a="GO:0008237" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation from UniProtKB keyword mapping (KW-0482 Metalloprotease). GO:0008237 metallopeptidase activity is a parent term of GO:0004222 metalloendopeptidase activity.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This term accurately describes NprE as a metal-dependent peptidase. While more general than GO:0004222, it correctly captures the metallopeptidase nature of the enzyme. The zinc dependence of the catalytic mechanism is well-established.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:BACSU/nprE/nprE-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Activity is abolished by chelators (e.g., EDTA), and Ca2+ enhances stability/activity</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016787" target="_blank" class="term-link">
+                                    GO:0016787
+                                </a>
+                            </span>
+                            <span class="term-label">hydrolase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P68736" data-a="GO:0016787" data-r="GO_REF:0000043" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation from UniProtKB keyword mapping (KW-0378 Hydrolase). GO:0016787 hydrolase activity is a high-level parent term in the GO hierarchy.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While technically correct (metalloendopeptidases are hydrolases that use water as a nucleophile), this term is too general to be informative. The more specific terms GO:0004222 (metalloendopeptidase activity) and GO:0008237 (metallopeptidase activity) are already annotated and provide much more useful functional information. Retaining this very broad term adds little value.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:BACSU/nprE/nprE-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">catalysis proceeds via activation of a zinc-bound water/hydroxide for peptide bond hydrolysis</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046872" target="_blank" class="term-link">
+                                    GO:0046872
+                                </a>
+                            </span>
+                            <span class="term-label">metal ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P68736" data-a="GO:0046872" data-r="GO_REF:0000043" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation from UniProtKB keyword mapping (KW-0479 Metal-binding). NprE binds one catalytic Zn2+ ion and four structural Ca2+ ions.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While NprE does bind metal ions, this generic term does not capture the specific and functionally important metal binding. The enzyme specifically binds zinc (essential for catalysis) and calcium (essential for structural stability). More specific terms GO:0008270 (zinc ion binding) and GO:0005509 (calcium ion binding) would be more informative and accurately represent the documented metal binding properties.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008270" target="_blank" class="term-link">
+                                    zinc ion binding
+                                </a>
+                            </span>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005509" target="_blank" class="term-link">
+                                    calcium ion binding
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:P68736
+                                    
+                                </span>
+                                
+                                <div class="support-text">Binds 4 Ca(2+) ions per subunit</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:P68736
+                                    
+                                </span>
+                                
+                                <div class="support-text">Binds 1 zinc ion per subunit</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:BACSU/nprE/nprE-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Ca2+ ions stabilize structure and thermal resistance</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Core enzymatic function. NprE is a zinc-dependent metalloendopeptidase with thermolysin-like catalytic activity (EC 3.4.24.28). Uses HExxH motif for zinc binding and catalysis. Along with AprE, NprE accounts for approximately 95% of extracellular proteolytic activity in stationary-phase B. subtilis cultures. Secreted via Sec pathway with N-terminal signal peptide. Mature enzyme accumulates in culture supernatant during stationary phase.</h3>
+                <span class="vote-buttons" data-g="P68736" data-a="FUNCTION: Core enzymatic function. NprE is a zinc-dependent ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004222" target="_blank" class="term-link">
+                            metalloendopeptidase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006508" target="_blank" class="term-link">
+                                proteolysis
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                extracellular region
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:BACSU/nprE/nprE-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">NprE is a secreted zinc metallopeptidase of the peptidase M4 family (thermolysin-like proteases) and is one of the two dominant extracellular proteases in stationary phase culture supernatants (the other is AprE/subtilisin)</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:BACSU/nprE/nprE-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">Thermolysin-like M4 metalloproteases are &#34;Glu-zincins,&#34; using the conserved HExxH motif to bind Zn2+ (His-His) and a downstream Glu as the third zinc ligand; catalysis proceeds via activation of a zinc-bound water/hydroxide for peptide bond hydrolysis</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">InterPro domains IPR001570, IPR013856, IPR023612 identify Peptidase_M4 family membership</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Phylogenetic relationship to thermolysin (P14756) supports proteolysis annotation</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Keywords Protease, Metalloprotease, Hydrolase, Metal-binding map to corresponding GO terms</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Secreted subcellular location maps to extracellular region</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Combined InterPro and keyword evidence for proteolysis</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        UniProt:P68736
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">UniProt entry for Bacillus subtilis bacillolysin (NprE)</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Extracellular zinc metalloprotease with thermolysin-like activity</div>
+                        
+                        <div class="finding-text">"FUNCTION: Extracellular zinc metalloprotease"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Binds calcium ions for structural stability</div>
+                        
+                        <div class="finding-text">"Binds 4 Ca(2+) ions per subunit"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Binds zinc for catalytic activity</div>
+                        
+                        <div class="finding-text">"Binds 1 zinc ion per subunit"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Secreted protein</div>
+                        
+                        <div class="finding-text">"SUBCELLULAR LOCATION: Secreted"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Member of peptidase M4 family</div>
+                        
+                        <div class="finding-text">"Belongs to the peptidase M4 family"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:BACSU/nprE/nprE-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep research review of nprE gene function</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">NprE is one of two dominant extracellular proteases in B. subtilis stationary phase</div>
+                        
+                        <div class="finding-text">"NprE is a secreted zinc metallopeptidase of the peptidase M4 family (thermolysin-like proteases) and is one of the two dominant extracellular proteases in stationary phase culture supernatants (the other is AprE/subtilisin)"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">M4 family proteases contain HExxH zinc-binding motif and use Glu-zincin mechanism</div>
+                        
+                        <div class="finding-text">"Thermolysin-like M4 metalloproteases are &#34;Glu-zincins,&#34; using the conserved HExxH motif to bind Zn2+ (His-His) and a downstream Glu as the third zinc ligand; catalysis proceeds via activation of a zinc-bound water/hydroxide for peptide bond hydrolysis"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Deletion of nprE and aprE reduces extracellular protease activity by approximately 95%</div>
+                        
+                        <div class="finding-text">"Deletion of nprE and aprE together reduces culture supernatant protease activity by ~95% in stationary phase"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">NprE is secreted and accumulates extracellularly</div>
+                        
+                        <div class="finding-text">"Mature NprE is extracellular/secreted, accumulating in stationary-phase culture supernatants"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Activity abolished by chelators, enhanced by Ca2+</div>
+                        
+                        <div class="finding-text">"Activity is abolished by chelators (e.g., EDTA), and Ca2+ enhances stability/activity"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Ca2+ provides structural stability</div>
+                        
+                        <div class="finding-text">"Ca2+ ions stabilize structure and thermal resistance"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Expression regulated by CodY, ScoC, AbrB, and DegU~P</div>
+                        
+                        <div class="finding-text">"nprE expression is strongly expressed only post-exponentially/late log-to-stationary phase. Regulation involves: (i) direct repression by CodY under nutrient-replete conditions"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(nprE-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P68736" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2025-12-18T08:26:45.687084'<br />
+end_time: '2025-12-18T08:35:39.221095'<br />
+duration_seconds: 533.53<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: BACSU<br />
+  gene_id: nprE<br />
+  gene_symbol: nprE<br />
+  uniprot_accession: P68736<br />
+  protein_description: 'RecName: Full=Bacillolysin; EC=3.4.24.28; AltName: Full=Neutral<br />
+    protease NprE; Flags: Precursor;'<br />
+  gene_info: Name=nprE; OrderedLocusNames=BSU14700;<br />
+  organism_full: Bacillus subtilis (strain 168).<br />
+  protein_family: Belongs to the peptidase M4 family. .<br />
+  protein_domains: FTP_domain. (IPR011096); PepSY. (IPR025711); Peptidase_M4. (IPR023612);<br />
+    Peptidase_M4/M1_CTD_sf. (IPR027268); Peptidase_M4_C_domain. (IPR001570)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 30</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> P68736</li>
+<li><strong>Protein Description:</strong> RecName: Full=Bacillolysin; EC=3.4.24.28; AltName: Full=Neutral protease NprE; Flags: Precursor;</li>
+<li><strong>Gene Information:</strong> Name=nprE; OrderedLocusNames=BSU14700;</li>
+<li><strong>Organism (full):</strong> Bacillus subtilis (strain 168).</li>
+<li><strong>Protein Family:</strong> Belongs to the peptidase M4 family. .</li>
+<li><strong>Key Domains:</strong> FTP_domain. (IPR011096); PepSY. (IPR025711); Peptidase_M4. (IPR023612); Peptidase_M4/M1_CTD_sf. (IPR027268); Peptidase_M4_C_domain. (IPR001570)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "nprE" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Bacillus subtilis (strain 168).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'nprE' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>nprE</strong> (gene ID: nprE, UniProt: P68736) in BACSU.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> P68736</li>
+<li><strong>Protein Description:</strong> RecName: Full=Bacillolysin; EC=3.4.24.28; AltName: Full=Neutral protease NprE; Flags: Precursor;</li>
+<li><strong>Gene Information:</strong> Name=nprE; OrderedLocusNames=BSU14700;</li>
+<li><strong>Organism (full):</strong> Bacillus subtilis (strain 168).</li>
+<li><strong>Protein Family:</strong> Belongs to the peptidase M4 family. .</li>
+<li><strong>Key Domains:</strong> FTP_domain. (IPR011096); PepSY. (IPR025711); Peptidase_M4. (IPR023612); Peptidase_M4/M1_CTD_sf. (IPR027268); Peptidase_M4_C_domain. (IPR001570)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "nprE" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Bacillus subtilis (strain 168).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'nprE' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>nprE</strong> (gene ID: nprE, UniProt: P68736) in BACSU.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<p>Plan status: Objective 1 (identity verification) completed; objectives 2–7 addressed below with sourced evidence; final objective (write report) submitted here.</p>
+<p>Comprehensive research report: Bacillus subtilis nprE (UniProt P68736)</p>
+<p>1) Key concepts and definitions</p>
+<ul>
+<li>Identity and classification. nprE encodes the neutral metalloprotease “bacillolysin” (NprE) of Bacillus subtilis (strain 168). NprE is a secreted zinc metallopeptidase of the peptidase M4 family (thermolysin-like proteases) and is one of the two dominant extracellular proteases in stationary phase culture supernatants (the other is AprE/subtilisin) (Harwood &amp; Kikuchi, FEMS Microbiol Rev, Aug 2022; https://doi.org/10.1093/femsre/fuab046) (harwood2022theinsand pages 12-13, harwood2022theinsand pages 13-14, harwood2022theinsand pages 14-15).</li>
+<li>Domain organization and maturation. Bacillus neutral metalloproteases are synthesized as preproenzymes with an N-terminal Sec signal peptide, a large propeptide that assists folding and transiently inhibits activity, and the mature catalytic domain; signal peptides are removed by type I signal peptidases and propeptides are removed during/post secretion, often by autoprocessing (Hase &amp; Finkelstein, Microbiol Rev, Dec 1993; https://doi.org/10.1128/mr.57.4.823-837.1993) (hase1993bacterialextracellularzinccontaining pages 2-3). NprE specifically is produced as a prepropeptide comprising a ~27-residue signal peptide and ~194-residue propeptide, yielding a mature ~56 kDa neutral protease (Harwood &amp; Kikuchi 2022; https://doi.org/10.1093/femsre/fuab046) (harwood2022theinsand pages 13-14).</li>
+<li>Catalytic chemistry. Thermolysin-like M4 metalloproteases are “Glu-zincins,” using the conserved HExxH motif to bind Zn2+ (His-His) and a downstream Glu as the third zinc ligand; catalysis proceeds via activation of a zinc-bound water/hydroxide for peptide bond hydrolysis. Ca2+ ions stabilize structure and thermal resistance (Adekoya &amp; Sylte, Chem Biol Drug Des, Jan 2009; https://doi.org/10.1111/j.1747-0285.2008.00757.x; Hase &amp; Finkelstein 1993) (adekoya2009thethermolysinfamily pages 3-4, hase1993bacterialextracellularzinccontaining pages 2-3, hase1993bacterialextracellularzinccontaining pages 3-4).</li>
+<li>Accessory domains. PepSY domains have been described as regulators/inhibitors associated with microbial proteases; thermolysin-like family members often carry ancillary C-terminal domains (e.g., PPC/PepSY) implicated in regulation or substrate interactions (Adekoya &amp; Sylte 2009; https://doi.org/10.1111/j.1747-0285.2008.00757.x) (adekoya2009thethermolysinfamily pages 7-8).</li>
+</ul>
+<p>2) Recent developments and latest research (2023–2024 priority)</p>
+<ul>
+<li>Protease-deficient Bacillus chassis and secretion quality control. A 2024 engineering study describes strategies relevant to extracellular proteases including NprE: Sec-dependent secretion with signal peptide cleavage (e.g., SppA), periplasmic/extracytoplasmic folding assistance by PrsA, and the contribution of HtrA/HtrB/WprA quality-control proteases; cumulative deletions of extracellular proteases (AprE, Bpr, Epr, Mpr, NprB, NprE, Vpr; often plus wprA) are used to reduce background proteolysis in production strains (Astles 2024; doctoral thesis with DOI https://doi.org/10.7488/era/4696, Jul 2024) (astles2024novelextremophilicmetalloproteases pages 56-60).</li>
+<li>Contemporary review synthesis. Harwood &amp; Kikuchi (2022) remains a recent authoritative synthesis on Bacillus proteases, highlighting NprE as second only to AprE in extracellular activity and summarizing regulation/maturation contexts leveraged in industrial strain design (FEMS Microbiol Rev, Aug 2022; https://doi.org/10.1093/femsre/fuab046) (harwood2022theinsand pages 12-13, harwood2022theinsand pages 14-15).</li>
+</ul>
+<p>3) Current applications and real-world implementations</p>
+<ul>
+<li>Industrial strain engineering. Deletion of nprE (often together with aprE and other extracellular proteases) is standard in Bacillus production hosts to protect heterologous proteins. For example, a 2018 Microbial Cell Factories study constructed a B. subtilis ATCC6051 Δ10 strain with deletions in eight extracellular proteases (including nprE) plus spoIIAC and srfAC, enabling high-level secretion of pullulanase; dual promoters achieved up to 625.5 U/mL activity (Liu et al., Oct 2018; https://doi.org/10.1186/s12934-018-1011-y) (liu2018efficientproductionof pages 6-9). NprE and AprE deletions alone decrease bulk extracellular protease activity by ~95% in stationary phase, underscoring their dominance and the rationale for knockouts in production strains (Harwood &amp; Kikuchi 2022; citing Karamura &amp; Doi 1984) (harwood2022theinsand pages 14-15).</li>
+<li>Secretion optimization and proteostasis. Upregulation of PrsA foldase and modulation of cell wall teichoic acid alanylation improve extracellular recovery of secreted proteins by enhancing post-translocation folding and reducing quality-control proteolysis; these general principles affect outcomes in protease-rich backgrounds that include NprE (Harwood &amp; Kikuchi 2022; https://doi.org/10.1093/femsre/fuab046) (harwood2022theinsand pages 11-12, harwood2022theinsand pages 14-15).</li>
+</ul>
+<p>4) Expert opinions and analysis from authoritative sources</p>
+<ul>
+<li>Regulatory circuitry. An in-depth genetic analysis demonstrated that CodY directly represses aprE and nprE under nutrient-replete conditions; because CodY also represses scoC, its loss elevates ScoC, masking derepression. High exoprotease expression requires relief of multiple repressors and/or activation by DegU~P; only when abrB is also inactivated does early-phase high expression occur. Thus, nprE expression is tightly restricted to post-exponential/stationary phase via integrated CodY–ScoC–AbrB and DegS–DegU control with Spo0A feeding into AbrB repression (Barbieri et al., J Bacteriol, Mar 2016; https://doi.org/10.1128/JB.00894-15) (barbieri2016interplayofcody pages 1-6). Harwood &amp; Kikuchi (2022) corroborate NprE’s regulon context (ScoC/AbrB/CodY) and stationary-phase dominance (https://doi.org/10.1093/femsre/fuab046) (harwood2022theinsand pages 13-14, harwood2022theinsand pages 12-13).</li>
+<li>Catalytic mechanism and metal dependence. Foundational reviews converge that Bacillus neutral metalloproteases share the thermolysin fold with the catalytic HExxH motif, Zn2+ at the active site and multiple Ca2+ binding sites providing stability. Activity is abolished by chelators (e.g., EDTA), and Ca2+ enhances stability/activity—quantitatively shown in Bacillus neutral protease homologs (Hase &amp; Finkelstein 1993; https://doi.org/10.1128/mr.57.4.823-837.1993; Manni et al., Process Biochem, May 2008; https://doi.org/10.1016/j.procbio.2008.01.016) (hase1993bacterialextracellularzinccontaining pages 2-3, manni2008biochemicalandmolecular pages 5-8, manni2008biochemicalandmolecular pages 9-9, hase1993bacterialextracellularzinccontaining pages 3-4).</li>
+</ul>
+<p>5) Relevant statistics and data from recent studies</p>
+<ul>
+<li>Contribution to total extracellular proteolysis. Deletion of nprE and aprE together reduces culture supernatant protease activity by ~95% in stationary phase (Harwood &amp; Kikuchi 2022; https://doi.org/10.1093/femsre/fuab046) (harwood2022theinsand pages 14-15).</li>
+<li>Prepropeptide architecture. NprE prepropeptide contains a ~27-residue signal peptide and a ~194-residue propeptide; mature enzyme is ~56 kDa (Harwood &amp; Kikuchi 2022; https://doi.org/10.1093/femsre/fuab046) (harwood2022theinsand pages 13-14).</li>
+<li>Secretion/folding determinants. Overexpression of PrsA and alterations to teichoic acid alanylation improve secreted protein recovery, indicating the importance of post-translocation folding rate in protease-rich environments (Harwood &amp; Kikuchi 2022; https://doi.org/10.1093/femsre/fuab046) (harwood2022theinsand pages 14-15, harwood2022theinsand pages 11-12).</li>
+<li>Production host performance. In a Δ10 protease-negative ATCC6051 host (including ΔnprE), dual promoter PamyL–PspovG drove pullulanase secretion up to 625.5 U/mL, with a dry cell weight of 18.73 g/L in shake flasks (Liu et al. 2018; https://doi.org/10.1186/s12934-018-1011-y) (liu2018efficientproductionof pages 6-9).</li>
+</ul>
+<p>Functional detail: enzymology, localization, maturation, regulation, and physiology</p>
+<ul>
+<li>Enzymatic function and specificity. NprE is a secreted zinc endopeptidase that hydrolyzes peptide bonds via a Zn2+-activated water. The active site contains the HExxH motif (His-His ligands) and a downstream Glu ligand (Glu-(Xaa)3-Asp motif region in thermolysin-like enzymes), and activity/stability depend on Zn2+ and several Ca2+ binding sites. Chelators inhibit; Ca2+ enhances thermal stability and activity—features broadly conserved among Bacillus neutral proteases and experimentally demonstrated in characterized Bacillus neutral proteases (Adekoya &amp; Sylte 2009; Hase &amp; Finkelstein 1993; Manni et al. 2008) (adekoya2009thethermolysinfamily pages 3-4, hase1993bacterialextracellularzinccontaining pages 2-3, manni2008biochemicalandmolecular pages 5-8, manni2008biochemicalandmolecular pages 9-9, hase1993bacterialextracellularzinccontaining pages 3-4). Detailed P1/P1’ subsite preferences are best established for thermolysin-type enzymes (hydrophobic preferences), and apply by homology to M4 Bacillus neutral proteases (Adekoya &amp; Sylte 2009) (adekoya2009thethermolysinfamily pages 7-8, adekoya2009thethermolysinfamily pages 3-4).</li>
+<li>Maturation and secretion. NprE is exported by the Sec pathway via an N-terminal signal peptide. After signal peptide removal by type I signal peptidase, the propeptide assists folding and keeps the enzyme inactive until autoprocessing yields the mature active protease in the extracellular milieu; PrsA assists extracellular folding/maturation post-translocation. These principles are established for Bacillus extracellular proteases and metalloproteases (Hase &amp; Finkelstein 1993; Harwood &amp; Kikuchi 2022; Astles 2024) (hase1993bacterialextracellularzinccontaining pages 2-3, harwood2022theinsand pages 11-12, harwood2022theinsand pages 14-15, astles2024novelextremophilicmetalloproteases pages 56-60).</li>
+<li>Localization. Mature NprE is extracellular/secreted, accumulating in stationary-phase culture supernatants (Harwood &amp; Kikuchi 2022; https://doi.org/10.1093/femsre/fuab046) (harwood2022theinsand pages 12-13, harwood2022theinsand pages 14-15).</li>
+<li>Genetic regulation and growth-phase control. nprE is strongly expressed only post-exponentially/late log-to-stationary phase. Regulation involves: (i) direct repression by CodY under nutrient-replete conditions (liganded by branched-chain amino acids and GTP), (ii) ScoC-mediated repression, tied to CodY because CodY represses scoC, (iii) AbrB repression during early growth, and (iv) activation by phosphorylated DegU (the output of the DegS–DegU two-component system). Spo0A indirectly promotes expression by repressing abrB when Spo0A~P accumulates. Genetic/reporter and DNA-binding assays substantiate these roles (Barbieri et al., J Bacteriol, Mar 2016; https://doi.org/10.1128/JB.00894-15) (barbieri2016interplayofcody pages 1-6). Harwood &amp; Kikuchi (2022) summarize NprE’s placement in ScoC/AbrB/CodY regulons and stationary-phase prevalence (https://doi.org/10.1093/femsre/fuab046) (harwood2022theinsand pages 13-14, harwood2022theinsand pages 12-13).</li>
+<li>Physiological role and interactions with other proteases. NprE contributes to extracellular protein degradation for nutrient scavenging in stationary phase. Together with AprE, it accounts for most bulk proteolytic activity in the extracellular milieu. Bacillus secretes a network of proteases with diverse functions, including quality control (WprA, HtrA/HtrB) and processing of extracellular substrates/signals (e.g., Epr/Vpr processing CSF/PhrA; Vpr/TapA in biofilm matrix). Deleting multiple proteases can facilitate bioproduction but may trade off with processing/signaling functions (Harwood &amp; Kikuchi 2022; https://doi.org/10.1093/femsre/fuab046) (harwood2022theinsand pages 14-15, harwood2022theinsand pages 11-12).</li>
+</ul>
+<p>Notes on substrate preferences and optima</p>
+<ul>
+<li>pH/temperature optima and kinetic constants have been extensively characterized for thermolysin-like Bacillus neutral proteases; common patterns include neutral-to-alkaline pH optima and enhanced thermostability in the presence of Ca2+. Direct quantitative parameters for NprE were not extracted from the available excerpts, but homologous Bacillus neutral proteases show EDTA-sensitive activity, strong Ca2+ stabilization (up to ~2-fold activity enhancement at millimolar Ca2+), and neutral/alkaline optima, supporting similar properties for NprE by family homology (Manni et al. 2008; https://doi.org/10.1016/j.procbio.2008.01.016; Hase &amp; Finkelstein 1993) (manni2008biochemicalandmolecular pages 5-8, hase1993bacterialextracellularzinccontaining pages 2-3).</li>
+</ul>
+<p>Ambiguity check and symbol verification</p>
+<ul>
+<li>The symbol nprE in Bacillus subtilis 168 unambiguously denotes the secreted neutral protease bacillolysin; organism, family, and secretion are consistent across sources. No conflicting gene in another organism was used (Harwood &amp; Kikuchi 2022; Hase &amp; Finkelstein 1993) (harwood2022theinsand pages 12-13, hase1993bacterialextracellularzinccontaining pages 2-3).</li>
+</ul>
+<p>Gaps and future directions (data needs)</p>
+<ul>
+<li>Family-level biochemical features are well established (HExxH, Zn2+/Ca2+ dependence, Sec secretion with propeptide maturation), but NprE-specific kinetic constants, substrate mapping, and high-resolution domain annotation (e.g., explicit PepSY/PPC boundaries) were not present in the retrieved excerpts and would benefit from targeted structural/biochemical primary literature on B. subtilis NprE.</li>
+</ul>
+<p>References with URLs and dates</p>
+<ul>
+<li>Harwood CR, Kikuchi Y. The ins and outs of Bacillus proteases: activities, functions and commercial significance. FEMS Microbiol Rev. Aug 2022. https://doi.org/10.1093/femsre/fuab046 (supports identity, abundance, regulation summary, maturation/secretion context, applications) (harwood2022theinsand pages 12-13, harwood2022theinsand pages 13-14, harwood2022theinsand pages 14-15, harwood2022theinsand pages 11-12).</li>
+<li>Hase C, Finkelstein RA. Bacterial extracellular zinc-containing metalloproteases. Microbiol Rev. Dec 1993. https://doi.org/10.1128/mr.57.4.823-837.1993 (supports M4 family features, architecture, Zn/Ca, secretion/maturation) (hase1993bacterialextracellularzinccontaining pages 2-3, hase1993bacterialextracellularzinccontaining pages 3-4).</li>
+<li>Adekoya OA, Sylte I. The Thermolysin Family (M4) of Enzymes: Therapeutic and Biotechnological Potential. Chem Biol Drug Des. Jan 2009. https://doi.org/10.1111/j.1747-0285.2008.00757.x (supports catalytic motif HExxH, Glu ligand, mechanism; notes PepSY; industrial relevance) (adekoya2009thethermolysinfamily pages 3-4, adekoya2009thethermolysinfamily pages 7-8).</li>
+<li>Barbieri G, Albertini AM, Ferrari E, Sonenshein AL, Belitsky BR. Interplay of CodY and ScoC in the Regulation of Major Extracellular Protease Genes of Bacillus subtilis. J Bacteriol. Mar 2016. https://doi.org/10.1128/JB.00894-15 (supports direct/indirect regulation of nprE by CodY, ScoC, DegU, AbrB; stationary-phase expression) (barbieri2016interplayofcody pages 1-6).</li>
+<li>Manni L, Jellouli K, Agrebi R, Bayoudh A, Nasri M. Biochemical and molecular characterization of a novel calcium-dependent metalloprotease from Bacillus cereus SV1. Process Biochem. May 2008. https://doi.org/10.1016/j.procbio.2008.01.016 (supports EDTA inhibition, Ca2+ dependence, conserved HExxH and Glu ligand motifs in Bacillus neutral proteases; comparative evidence) (manni2008biochemicalandmolecular pages 5-8, manni2008biochemicalandmolecular pages 9-9).</li>
+<li>Astles BM. Novel extremophilic metalloproteases for consumer product application. Thesis (University of Edinburgh). Jul 2024. https://doi.org/10.7488/era/4696 (supports modern engineering context: Sec–PrsA maturation, QC proteases, multi-protease deletions incl. nprE) (astles2024novelextremophilicmetalloproteases pages 56-60).</li>
+<li>Liu X, Wang H, Wang B, Pan L. Efficient production of extracellular pullulanase in Bacillus subtilis ATCC6051 using the host strain construction and promoter optimization expression system. Microb Cell Fact. Oct 2018. https://doi.org/10.1186/s12934-018-1011-y (supports industrial deletion of nprE among multiple proteases; quantitative production data) (liu2018efficientproductionof pages 6-9).</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(harwood2022theinsand pages 12-13): Colin R Harwood and Yoshimi Kikuchi. The ins and outs of bacillus proteases: activities, functions and commercial significance. FEMS Microbiology Reviews, Aug 2022. URL: https://doi.org/10.1093/femsre/fuab046, doi:10.1093/femsre/fuab046. This article has 100 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(harwood2022theinsand pages 13-14): Colin R Harwood and Yoshimi Kikuchi. The ins and outs of bacillus proteases: activities, functions and commercial significance. FEMS Microbiology Reviews, Aug 2022. URL: https://doi.org/10.1093/femsre/fuab046, doi:10.1093/femsre/fuab046. This article has 100 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(harwood2022theinsand pages 14-15): Colin R Harwood and Yoshimi Kikuchi. The ins and outs of bacillus proteases: activities, functions and commercial significance. FEMS Microbiology Reviews, Aug 2022. URL: https://doi.org/10.1093/femsre/fuab046, doi:10.1093/femsre/fuab046. This article has 100 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(hase1993bacterialextracellularzinccontaining pages 2-3): C. Hase and Richard A. Finkelstein. Bacterial extracellular zinc-containing metalloproteases. Microbiological Reviews, 57:823-837, Dec 1993. URL: https://doi.org/10.1128/mr.57.4.823-837.1993, doi:10.1128/mr.57.4.823-837.1993. This article has 425 citations.</p>
+</li>
+<li>
+<p>(adekoya2009thethermolysinfamily pages 3-4): Olayiwola A. Adekoya and Ingebrigt Sylte. The thermolysin family (m4) of enzymes: therapeutic and biotechnological potential. Chemical Biology &amp; Drug Design, 73:7-16, Jan 2009. URL: https://doi.org/10.1111/j.1747-0285.2008.00757.x, doi:10.1111/j.1747-0285.2008.00757.x. This article has 225 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(hase1993bacterialextracellularzinccontaining pages 3-4): C. Hase and Richard A. Finkelstein. Bacterial extracellular zinc-containing metalloproteases. Microbiological Reviews, 57:823-837, Dec 1993. URL: https://doi.org/10.1128/mr.57.4.823-837.1993, doi:10.1128/mr.57.4.823-837.1993. This article has 425 citations.</p>
+</li>
+<li>
+<p>(adekoya2009thethermolysinfamily pages 7-8): Olayiwola A. Adekoya and Ingebrigt Sylte. The thermolysin family (m4) of enzymes: therapeutic and biotechnological potential. Chemical Biology &amp; Drug Design, 73:7-16, Jan 2009. URL: https://doi.org/10.1111/j.1747-0285.2008.00757.x, doi:10.1111/j.1747-0285.2008.00757.x. This article has 225 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(astles2024novelextremophilicmetalloproteases pages 56-60): Benjamin Michael Astles. Novel extremophilic metalloproteases for consumer product application. Unknown, Jul 2024. URL: https://doi.org/10.7488/era/4696, doi:10.7488/era/4696. This article has 0 citations.</p>
+</li>
+<li>
+<p>(liu2018efficientproductionof pages 6-9): Xin Liu, Hai Wang, Bin Wang, and Li Pan. Efficient production of extracellular pullulanase in bacillus subtilis atcc6051 using the host strain construction and promoter optimization expression system. Microbial Cell Factories, Oct 2018. URL: https://doi.org/10.1186/s12934-018-1011-y, doi:10.1186/s12934-018-1011-y. This article has 59 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(harwood2022theinsand pages 11-12): Colin R Harwood and Yoshimi Kikuchi. The ins and outs of bacillus proteases: activities, functions and commercial significance. FEMS Microbiology Reviews, Aug 2022. URL: https://doi.org/10.1093/femsre/fuab046, doi:10.1093/femsre/fuab046. This article has 100 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(barbieri2016interplayofcody pages 1-6): Giulia Barbieri, Alessandra M. Albertini, Eugenio Ferrari, Abraham L. Sonenshein, and Boris R. Belitsky. Interplay of cody and scoc in the regulation of major extracellular protease genes of bacillus subtilis. Journal of Bacteriology, 198:907-920, Mar 2016. URL: https://doi.org/10.1128/jb.00894-15, doi:10.1128/jb.00894-15. This article has 83 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(manni2008biochemicalandmolecular pages 5-8): Laila Manni, Kemel Jellouli, Rym Agrebi, Ahmed Bayoudh, and Moncef Nasri. Biochemical and molecular characterization of a novel calcium-dependent metalloprotease from bacillus cereus sv1. Process Biochemistry, 43:522-530, May 2008. URL: https://doi.org/10.1016/j.procbio.2008.01.016, doi:10.1016/j.procbio.2008.01.016. This article has 34 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(manni2008biochemicalandmolecular pages 9-9): Laila Manni, Kemel Jellouli, Rym Agrebi, Ahmed Bayoudh, and Moncef Nasri. Biochemical and molecular characterization of a novel calcium-dependent metalloprotease from bacillus cereus sv1. Process Biochemistry, 43:522-530, May 2008. URL: https://doi.org/10.1016/j.procbio.2008.01.016, doi:10.1016/j.procbio.2008.01.016. This article has 34 citations and is from a peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>hase1993bacterialextracellularzinccontaining pages 2-3</li>
+<li>harwood2022theinsand pages 13-14</li>
+<li>adekoya2009thethermolysinfamily pages 7-8</li>
+<li>astles2024novelextremophilicmetalloproteases pages 56-60</li>
+<li>liu2018efficientproductionof pages 6-9</li>
+<li>harwood2022theinsand pages 14-15</li>
+<li>barbieri2016interplayofcody pages 1-6</li>
+<li>harwood2022theinsand pages 12-13</li>
+<li>adekoya2009thethermolysinfamily pages 3-4</li>
+<li>hase1993bacterialextracellularzinccontaining pages 3-4</li>
+<li>harwood2022theinsand pages 11-12</li>
+<li>manni2008biochemicalandmolecular pages 5-8</li>
+<li>manni2008biochemicalandmolecular pages 9-9</li>
+<li>https://doi.org/10.1093/femsre/fuab046</li>
+<li>https://doi.org/10.1128/mr.57.4.823-837.1993</li>
+<li>https://doi.org/10.1111/j.1747-0285.2008.00757.x;</li>
+<li>https://doi.org/10.1111/j.1747-0285.2008.00757.x</li>
+<li>https://doi.org/10.7488/era/4696,</li>
+<li>https://doi.org/10.1186/s12934-018-1011-y</li>
+<li>https://doi.org/10.1128/JB.00894-15</li>
+<li>https://doi.org/10.1128/mr.57.4.823-837.1993;</li>
+<li>https://doi.org/10.1016/j.procbio.2008.01.016</li>
+<li>https://doi.org/10.1016/j.procbio.2008.01.016;</li>
+<li>https://doi.org/10.7488/era/4696</li>
+<li>https://doi.org/10.1093/femsre/fuab046,</li>
+<li>https://doi.org/10.1128/mr.57.4.823-837.1993,</li>
+<li>https://doi.org/10.1111/j.1747-0285.2008.00757.x,</li>
+<li>https://doi.org/10.1186/s12934-018-1011-y,</li>
+<li>https://doi.org/10.1128/jb.00894-15,</li>
+<li>https://doi.org/10.1016/j.procbio.2008.01.016,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P68736
+gene_symbol: nprE
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:224308
+  label: Bacillus subtilis (strain 168)
+description: &gt;-
+  NprE (bacillolysin) is a secreted zinc metalloendopeptidase of the peptidase M4 (thermolysin-like) family.
+  It is one of the two dominant extracellular proteases in stationary-phase B. subtilis culture supernatants,
+  along with AprE (subtilisin). NprE is synthesized as a preproenzyme with an N-terminal Sec signal peptide
+  (residues 1-27), a large propeptide (residues 28-221) that assists folding and transiently inhibits activity,
+  and a mature catalytic domain (residues 222-521). The active site contains the conserved HExxH zinc-binding
+  motif characteristic of M4 family proteases. The enzyme binds one catalytic Zn2+ ion and four structural
+  Ca2+ ions that provide stability. NprE expression is tightly regulated and restricted to post-exponential/
+  stationary phase through the integrated action of repressors CodY, ScoC, and AbrB, and activator DegU~P.
+  Together with AprE, deletion of nprE accounts for approximately 95% reduction in bulk extracellular protease
+  activity, indicating its major contribution to extracellular proteolysis for nutrient scavenging during
+  stationary phase.
+existing_annotations:
+- term:
+    id: GO:0006508
+    label: proteolysis
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      IBA annotation of proteolysis based on phylogenetic inference from PANTHER (PTN002138658) and
+      thermolysin (UniProtKB:P14756). NprE is a well-characterized metalloendopeptidase that catalyzes
+      hydrolysis of peptide bonds, directly contributing to proteolysis in the extracellular milieu.
+    action: ACCEPT
+    reason: &gt;-
+      This is a core function of NprE. The enzyme is a secreted zinc metalloprotease that hydrolyzes
+      peptide bonds, directly performing proteolysis. The phylogenetic inference from thermolysin
+      (a closely related M4 family member) is appropriate. Multiple reviews confirm NprE as one of
+      the two dominant extracellular proteases in B. subtilis stationary phase cultures.
+    supported_by:
+      - reference_id: file:BACSU/nprE/nprE-deep-research-falcon.md
+        supporting_text: &gt;-
+          NprE is a secreted zinc metallopeptidase of the peptidase M4 family (thermolysin-like proteases)
+          and is one of the two dominant extracellular proteases in stationary phase culture supernatants
+          (the other is AprE/subtilisin)
+
+- term:
+    id: GO:0004222
+    label: metalloendopeptidase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      IEA annotation from InterPro domain mapping (IPR001570, IPR013856, IPR023612). NprE contains
+      the Peptidase_M4 domain and related domains characteristic of thermolysin-like metalloendopeptidases.
+    action: ACCEPT
+    reason: &gt;-
+      This is the most specific and accurate molecular function term for NprE. The enzyme is a
+      zinc-dependent metalloendopeptidase that hydrolyzes internal peptide bonds using a catalytic
+      mechanism involving Zn2+-activated water. The HExxH motif characteristic of M4 metalloproteases
+      is present, and the catalytic mechanism is well-established for this enzyme family.
+    supported_by:
+      - reference_id: file:BACSU/nprE/nprE-deep-research-falcon.md
+        supporting_text: &gt;-
+          Thermolysin-like M4 metalloproteases are &#34;Glu-zincins,&#34; using the conserved HExxH motif to bind
+          Zn2+ (His-His) and a downstream Glu as the third zinc ligand; catalysis proceeds via activation
+          of a zinc-bound water/hydroxide for peptide bond hydrolysis
+
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: &gt;-
+      IEA annotation from UniProtKB subcellular location vocabulary mapping. UniProt records NprE
+      as secreted (ECO:0000250). The protein has an N-terminal signal peptide for Sec-dependent export.
+    action: ACCEPT
+    reason: &gt;-
+      This is a core localization for NprE. The enzyme is secreted via the Sec pathway and functions
+      in the extracellular milieu. The signal peptide (residues 1-27) directs export, and the mature
+      protease accumulates in stationary-phase culture supernatants.
+    supported_by:
+      - reference_id: file:BACSU/nprE/nprE-deep-research-falcon.md
+        supporting_text: &gt;-
+          Mature NprE is extracellular/secreted, accumulating in stationary-phase culture supernatants
+      - reference_id: UniProt:P68736
+        supporting_text: &gt;-
+          SUBCELLULAR LOCATION: Secreted
+
+- term:
+    id: GO:0006508
+    label: proteolysis
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      IEA annotation from combined automated methods (InterPro:IPR023612 Peptidase_M4 and
+      UniProtKB-KW:KW-0645 Protease). This is a duplicate of the IBA annotation for proteolysis.
+    action: ACCEPT
+    reason: &gt;-
+      Duplicate annotation with different evidence source is acceptable. The IEA annotation reinforces
+      the IBA annotation and is based on valid domain and keyword mappings. Both evidence lines
+      correctly identify proteolysis as a core biological process for this enzyme.
+    supported_by:
+      - reference_id: file:BACSU/nprE/nprE-deep-research-falcon.md
+        supporting_text: &gt;-
+          Deletion of nprE and aprE together reduces culture supernatant protease activity by ~95%
+          in stationary phase
+
+- term:
+    id: GO:0008233
+    label: peptidase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;-
+      IEA annotation from UniProtKB keyword mapping (KW-0645 Protease). GO:0008233 peptidase activity
+      is a parent term of GO:0004222 metalloendopeptidase activity.
+    action: ACCEPT
+    reason: &gt;-
+      While this is a more general term than GO:0004222, it is not incorrect. The IEA annotation
+      is based on a valid keyword mapping. Since the more specific term GO:0004222 (metalloendopeptidase
+      activity) is also annotated, this broader term is acceptable as it provides a different evidence
+      lineage and could be useful for hierarchical queries.
+    supported_by:
+      - reference_id: UniProt:P68736
+        supporting_text: &gt;-
+          RecName: Full=Bacillolysin; EC=3.4.24.28
+
+- term:
+    id: GO:0008237
+    label: metallopeptidase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;-
+      IEA annotation from UniProtKB keyword mapping (KW-0482 Metalloprotease). GO:0008237 metallopeptidase
+      activity is a parent term of GO:0004222 metalloendopeptidase activity.
+    action: ACCEPT
+    reason: &gt;-
+      This term accurately describes NprE as a metal-dependent peptidase. While more general than
+      GO:0004222, it correctly captures the metallopeptidase nature of the enzyme. The zinc dependence
+      of the catalytic mechanism is well-established.
+    supported_by:
+      - reference_id: file:BACSU/nprE/nprE-deep-research-falcon.md
+        supporting_text: &gt;-
+          Activity is abolished by chelators (e.g., EDTA), and Ca2+ enhances stability/activity
+
+- term:
+    id: GO:0016787
+    label: hydrolase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;-
+      IEA annotation from UniProtKB keyword mapping (KW-0378 Hydrolase). GO:0016787 hydrolase activity
+      is a high-level parent term in the GO hierarchy.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      While technically correct (metalloendopeptidases are hydrolases that use water as a nucleophile),
+      this term is too general to be informative. The more specific terms GO:0004222 (metalloendopeptidase
+      activity) and GO:0008237 (metallopeptidase activity) are already annotated and provide much more
+      useful functional information. Retaining this very broad term adds little value.
+    supported_by:
+      - reference_id: file:BACSU/nprE/nprE-deep-research-falcon.md
+        supporting_text: &gt;-
+          catalysis proceeds via activation of a zinc-bound water/hydroxide for peptide bond hydrolysis
+
+- term:
+    id: GO:0046872
+    label: metal ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;-
+      IEA annotation from UniProtKB keyword mapping (KW-0479 Metal-binding). NprE binds one catalytic
+      Zn2+ ion and four structural Ca2+ ions.
+    action: MODIFY
+    reason: &gt;-
+      While NprE does bind metal ions, this generic term does not capture the specific and functionally
+      important metal binding. The enzyme specifically binds zinc (essential for catalysis) and calcium
+      (essential for structural stability). More specific terms GO:0008270 (zinc ion binding) and
+      GO:0005509 (calcium ion binding) would be more informative and accurately represent the
+      documented metal binding properties.
+    proposed_replacement_terms:
+      - id: GO:0008270
+        label: zinc ion binding
+      - id: GO:0005509
+        label: calcium ion binding
+    supported_by:
+      - reference_id: UniProt:P68736
+        supporting_text: &gt;-
+          Binds 4 Ca(2+) ions per subunit
+      - reference_id: UniProt:P68736
+        supporting_text: &gt;-
+          Binds 1 zinc ion per subunit
+      - reference_id: file:BACSU/nprE/nprE-deep-research-falcon.md
+        supporting_text: &gt;-
+          Ca2+ ions stabilize structure and thermal resistance
+
+core_functions:
+  - molecular_function:
+      id: GO:0004222
+      label: metalloendopeptidase activity
+    directly_involved_in:
+      - id: GO:0006508
+        label: proteolysis
+    locations:
+      - id: GO:0005576
+        label: extracellular region
+    description: &gt;-
+      Core enzymatic function. NprE is a zinc-dependent metalloendopeptidase with thermolysin-like
+      catalytic activity (EC 3.4.24.28). Uses HExxH motif for zinc binding and catalysis.
+      Along with AprE, NprE accounts for approximately 95% of extracellular proteolytic activity
+      in stationary-phase B. subtilis cultures. Secreted via Sec pathway with N-terminal signal
+      peptide. Mature enzyme accumulates in culture supernatant during stationary phase.
+    supported_by:
+      - reference_id: file:BACSU/nprE/nprE-deep-research-falcon.md
+        supporting_text: &gt;-
+          NprE is a secreted zinc metallopeptidase of the peptidase M4 family (thermolysin-like proteases)
+          and is one of the two dominant extracellular proteases in stationary phase culture supernatants
+          (the other is AprE/subtilisin)
+      - reference_id: file:BACSU/nprE/nprE-deep-research-falcon.md
+        supporting_text: &gt;-
+          Thermolysin-like M4 metalloproteases are &#34;Glu-zincins,&#34; using the conserved HExxH motif
+          to bind Zn2+ (His-His) and a downstream Glu as the third zinc ligand; catalysis proceeds
+          via activation of a zinc-bound water/hydroxide for peptide bond hydrolysis
+
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings:
+    - statement: InterPro domains IPR001570, IPR013856, IPR023612 identify Peptidase_M4 family membership
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings:
+    - statement: Phylogenetic relationship to thermolysin (P14756) supports proteolysis annotation
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings:
+    - statement: Keywords Protease, Metalloprotease, Hydrolase, Metal-binding map to corresponding GO terms
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping
+  findings:
+    - statement: Secreted subcellular location maps to extracellular region
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings:
+    - statement: Combined InterPro and keyword evidence for proteolysis
+- id: UniProt:P68736
+  title: UniProt entry for Bacillus subtilis bacillolysin (NprE)
+  findings:
+    - statement: Extracellular zinc metalloprotease with thermolysin-like activity
+      supporting_text: &gt;-
+        FUNCTION: Extracellular zinc metalloprotease
+    - statement: Binds calcium ions for structural stability
+      supporting_text: &gt;-
+        Binds 4 Ca(2+) ions per subunit
+    - statement: Binds zinc for catalytic activity
+      supporting_text: &gt;-
+        Binds 1 zinc ion per subunit
+    - statement: Secreted protein
+      supporting_text: &gt;-
+        SUBCELLULAR LOCATION: Secreted
+    - statement: Member of peptidase M4 family
+      supporting_text: &gt;-
+        Belongs to the peptidase M4 family
+- id: file:BACSU/nprE/nprE-deep-research-falcon.md
+  title: Deep research review of nprE gene function
+  findings:
+    - statement: NprE is one of two dominant extracellular proteases in B. subtilis stationary phase
+      supporting_text: &gt;-
+        NprE is a secreted zinc metallopeptidase of the peptidase M4 family (thermolysin-like proteases)
+        and is one of the two dominant extracellular proteases in stationary phase culture supernatants
+        (the other is AprE/subtilisin)
+    - statement: M4 family proteases contain HExxH zinc-binding motif and use Glu-zincin mechanism
+      supporting_text: &gt;-
+        Thermolysin-like M4 metalloproteases are &#34;Glu-zincins,&#34; using the conserved HExxH motif to bind
+        Zn2+ (His-His) and a downstream Glu as the third zinc ligand; catalysis proceeds via activation
+        of a zinc-bound water/hydroxide for peptide bond hydrolysis
+    - statement: Deletion of nprE and aprE reduces extracellular protease activity by approximately 95%
+      supporting_text: &gt;-
+        Deletion of nprE and aprE together reduces culture supernatant protease activity by ~95%
+        in stationary phase
+    - statement: NprE is secreted and accumulates extracellularly
+      supporting_text: &gt;-
+        Mature NprE is extracellular/secreted, accumulating in stationary-phase culture supernatants
+    - statement: Activity abolished by chelators, enhanced by Ca2+
+      supporting_text: &gt;-
+        Activity is abolished by chelators (e.g., EDTA), and Ca2+ enhances stability/activity
+    - statement: Ca2+ provides structural stability
+      supporting_text: &gt;-
+        Ca2+ ions stabilize structure and thermal resistance
+    - statement: Expression regulated by CodY, ScoC, AbrB, and DegU~P
+      supporting_text: &gt;-
+        nprE expression is strongly expressed only post-exponentially/late log-to-stationary phase.
+        Regulation involves: (i) direct repression by CodY under nutrient-replete conditions
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

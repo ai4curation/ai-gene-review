@@ -1,0 +1,2866 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>sigF - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>sigF</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P07860" target="_blank" class="term-link">
+                        P07860
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Bacillus subtilis (strain 168)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "sigF";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P07860" data-a="DESCRIPTION: SigF (also known as SpoIIAC) encodes the RNA polym..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>SigF (also known as SpoIIAC) encodes the RNA polymerase sigma-F factor, a member of the sigma-70 family of alternative sigma factors that is specifically activated in the forespore compartment during Bacillus subtilis sporulation. SigF is the first compartment-specific transcription factor activated after asymmetric septation, initiating the early forespore transcriptional program. The protein contains conserved sigma-70 regions (2, 3, and 4) including a helix-turn-helix DNA-binding motif that recognizes specific promoter sequences. SigF activity is tightly controlled by an elegant partner-switching mechanism involving the anti-sigma factor SpoIIAB (which binds and sequesters SigF) and the anti-anti-sigma factor SpoIIAA. Before septation, SpoIIAB keeps SigF inactive by direct binding and also phosphorylates SpoIIAA to prevent its antagonistic activity. Upon asymmetric septation, the membrane-associated phosphatase SpoIIE preferentially dephosphorylates SpoIIAA-P in the forespore, allowing unphosphorylated SpoIIAA to bind SpoIIAB and release SigF for holoenzyme formation. This partner-switching mechanism ensures compartment-specific activation of SigF exclusively in the forespore despite the protein being present in both compartments. SigF directs transcription of early forespore genes including sigG (the late forespore sigma factor), csfB (an anti-sigma factor that reinforces cell-type specificity), and the forespore-specific promoter of rho (transcription termination factor). SigF also autoregulates the spoIIA operon from which it is expressed. The sequential activation of sigma factors (SigF in forespore, SigE in mother cell, followed by SigG and SigK) orchestrates the complex developmental program of sporulation.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000976" target="_blank" class="term-link">
+                                    GO:0000976
+                                </a>
+                            </span>
+                            <span class="term-label">transcription cis-regulatory region binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P07860" data-a="GO:0000976" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Sigma factors bind to specific promoter sequences to position RNA polymerase for transcription initiation. SigF recognizes and binds to SigF-dependent promoter elements consisting of a -10 region (consensus similar to GGTAAAAATA) and a -35 region (GAATA) separated by an A/T-rich spacer. This has been demonstrated through mutational analysis of the forespore-specific rho promoter where mutations in the -35 GAATA element abolished forespore-specific transcription (Bidnenko et al. 2024). The helix-turn-helix motif in SigF (residues 221-240 per UniProt) mediates DNA binding.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The IBA annotation for transcription cis-regulatory region binding is well-supported by the molecular function of sigma factors. SigF contains a characterized helix-turn-helix DNA-binding motif and has demonstrated sequence-specific recognition of promoter elements. The 2024 work on the rho promoter provides direct evidence that SigF recognizes specific DNA sequences at its target promoters.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:BACSU/sigF/sigF-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">a SigF-like -10 (GGTAAAAATA) and GAATA -35 separated by an A/T-rich spacer were identified; mutation of the -35 GAATA element abolished the forespore GFP burst and reduced luciferase activity</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:P07860
+                                    
+                                </span>
+                                
+                                <div class="support-text">InterPro; IPR001387; Cro/C1-type_HTH</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003899" target="_blank" class="term-link">
+                                    GO:0003899
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-directed RNA polymerase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="P07860" data-a="GO:0003899" data-r="GO_REF:0000033" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation suggests SigF has RNA polymerase catalytic activity, which is inaccurate. Sigma factors do not possess intrinsic polymerase activity - they are initiation factors that confer promoter specificity to the RNA polymerase core enzyme. The catalytic activity resides in the core RNAP subunits (alpha, beta, beta-prime), not in sigma factors.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Sigma factors including SigF do not catalyze RNA synthesis. They function as specificity factors that direct the RNA polymerase holoenzyme to specific promoters. The RNAP core enzyme provides the catalytic activity. This annotation conflates the function of the sigma subunit with the catalytic core. The correct annotation is sigma factor activity (GO:0016987), which is already present.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:P07860
+                                    
+                                </span>
+                                
+                                <div class="support-text">Sigma factors are initiation factors that promote the attachment of RNA polymerase to specific initiation sites and are then released</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006355" target="_blank" class="term-link">
+                                    GO:0006355
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of DNA-templated transcription</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P07860" data-a="GO:0006355" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SigF regulates transcription by conferring promoter specificity to RNA polymerase, thereby activating a specific set of forespore genes during sporulation. SigF directs expression of numerous sporulation-specific genes including sigG, csfB, and the forespore promoter of rho. SigF also autoregulates the spoIIA operon.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> As an alternative sigma factor, SigF fundamentally regulates transcription by determining which promoters the RNAP holoenzyme can recognize. SigF-dependent transcription activates the early forespore program. This is a core function of sigma factors and is well-documented for SigF.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:P07860
+                                    
+                                </span>
+                                
+                                <div class="support-text">This sigma factor is responsible for the expression of sporulation specific genes</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016987" target="_blank" class="term-link">
+                                    GO:0016987
+                                </a>
+                            </span>
+                            <span class="term-label">sigma factor activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P07860" data-a="GO:0016987" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SigF is a well-characterized sigma factor of the sigma-70 family. It contains conserved sigma-70 regions (regions 2, 3, and 4) that mediate core RNAP binding and promoter recognition. Biochemical and genetic studies have definitively established SigF as a sigma factor that associates with RNAP core and directs transcription initiation at SigF-dependent promoters.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the primary molecular function of SigF. The sigma factor activity annotation accurately captures SigF&#39;s role in conferring promoter specificity to RNA polymerase. This is supported by extensive biochemical characterization, domain analysis, and genetic studies demonstrating SigF-dependent transcription.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:P07860
+                                    
+                                </span>
+                                
+                                <div class="support-text">Sigma factors are initiation factors that promote the attachment of RNA polymerase to specific initiation sites and are then released</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:P07860
+                                    
+                                </span>
+                                
+                                <div class="support-text">Associates with the RNAP core only in stationary phase cells</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1903865" target="_blank" class="term-link">
+                                    GO:1903865
+                                </a>
+                            </span>
+                            <span class="term-label">sigma factor antagonist complex</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P07860" data-a="GO:1903865" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SigF forms a complex with its anti-sigma factor SpoIIAB, which inhibits SigF activity by direct binding. The SigF-SpoIIAB complex represents a sigma factor antagonist complex where SpoIIAB sequesters SigF and prevents holoenzyme formation. This complex is a central component of the partner-switching mechanism that controls SigF activation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The formation of a SigF-SpoIIAB inhibitory complex is well-documented and represents a key regulatory mechanism. SpoIIAB binds SigF through contacts at conserved sigma-70 regions 2.1, 3.1, and 4.1. This complex formation is essential for keeping SigF inactive in the pre-divisional cell and in the mother cell compartment after septation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:P07860
+                                    
+                                </span>
+                                
+                                <div class="support-text">Interaction with SpoIIAB inhibits sigma-F activity throughout the cell before the formation of the asymmetric septum</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003677" target="_blank" class="term-link">
+                                    GO:0003677
+                                </a>
+                            </span>
+                            <span class="term-label">DNA binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P07860" data-a="GO:0003677" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SigF binds DNA as part of the RNAP holoenzyme to recognize promoter sequences. SigF contains a characterized helix-turn-helix DNA-binding motif (residues 221-240) that mediates sequence-specific recognition of SigF-dependent promoters.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While this IEA annotation is more general than the IBA annotation for transcription cis-regulatory region binding (GO:0000976), it is not incorrect. Sigma factors do bind DNA as part of the holoenzyme. The presence of a characterized HTH motif in SigF supports this annotation. This can be retained as a broader annotation alongside the more specific term.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:P07860
+                                    
+                                </span>
+                                
+                                <div class="support-text">InterPro; IPR001387; Cro/C1-type_HTH</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003700" target="_blank" class="term-link">
+                                    GO:0003700
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-binding transcription factor activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P07860" data-a="GO:0003700" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This term is intended for sequence-specific DNA-binding transcription factors that regulate transcription by binding to cis-regulatory elements. While sigma factors do bind DNA and regulate transcription, they function mechanistically differently from classical transcription factors - sigma factors confer promoter recognition to the RNA polymerase core rather than acting as independent regulatory factors.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The term GO:0003700 is designed for classical transcription factors that independently bind DNA regulatory elements. Sigma factors have a distinct mechanism - they are subunits of the RNAP holoenzyme that confer promoter specificity. The more appropriate and specific term is GO:0016987 (sigma factor activity), which is already annotated. This IEA annotation from InterPro mapping may be overly broad.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016987" target="_blank" class="term-link">
+                                    sigma factor activity
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:P07860
+                                    
+                                </span>
+                                
+                                <div class="support-text">Sigma factors are initiation factors that promote the attachment of RNA polymerase to specific initiation sites and are then released</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006351" target="_blank" class="term-link">
+                                    GO:0006351
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-templated transcription</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P07860" data-a="GO:0006351" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SigF participates in DNA-templated transcription as the sigma subunit of the RNA polymerase holoenzyme. As a sigma factor, it enables transcription initiation at SigF-dependent promoters during sporulation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This biological process annotation correctly captures SigF&#39;s involvement in transcription. As a sigma factor, SigF is directly involved in the transcription process by conferring promoter specificity to RNAP and enabling transcription initiation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:P07860
+                                    
+                                </span>
+                                
+                                <div class="support-text">Sigma factors are initiation factors that promote the attachment of RNA polymerase to specific initiation sites</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:P07860
+                                    
+                                </span>
+                                
+                                <div class="support-text">This sigma factor is responsible for the expression of sporulation specific genes</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006352" target="_blank" class="term-link">
+                                    GO:0006352
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-templated transcription initiation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P07860" data-a="GO:0006352" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SigF is specifically involved in transcription initiation - sigma factors function at the initiation step to position RNA polymerase at promoters and enable formation of the open complex. After initiation, sigma factors are typically released from the elongating polymerase.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation is highly appropriate for SigF. Sigma factors function specifically at the transcription initiation step - they enable promoter recognition and open complex formation but are released during the transition to elongation. This term accurately captures the specific stage of transcription where sigma factors act.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:P07860
+                                    
+                                </span>
+                                
+                                <div class="support-text">Sigma factors are initiation factors that promote the attachment of RNA polymerase to specific initiation sites and are then released</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006355" target="_blank" class="term-link">
+                                    GO:0006355
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of DNA-templated transcription</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P07860" data-a="GO:0006355" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Duplicate annotation with the IBA entry. SigF regulates transcription by determining which promoters are recognized by the RNAP holoenzyme, thereby activating transcription of forespore-specific genes.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a valid annotation for SigF regardless of evidence code. As an alternative sigma factor, SigF regulates transcription by conferring promoter specificity. The duplicate with different evidence codes is acceptable and reflects independent inference paths reaching the same conclusion.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:P07860
+                                    
+                                </span>
+                                
+                                <div class="support-text">This sigma factor is responsible for the expression of sporulation specific genes</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016987" target="_blank" class="term-link">
+                                    GO:0016987
+                                </a>
+                            </span>
+                            <span class="term-label">sigma factor activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P07860" data-a="GO:0016987" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Duplicate annotation with the IBA entry. SigF is a well-characterized member of the sigma-70 family with demonstrated sigma factor activity.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This core molecular function annotation is appropriate for SigF. The duplicate with IEA evidence code reflects independent computational inference confirming the phylogenetically-derived IBA annotation. Duplicates with different evidence types are acceptable in GO annotation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:P07860
+                                    
+                                </span>
+                                
+                                <div class="support-text">Belongs to the sigma-70 factor family</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030435" target="_blank" class="term-link">
+                                    GO:0030435
+                                </a>
+                            </span>
+                            <span class="term-label">sporulation resulting in formation of a cellular spore</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P07860" data-a="GO:0030435" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SigF plays an essential role in sporulation. It is the first compartment-specific sigma factor activated during sporulation and initiates the early forespore transcriptional program. Mutations in sigF block sporulation and prevent formation of mature spores.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This biological process annotation appropriately captures SigF&#39;s essential role in sporulation. SigF is absolutely required for spore formation - mutations abolish spore production and induction of sporulation-associated enzymes. SigF initiates the forespore developmental program that ultimately leads to spore formation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:P07860
+                                    
+                                </span>
+                                
+                                <div class="support-text">In spo-63 (loss of residues 27-255); no spores develop, no induction of sporulation-associated enzymes</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:2000142" target="_blank" class="term-link">
+                                    GO:2000142
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of DNA-templated transcription initiation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000108
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P07860" data-a="GO:2000142" data-r="GO_REF:0000108" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SigF specifically regulates transcription at the initiation step. As a sigma factor, it enables recognition of specific promoters and formation of the initiation complex. This term is more specific than the general regulation of transcription term and accurately reflects sigma factor function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation correctly captures that sigma factors regulate transcription specifically at the initiation step. SigF enables RNAP to recognize and initiate transcription from SigF-dependent promoters. This is a precise characterization of sigma factor function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:P07860
+                                    
+                                </span>
+                                
+                                <div class="support-text">Sigma factors are initiation factors that promote the attachment of RNA polymerase to specific initiation sites</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>SigF is the primary forespore-specific sigma factor that confers promoter recognition specificity to RNA polymerase, enabling transcription of early forespore genes during sporulation. As a member of the sigma-70 family, SigF binds to the RNAP core and directs the holoenzyme to SigF-dependent promoters characterized by specific -10 and -35 elements.</h3>
+                <span class="vote-buttons" data-g="P07860" data-a="FUNCTION: SigF is the primary forespore-specific sigma facto..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016987" target="_blank" class="term-link">
+                            sigma factor activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006352" target="_blank" class="term-link">
+                                DNA-templated transcription initiation
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030435" target="_blank" class="term-link">
+                                sporulation resulting in formation of a cellular spore
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            UniProt:P07860
+                            
+                        </span>
+                        
+                        <div class="finding-text">Sigma factors are initiation factors that promote the attachment of RNA polymerase to specific initiation sites and are then released</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            UniProt:P07860
+                            
+                        </span>
+                        
+                        <div class="finding-text">Associates with the RNAP core only in stationary phase cells</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>SigF forms an inhibitory complex with the anti-sigma factor SpoIIAB, which is essential for the partner-switching mechanism that controls compartment-specific SigF activation. SpoIIAB binding to SigF prevents holoenzyme formation.</h3>
+                <span class="vote-buttons" data-g="P07860" data-a="FUNCTION: SigF forms an inhibitory complex with the anti-sig..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016987" target="_blank" class="term-link">
+                            sigma factor activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1903865" target="_blank" class="term-link">
+                            sigma factor antagonist complex
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            UniProt:P07860
+                            
+                        </span>
+                        
+                        <div class="finding-text">Interaction with SpoIIAB inhibits sigma-F activity throughout the cell before the formation of the asymmetric septum</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000108.md" target="_blank" class="term-link">
+                            GO_REF:0000108
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Automatic assignment of GO terms using logical inference, based on inter-ontology links</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/3116160" target="_blank" class="term-link">
+                            PMID:3116160
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Structure and function in a Bacillus subtilis sporulation-specific sigma factor: molecular nature of mutations in spoIIAC</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/8358793" target="_blank" class="term-link">
+                            PMID:8358793
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Sigma F, the first compartment-specific transcription factor of B. subtilis, is regulated by an anti-sigma factor that is also a protein kinase</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/8759874" target="_blank" class="term-link">
+                            PMID:8759874
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Identification of additional genes under the control of the transcription factor sigma F of Bacillus subtilis</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21037003" target="_blank" class="term-link">
+                            PMID:21037003
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A small protein required for the switch from sigma-F to sigma-G during sporulation in Bacillus subtilis</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21710567" target="_blank" class="term-link">
+                            PMID:21710567
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The dynamic protein partnership of RNA polymerase in Bacillus subtilis</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:BACSU/sigF/sigF-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep research review of sigF function and regulation</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">SigF is the archetypal forespore-specific sigma-70-family sigma factor that initiates the early forespore transcriptional program after septation</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">SigF activity is gated by a partner-switching module (SpoIIAB/SpoIIAA) under the control of the septal phosphatase SpoIIE</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">SigF directly establishes forespore transcription of rho from a dedicated SigF promoter</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the complete SigF regulon and how does it compare across Bacillus species?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P07860" data-a="Q: What is the complete SigF regulon and how does it ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How is the partner-switching mechanism quantitatively tuned to ensure reliable compartment-specific activation?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P07860" data-a="Q: How is the partner-switching mechanism quantitativ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> ChIP-seq analysis of SigF binding during sporulation would enable genome-wide identification of SigF binding sites, comprehensively defining the SigF regulon and revealing any previously uncharacterized target promoters.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: SigF binds to specific promoter sequences genome-wide to activate a defined early forespore transcriptional program</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: ChIP-seq</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P07860" data-a="EXPERIMENT: ChIP-seq analysis of SigF binding during sporulati..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Quantitative analysis of SpoIIE phosphatase activity in forespore vs mother cell would illuminate the molecular basis of compartment-specific SigF activation by understanding how SpoIIE activity is restricted to the forespore.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: SpoIIE phosphatase activity is higher in the forespore compartment due to its localization at the asymmetric septum</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: Biochemical assay</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P07860" data-a="EXPERIMENT: Quantitative analysis of SpoIIE phosphatase activi..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(sigF-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P07860" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2025-12-17T23:25:06.542428'<br />
+end_time: '2025-12-17T23:35:51.411009'<br />
+duration_seconds: 644.87<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: BACSU<br />
+  gene_id: sigF<br />
+  gene_symbol: sigF<br />
+  uniprot_accession: P07860<br />
+  protein_description: 'RecName: Full=RNA polymerase sigma-F factor; AltName: Full=Sporulation<br />
+    sigma factor; AltName: Full=Stage II sporulation protein AC;'<br />
+  gene_info: Name=sigF; Synonyms=spoIIAC; OrderedLocusNames=BSU23450;<br />
+  organism_full: Bacillus subtilis (strain 168).<br />
+  protein_family: Belongs to the sigma-70 factor family. .<br />
+  protein_domains: Cro/C1-type_HTH. (IPR001387); RNA_pol_sigma-70_dom. (IPR014284);<br />
+    RNA_pol_sigma-B/F/G. (IPR014322); RNA_pol_sigma-F. (IPR014236); RNA_pol_sigma70.<br />
+    (IPR000943)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 28</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> P07860</li>
+<li><strong>Protein Description:</strong> RecName: Full=RNA polymerase sigma-F factor; AltName: Full=Sporulation sigma factor; AltName: Full=Stage II sporulation protein AC;</li>
+<li><strong>Gene Information:</strong> Name=sigF; Synonyms=spoIIAC; OrderedLocusNames=BSU23450;</li>
+<li><strong>Organism (full):</strong> Bacillus subtilis (strain 168).</li>
+<li><strong>Protein Family:</strong> Belongs to the sigma-70 factor family. .</li>
+<li><strong>Key Domains:</strong> Cro/C1-type_HTH. (IPR001387); RNA_pol_sigma-70_dom. (IPR014284); RNA_pol_sigma-B/F/G. (IPR014322); RNA_pol_sigma-F. (IPR014236); RNA_pol_sigma70. (IPR000943)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "sigF" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Bacillus subtilis (strain 168).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'sigF' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>sigF</strong> (gene ID: sigF, UniProt: P07860) in BACSU.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> P07860</li>
+<li><strong>Protein Description:</strong> RecName: Full=RNA polymerase sigma-F factor; AltName: Full=Sporulation sigma factor; AltName: Full=Stage II sporulation protein AC;</li>
+<li><strong>Gene Information:</strong> Name=sigF; Synonyms=spoIIAC; OrderedLocusNames=BSU23450;</li>
+<li><strong>Organism (full):</strong> Bacillus subtilis (strain 168).</li>
+<li><strong>Protein Family:</strong> Belongs to the sigma-70 factor family. .</li>
+<li><strong>Key Domains:</strong> Cro/C1-type_HTH. (IPR001387); RNA_pol_sigma-70_dom. (IPR014284); RNA_pol_sigma-B/F/G. (IPR014322); RNA_pol_sigma-F. (IPR014236); RNA_pol_sigma70. (IPR000943)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "sigF" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Bacillus subtilis (strain 168).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'sigF' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>sigF</strong> (gene ID: sigF, UniProt: P07860) in BACSU.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<p>Plan<br />
+Objective 1: Verify identity of the target protein and avoid symbol ambiguity. Completed: spoIIAC (sigF) encodes the sporulation sigma factor σF in Bacillus subtilis; σF is a σ70-family alternative sigma factor with conserved σ70 regions and forespore-restricted activity during sporulation (haldenwang1995thesigmafactors pages 17-18, lewis1996compartmentalizeddistributionof pages 6-8, serrano2015dualspecificityantisigmafactor pages 2-4).<br />
+Objective 2: Assemble recent (2023–2024) literature and core primary sources. Completed: 2024 JBC and MMBR reviews provide new, compartment-specific σF-linked regulation and DNA-repair integration during sporulation; foundational mechanistic studies (1993–1999) define SpoIIAB/SpoIIAA/SpoIIE control of σF (bidnenko2024complexsporulationspecificexpression pages 11-12, bidnenko2024complexsporulationspecificexpression pages 3-4, bidnenko2024complexsporulationspecificexpression pages 4-6, bidnenko2024complexsporulationspecificexpression pages 6-7, bidnenko2024complexsporulationspecificexpression pages 10-11, pedrazareyes2024bacillussubtilisstressassociated pages 18-20, haldenwang1995thesigmafactors pages 17-18, lewis1996compartmentalizeddistributionof pages 6-8, serrano2015dualspecificityantisigmafactor pages 19-20, serrano2015dualspecificityantisigmafactor pages 2-4, serrano2015dualspecificityantisigmafactor pages 6-7).<br />
+Objective 3–8: Extract key mechanisms, recent advances, applications, expert perspectives, quantitative data, and produce a concise artifact; then write the report with citations. Completed below.</p>
+<p>Comprehensive research report: Bacillus subtilis sigF (spoIIAC) – σF, the forespore-specific sigma factor</p>
+<p>1) Key concepts and definitions<br />
+- Identity and family: sigF (spoIIAC) encodes σF, an alternative RNA polymerase sigma factor that launches the early forespore transcriptional program in Bacillus subtilis. Sequence analyses and functional genetics established spoIIAC as a bona fide sigma factor within the σ70 family; σF contains conserved σ70 regions (e.g., regions 2/3/4) that mediate core binding and promoter recognition (haldenwang1995thesigmafactors pages 17-18, serrano2015dualspecificityantisigmafactor pages 2-4).<br />
+- Core regulatory module and partner switching: σF is held inactive by the anti-sigma factor SpoIIAB, which binds σF and prevents holoenzyme formation; SpoIIAB also functions as a serine kinase that phosphorylates the anti–anti-sigma SpoIIAA. Dephosphorylated SpoIIAA binds SpoIIAB, liberating σF. The PP2C-like phosphatase SpoIIE dephosphorylates SpoIIAA-P at the sporulation septum, triggering σF activation specifically in the forespore (haldenwang1995thesigmafactors pages 17-18, lewis1996compartmentalizeddistributionof pages 6-8). Classic biochemical and genetic analyses established SpoIIAB–σF binding and mapped SpoIIAB contact sites on σF to three conserved σ70 regions (2.1, 3.1, 4.1), reinforcing the σ70-family placement (haldenwang1995thesigmafactors pages 17-18, lewis1996compartmentalizeddistributionof pages 6-8).<br />
+- Compartment and timing of activity: σF protein accumulates around ~1 h after sporulation onset and is activated specifically in the forespore compartment following asymmetric septation; σF-dependent transcription is prespore-restricted even though σF protein can be detected in both compartments, indicating that activation—not localization—controls compartment specificity (lewis1996compartmentalizeddistributionof pages 6-8). Septation-dependent SpoIIE action at the septum underlies this compartmental switch (lewis1996compartmentalizeddistributionof pages 6-8).<br />
+- Genetic organization: sigF resides as the third cistron in the tricistronic spoIIA operon (spoIIAA–spoIIAB–spoIIAC/sigF), which couples synthesis of the anti–anti-, anti-, and sigma factor in one unit; σF also autoregulates the spoIIA operon via an upstream promoter (haldenwang1995thesigmafactors pages 17-18).</p>
+<p>2) Recent developments and latest research (emphasis 2023–2024)<br />
+- 2024: Compartment-specific σF control of transcription termination factor Rho. A JBC study demonstrated that rho expression is reprogrammed during sporulation through dual, compartment-specific mechanisms: read-through transcription from a distal SigH- and Spo0A~P-regulated promoter drives mother-cell expression, while a genuine SigF-dependent promoter in the rho 5′ UTR drives forespore expression. A SigF-like −10 (GGTAAAAATA) and GAATA −35 separated by an A/T-rich spacer were identified; mutation of the −35 GAATA element abolished the forespore GFP burst and reduced luciferase activity, phenocopying ΔsigF. ΔsigF significantly diminishes forespore-specific rho expression, whereas ΔsigE does not, showing forespore-specific σF control. These sporulation-specific promoters compensate for silencing of the vegetative SigA-dependent rho promoter, enabling “refueling” of Rho protein in both compartments; altering this pattern impacts spore morphology and revival efficiency (JBC, 2024-12; https://doi.org/10.1016/j.jbc.2024.107905) (bidnenko2024complexsporulationspecificexpression pages 4-6, bidnenko2024complexsporulationspecificexpression pages 6-7, bidnenko2024complexsporulationspecificexpression pages 10-11, bidnenko2024complexsporulationspecificexpression pages 3-4, bidnenko2024complexsporulationspecificexpression pages 1-2).<br />
+- 2024: Integration with DNA repair and stress-associated mutagenesis. An MMBR review synthesized recent findings that several DNA repair and maintenance factors are expressed in a compartment-specific manner during sporulation, with σF directing forespore expression of certain functions (e.g., YwjD UV endonuclease). The review details lesion-specific processing cascades in sporulating cells and shows that many repair proteins (including σF-driven or forespore-enriched proteins) are packaged in spores and become active upon germination, linking σF-dependent transcription to spore quality and resilience (MMBR, 2024-06; https://doi.org/10.1128/mmbr.00158-23) (pedrazareyes2024bacillussubtilisstressassociated pages 18-20).<br />
+- Refined understanding of σF discrimination by CsfB (contextual modern mechanistic work): CsfB (Gin), a dual-specificity anti-sigma, reinforces cell-type specificity by binding σG and σE but discriminating against σF and σK via specific residues in conserved σ70 region 2.1/2.3, respectively (E39 in σF vs N45 in σG; N100 in σE vs E93 in σK). This prevents ectopic σG activity in pre-divisional cells and helps the σE→σK transition; spore formation efficiency changes and surface-layer composition differences illustrate phenotypic outcomes (PLOS Genetics, 2015-04; https://doi.org/10.1371/journal.pgen.1005104) (serrano2015dualspecificityantisigmafactor pages 19-20, serrano2015dualspecificityantisigmafactor pages 2-4, serrano2015dualspecificityantisigmafactor pages 6-7).</p>
+<p>3) Current applications and real-world implementations<br />
+- Live-cell and compartment-specific reporters controlled by σF. The Prho-gfp and Prho-luc fusions constructed at the native rho locus provide real-time, compartment-resolved readouts of forespore σF activity in vivo; mutational analyses of the SigF-dependent −35 element serve both as validation and as practical tools for dissecting forespore transcription circuits (bidnenko2024complexsporulationspecificexpression pages 6-7, bidnenko2024complexsporulationspecificexpression pages 12-13, bidnenko2024complexsporulationspecificexpression pages 1-2).<br />
+- Forespore DNA repair engineering and spore quality: The 2024 MMBR synthesis highlights σF-controlled expression of forespore DNA repair enzymes (e.g., YwjD endonuclease) that contribute to UV damage processing and spore fitness. These insights guide strategies to optimize spore robustness for industrial or probiotic applications by tuning σF-driven repair pathway expression during sporulation (pedrazareyes2024bacillussubtilisstressassociated pages 18-20).<br />
+- Regulatory circuit design principles: The σF/SpoIIAB/SpoIIAA/SpoIIE module exemplifies a partner-switching, phosphorylation-controlled, septation-gated signal transduction circuit. It inspires synthetic compartmentalized gene-expression designs and time-locked differentiation programs in Gram-positive bacteria where asymmetric division and σF-like modules exist (haldenwang1995thesigmafactors pages 17-18, lewis1996compartmentalizeddistributionof pages 6-8, bidnenko2024complexsporulationspecificexpression pages 4-6, bidnenko2024complexsporulationspecificexpression pages 6-7).</p>
+<p>4) Expert opinions and authoritative analyses<br />
+- Reviews defining σF and its control: The Microbiological Reviews article by Haldenwang remains a cornerstone that cataloged B. subtilis sigma factors, mapped spoIIAC as σF, described σF autoregulation, and established the logic of anti-sigma and anti–anti-sigma control (Microbiol. Rev., 1995-03; https://doi.org/10.1128/mr.59.1.1-30.1995) (haldenwang1995thesigmafactors pages 17-18). The 1996–1999 primary literature from Losick, Errington and colleagues elucidated compartmental activation by SpoIIE at the septum and the prespore-restricted transcriptional output of σF (Genes Dev., 1999-05; https://doi.org/10.1101/gad.13.9.1156) (lewis1996compartmentalizeddistributionof pages 6-8).<br />
+- 2024 authoritative perspective: Bidnenko et al. conclude that compartment-specific rerouting of rho expression—SigH/Spo0A~P-dependent read-through in the mother cell and direct SigF-dependent forespore transcription—is essential for generating spores with normal morphology and revival kinetics, and that σF-dependent “refueling” of Rho during morphogenesis primarily determines outgrowth quality (JBC, 2024-12; https://doi.org/10.1016/j.jbc.2024.107905) (bidnenko2024complexsporulationspecificexpression pages 10-11).</p>
+<p>5) Relevant statistics and data from recent and primary studies<br />
+- Timing and compartment: σF protein often becomes detectable ~1 h after sporulation initiation; activity is confined to the prespore even when protein is present in both compartments (immunostaining and gpr-lacZ reporters) (Genes to Cells, 1996-10; https://doi.org/10.1046/j.1365-2443.1996.750275.x) (lewis1996compartmentalizeddistributionof pages 6-8).<br />
+- Molecular contacts: SpoIIAB–σF binding interfaces map to σ70 conserved regions 2.1, 3.1, and 4.1 (Genes Dev., 1996-09; https://doi.org/10.1101/gad.10.18.2348) (lewis1996compartmentalizeddistributionof pages 6-8).<br />
+- Anti-sigma binding and kinase activity: SpoIIAB binds σF to inhibit transcription and has serine kinase activity that phosphorylates SpoIIAA, toggling σF release via partner switching (PNAS, 1993-03; https://doi.org/10.1073/pnas.90.6.2325) (haldenwang1995thesigmafactors pages 17-18).<br />
+- Septation-coupled activation: SpoIIE at the division septum dephosphorylates SpoIIAA-P, enabling compartment-restricted σF activation (Genes Dev., 1999-05; https://doi.org/10.1101/gad.13.9.1156) (lewis1996compartmentalizeddistributionof pages 6-8).<br />
+- σF-dependent forespore promoter architecture and function (2024): For rho, a SigF-like −10 (GGTAAAAATA) and GAATA −35 with a 14-bp A/T-rich spacer operate in forespores; mutating the −35 element (mF-35T/A or mF-35T/C) abolishes forespore GFP bursts and reduces luciferase signals, recapitulating ΔsigF effects; ΔsigE does not impair forespore rho expression (JBC, 2024-12; https://doi.org/10.1016/j.jbc.2024.107905) (bidnenko2024complexsporulationspecificexpression pages 6-7, bidnenko2024complexsporulationspecificexpression pages 4-6).<br />
+- σF-driven regulon link: σF drives initial transcription of sigG in the forespore, coordinating the early-to-late switch in forespore gene expression; CsfB-based discrimination (E39 in σF vs N45 in σG) helps prevent premature σG activity (PLOS Genet., 2015-04; https://doi.org/10.1371/journal.pgen.1005104) (serrano2015dualspecificityantisigmafactor pages 2-4, serrano2015dualspecificityantisigmafactor pages 19-20).<br />
+- DNA repair targets under forespore control (2024): σF-dependent YwjD endonuclease incises the 5´ side of CPDs, 6–4 PDs, and DWIs in sporulating cells; subsequent lesion-specific processing enzymes (e.g., YqjH/YqjW, YpcP) act in a compartment-aware manner; multiple repair proteins are expressed in sporulation and packaged into spores (MMBR, 2024-06; https://doi.org/10.1128/mmbr.00158-23) (pedrazareyes2024bacillussubtilisstressassociated pages 18-20).</p>
+<p>Mechanistic pathway and localization summary<br />
+σF is synthesized from the spoIIA operon alongside SpoIIAA and SpoIIAB. Before septation, SpoIIAB binds σF and, as a kinase, keeps SpoIIAA predominantly phosphorylated (SpoIIAA-P), maintaining σF inactive. Upon asymmetric septation, SpoIIE (at the septum) dephosphorylates SpoIIAA-P preferentially in the forespore, freeing SpoIIAA to bind SpoIIAB and release σF, thereby enabling σF–RNAP holoenzyme formation and forespore-restricted transcription. σF initiates early forespore programs, including sigG transcription and σF-dependent genes such as the forespore promoter of rho, while anti-sigma factor CsfB further enforces proper timing by discriminating among sporulation σ factors to prevent ectopic σG activation (haldenwang1995thesigmafactors pages 17-18, lewis1996compartmentalizeddistributionof pages 6-8, serrano2015dualspecificityantisigmafactor pages 2-4, serrano2015dualspecificityantisigmafactor pages 19-20, bidnenko2024complexsporulationspecificexpression pages 4-6, bidnenko2024complexsporulationspecificexpression pages 6-7, bidnenko2024complexsporulationspecificexpression pages 10-11).</p>
+<p>Embedded artifact<br />
+| Component | Role in pathway | Cell compartment / timing | Mechanism or key molecular detail | Selected quantitative / structural data | Primary sources (with year) |<br />
+|---|---|---|---|---|---|<br />
+| SigF (spoIIAC) | Early forespore-specific sigma factor that initiates forespore transcriptional program | Activated in forespore; protein detectable ~1 h after sporulation onset | Member of sigma-70 family; directs RNAP to early forespore promoters; autoregulates spoIIA expression | Protein levels rise early in sporulation; forespore-restricted activity though protein may be present in both compartments (detectable ~1 h) | Haldenwang 1995 (haldenwang1995thesigmafactors pages 17-18); Lewis 1996 (lewis1996compartmentalizeddistributionof pages 6-8); Serrano 2015 (serrano2015dualspecificityantisigmafactor pages 2-4); Pedraza-Reyes 2024 (pedrazareyes2024bacillussubtilisstressassociated pages 18-20) |<br />
+| SpoIIAB | Anti-sigma factor and regulator (inhibits σF) | Cotranscribed with spoIIAC; acts prior to/around septation | Binds and sequesters σF to prevent holoenzyme formation; has serine kinase activity that phosphorylates SpoIIAA (controls partner-switching) | Binding interfaces map to conserved sigma regions (functional inhibition/kinase activity described) | Ayala et al. 2020 (ayala2020thestressresponsivealternative pages 2-3); Haldenwang 1995 (haldenwang1995thesigmafactors pages 17-18) |<br />
+| SpoIIAA | Anti–anti-sigma factor (antagonizes SpoIIAB) | Present in prespore/mother-cell; activity toggled by phosphorylation state | Unphosphorylated SpoIIAA binds SpoIIAB, releasing σF; SpoIIAB phosphorylates SpoIIAA (SpoIIAA-P) to inactivate it | Partner-switching cycle central to σF activation; biochemical assays demonstrate phosphorylation/dephosphorylation cycle | Ayala et al. 2020 (ayala2020thestressresponsivealternative pages 2-3); Lewis 1996 (lewis1996compartmentalizeddistributionof pages 6-8) |<br />
+| SpoIIE | Phosphatase that triggers σF activation in forespore | Localized to sporulation septum; acts at/after asymmetric septation to create forespore-specific signal | Dephosphorylates SpoIIAA-P at septum → frees SpoIIAA to antagonize SpoIIAB → σF activation in forespore | Septum-associated localization and septation-coupled activation; morphological checkpoint links SpoIIE activity to compartmentalized transcription | Arigoni/King reviews &amp; experimental work summarized in Haldenwang 1995 and later reviews (haldenwang1995thesigmafactors pages 17-18, pedrazareyes2024bacillussubtilisstressassociated pages 18-20); Lewis 1996 (lewis1996compartmentalizeddistributionof pages 6-8) |<br />
+| CsfB (Gin) | Dual-specificity anti-sigma factor that reinforces cell-type specificity | Expressed early in forespore under σF control and later in mother cell under σK control | Binds selectively to closely related sporulation sigmas; discriminates σF vs σG via residue in region 2.1 (E39 in σF vs N45 in σG) to prevent ectopic σG activation | Reported spore formation efficiencies: PsigF/PsigK mutant comparisons (examples: WT ~83%; PsigF 77%; PsigK 88% reported) | Serrano et al. 2015 (serrano2015dualspecificityantisigmafactor pages 2-4, serrano2015dualspecificityantisigmafactor pages 6-7, serrano2015dualspecificityantisigmafactor pages 19-20) |<br />
+| csfB promoter | Target promoter used to control CsfB expression and timing | Recognized/initiated in forespore early (σF) and later in mother cell (σK); in vitro run-off transcription observed | Both σF- and σG-containing holoenzymes can initiate csfB transcription; promoter architecture allows stage-specific expression | In vitro reconstituted transcription produced a 148-nt run-off product with σF/σG holoenzymes (used in promoter assays) | Serrano et al. 2015 (serrano2015dualspecificityantisigmafactor pages 6-7) |<br />
+| spoIIA operon (tricistronic: spoIIAA–spoIIAB–spoIIAC) | Genetic unit encoding the SpoIIAA / SpoIIAB / SigF regulatory module | Transcribed prior to septation; autoregulated by σF from a spoIIA promoter | Tricistronic organization couples synthesis of anti-anti, anti, and σF; promoter includes upstream regulatory sequence enabling autoregulation | Genetic mapping/cloning established spoIIAC as σF (sequence similarity to sigma factors) | Haldenwang 1995 (haldenwang1995thesigmafactors pages 17-18); Lewis 1996 (lewis1996compartmentalizeddistributionof pages 6-8) |</p>
+<p><em>Table: Compact summary table of the key components controlling Bacillus subtilis σF (spoIIAC) activation, their roles, compartmental timing, molecular mechanisms, and selected quantitative/structural notes with primary source citations for each entry.</em></p>
+<p>Verification against the user’s CRITICAL identity checks<br />
+- Gene/protein symbol and description: The literature consistently identifies spoIIAC (sigF) as the sporulation sigma factor σF of Bacillus subtilis, matching the UniProt description for P07860 (RNA polymerase sigma-F, sporulation sigma factor, Stage II sporulation protein AC) (haldenwang1995thesigmafactors pages 17-18).<br />
+- Organism: All cited studies investigate σF in Bacillus subtilis; no evidence was found for a different organism under this symbol within the collected evidence, and no contradictory usage was identified. Where explicitly stated, the work is in B. subtilis (haldenwang1995thesigmafactors pages 17-18, lewis1996compartmentalizeddistributionof pages 6-8, bidnenko2024complexsporulationspecificexpression pages 4-6).<br />
+- Family and domains: σF is a σ70-family sigma factor; contact mapping with its anti-sigma (SpoIIAB) involves conserved σ70 regions 2.1, 3.1, and 4.1, consistent with σ70 architecture (lewis1996compartmentalizeddistributionof pages 6-8). We found no conflicting literature assigning different domains to sigF.<br />
+- Ambiguity check: The search returned no evidence of a different gene/protein designated “sigF” in a way that would confound Bacillus subtilis σF within this context; thus, we proceeded with the Bacillus subtilis σF literature exclusively (haldenwang1995thesigmafactors pages 17-18, lewis1996compartmentalizeddistributionof pages 6-8, bidnenko2024complexsporulationspecificexpression pages 4-6).</p>
+<p>Selected source list with URLs and dates<br />
+- Haldenwang WG. The sigma factors of Bacillus subtilis. Microbiological Reviews. 1995-03. https://doi.org/10.1128/mr.59.1.1-30.1995 (haldenwang1995thesigmafactors pages 17-18)<br />
+- Duncan L, Losick R. SpoIIAB is an anti-sigma factor that binds and inhibits σF. PNAS. 1993-03. https://doi.org/10.1073/pnas.90.6.2325 (haldenwang1995thesigmafactors pages 17-18)<br />
+- Lewis PJ, Magnin T, Errington J. Compartmentalized distribution controlling σF. Genes to Cells. 1996-10. https://doi.org/10.1046/j.1365-2443.1996.750275.x (lewis1996compartmentalizeddistributionof pages 6-8)<br />
+- King N et al. Septation, dephosphorylation, and σF activation. Genes &amp; Development. 1999-05. https://doi.org/10.1101/gad.13.9.1156 (lewis1996compartmentalizeddistributionof pages 6-8)<br />
+- Decatur L, Losick R. Three σF–SpoIIAB contact sites in σ70 regions. Genes &amp; Development. 1996-09. https://doi.org/10.1101/gad.10.18.2348 (lewis1996compartmentalizeddistributionof pages 6-8)<br />
+- Serrano M et al. Dual-specificity anti-sigma CsfB discriminates σF/σG. PLoS Genetics. 2015-04. https://doi.org/10.1371/journal.pgen.1005104 (serrano2015dualspecificityantisigmafactor pages 2-4, serrano2015dualspecificityantisigmafactor pages 6-7, serrano2015dualspecificityantisigmafactor pages 19-20)<br />
+- Bidnenko V et al. Sporulation-specific, compartmental rho expression via SigF and SigH/Spo0A~P. JBC. 2024-12. https://doi.org/10.1016/j.jbc.2024.107905 (bidnenko2024complexsporulationspecificexpression pages 4-6, bidnenko2024complexsporulationspecificexpression pages 6-7, bidnenko2024complexsporulationspecificexpression pages 10-11, bidnenko2024complexsporulationspecificexpression pages 3-4, bidnenko2024complexsporulationspecificexpression pages 1-2, bidnenko2024complexsporulationspecificexpression pages 12-13)<br />
+- Pedraza-Reyes M et al. Stress-associated mutagenesis and developmental DNA repair with σF-linked forespore expression. MMBR. 2024-06. https://doi.org/10.1128/mmbr.00158-23 (pedrazareyes2024bacillussubtilisstressassociated pages 18-20)</p>
+<p>Conclusions<br />
+σF (SigF/SpoIIAC) is the archetypal forespore-specific σ70-family sigma factor of Bacillus subtilis that initiates the early forespore transcriptional program after septation. Its activity is gated by a partner-switching module (SpoIIAB/SpoIIAA) under the control of the septal phosphatase SpoIIE, ensuring activation exclusively in the forespore. New 2024 work shows that σF directly establishes forespore transcription of the essential factor Rho from a dedicated σF promoter, while mother-cell rho expression is supplied by SigH/Spo0A~P-driven read-through, together sustaining spore morphogenesis and fitness. These developments, together with recent syntheses linking σF to forespore DNA repair and spore quality, refine the view of σF as both a fate determinant and a coordinator of forespore physiology with consequences for spore robustness and revival (haldenwang1995thesigmafactors pages 17-18, lewis1996compartmentalizeddistributionof pages 6-8, bidnenko2024complexsporulationspecificexpression pages 4-6, bidnenko2024complexsporulationspecificexpression pages 6-7, bidnenko2024complexsporulationspecificexpression pages 10-11, pedrazareyes2024bacillussubtilisstressassociated pages 18-20, serrano2015dualspecificityantisigmafactor pages 2-4).</p>
+<p>References</p>
+<ol>
+<li>
+<p>(haldenwang1995thesigmafactors pages 17-18): W G Haldenwang. The sigma factors of bacillus subtilis. Microbiological Reviews, 59:1-30, Mar 1995. URL: https://doi.org/10.1128/mr.59.1.1-30.1995, doi:10.1128/mr.59.1.1-30.1995. This article has 790 citations.</p>
+</li>
+<li>
+<p>(lewis1996compartmentalizeddistributionof pages 6-8): Peter J. Lewis, Thierry Magnin, and Jeffery Errington. Compartmentalized distribution of the proteins controlling the prespore‐specific transcription factor σf of bacillus subtilis. Genes to Cells, 1:881-894, Oct 1996. URL: https://doi.org/10.1046/j.1365-2443.1996.750275.x, doi:10.1046/j.1365-2443.1996.750275.x. This article has 54 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(serrano2015dualspecificityantisigmafactor pages 2-4): Mónica Serrano, JinXin Gao, João Bota, Ashley R. Bate, Jeffrey Meisner, Patrick Eichenberger, Charles P. Moran, and Adriano O. Henriques. Dual-specificity anti-sigma factor reinforces control of cell-type specific gene expression in bacillus subtilis. PLOS Genetics, 11:e1005104, Apr 2015. URL: https://doi.org/10.1371/journal.pgen.1005104, doi:10.1371/journal.pgen.1005104. This article has 17 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(bidnenko2024complexsporulationspecificexpression pages 11-12): Vladimir Bidnenko, Arnaud Chastanet, Christine Péchoux, Yulia Redko-Hamel, Olivier Pellegrini, Sylvain Durand, Ciarán Condon, Marc Boudvillain, Matthieu Jules, and Elena Bidnenko. Complex sporulation-specific expression of transcription termination factor rho highlights its involvement in bacillus subtilis cell differentiation. Journal of Biological Chemistry, 300:107905, Dec 2024. URL: https://doi.org/10.1016/j.jbc.2024.107905, doi:10.1016/j.jbc.2024.107905. This article has 6 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(bidnenko2024complexsporulationspecificexpression pages 3-4): Vladimir Bidnenko, Arnaud Chastanet, Christine Péchoux, Yulia Redko-Hamel, Olivier Pellegrini, Sylvain Durand, Ciarán Condon, Marc Boudvillain, Matthieu Jules, and Elena Bidnenko. Complex sporulation-specific expression of transcription termination factor rho highlights its involvement in bacillus subtilis cell differentiation. Journal of Biological Chemistry, 300:107905, Dec 2024. URL: https://doi.org/10.1016/j.jbc.2024.107905, doi:10.1016/j.jbc.2024.107905. This article has 6 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(bidnenko2024complexsporulationspecificexpression pages 4-6): Vladimir Bidnenko, Arnaud Chastanet, Christine Péchoux, Yulia Redko-Hamel, Olivier Pellegrini, Sylvain Durand, Ciarán Condon, Marc Boudvillain, Matthieu Jules, and Elena Bidnenko. Complex sporulation-specific expression of transcription termination factor rho highlights its involvement in bacillus subtilis cell differentiation. Journal of Biological Chemistry, 300:107905, Dec 2024. URL: https://doi.org/10.1016/j.jbc.2024.107905, doi:10.1016/j.jbc.2024.107905. This article has 6 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(bidnenko2024complexsporulationspecificexpression pages 6-7): Vladimir Bidnenko, Arnaud Chastanet, Christine Péchoux, Yulia Redko-Hamel, Olivier Pellegrini, Sylvain Durand, Ciarán Condon, Marc Boudvillain, Matthieu Jules, and Elena Bidnenko. Complex sporulation-specific expression of transcription termination factor rho highlights its involvement in bacillus subtilis cell differentiation. Journal of Biological Chemistry, 300:107905, Dec 2024. URL: https://doi.org/10.1016/j.jbc.2024.107905, doi:10.1016/j.jbc.2024.107905. This article has 6 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(bidnenko2024complexsporulationspecificexpression pages 10-11): Vladimir Bidnenko, Arnaud Chastanet, Christine Péchoux, Yulia Redko-Hamel, Olivier Pellegrini, Sylvain Durand, Ciarán Condon, Marc Boudvillain, Matthieu Jules, and Elena Bidnenko. Complex sporulation-specific expression of transcription termination factor rho highlights its involvement in bacillus subtilis cell differentiation. Journal of Biological Chemistry, 300:107905, Dec 2024. URL: https://doi.org/10.1016/j.jbc.2024.107905, doi:10.1016/j.jbc.2024.107905. This article has 6 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(pedrazareyes2024bacillussubtilisstressassociated pages 18-20): Mario Pedraza-Reyes, Karen Abundiz-Yañez, Alejandra Rangel-Mendoza, Lissett E. Martínez, Rocío C. Barajas-Ornelas, Mayra Cuéllar-Cruz, Hilda C. Leyva-Sánchez, Víctor M. Ayala-García, Luz I. Valenzuela-García, and Eduardo A. Robleto. <i>bacillus subtilis</i> stress-associated mutagenesis and developmental dna repair. Microbiology and Molecular Biology Reviews, Jun 2024. URL: https://doi.org/10.1128/mmbr.00158-23, doi:10.1128/mmbr.00158-23. This article has 18 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(serrano2015dualspecificityantisigmafactor pages 19-20): Mónica Serrano, JinXin Gao, João Bota, Ashley R. Bate, Jeffrey Meisner, Patrick Eichenberger, Charles P. Moran, and Adriano O. Henriques. Dual-specificity anti-sigma factor reinforces control of cell-type specific gene expression in bacillus subtilis. PLOS Genetics, 11:e1005104, Apr 2015. URL: https://doi.org/10.1371/journal.pgen.1005104, doi:10.1371/journal.pgen.1005104. This article has 17 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(serrano2015dualspecificityantisigmafactor pages 6-7): Mónica Serrano, JinXin Gao, João Bota, Ashley R. Bate, Jeffrey Meisner, Patrick Eichenberger, Charles P. Moran, and Adriano O. Henriques. Dual-specificity anti-sigma factor reinforces control of cell-type specific gene expression in bacillus subtilis. PLOS Genetics, 11:e1005104, Apr 2015. URL: https://doi.org/10.1371/journal.pgen.1005104, doi:10.1371/journal.pgen.1005104. This article has 17 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(bidnenko2024complexsporulationspecificexpression pages 1-2): Vladimir Bidnenko, Arnaud Chastanet, Christine Péchoux, Yulia Redko-Hamel, Olivier Pellegrini, Sylvain Durand, Ciarán Condon, Marc Boudvillain, Matthieu Jules, and Elena Bidnenko. Complex sporulation-specific expression of transcription termination factor rho highlights its involvement in bacillus subtilis cell differentiation. Journal of Biological Chemistry, 300:107905, Dec 2024. URL: https://doi.org/10.1016/j.jbc.2024.107905, doi:10.1016/j.jbc.2024.107905. This article has 6 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(bidnenko2024complexsporulationspecificexpression pages 12-13): Vladimir Bidnenko, Arnaud Chastanet, Christine Péchoux, Yulia Redko-Hamel, Olivier Pellegrini, Sylvain Durand, Ciarán Condon, Marc Boudvillain, Matthieu Jules, and Elena Bidnenko. Complex sporulation-specific expression of transcription termination factor rho highlights its involvement in bacillus subtilis cell differentiation. Journal of Biological Chemistry, 300:107905, Dec 2024. URL: https://doi.org/10.1016/j.jbc.2024.107905, doi:10.1016/j.jbc.2024.107905. This article has 6 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ayala2020thestressresponsivealternative pages 2-3): Facundo Rodriguez Ayala, Marco Bartolini, and Roberto Grau. The stress-responsive alternative sigma factor sigb of bacillus subtilis and its relatives: an old friend with new functions. Frontiers in Microbiology, Sep 2020. URL: https://doi.org/10.3389/fmicb.2020.01761, doi:10.3389/fmicb.2020.01761. This article has 112 citations and is from a poor quality or predatory journal.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>lewis1996compartmentalizeddistributionof pages 6-8</li>
+<li>haldenwang1995thesigmafactors pages 17-18</li>
+<li>pedrazareyes2024bacillussubtilisstressassociated pages 18-20</li>
+<li>bidnenko2024complexsporulationspecificexpression pages 10-11</li>
+<li>serrano2015dualspecificityantisigmafactor pages 2-4</li>
+<li>ayala2020thestressresponsivealternative pages 2-3</li>
+<li>serrano2015dualspecificityantisigmafactor pages 6-7</li>
+<li>bidnenko2024complexsporulationspecificexpression pages 11-12</li>
+<li>bidnenko2024complexsporulationspecificexpression pages 3-4</li>
+<li>bidnenko2024complexsporulationspecificexpression pages 4-6</li>
+<li>bidnenko2024complexsporulationspecificexpression pages 6-7</li>
+<li>serrano2015dualspecificityantisigmafactor pages 19-20</li>
+<li>bidnenko2024complexsporulationspecificexpression pages 1-2</li>
+<li>bidnenko2024complexsporulationspecificexpression pages 12-13</li>
+<li>https://doi.org/10.1016/j.jbc.2024.107905</li>
+<li>https://doi.org/10.1128/mmbr.00158-23</li>
+<li>https://doi.org/10.1371/journal.pgen.1005104</li>
+<li>https://doi.org/10.1128/mr.59.1.1-30.1995</li>
+<li>https://doi.org/10.1101/gad.13.9.1156</li>
+<li>https://doi.org/10.1046/j.1365-2443.1996.750275.x</li>
+<li>https://doi.org/10.1101/gad.10.18.2348</li>
+<li>https://doi.org/10.1073/pnas.90.6.2325</li>
+<li>https://doi.org/10.1128/mr.59.1.1-30.1995,</li>
+<li>https://doi.org/10.1046/j.1365-2443.1996.750275.x,</li>
+<li>https://doi.org/10.1371/journal.pgen.1005104,</li>
+<li>https://doi.org/10.1016/j.jbc.2024.107905,</li>
+<li>https://doi.org/10.1128/mmbr.00158-23,</li>
+<li>https://doi.org/10.3389/fmicb.2020.01761,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P07860
+gene_symbol: sigF
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:224308
+  label: Bacillus subtilis (strain 168)
+description: &gt;-
+  SigF (also known as SpoIIAC) encodes the RNA polymerase sigma-F factor, a member of the sigma-70 family
+  of alternative sigma factors that is specifically activated in the forespore compartment during Bacillus
+  subtilis sporulation. SigF is the first compartment-specific transcription factor activated after asymmetric
+  septation, initiating the early forespore transcriptional program. The protein contains conserved sigma-70
+  regions (2, 3, and 4) including a helix-turn-helix DNA-binding motif that recognizes specific promoter
+  sequences. SigF activity is tightly controlled by an elegant partner-switching mechanism involving the
+  anti-sigma factor SpoIIAB (which binds and sequesters SigF) and the anti-anti-sigma factor SpoIIAA. Before
+  septation, SpoIIAB keeps SigF inactive by direct binding and also phosphorylates SpoIIAA to prevent its
+  antagonistic activity. Upon asymmetric septation, the membrane-associated phosphatase SpoIIE preferentially
+  dephosphorylates SpoIIAA-P in the forespore, allowing unphosphorylated SpoIIAA to bind SpoIIAB and release
+  SigF for holoenzyme formation. This partner-switching mechanism ensures compartment-specific activation of
+  SigF exclusively in the forespore despite the protein being present in both compartments. SigF directs
+  transcription of early forespore genes including sigG (the late forespore sigma factor), csfB (an anti-sigma
+  factor that reinforces cell-type specificity), and the forespore-specific promoter of rho (transcription
+  termination factor). SigF also autoregulates the spoIIA operon from which it is expressed. The sequential
+  activation of sigma factors (SigF in forespore, SigE in mother cell, followed by SigG and SigK) orchestrates
+  the complex developmental program of sporulation.
+existing_annotations:
+- term:
+    id: GO:0000976
+    label: transcription cis-regulatory region binding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      Sigma factors bind to specific promoter sequences to position RNA polymerase for transcription initiation.
+      SigF recognizes and binds to SigF-dependent promoter elements consisting of a -10 region (consensus similar
+      to GGTAAAAATA) and a -35 region (GAATA) separated by an A/T-rich spacer. This has been demonstrated through
+      mutational analysis of the forespore-specific rho promoter where mutations in the -35 GAATA element abolished
+      forespore-specific transcription (Bidnenko et al. 2024). The helix-turn-helix motif in SigF (residues 221-240
+      per UniProt) mediates DNA binding.
+    action: ACCEPT
+    reason: &gt;-
+      The IBA annotation for transcription cis-regulatory region binding is well-supported by the molecular
+      function of sigma factors. SigF contains a characterized helix-turn-helix DNA-binding motif and has
+      demonstrated sequence-specific recognition of promoter elements. The 2024 work on the rho promoter
+      provides direct evidence that SigF recognizes specific DNA sequences at its target promoters.
+    supported_by:
+      - reference_id: file:BACSU/sigF/sigF-deep-research-falcon.md
+        supporting_text: &#34;a SigF-like -10 (GGTAAAAATA) and GAATA -35 separated by an A/T-rich spacer were identified; mutation of the -35 GAATA element abolished the forespore GFP burst and reduced luciferase activity&#34;
+      - reference_id: UniProt:P07860
+        supporting_text: &#34;InterPro; IPR001387; Cro/C1-type_HTH&#34;
+
+- term:
+    id: GO:0003899
+    label: DNA-directed RNA polymerase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      This annotation suggests SigF has RNA polymerase catalytic activity, which is inaccurate. Sigma factors
+      do not possess intrinsic polymerase activity - they are initiation factors that confer promoter specificity
+      to the RNA polymerase core enzyme. The catalytic activity resides in the core RNAP subunits (alpha, beta,
+      beta-prime), not in sigma factors.
+    action: REMOVE
+    reason: &gt;-
+      Sigma factors including SigF do not catalyze RNA synthesis. They function as specificity factors that
+      direct the RNA polymerase holoenzyme to specific promoters. The RNAP core enzyme provides the catalytic
+      activity. This annotation conflates the function of the sigma subunit with the catalytic core. The correct
+      annotation is sigma factor activity (GO:0016987), which is already present.
+    supported_by:
+      - reference_id: UniProt:P07860
+        supporting_text: &#34;Sigma factors are initiation factors that promote the attachment of RNA polymerase to specific initiation sites and are then released&#34;
+
+- term:
+    id: GO:0006355
+    label: regulation of DNA-templated transcription
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      SigF regulates transcription by conferring promoter specificity to RNA polymerase, thereby activating
+      a specific set of forespore genes during sporulation. SigF directs expression of numerous sporulation-specific
+      genes including sigG, csfB, and the forespore promoter of rho. SigF also autoregulates the spoIIA operon.
+    action: ACCEPT
+    reason: &gt;-
+      As an alternative sigma factor, SigF fundamentally regulates transcription by determining which promoters
+      the RNAP holoenzyme can recognize. SigF-dependent transcription activates the early forespore program.
+      This is a core function of sigma factors and is well-documented for SigF.
+    supported_by:
+      - reference_id: UniProt:P07860
+        supporting_text: &#34;This sigma factor is responsible for the expression of sporulation specific genes&#34;
+
+- term:
+    id: GO:0016987
+    label: sigma factor activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      SigF is a well-characterized sigma factor of the sigma-70 family. It contains conserved sigma-70 regions
+      (regions 2, 3, and 4) that mediate core RNAP binding and promoter recognition. Biochemical and genetic
+      studies have definitively established SigF as a sigma factor that associates with RNAP core and directs
+      transcription initiation at SigF-dependent promoters.
+    action: ACCEPT
+    reason: &gt;-
+      This is the primary molecular function of SigF. The sigma factor activity annotation accurately captures
+      SigF&#39;s role in conferring promoter specificity to RNA polymerase. This is supported by extensive biochemical
+      characterization, domain analysis, and genetic studies demonstrating SigF-dependent transcription.
+    supported_by:
+      - reference_id: UniProt:P07860
+        supporting_text: &#34;Sigma factors are initiation factors that promote the attachment of RNA polymerase to specific initiation sites and are then released&#34;
+      - reference_id: UniProt:P07860
+        supporting_text: &#34;Associates with the RNAP core only in stationary phase cells&#34;
+
+- term:
+    id: GO:1903865
+    label: sigma factor antagonist complex
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      SigF forms a complex with its anti-sigma factor SpoIIAB, which inhibits SigF activity by direct binding.
+      The SigF-SpoIIAB complex represents a sigma factor antagonist complex where SpoIIAB sequesters SigF and
+      prevents holoenzyme formation. This complex is a central component of the partner-switching mechanism
+      that controls SigF activation.
+    action: ACCEPT
+    reason: &gt;-
+      The formation of a SigF-SpoIIAB inhibitory complex is well-documented and represents a key regulatory
+      mechanism. SpoIIAB binds SigF through contacts at conserved sigma-70 regions 2.1, 3.1, and 4.1. This
+      complex formation is essential for keeping SigF inactive in the pre-divisional cell and in the mother
+      cell compartment after septation.
+    supported_by:
+      - reference_id: UniProt:P07860
+        supporting_text: &#34;Interaction with SpoIIAB inhibits sigma-F activity throughout the cell before the formation of the asymmetric septum&#34;
+
+- term:
+    id: GO:0003677
+    label: DNA binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      SigF binds DNA as part of the RNAP holoenzyme to recognize promoter sequences. SigF contains a characterized
+      helix-turn-helix DNA-binding motif (residues 221-240) that mediates sequence-specific recognition of
+      SigF-dependent promoters.
+    action: ACCEPT
+    reason: &gt;-
+      While this IEA annotation is more general than the IBA annotation for transcription cis-regulatory region
+      binding (GO:0000976), it is not incorrect. Sigma factors do bind DNA as part of the holoenzyme. The
+      presence of a characterized HTH motif in SigF supports this annotation. This can be retained as a broader
+      annotation alongside the more specific term.
+    supported_by:
+      - reference_id: UniProt:P07860
+        supporting_text: &#34;InterPro; IPR001387; Cro/C1-type_HTH&#34;
+
+- term:
+    id: GO:0003700
+    label: DNA-binding transcription factor activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      This term is intended for sequence-specific DNA-binding transcription factors that regulate transcription
+      by binding to cis-regulatory elements. While sigma factors do bind DNA and regulate transcription, they
+      function mechanistically differently from classical transcription factors - sigma factors confer promoter
+      recognition to the RNA polymerase core rather than acting as independent regulatory factors.
+    action: MODIFY
+    reason: &gt;-
+      The term GO:0003700 is designed for classical transcription factors that independently bind DNA regulatory
+      elements. Sigma factors have a distinct mechanism - they are subunits of the RNAP holoenzyme that confer
+      promoter specificity. The more appropriate and specific term is GO:0016987 (sigma factor activity), which
+      is already annotated. This IEA annotation from InterPro mapping may be overly broad.
+    proposed_replacement_terms:
+      - id: GO:0016987
+        label: sigma factor activity
+    supported_by:
+      - reference_id: UniProt:P07860
+        supporting_text: &#34;Sigma factors are initiation factors that promote the attachment of RNA polymerase to specific initiation sites and are then released&#34;
+
+- term:
+    id: GO:0006351
+    label: DNA-templated transcription
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;-
+      SigF participates in DNA-templated transcription as the sigma subunit of the RNA polymerase holoenzyme.
+      As a sigma factor, it enables transcription initiation at SigF-dependent promoters during sporulation.
+    action: ACCEPT
+    reason: &gt;-
+      This biological process annotation correctly captures SigF&#39;s involvement in transcription. As a sigma
+      factor, SigF is directly involved in the transcription process by conferring promoter specificity to
+      RNAP and enabling transcription initiation.
+    supported_by:
+      - reference_id: UniProt:P07860
+        supporting_text: &#34;Sigma factors are initiation factors that promote the attachment of RNA polymerase to specific initiation sites&#34;
+      - reference_id: UniProt:P07860
+        supporting_text: &#34;This sigma factor is responsible for the expression of sporulation specific genes&#34;
+
+- term:
+    id: GO:0006352
+    label: DNA-templated transcription initiation
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      SigF is specifically involved in transcription initiation - sigma factors function at the initiation
+      step to position RNA polymerase at promoters and enable formation of the open complex. After initiation,
+      sigma factors are typically released from the elongating polymerase.
+    action: ACCEPT
+    reason: &gt;-
+      This annotation is highly appropriate for SigF. Sigma factors function specifically at the transcription
+      initiation step - they enable promoter recognition and open complex formation but are released during
+      the transition to elongation. This term accurately captures the specific stage of transcription where
+      sigma factors act.
+    supported_by:
+      - reference_id: UniProt:P07860
+        supporting_text: &#34;Sigma factors are initiation factors that promote the attachment of RNA polymerase to specific initiation sites and are then released&#34;
+
+- term:
+    id: GO:0006355
+    label: regulation of DNA-templated transcription
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      Duplicate annotation with the IBA entry. SigF regulates transcription by determining which promoters
+      are recognized by the RNAP holoenzyme, thereby activating transcription of forespore-specific genes.
+    action: ACCEPT
+    reason: &gt;-
+      This is a valid annotation for SigF regardless of evidence code. As an alternative sigma factor, SigF
+      regulates transcription by conferring promoter specificity. The duplicate with different evidence codes
+      is acceptable and reflects independent inference paths reaching the same conclusion.
+    supported_by:
+      - reference_id: UniProt:P07860
+        supporting_text: &#34;This sigma factor is responsible for the expression of sporulation specific genes&#34;
+
+- term:
+    id: GO:0016987
+    label: sigma factor activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      Duplicate annotation with the IBA entry. SigF is a well-characterized member of the sigma-70 family
+      with demonstrated sigma factor activity.
+    action: ACCEPT
+    reason: &gt;-
+      This core molecular function annotation is appropriate for SigF. The duplicate with IEA evidence code
+      reflects independent computational inference confirming the phylogenetically-derived IBA annotation.
+      Duplicates with different evidence types are acceptable in GO annotation.
+    supported_by:
+      - reference_id: UniProt:P07860
+        supporting_text: &#34;Belongs to the sigma-70 factor family&#34;
+
+- term:
+    id: GO:0030435
+    label: sporulation resulting in formation of a cellular spore
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;-
+      SigF plays an essential role in sporulation. It is the first compartment-specific sigma factor activated
+      during sporulation and initiates the early forespore transcriptional program. Mutations in sigF block
+      sporulation and prevent formation of mature spores.
+    action: ACCEPT
+    reason: &gt;-
+      This biological process annotation appropriately captures SigF&#39;s essential role in sporulation. SigF
+      is absolutely required for spore formation - mutations abolish spore production and induction of
+      sporulation-associated enzymes. SigF initiates the forespore developmental program that ultimately
+      leads to spore formation.
+    supported_by:
+      - reference_id: UniProt:P07860
+        supporting_text: &#34;In spo-63 (loss of residues 27-255); no spores develop, no induction of sporulation-associated enzymes&#34;
+
+- term:
+    id: GO:2000142
+    label: regulation of DNA-templated transcription initiation
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000108
+  review:
+    summary: &gt;-
+      SigF specifically regulates transcription at the initiation step. As a sigma factor, it enables
+      recognition of specific promoters and formation of the initiation complex. This term is more specific
+      than the general regulation of transcription term and accurately reflects sigma factor function.
+    action: ACCEPT
+    reason: &gt;-
+      This annotation correctly captures that sigma factors regulate transcription specifically at the
+      initiation step. SigF enables RNAP to recognize and initiate transcription from SigF-dependent
+      promoters. This is a precise characterization of sigma factor function.
+    supported_by:
+      - reference_id: UniProt:P07860
+        supporting_text: &#34;Sigma factors are initiation factors that promote the attachment of RNA polymerase to specific initiation sites&#34;
+
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+- id: GO_REF:0000108
+  title: Automatic assignment of GO terms using logical inference, based on inter-ontology links
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:3116160
+  title: &#34;Structure and function in a Bacillus subtilis sporulation-specific sigma factor: molecular nature of mutations in spoIIAC&#34;
+  full_text_unavailable: true
+  findings: []
+- id: PMID:8358793
+  title: &#34;Sigma F, the first compartment-specific transcription factor of B. subtilis, is regulated by an anti-sigma factor that is also a protein kinase&#34;
+  full_text_unavailable: true
+  findings: []
+- id: PMID:8759874
+  title: &#34;Identification of additional genes under the control of the transcription factor sigma F of Bacillus subtilis&#34;
+  full_text_unavailable: true
+  findings: []
+- id: PMID:21037003
+  title: &#34;A small protein required for the switch from sigma-F to sigma-G during sporulation in Bacillus subtilis&#34;
+  full_text_unavailable: true
+  findings: []
+- id: PMID:21710567
+  title: &#34;The dynamic protein partnership of RNA polymerase in Bacillus subtilis&#34;
+  full_text_unavailable: true
+  findings: []
+- id: file:BACSU/sigF/sigF-deep-research-falcon.md
+  title: &#34;Deep research review of sigF function and regulation&#34;
+  findings:
+    - statement: SigF is the archetypal forespore-specific sigma-70-family sigma factor that initiates the early forespore transcriptional program after septation
+    - statement: SigF activity is gated by a partner-switching module (SpoIIAB/SpoIIAA) under the control of the septal phosphatase SpoIIE
+    - statement: SigF directly establishes forespore transcription of rho from a dedicated SigF promoter
+
+core_functions:
+  - description: &gt;-
+      SigF is the primary forespore-specific sigma factor that confers promoter recognition specificity
+      to RNA polymerase, enabling transcription of early forespore genes during sporulation. As a member
+      of the sigma-70 family, SigF binds to the RNAP core and directs the holoenzyme to SigF-dependent
+      promoters characterized by specific -10 and -35 elements.
+    molecular_function:
+      id: GO:0016987
+      label: sigma factor activity
+    directly_involved_in:
+      - id: GO:0006352
+        label: DNA-templated transcription initiation
+      - id: GO:0030435
+        label: sporulation resulting in formation of a cellular spore
+    supported_by:
+      - reference_id: UniProt:P07860
+        supporting_text: &#34;Sigma factors are initiation factors that promote the attachment of RNA polymerase to specific initiation sites and are then released&#34;
+      - reference_id: UniProt:P07860
+        supporting_text: &#34;Associates with the RNAP core only in stationary phase cells&#34;
+
+  - description: &gt;-
+      SigF forms an inhibitory complex with the anti-sigma factor SpoIIAB, which is essential for
+      the partner-switching mechanism that controls compartment-specific SigF activation. SpoIIAB
+      binding to SigF prevents holoenzyme formation.
+    molecular_function:
+      id: GO:0016987
+      label: sigma factor activity
+    in_complex:
+      id: GO:1903865
+      label: sigma factor antagonist complex
+    supported_by:
+      - reference_id: UniProt:P07860
+        supporting_text: &#34;Interaction with SpoIIAB inhibits sigma-F activity throughout the cell before the formation of the asymmetric septum&#34;
+
+suggested_questions:
+  - question: What is the complete SigF regulon and how does it compare across Bacillus species?
+  - question: How is the partner-switching mechanism quantitatively tuned to ensure reliable compartment-specific activation?
+
+suggested_experiments:
+  - description: &gt;-
+      ChIP-seq analysis of SigF binding during sporulation would enable genome-wide identification of
+      SigF binding sites, comprehensively defining the SigF regulon and revealing any previously
+      uncharacterized target promoters.
+    hypothesis: SigF binds to specific promoter sequences genome-wide to activate a defined early forespore transcriptional program
+    experiment_type: ChIP-seq
+  - description: &gt;-
+      Quantitative analysis of SpoIIE phosphatase activity in forespore vs mother cell would illuminate
+      the molecular basis of compartment-specific SigF activation by understanding how SpoIIE activity
+      is restricted to the forespore.
+    hypothesis: SpoIIE phosphatase activity is higher in the forespore compartment due to its localization at the asymmetric septum
+    experiment_type: Biochemical assay
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

@@ -1,0 +1,2328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>sacB - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>sacB</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P05655" target="_blank" class="term-link">
+                        P05655
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Bacillus subtilis (strain 168)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "sacB";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P05655" data-a="DESCRIPTION: Levansucrase (SacB) is a secreted glycosyl hydrola..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Levansucrase (SacB) is a secreted glycosyl hydrolase family 68 (GH68) enzyme that catalyzes the synthesis of levan, a beta-2,6-linked fructose polymer, by transferring fructosyl moieties from sucrose to a growing acceptor molecule (EC 2.4.1.10). The enzyme operates via a retaining double-displacement mechanism with Asp86 as the catalytic nucleophile and Glu342 as the acid/base catalyst. At low sucrose concentrations, the enzyme functions primarily as a hydrolase with water as acceptor, releasing glucose and fructose; at higher substrate concentrations, it adds fructosyl units to growing levan chains. The enzyme contains a signal peptide (residues 1-29) and is secreted to the extracellular space where it synthesizes levan as an exopolysaccharide component of biofilm matrix. Ca2+ binding (at residues Asn241, Asp272, Asn308, Asp310, Asp339) plays an important structural role promoting enzyme stability. The sacB gene is part of the sacB-yveB-yveA operon and is induced by sucrose. SacB is widely used as a counterselection marker in bacterial genetics because its expression in the presence of sucrose is lethal in many Gram-negative bacteria, likely due to toxic accumulation of levan or fructose metabolites.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P05655" data-a="GO:0005576" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SacB is a secreted enzyme that functions in the extracellular space. The protein contains an N-terminal Sec-type signal peptide (residues 1-29) that directs secretion via the general secretory pathway. UniProt annotation confirms &#34;Secreted&#34; subcellular location based on experimental characterization of the signal peptide (PMID:6424671).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The extracellular localization is well-established. The signal peptide has been experimentally characterized and the mature protein (residues 30-473) is secreted to the extracellular space where it synthesizes levan as part of the biofilm matrix. This is consistent with the enzyme&#39;s physiological role in producing extracellular polysaccharides.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:P05655
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Secreted</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:BACSU/sacB/sacB-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">SacB possesses an N-terminal Sec-type signal peptide and is secreted extracellularly in Gram-positive bacteria</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009758" target="_blank" class="term-link">
+                                    GO:0009758
+                                </a>
+                            </span>
+                            <span class="term-label">carbohydrate utilization</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P05655" data-a="GO:0009758" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This IEA annotation is derived from InterPro mapping. While sacB is involved in carbohydrate metabolism (specifically sucrose as substrate), the primary function is not carbohydrate utilization for energy but rather the biosynthesis of the exopolysaccharide levan. The term is too general and somewhat misleading for this enzyme&#39;s actual function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The term &#34;carbohydrate utilization&#34; (GO:0009758) implies catabolism for energy or nutrient acquisition. While SacB does use sucrose as a substrate, its primary biological function is levan biosynthesis - an anabolic process producing extracellular polysaccharide. A more accurate biological process term would be GO:0010146 &#34;fructan biosynthetic process&#34; since levan is a type of fructan (beta-2,6-linked fructose polymer).
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010146" target="_blank" class="term-link">
+                                    fructan biosynthetic process
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:P05655
+                                    
+                                </span>
+                                
+                                <div class="support-text">Catalyzes the synthesis of levan, a fructose polymer, by transferring the fructosyl moiety from sucrose to a growing acceptor molecule</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:BACSU/sacB/sacB-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Levansucrase (SacB) is a glycoside hydrolase family 68 (GH68) enzyme that catalyzes both sucrose hydrolysis and transfructosylation to form beta-2,6-linked levan and levan-type fructooligosaccharides</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016740" target="_blank" class="term-link">
+                                    GO:0016740
+                                </a>
+                            </span>
+                            <span class="term-label">transferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P05655" data-a="GO:0016740" data-r="GO_REF:0000043" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SacB is indeed a transferase - specifically a fructosyltransferase that transfers the fructosyl moiety from sucrose to acceptor molecules. However, this annotation is too general. A much more specific and informative term exists: GO:0050053 &#34;levansucrase activity&#34; which is already annotated to this protein.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While technically correct, GO:0016740 &#34;transferase activity&#34; is an extremely broad parent term. The more specific annotation GO:0050053 &#34;levansucrase activity&#34; (EC 2.4.1.10) is already present in the annotation set and fully captures the enzymatic function. This general term adds no information beyond what is already captured by the specific term.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:P05655
+                                    
+                                </span>
+                                
+                                <div class="support-text">RecName: Full=Levansucrase</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016757" target="_blank" class="term-link">
+                                    GO:0016757
+                                </a>
+                            </span>
+                            <span class="term-label">glycosyltransferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P05655" data-a="GO:0016757" data-r="GO_REF:0000043" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SacB is a glycosyltransferase, specifically transferring fructosyl groups from sucrose. This term is more specific than &#34;transferase activity&#34; but still less informative than the existing specific annotation GO:0050053 &#34;levansucrase activity&#34;.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation is technically correct as levansucrase is a type of glycosyltransferase. However, GO:0050053 &#34;levansucrase activity&#34; provides much more specific information about the enzyme&#39;s function. The hierarchy relationship (levansucrase activity is_a glycosyltransferase activity) means this annotation is redundant with the more specific term already present.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:P05655
+                                    
+                                </span>
+                                
+                                <div class="support-text">Belongs to the glycosyl hydrolase 68 family</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046872" target="_blank" class="term-link">
+                                    GO:0046872
+                                </a>
+                            </span>
+                            <span class="term-label">metal ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P05655" data-a="GO:0046872" data-r="GO_REF:0000043" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SacB binds calcium ions which play an important structural role in enzyme stability. Crystal structures have identified five Ca2+ binding residues: Asn241, Asp272, Asn308, Asp310, and Asp339. However, Ca2+ is not required for catalytic activity per se but rather promotes protein stability.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The annotation is correct that SacB binds metal ions, specifically Ca2+. However, GO:0046872 &#34;metal ion binding&#34; is overly broad. The specific calcium ion binding has been extensively characterized by X-ray crystallography and mutagenesis. A more precise annotation would be GO:0005509 &#34;calcium ion binding&#34;. The calcium plays a structural/regulatory role rather than being directly involved in catalysis.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005509" target="_blank" class="term-link">
+                                    calcium ion binding
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:P05655
+                                    
+                                </span>
+                                
+                                <div class="support-text">Ca(2+) may play an important structural role and promote stability of levansucrase</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:BACSU/sacB/sacB-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Metal-binding loop in some levansucrases; certain divalent ions (e.g., Ca2+) can stimulate fructosylation/levan synthesis by allosteric effects</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050053" target="_blank" class="term-link">
+                                    GO:0050053
+                                </a>
+                            </span>
+                            <span class="term-label">levansucrase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P05655" data-a="GO:0050053" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Levansucrase activity (EC 2.4.1.10) is the precise molecular function of SacB. The enzyme catalyzes: sucrose + (2,6-beta-D-fructosyl)n -&gt; glucose + (2,6-beta-D-fructosyl)n+1. This has been extensively characterized by kinetic studies (Km ~8-9 mM for sucrose), X-ray crystallography (PDB: 1OYG, 1PT2, 6VHQ), and mutagenesis of active site residues.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the core molecular function of SacB and is extremely well characterized. Multiple publications provide direct experimental evidence including enzyme kinetics (PMID:4206083, PMID:18596022), crystal structures with bound substrate (PMID:14517548), and site-directed mutagenesis of catalytic residues (Asp86 nucleophile, Glu342 acid/base). The enzyme operates via a retaining double-displacement mechanism. This annotation should be retained as representing the primary function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:P05655
+                                    
+                                </span>
+                                
+                                <div class="support-text">Catalyzes the synthesis of levan, a fructose polymer, by transferring the fructosyl moiety from sucrose to a growing acceptor molecule</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:BACSU/sacB/sacB-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">sacB encodes levansucrase (SacB) from Bacillus subtilis (strain 168); UniProt P05655</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010146" target="_blank" class="term-link">
+                                    GO:0010146
+                                </a>
+                            </span>
+                            <span class="term-label">fructan biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/4206083" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:4206083
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Kinetic studies of levansucrase of Bacillus subtilis
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="P05655" data-a="GO:0010146" data-r="PMID:4206083" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Levan is a type of fructan (specifically a beta-2,6-linked fructan). SacB is directly responsible for fructan/levan biosynthesis as its primary biological function. This process annotation appropriately captures what the enzyme does at the cellular/organismal level.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation is missing from the current GOA set and represents an important biological process function of SacB. The enzyme&#39;s physiological role is to synthesize levan (a fructan polymer) which forms part of the extracellular matrix in B. subtilis biofilms. While the molecular function (levansucrase activity) is annotated, the corresponding biological process term should also be included for completeness.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:P05655
+                                    
+                                </span>
+                                
+                                <div class="support-text">Catalyzes the synthesis of levan, a fructose polymer</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:BACSU/sacB/sacB-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">sacB encodes levansucrase which synthesizes beta-2,6-linked levan and levan-type fructooligosaccharides</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>The enzyme catalyzes fructosyl transfer from sucrose to build beta-2,6-linked levan polymers (EC 2.4.1.10). Extensively characterized by kinetics, crystallography, and mutagenesis. Core active site residues: Asp86 (nucleophile), Asp247 (transition state stabilizer), Glu342 (acid/base). Km ~8-9 mM for sucrose.</h3>
+                <span class="vote-buttons" data-g="P05655" data-a="FUNCTION: The enzyme catalyzes fructosyl transfer from sucro..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050053" target="_blank" class="term-link">
+                            levansucrase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010146" target="_blank" class="term-link">
+                                fructan biosynthetic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                extracellular region
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/4206083" target="_blank" class="term-link">
+                            PMID:4206083
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Kinetic studies of levansucrase of Bacillus subtilis</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Foundational kinetic characterization of levansucrase</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Established dual hydrolase/transferase activity depending on sucrose concentration</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/14517548" target="_blank" class="term-link">
+                            PMID:14517548
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Structural framework of fructosyl transfer in Bacillus subtilis levansucrase</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">First crystal structure of B. subtilis levansucrase at 1.50 angstroms</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Identified catalytic residues Asp86 (nucleophile), Asp247 (transition state stabilizer), Glu342 (acid/base)</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Characterized Ca2+ binding sites</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18596022" target="_blank" class="term-link">
+                            PMID:18596022
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Selected mutations in Bacillus subtilis levansucrase semi-conserved regions affecting its biochemical properties</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Mutagenesis studies characterizing active site residues</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Km of 8 mM for sucrose</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32553967" target="_blank" class="term-link">
+                            PMID:32553967
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Implications of the mutation S164A on Bacillus subtilis levansucrase product specificity</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Detailed kinetic analysis of hydrolysis vs transfructosylation</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">S164A mutation increases transfructosylation activity</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/33303628" target="_blank" class="term-link">
+                            PMID:33303628
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The molecular basis of the nonprocessive elongation mechanism in levansucrases</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Crystal structure with levan hexasaccharides</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Molecular basis for nonprocessive elongation mechanism</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/6424671" target="_blank" class="term-link">
+                            PMID:6424671
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Characterization of the precursor form of the exocellular levansucrase from Bacillus subtilis</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Characterized signal peptide and secretion</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11739774" target="_blank" class="term-link">
+                            PMID:11739774
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">yveB, encoding endolevanase LevB, is part of the sacB-yveB-yveA levansucrase tricistronic operon in Bacillus subtilis</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">sacB is part of a tricistronic operon with yveB (endolevanase) and yveA</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Induced by sucrose</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:BACSU/sacB/sacB-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep research report on sacB levansucrase</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Comprehensive review of levansucrase biology from recent literature (2023-2024)</div>
+                        
+                        <div class="finding-text">"sacB encodes levansucrase (SacB) from Bacillus subtilis (strain 168); UniProt P05655"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Details on operon organization and secretion</div>
+                        
+                        <div class="finding-text">"SacB possesses an N-terminal Sec-type signal peptide and is secreted extracellularly in Gram-positive bacteria"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">GH68 levansucrases use retaining double-displacement mechanism with 5-bladed beta-propeller fold</div>
+                        
+                        <div class="finding-text">"GH68 levansucrases operate via a retaining double-displacement mechanism"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Ca2+ and other divalent metals can stimulate fructosylation</div>
+                        
+                        <div class="finding-text">"Metal-binding loop in some levansucrases; certain divalent ions (e.g., Ca2+) can stimulate fructosylation/levan synthesis by allosteric effects"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(sacB-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P05655" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2025-12-17T23:25:27.743695'<br />
+end_time: '2025-12-17T23:32:10.577776'<br />
+duration_seconds: 402.83<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: BACSU<br />
+  gene_id: sacB<br />
+  gene_symbol: sacB<br />
+  uniprot_accession: P05655<br />
+  protein_description: 'RecName: Full=Levansucrase {ECO:0000303|PubMed:4206083}; EC=2.4.1.10<br />
+    {ECO:0000269|PubMed:14517548, ECO:0000269|PubMed:18596022, ECO:0000269|PubMed:32553967,<br />
+    ECO:0000269|PubMed:33303628, ECO:0000269|PubMed:4206083}; AltName: Full=Beta-D-fructofuranosyl<br />
+    transferase {ECO:0000303|PubMed:6424671}; AltName: Full=Fructosyltransferase {ECO:0000303|PubMed:14517548};<br />
+    Short=FTF {ECO:0000303|PubMed:14517548}; AltName: Full=Sucrose 6-fructosyl transferase;<br />
+    Flags: Precursor;'<br />
+  gene_info: Name=sacB {ECO:0000303|PubMed:6424671}; OrderedLocusNames=BSU34450;<br />
+  organism_full: Bacillus subtilis (strain 168).<br />
+  protein_family: Belongs to the glycosyl hydrolase 68 family. .<br />
+  protein_domains: Glyco_hydro_68. (IPR003469); Glyco_hydro_beta-prop_sf. (IPR023296);<br />
+    Glyco_hydro_68 (PF02435)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 21</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> P05655</li>
+<li><strong>Protein Description:</strong> RecName: Full=Levansucrase {ECO:0000303|PubMed:4206083}; EC=2.4.1.10 {ECO:0000269|PubMed:14517548, ECO:0000269|PubMed:18596022, ECO:0000269|PubMed:32553967, ECO:0000269|PubMed:33303628, ECO:0000269|PubMed:4206083}; AltName: Full=Beta-D-fructofuranosyl transferase {ECO:0000303|PubMed:6424671}; AltName: Full=Fructosyltransferase {ECO:0000303|PubMed:14517548}; Short=FTF {ECO:0000303|PubMed:14517548}; AltName: Full=Sucrose 6-fructosyl transferase; Flags: Precursor;</li>
+<li><strong>Gene Information:</strong> Name=sacB {ECO:0000303|PubMed:6424671}; OrderedLocusNames=BSU34450;</li>
+<li><strong>Organism (full):</strong> Bacillus subtilis (strain 168).</li>
+<li><strong>Protein Family:</strong> Belongs to the glycosyl hydrolase 68 family. .</li>
+<li><strong>Key Domains:</strong> Glyco_hydro_68. (IPR003469); Glyco_hydro_beta-prop_sf. (IPR023296); Glyco_hydro_68 (PF02435)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "sacB" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Bacillus subtilis (strain 168).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'sacB' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>sacB</strong> (gene ID: sacB, UniProt: P05655) in BACSU.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> P05655</li>
+<li><strong>Protein Description:</strong> RecName: Full=Levansucrase {ECO:0000303|PubMed:4206083}; EC=2.4.1.10 {ECO:0000269|PubMed:14517548, ECO:0000269|PubMed:18596022, ECO:0000269|PubMed:32553967, ECO:0000269|PubMed:33303628, ECO:0000269|PubMed:4206083}; AltName: Full=Beta-D-fructofuranosyl transferase {ECO:0000303|PubMed:6424671}; AltName: Full=Fructosyltransferase {ECO:0000303|PubMed:14517548}; Short=FTF {ECO:0000303|PubMed:14517548}; AltName: Full=Sucrose 6-fructosyl transferase; Flags: Precursor;</li>
+<li><strong>Gene Information:</strong> Name=sacB {ECO:0000303|PubMed:6424671}; OrderedLocusNames=BSU34450;</li>
+<li><strong>Organism (full):</strong> Bacillus subtilis (strain 168).</li>
+<li><strong>Protein Family:</strong> Belongs to the glycosyl hydrolase 68 family. .</li>
+<li><strong>Key Domains:</strong> Glyco_hydro_68. (IPR003469); Glyco_hydro_beta-prop_sf. (IPR023296); Glyco_hydro_68 (PF02435)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "sacB" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Bacillus subtilis (strain 168).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'sacB' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>sacB</strong> (gene ID: sacB, UniProt: P05655) in BACSU.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<p>Title: Functional annotation of Bacillus subtilis sacB (UniProt P05655): levansucrase identity, mechanism, localization, pathways, and applications</p>
+<p>Plan status: We verified the gene/protein identity, gathered recent and foundational literature (prioritizing 2023–2024), compiled mechanistic and localization evidence, summarized applications, created a summary artifact, and integrated all material into this report.</p>
+<p>Verification of identity and scope<br />
+- Gene symbol and organism: sacB from Bacillus subtilis (strain 168) encodes levansucrase (EC 2.4.1.10), a secreted fructosyltransferase that synthesizes levan-type fructans from sucrose; this assignment and GH68 family membership are supported by recent genomic-operon analyses and prior work (https://doi.org/10.4014/jmb.2404.04043, Aug 2024) (lekakarn2024exploringlevansucraseoperon pages 1-2).</p>
+<p>Key concepts and definitions<br />
+- Enzyme class and family: Levansucrase (SacB) is a glycoside hydrolase family 68 (GH68) enzyme that catalyzes both sucrose hydrolysis and transfructosylation to form β-2,6-linked levan and levan-type fructooligosaccharides (L-FOSs) (https://doi.org/10.4014/jmb.2404.04043, Aug 2024) (lekakarn2024exploringlevansucraseoperon pages 1-2). GH68 levansucrases share a 5‑bladed beta-propeller fold and a retaining double-displacement catalytic mechanism (https://doi.org/10.1093/glycob/cwx050, Jun 2017) (ortizsoto2017impairedcoordinationof pages 1-2).<br />
+- Reaction and products: SacB uses sucrose as donor to form a fructosyl–enzyme intermediate and transfers fructose to water (hydrolysis) or to an acceptor sugar to elongate β(2→6)-linked fructans. Products range from L-FOS (e.g., DP3–5 and longer) to high-molecular-weight levan; branching with occasional β(2→1) linkages is described in microbial levan (https://doi.org/10.4014/jmb.2404.04043, Aug 2024) (lekakarn2024exploringlevansucraseoperon pages 1-2).</p>
+<p>Mechanism, catalytic residues, fold, and specificity<br />
+- Catalytic mechanism: GH68 levansucrases operate via a retaining double-displacement mechanism with two transition states (TS1, TS2). In Bacillus megaterium LS (close to B. subtilis SacB), the catalytic nucleophile is Asp (e.g., D95) and the acid/base is Glu (e.g., E352), and the enzyme’s open, water-accessible active site in single-domain Gram-positive levansucrases biases toward hydrolysis unless engineered to favor acceptors (https://doi.org/10.1093/glycob/cwx050, Jun 2017) (ortizsoto2017impairedcoordinationof pages 1-2).<br />
+- Engineering insights: Mutations in first-shell residues that coordinate the nucleophile or manage active-site water (e.g., S173, Y421, S422, Y439) can increase transfructosylation and shift product spectra, indicating how SacB-like enzymes may be tuned for FOS vs levan (https://doi.org/10.1093/glycob/cwx050, Jun 2017) (ortizsoto2017impairedcoordinationof pages 1-2).<br />
+- Metal-ion modulation: Although levansucrases do not require metals for catalysis, recent work identified a metal-binding loop in some bacterial levansucrases; certain divalent ions (e.g., Ca2+) increased fructosylation and levan synthesis, consistent with allosteric control of hydrolysis vs transfructosylation partitioning (https://doi.org/10.4014/jmb.2411.11030, Feb 2025) (ko2025insightofmetal pages 7-8).</p>
+<p>Cellular localization, processing, and physiological role<br />
+- Secretion: SacB possesses an N-terminal Sec-type signal peptide and is secreted extracellularly in Gram-positive bacteria, consistent with its role in exopolysaccharide synthesis at/near the cell surface (https://doi.org/10.4014/jmb.2404.04043, Aug 2024) (lekakarn2024exploringlevansucraseoperon pages 3-5).<br />
+- Physiological role: Levan functions as an extracellular polysaccharide contributing to the matrix in Bacillus spp. biofilms; earlier work catalogs EPS genes and polymers in B. subtilis, including sacB for levan synthesis (https://doi.org/10.1111/j.1574-6968.2010.02085.x, Dec 2010) (marvasi2010, not directly captured by pqac IDs; see contextual support in 2024 operon/source).</p>
+<p>Genetic context and pathway<br />
+- Operon organization: In Bacillaceae, sacB often co-occurs with levB encoding an endo-levanase (GH32). levB internally cleaves levan to generate L-FOS, shaping product distributions. Genomic analyses identify a sacB–levB operon and carbohydrate transporters that feed sucrose into the pathway; in B. subtilis the levan system is linked to broader sucrose utilization loci (https://doi.org/10.4014/jmb.2404.04043, Aug 2024) (lekakarn2024exploringlevansucraseoperon pages 1-2, lekakarn2024exploringlevansucraseoperon pages 3-5).<br />
+- Substrate uptake and regulation: Carbohydrate transporters (ABC systems, PTS) and sucrose-responsive control are implicated in levan synthesis capacity; sucrose is the primary inducer/substrate for SacB activity (https://doi.org/10.4014/jmb.2404.04043, Aug 2024) (lekakarn2024exploringlevansucraseoperon pages 1-2).</p>
+<p>Recent developments (2023–2024 priority) and latest research<br />
+- High-yield whole-cell production: Priestia koreensis HL12 harboring a sacB–levB operon produced 127 g/L levan from 300 g/L sucrose (≈55% conversion) within 48 h, with both short-chain (DP3–5) and longer L-FOS detected, highlighting the potential of Bacillaceae systems for efficient levan/FOS biosynthesis (https://doi.org/10.4014/jmb.2404.04043, Aug 2024) (lekakarn2024exploringlevansucraseoperon pages 1-2).<br />
+- Process integration: A fusion enzyme between B. licheniformis LevB and B. subtilis SacB expressed in Pichia pastoris enabled one-pot synthesis of monosaccharide-free L-FOS. In a 1.5 L bioreactor, yield reached 45.5% (w L-FOS/w sucrose), with DP &lt;10 under those conditions (https://doi.org/10.1186/s12934-022-02009-7, Jan 2023) (avilafernandez2023simultaneousenzymeproduction pages 1-2).<br />
+- Mechanistic control: Active-site residue engineering continues to be a lever to favor transfructosylation over hydrolysis in Bacillus levansucrases, guiding product size distribution and acceptor usage (https://doi.org/10.1093/glycob/cwx050, Jun 2017) (ortizsoto2017impairedcoordinationof pages 1-2). Emerging 2025 evidence suggests metal-binding loops in some levansucrases can stimulate fructosylation, providing an additional tuning knob (https://doi.org/10.4014/jmb.2411.11030, Feb 2025) (ko2025insightofmetal pages 7-8).</p>
+<p>Current applications and real-world implementations<br />
+- Genetic counterselection: sacB expression causes sucrose-dependent lethality in many Gram-negative and some Gram-positive bacteria, enabling efficient allelic exchange. Recent demonstrations include V. natriegens engineering workflows citing sacB lethality in sucrose (Microbiology Spectrum, Jun 2024; https://doi.org/10.1128/spectrum.03964-23) and a new sacB-based counterselection built for Fusobacterium nucleatum (Microbiology Spectrum, Jan 2025; https://doi.org/10.1128/spectrum.02066-24) (glasgo 2024 and zhou 2025 captured in evidence) (lekakarn2024exploringlevansucraseoperon pages 9-10).<br />
+- Biomanufacturing: Leveraging SacB’s transfructosylation, industrially relevant processes target levan and L-FOS production. Quantitative outputs reported recently include 127 g/L levan at ≈55% sucrose conversion (2024 whole-cell) and 45.5% L-FOS yield in Pichia systems (2023), and other studies continue to optimize acceptor availability and enzyme ratios to modulate DP and reduce monosaccharides (https://doi.org/10.4014/jmb.2404.04043; https://doi.org/10.1186/s12934-022-02009-7) (lekakarn2024exploringlevansucraseoperon pages 1-2, avilafernandez2023simultaneousenzymeproduction pages 1-2).</p>
+<p>Expert opinions and analysis<br />
+- Structural-mechanistic perspective: The prevailing view is that single-domain Bacillus GH68 levansucrases possess an open, water-accessible active site that predisposes to hydrolysis; increasing hydrophobicity or constraining water at the +1 subsite, and fine-tuning nucleophile/acid-base coordination, enhance transfructosylation and tailor product spectra. These insights inform protein engineering for FOS-rich outputs (https://doi.org/10.1093/glycob/cwx050, Jun 2017) (ortizsoto2017impairedcoordinationof pages 1-2).<br />
+- Systems perspective: Operon-level organization with levB provides endogenous capacity to generate defined L-FOS from polymeric levan, and transporter/promoter context supports sucrose-responsive production. Recent genomic and process studies emphasize strain selection and secretion optimization to increase titers and control molecular weight distributions (https://doi.org/10.4014/jmb.2404.04043, Aug 2024) (lekakarn2024exploringlevansucraseoperon pages 1-2, lekakarn2024exploringlevansucraseoperon pages 3-5).</p>
+<p>Relevant statistics and data (recent)<br />
+- Levan titer and conversion: 127 g/L levan at ≈55% conversion from 300 g/L sucrose in 48 h using Priestia koreensis HL12 (2024) (https://doi.org/10.4014/jmb.2404.04043) (lekakarn2024exploringlevansucraseoperon pages 1-2).<br />
+- L-FOS yield and DP: 45.5% w/w L-FOS yield (bioreactor) with DP &lt;10 using a LevB–SacB fusion expressed in Pichia pastoris (2023) (https://doi.org/10.1186/s12934-022-02009-7) (avilafernandez2023simultaneousenzymeproduction pages 1-2).<br />
+- Mechanistic partitioning: Bacillus levansucrases can be hydrolysis-biased; engineering first-shell residues increases transfructosylation by 30–200% with altered product profiles (2017 reference, mechanistic basis for ongoing 2023–2024 engineering efforts) (https://doi.org/10.1093/glycob/cwx050) (ortizsoto2017impairedcoordinationof pages 1-2).</p>
+<p>Embedded summary artifact<br />
+| Aspect | Summary | Recent/Authoritative sources (with URLs) |<br />
+|---|---|---|<br />
+| Identity / organism | sacB encodes levansucrase (SacB) from Bacillus subtilis (strain 168); UniProt P05655. | Lekakarn et al., 2024 — sacB = levansucrase (https://doi.org/10.4014/jmb.2404.04043) (lekakarn2024exploringlevansucraseoperon pages 1-2) |<br />
+| Family / domains / fold | Member of glycosyl hydrolase family GH68; single-domain Gram-positive levansucrases adopt a 5‑bladed β‑propeller catalytic fold. | Ortiz‑Soto et al., 2017 — GH68, β‑propeller (https://doi.org/10.1093/glycob/cwx050) (ortizsoto2017impairedcoordinationof pages 1-2); Lekakarn et al., 2024 (lekakarn2024exploringlevansucraseoperon pages 3-5) |<br />
+| Catalysis | EC 2.4.1.10 (levansucrase): retaining double‑displacement mechanism with a catalytic nucleophile (Asp) and an acid/base Glu (e.g., D95/E352 in Bm‑LS numbering). Enzyme performs sucrose hydrolysis and transfructosylation (hydrolysis vs transfructosylation partitioning dependent on active‑site water and residues). | Ortiz‑Soto et al., 2017 — mechanism and key residues (https://doi.org/10.1093/glycob/cwx050) (ortizsoto2017impairedcoordinationof pages 1-2); Lekakarn et al., 2024 (lekakarn2024exploringlevansucraseoperon pages 1-2) |<br />
+| Products | Synthesizes β‑2,6 linked levan (high‑MW polymer) and levan‑type fructooligosaccharides (L‑FOS); reported product ranges include short-chain L‑FOS (DP3–5) and long chains (&gt;DP6), with L‑FOS DP reported up to ~DP12 in literature. | Lekakarn et al., 2024 — product profiles and DP ranges; Priestia koreensis example (https://doi.org/10.4014/jmb.2404.04043) (lekakarn2024exploringlevansucraseoperon pages 1-2) |<br />
+| Localization / secretion | Contains a Sec‑type N‑terminal signal peptide and is secreted to the extracellular space / cell surface (Gram‑positive secretion via Sec pathway). | Lekakarn et al., 2024 — Sec signal peptide and secretion (https://doi.org/10.4014/jmb.2404.04043) (lekakarn2024exploringlevansucraseoperon pages 3-5) |<br />
+| Genetic context | sacB commonly colocates with levB (endo‑levanase, GH32) in an operon; LevB trims levan to oligomeric L‑FOS, shaping product distribution. | Lekakarn et al., 2024 — sacB–levB operon, levB role (https://doi.org/10.4014/jmb.2404.04043) (lekakarn2024exploringlevansucraseoperon pages 1-2, lekakarn2024exploringlevansucraseoperon pages 3-5) |<br />
+| Recent yields / applications | High‑yield examples: Priestia koreensis HL12 produced 127 g/L levan from 300 g/L sucrose (55% conversion, 48 h, 2024). Recombinant systems: LevB–SacB fusion in Pichia pastoris produced monosaccharide‑free L‑FOS with a bioreactor yield ≈45.5% (w L‑FOS/w sucrose) (2023). | Priestia koreensis HL12 — 127 g/L (Lekakarn et al., 2024) (https://doi.org/10.4014/jmb.2404.04043) (lekakarn2024exploringlevansucraseoperon pages 1-2); Ávila‑Fernández et al., 2023 — P. pastoris fusion, 45.5% yield (https://doi.org/10.1186/s12934-022-02009-7) (avilafernandez2023simultaneousenzymeproduction pages 1-2) |<br />
+| Mechanistic / engineering insights | Active‑site water accessibility and first‑shell residues (e.g., S173, Y421, S422, Y439) control hydrolysis vs transfructosylation; targeted mutations can increase transfructosylation and alter product spectra. | Ortiz‑Soto et al., 2017 — residue engineering shifts specificity (https://doi.org/10.1093/glycob/cwx050) (ortizsoto2017impairedcoordinationof pages 1-2) |<br />
+| Metal‑ion modulation | Recent work identifies a metal‑binding loop in some levansucrases; certain divalent metal ions (e.g., Ca2+) can stimulate fructosylation/levan synthesis by allosteric effects. | Ko et al., 2025 — metal‑binding loop stimulates fructosylation (https://doi.org/10.4014/jmb.2411.11030) (ko2025insightofmetal pages 7-8) |</p>
+<p><em>Table: Compact, citable summary table of key facts about Bacillus subtilis sacB (Levansucrase), including identity, mechanism, localization, products, genomic context, recent yields/applications, and engineering insights; sources (with URLs) are provided for verification.</em></p>
+<p>Conclusion<br />
+B. subtilis sacB encodes a secreted GH68 levansucrase that catalyzes a retaining transfructosylation/hydrolysis reaction on sucrose to build β-2,6-linked levan and L-FOS. Its 5‑bladed β‑propeller active site, catalytic Asp/Glu pair, and water accessibility govern product partitioning. In Bacillaceae, sacB commonly resides with levB, facilitating conversion between levan and L-FOS. Recent 2023–2024 studies highlight high levan titers and integrated bioprocesses yielding monosaccharide-free L-FOS. sacB remains a widely adopted genetic counterselection marker due to sucrose lethality in diverse bacteria. Together, structural-mechanistic insights and operon/process engineering continue to expand sacB’s roles in biotechnology and synthetic biology (https://doi.org/10.4014/jmb.2404.04043; https://doi.org/10.1186/s12934-022-02009-7; https://doi.org/10.1093/glycob/cwx050; https://doi.org/10.1128/spectrum.03964-23; https://doi.org/10.1128/spectrum.02066-24) (lekakarn2024exploringlevansucraseoperon pages 1-2, lekakarn2024exploringlevansucraseoperon pages 3-5, ortizsoto2017impairedcoordinationof pages 1-2, avilafernandez2023simultaneousenzymeproduction pages 1-2, lekakarn2024exploringlevansucraseoperon pages 9-10).</p>
+<p>References</p>
+<ol>
+<li>
+<p>(lekakarn2024exploringlevansucraseoperon pages 1-2): Hataikarn Lekakarn, Daran Prongjit, Wuttichai Mhuantong, Srisakul Trakarnpaiboon, and Benjarat Bunterngsook. Exploring levansucrase operon regulating levan-type fructooligosaccharides (l-foss) production in priestia koreensis hl12. Journal of Microbiology and Biotechnology, 34:1959-1968, Aug 2024. URL: https://doi.org/10.4014/jmb.2404.04043, doi:10.4014/jmb.2404.04043. This article has 5 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ortizsoto2017impairedcoordinationof pages 1-2): Maria Elena Ortiz-Soto, Christian Possiel, Julian Görl, Andreas Vogel, Ramona Schmiedel, and Jürgen Seibel. Impaired coordination of nucleophile and increased hydrophobicity in the +1 subsite shift levansucrase activity towards transfructosylation. Glycobiology, 27:755-765, Jun 2017. URL: https://doi.org/10.1093/glycob/cwx050, doi:10.1093/glycob/cwx050. This article has 35 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ko2025insightofmetal pages 7-8): Hyunjun Ko, Minsik Kang, Bong Hyun Sung, Mi-Jin Kim, Jung-Hoon Sohn, and Jung-Hoon Bae. Insight of metal ions in enzymatic synthesis of levan: the metal-binding loop. Journal of Microbiology and Biotechnology, Feb 2025. URL: https://doi.org/10.4014/jmb.2411.11030, doi:10.4014/jmb.2411.11030. This article has 2 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lekakarn2024exploringlevansucraseoperon pages 3-5): Hataikarn Lekakarn, Daran Prongjit, Wuttichai Mhuantong, Srisakul Trakarnpaiboon, and Benjarat Bunterngsook. Exploring levansucrase operon regulating levan-type fructooligosaccharides (l-foss) production in priestia koreensis hl12. Journal of Microbiology and Biotechnology, 34:1959-1968, Aug 2024. URL: https://doi.org/10.4014/jmb.2404.04043, doi:10.4014/jmb.2404.04043. This article has 5 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(avilafernandez2023simultaneousenzymeproduction pages 1-2): Ángela Ávila-Fernández, Silvia Montiel, María Elena Rodríguez-Alegría, Luis Caspeta, and Agustín López Munguía. Simultaneous enzyme production, levan-type fos synthesis and sugar by-products elimination using a recombinant pichia pastoris strain expressing a levansucrase-endolevanase fusion enzyme. Microbial Cell Factories, Jan 2023. URL: https://doi.org/10.1186/s12934-022-02009-7, doi:10.1186/s12934-022-02009-7. This article has 26 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lekakarn2024exploringlevansucraseoperon pages 9-10): Hataikarn Lekakarn, Daran Prongjit, Wuttichai Mhuantong, Srisakul Trakarnpaiboon, and Benjarat Bunterngsook. Exploring levansucrase operon regulating levan-type fructooligosaccharides (l-foss) production in priestia koreensis hl12. Journal of Microbiology and Biotechnology, 34:1959-1968, Aug 2024. URL: https://doi.org/10.4014/jmb.2404.04043, doi:10.4014/jmb.2404.04043. This article has 5 citations and is from a peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>lekakarn2024exploringlevansucraseoperon pages 1-2</li>
+<li>ortizsoto2017impairedcoordinationof pages 1-2</li>
+<li>ko2025insightofmetal pages 7-8</li>
+<li>lekakarn2024exploringlevansucraseoperon pages 3-5</li>
+<li>avilafernandez2023simultaneousenzymeproduction pages 1-2</li>
+<li>lekakarn2024exploringlevansucraseoperon pages 9-10</li>
+<li>https://doi.org/10.4014/jmb.2404.04043,</li>
+<li>https://doi.org/10.1093/glycob/cwx050,</li>
+<li>https://doi.org/10.4014/jmb.2411.11030,</li>
+<li>https://doi.org/10.1111/j.1574-6968.2010.02085.x,</li>
+<li>https://doi.org/10.1186/s12934-022-02009-7,</li>
+<li>https://doi.org/10.1128/spectrum.03964-23</li>
+<li>https://doi.org/10.1128/spectrum.02066-24</li>
+<li>https://doi.org/10.4014/jmb.2404.04043;</li>
+<li>https://doi.org/10.1186/s12934-022-02009-7</li>
+<li>https://doi.org/10.4014/jmb.2404.04043</li>
+<li>https://doi.org/10.1093/glycob/cwx050</li>
+<li>https://doi.org/10.4014/jmb.2411.11030</li>
+<li>https://doi.org/10.1186/s12934-022-02009-7;</li>
+<li>https://doi.org/10.1093/glycob/cwx050;</li>
+<li>https://doi.org/10.1128/spectrum.03964-23;</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P05655
+gene_symbol: sacB
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:224308
+  label: Bacillus subtilis (strain 168)
+description: &gt;-
+  Levansucrase (SacB) is a secreted glycosyl hydrolase family 68 (GH68) enzyme that catalyzes
+  the synthesis of levan, a beta-2,6-linked fructose polymer, by transferring fructosyl moieties
+  from sucrose to a growing acceptor molecule (EC 2.4.1.10). The enzyme operates via a retaining
+  double-displacement mechanism with Asp86 as the catalytic nucleophile and Glu342 as the
+  acid/base catalyst. At low sucrose concentrations, the enzyme functions primarily as a hydrolase
+  with water as acceptor, releasing glucose and fructose; at higher substrate concentrations, it
+  adds fructosyl units to growing levan chains. The enzyme contains a signal peptide (residues 1-29)
+  and is secreted to the extracellular space where it synthesizes levan as an exopolysaccharide
+  component of biofilm matrix. Ca2+ binding (at residues Asn241, Asp272, Asn308, Asp310, Asp339)
+  plays an important structural role promoting enzyme stability. The sacB gene is part of the
+  sacB-yveB-yveA operon and is induced by sucrose. SacB is widely used as a counterselection
+  marker in bacterial genetics because its expression in the presence of sucrose is lethal in
+  many Gram-negative bacteria, likely due to toxic accumulation of levan or fructose metabolites.
+existing_annotations:
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: &gt;-
+      SacB is a secreted enzyme that functions in the extracellular space. The protein contains
+      an N-terminal Sec-type signal peptide (residues 1-29) that directs secretion via the
+      general secretory pathway. UniProt annotation confirms &#34;Secreted&#34; subcellular location
+      based on experimental characterization of the signal peptide (PMID:6424671).
+    action: ACCEPT
+    reason: &gt;-
+      The extracellular localization is well-established. The signal peptide has been
+      experimentally characterized and the mature protein (residues 30-473) is secreted to the
+      extracellular space where it synthesizes levan as part of the biofilm matrix. This is
+      consistent with the enzyme&#39;s physiological role in producing extracellular polysaccharides.
+    supported_by:
+      - reference_id: UniProt:P05655
+        supporting_text: &#34;SUBCELLULAR LOCATION: Secreted&#34;
+      - reference_id: file:BACSU/sacB/sacB-deep-research-falcon.md
+        supporting_text: &#34;SacB possesses an N-terminal Sec-type signal peptide and is secreted extracellularly in Gram-positive bacteria&#34;
+- term:
+    id: GO:0009758
+    label: carbohydrate utilization
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      This IEA annotation is derived from InterPro mapping. While sacB is involved in
+      carbohydrate metabolism (specifically sucrose as substrate), the primary function is
+      not carbohydrate utilization for energy but rather the biosynthesis of the
+      exopolysaccharide levan. The term is too general and somewhat misleading for this
+      enzyme&#39;s actual function.
+    action: MODIFY
+    reason: &gt;-
+      The term &#34;carbohydrate utilization&#34; (GO:0009758) implies catabolism for energy or
+      nutrient acquisition. While SacB does use sucrose as a substrate, its primary
+      biological function is levan biosynthesis - an anabolic process producing
+      extracellular polysaccharide. A more accurate biological process term would be
+      GO:0010146 &#34;fructan biosynthetic process&#34; since levan is a type of fructan
+      (beta-2,6-linked fructose polymer).
+    proposed_replacement_terms:
+      - id: GO:0010146
+        label: fructan biosynthetic process
+    supported_by:
+      - reference_id: UniProt:P05655
+        supporting_text: &#34;Catalyzes the synthesis of levan, a fructose polymer, by transferring the fructosyl moiety from sucrose to a growing acceptor molecule&#34;
+      - reference_id: file:BACSU/sacB/sacB-deep-research-falcon.md
+        supporting_text: &#34;Levansucrase (SacB) is a glycoside hydrolase family 68 (GH68) enzyme that catalyzes both sucrose hydrolysis and transfructosylation to form beta-2,6-linked levan and levan-type fructooligosaccharides&#34;
+- term:
+    id: GO:0016740
+    label: transferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;-
+      SacB is indeed a transferase - specifically a fructosyltransferase that transfers
+      the fructosyl moiety from sucrose to acceptor molecules. However, this annotation
+      is too general. A much more specific and informative term exists: GO:0050053
+      &#34;levansucrase activity&#34; which is already annotated to this protein.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      While technically correct, GO:0016740 &#34;transferase activity&#34; is an extremely broad
+      parent term. The more specific annotation GO:0050053 &#34;levansucrase activity&#34;
+      (EC 2.4.1.10) is already present in the annotation set and fully captures the
+      enzymatic function. This general term adds no information beyond what is already
+      captured by the specific term.
+    supported_by:
+      - reference_id: UniProt:P05655
+        supporting_text: &#34;RecName: Full=Levansucrase&#34;
+- term:
+    id: GO:0016757
+    label: glycosyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;-
+      SacB is a glycosyltransferase, specifically transferring fructosyl groups from
+      sucrose. This term is more specific than &#34;transferase activity&#34; but still less
+      informative than the existing specific annotation GO:0050053 &#34;levansucrase activity&#34;.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      This annotation is technically correct as levansucrase is a type of glycosyltransferase.
+      However, GO:0050053 &#34;levansucrase activity&#34; provides much more specific information
+      about the enzyme&#39;s function. The hierarchy relationship (levansucrase activity is_a
+      glycosyltransferase activity) means this annotation is redundant with the more
+      specific term already present.
+    supported_by:
+      - reference_id: UniProt:P05655
+        supporting_text: &#34;Belongs to the glycosyl hydrolase 68 family&#34;
+- term:
+    id: GO:0046872
+    label: metal ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;-
+      SacB binds calcium ions which play an important structural role in enzyme stability.
+      Crystal structures have identified five Ca2+ binding residues: Asn241, Asp272, Asn308,
+      Asp310, and Asp339. However, Ca2+ is not required for catalytic activity per se but
+      rather promotes protein stability.
+    action: MODIFY
+    reason: &gt;-
+      The annotation is correct that SacB binds metal ions, specifically Ca2+. However,
+      GO:0046872 &#34;metal ion binding&#34; is overly broad. The specific calcium ion binding
+      has been extensively characterized by X-ray crystallography and mutagenesis. A more
+      precise annotation would be GO:0005509 &#34;calcium ion binding&#34;. The calcium plays a
+      structural/regulatory role rather than being directly involved in catalysis.
+    proposed_replacement_terms:
+      - id: GO:0005509
+        label: calcium ion binding
+    supported_by:
+      - reference_id: UniProt:P05655
+        supporting_text: &#34;Ca(2+) may play an important structural role and promote stability of levansucrase&#34;
+      - reference_id: file:BACSU/sacB/sacB-deep-research-falcon.md
+        supporting_text: &#34;Metal-binding loop in some levansucrases; certain divalent ions (e.g., Ca2+) can stimulate fructosylation/levan synthesis by allosteric effects&#34;
+- term:
+    id: GO:0050053
+    label: levansucrase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      Levansucrase activity (EC 2.4.1.10) is the precise molecular function of SacB. The
+      enzyme catalyzes: sucrose + (2,6-beta-D-fructosyl)n -&gt; glucose + (2,6-beta-D-fructosyl)n+1.
+      This has been extensively characterized by kinetic studies (Km ~8-9 mM for sucrose),
+      X-ray crystallography (PDB: 1OYG, 1PT2, 6VHQ), and mutagenesis of active site residues.
+    action: ACCEPT
+    reason: &gt;-
+      This is the core molecular function of SacB and is extremely well characterized.
+      Multiple publications provide direct experimental evidence including enzyme kinetics
+      (PMID:4206083, PMID:18596022), crystal structures with bound substrate (PMID:14517548),
+      and site-directed mutagenesis of catalytic residues (Asp86 nucleophile, Glu342 acid/base).
+      The enzyme operates via a retaining double-displacement mechanism. This annotation
+      should be retained as representing the primary function.
+    supported_by:
+      - reference_id: UniProt:P05655
+        supporting_text: &#34;Catalyzes the synthesis of levan, a fructose polymer, by transferring the fructosyl moiety from sucrose to a growing acceptor molecule&#34;
+      - reference_id: file:BACSU/sacB/sacB-deep-research-falcon.md
+        supporting_text: &#34;sacB encodes levansucrase (SacB) from Bacillus subtilis (strain 168); UniProt P05655&#34;
+- term:
+    id: GO:0010146
+    label: fructan biosynthetic process
+  evidence_type: TAS
+  original_reference_id: PMID:4206083
+  review:
+    summary: &gt;-
+      Levan is a type of fructan (specifically a beta-2,6-linked fructan). SacB is
+      directly responsible for fructan/levan biosynthesis as its primary biological
+      function. This process annotation appropriately captures what the enzyme does
+      at the cellular/organismal level.
+    action: NEW
+    reason: &gt;-
+      This annotation is missing from the current GOA set and represents an important
+      biological process function of SacB. The enzyme&#39;s physiological role is to
+      synthesize levan (a fructan polymer) which forms part of the extracellular
+      matrix in B. subtilis biofilms. While the molecular function (levansucrase
+      activity) is annotated, the corresponding biological process term should also
+      be included for completeness.
+    supported_by:
+      - reference_id: UniProt:P05655
+        supporting_text: &#34;Catalyzes the synthesis of levan, a fructose polymer&#34;
+      - reference_id: file:BACSU/sacB/sacB-deep-research-falcon.md
+        supporting_text: &#34;sacB encodes levansucrase which synthesizes beta-2,6-linked levan and levan-type fructooligosaccharides&#34;
+references:
+- id: PMID:4206083
+  title: Kinetic studies of levansucrase of Bacillus subtilis
+  full_text_unavailable: true
+  findings:
+    - statement: Foundational kinetic characterization of levansucrase
+    - statement: Established dual hydrolase/transferase activity depending on sucrose concentration
+- id: PMID:14517548
+  title: Structural framework of fructosyl transfer in Bacillus subtilis levansucrase
+  full_text_unavailable: true
+  findings:
+    - statement: First crystal structure of B. subtilis levansucrase at 1.50 angstroms
+    - statement: Identified catalytic residues Asp86 (nucleophile), Asp247 (transition state stabilizer), Glu342 (acid/base)
+    - statement: Characterized Ca2+ binding sites
+- id: PMID:18596022
+  title: Selected mutations in Bacillus subtilis levansucrase semi-conserved regions affecting its biochemical properties
+  full_text_unavailable: true
+  findings:
+    - statement: Mutagenesis studies characterizing active site residues
+    - statement: Km of 8 mM for sucrose
+- id: PMID:32553967
+  title: Implications of the mutation S164A on Bacillus subtilis levansucrase product specificity
+  full_text_unavailable: true
+  findings:
+    - statement: Detailed kinetic analysis of hydrolysis vs transfructosylation
+    - statement: S164A mutation increases transfructosylation activity
+- id: PMID:33303628
+  title: The molecular basis of the nonprocessive elongation mechanism in levansucrases
+  full_text_unavailable: true
+  findings:
+    - statement: Crystal structure with levan hexasaccharides
+    - statement: Molecular basis for nonprocessive elongation mechanism
+- id: PMID:6424671
+  title: Characterization of the precursor form of the exocellular levansucrase from Bacillus subtilis
+  full_text_unavailable: true
+  findings:
+    - statement: Characterized signal peptide and secretion
+- id: PMID:11739774
+  title: yveB, encoding endolevanase LevB, is part of the sacB-yveB-yveA levansucrase tricistronic operon in Bacillus subtilis
+  full_text_unavailable: true
+  findings:
+    - statement: sacB is part of a tricistronic operon with yveB (endolevanase) and yveA
+    - statement: Induced by sucrose
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:BACSU/sacB/sacB-deep-research-falcon.md
+  title: Deep research report on sacB levansucrase
+  findings:
+    - statement: Comprehensive review of levansucrase biology from recent literature (2023-2024)
+      supporting_text: &#34;sacB encodes levansucrase (SacB) from Bacillus subtilis (strain 168); UniProt P05655&#34;
+    - statement: Details on operon organization and secretion
+      supporting_text: &#34;SacB possesses an N-terminal Sec-type signal peptide and is secreted extracellularly in Gram-positive bacteria&#34;
+    - statement: GH68 levansucrases use retaining double-displacement mechanism with 5-bladed beta-propeller fold
+      supporting_text: &#34;GH68 levansucrases operate via a retaining double-displacement mechanism&#34;
+    - statement: Ca2+ and other divalent metals can stimulate fructosylation
+      supporting_text: &#34;Metal-binding loop in some levansucrases; certain divalent ions (e.g., Ca2+) can stimulate fructosylation/levan synthesis by allosteric effects&#34;
+core_functions:
+- molecular_function:
+    id: GO:0050053
+    label: levansucrase activity
+  description: &gt;-
+    The enzyme catalyzes fructosyl transfer from sucrose to build beta-2,6-linked levan
+    polymers (EC 2.4.1.10). Extensively characterized by kinetics, crystallography, and
+    mutagenesis. Core active site residues: Asp86 (nucleophile), Asp247 (transition state
+    stabilizer), Glu342 (acid/base). Km ~8-9 mM for sucrose.
+  directly_involved_in:
+    - id: GO:0010146
+      label: fructan biosynthetic process
+  locations:
+    - id: GO:0005576
+      label: extracellular region
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

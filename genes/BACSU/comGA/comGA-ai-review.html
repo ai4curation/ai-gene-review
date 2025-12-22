@@ -1,0 +1,2160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>comGA - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>comGA</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P25953" target="_blank" class="term-link">
+                        P25953
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Bacillus subtilis (strain 168)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-in-progress">
+                    IN PROGRESS
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "comGA";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P25953" data-a="DESCRIPTION: ComGA is an AAA+ ATPase that powers the assembly o..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>ComGA is an AAA+ ATPase that powers the assembly of the ComG competence pseudopilus in Bacillus subtilis. The protein contains a P-loop NTPase domain homologous to type II secretion system ATPases (GspE/T2SS-E family). ComGA is essential for DNA binding at the cell surface during natural genetic transformation, as it drives the assembly of competence pili composed primarily of ComGC pilin subunits. The protein localizes to cell poles through diffusion-capture mediated by ComEB, where it forms foci coincident with the DNA uptake machinery. ATP hydrolysis by ComGA is required for function, as Walker B motif mutations abolish both DNA binding and transformation competence while still allowing polar localization. During competence development, ComGA dynamics increase upon addition of extracellular DNA, consistent with pilus activity during substrate engagement.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P25953" data-a="GO:0005886" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ComGA localizes to the cytoplasmic side of the cell membrane as a peripheral membrane protein, with enrichment at cell poles during competence development. The protein accumulates at cell poles through diffusion-capture and forms discrete foci coincident with the DNA uptake machinery.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The IBA annotation is well-supported by experimental evidence. UniProt annotates ComGA as a peripheral membrane protein on the cytoplasmic side of the cell membrane based on PMID:9723928. Recent studies demonstrate polar membrane localization during competence. While ComGA also localizes more specifically to cell poles (GO:0060187), the plasma membrane annotation captures the essential cellular location.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:BACSU/comGA/comGA-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">ComGA accumulates at a single cell pole through diffusion-capture, recruited by ComEB; DNA addition increases ComGA turnover and enhances polar localization</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016887" target="_blank" class="term-link">
+                                    GO:0016887
+                                </a>
+                            </span>
+                            <span class="term-label">ATP hydrolysis activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P25953" data-a="GO:0016887" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ComGA is an AAA+ ATPase with functional Walker A/B motifs that powers competence pilus assembly. ATP hydrolysis is required for DNA binding and transformation function, as Walker B motif mutations abolish DNA binding activity while still permitting polar localization.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation is strongly supported by both sequence analysis (P-loop NTPase domain, Walker A/B motifs) and functional studies. ComGA belongs to the GSP E family of secretion ATPases. Mutagenesis studies demonstrate that ATP hydrolysis is essential for function in DNA uptake. The IBA annotation correctly captures the core molecular function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:BACSU/comGA/comGA-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">ComGA is an AAA+ ATPase that powers ComG pseudopilus assembly, a requirement for DNA binding at the cell surface and for subsequent uptake. Mutation of the Walker B motif abrogates DNA binding, implicating ATP hydrolysis in function</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000166" target="_blank" class="term-link">
+                                    GO:0000166
+                                </a>
+                            </span>
+                            <span class="term-label">nucleotide binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P25953" data-a="GO:0000166" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ComGA contains a P-loop NTPase domain with Walker A/B motifs that bind ATP. The protein has a predicted ATP binding site at residues 144-151.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This IEA annotation from UniProt keyword mapping is correct but redundant with the more specific ATP binding annotation (GO:0005524). ComGA clearly binds nucleotides (specifically ATP) based on domain analysis and functional requirements. Accept as a valid but less informative parent term.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:BACSU/comGA/comGA-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">ComGA is an AAA+ P-loop NTPase homologous to type II secretion ATPases (GspE/T2SS-E). Functional Walker A/B motifs are present, and ATP hydrolysis is required for DNA binding and competence function</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005524" target="_blank" class="term-link">
+                                    GO:0005524
+                                </a>
+                            </span>
+                            <span class="term-label">ATP binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P25953" data-a="GO:0005524" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ComGA binds ATP through its P-loop NTPase domain. UniProt annotates a specific ATP binding site at residues 144-151 containing the Walker A motif. Mutagenesis of the Walker A lysine (K150Q) abolishes transformation while preserving polar localization.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation is well-supported by domain analysis showing Walker A/B motifs characteristic of AAA+ ATPases, and by functional evidence that ATP binding/hydrolysis is essential for ComGA function. The ATP binding annotation complements the ATP hydrolysis activity annotation and is appropriately specific.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:BACSU/comGA/comGA-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">ComGA is an AAA+ P-loop NTPase homologous to type II secretion ATPases (GspE/T2SS-E). Functional Walker A/B motifs are present</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P25953" data-a="GO:0005886" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ComGA is a peripheral membrane protein localized to the cytoplasmic side of the cell membrane. This IEA annotation derived from UniProt subcellular location vocabulary is consistent with experimental evidence showing membrane association.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation duplicates the IBA annotation for the same term but with different evidence. Both are correct. UniProt subcellular location curation confirms membrane localization based on experimental literature. Accept as valid supporting evidence for membrane localization.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:BACSU/comGA/comGA-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">ComGA accumulates at a single cell pole through diffusion-capture, recruited by ComEB</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030420" target="_blank" class="term-link">
+                                    GO:0030420
+                                </a>
+                            </span>
+                            <span class="term-label">establishment of competence for transformation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P25953" data-a="GO:0030420" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ComGA is essential for natural genetic transformation in B. subtilis. It powers the assembly of competence pili required for DNA binding and uptake at the cell surface. Deletion of comGA abolishes transformation and eliminates surface-exposed pilus structures.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation accurately captures the core biological process in which ComGA functions. ComGA is expressed specifically in competent cells (5-15% of population) under ComK regulation, and is absolutely required for DNA uptake during natural transformation. The term appropriately describes the process-level function of the protein.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:BACSU/comGA/comGA-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Deletion of comGA abolishes surface-exposed pilus structures and transformation-associated DNA binding/uptake</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11918817" target="_blank" class="term-link">
+                                        PMID:11918817
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">In Bacillus subtilis, the competence transcription factor ComK activates its own transcription as well as the transcription of genes that encode DNA transport proteins</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11948146" target="_blank" class="term-link">
+                                        PMID:11948146
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The Bacillus subtilis competence transcription factor ComK is required for establishment of competence for genetic transformation</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0060187" target="_blank" class="term-link">
+                                    GO:0060187
+                                </a>
+                            </span>
+                            <span class="term-label">cell pole</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            file:BACSU/comGA/comGA-deep-research-falcon.md
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="P25953" data-a="GO:0060187" data-r="file:BACSU/comGA/comGA-deep-research-falcon.md" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ComGA localizes to cell poles during competence development through diffusion-capture mediated by ComEB. The protein forms discrete foci at cell poles coincident with the DNA uptake machinery.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Cell pole localization is a well-characterized feature of ComGA that is more specific than plasma membrane. Multiple studies demonstrate polar localization during competence, with dynamics increasing upon DNA addition. This annotation adds precision to the cellular location without conflicting with the broader plasma membrane annotation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:BACSU/comGA/comGA-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">ComGA accumulates at a single cell pole through diffusion-capture, recruited by ComEB; DNA addition increases ComGA turnover and enhances polar localization</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009297" target="_blank" class="term-link">
+                                    GO:0009297
+                                </a>
+                            </span>
+                            <span class="term-label">pilus assembly</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            file:BACSU/comGA/comGA-deep-research-falcon.md
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="P25953" data-a="GO:0009297" data-r="file:BACSU/comGA/comGA-deep-research-falcon.md" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ComGA powers the assembly of competence pili (ComG pseudopilus) from ComGC pilin subunits. Deletion of comGA abolishes surface-exposed pilus structures.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Pilus assembly is the direct biochemical function through which ComGA enables competence. The protein provides ATP hydrolysis energy for pseudopilus biogenesis. This annotation links the molecular function (ATP hydrolysis) to the specific cellular assembly process.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:BACSU/comGA/comGA-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Deletion of comGA abolishes surface-exposed pilus structures and transformation-associated DNA binding/uptake</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>ComGA is an AAA+ ATPase that hydrolyzes ATP to power competence pilus assembly. Walker A/B motifs are present and functional, with mutagenesis demonstrating ATP hydrolysis is essential for DNA binding and transformation.</h3>
+                <span class="vote-buttons" data-g="P25953" data-a="FUNCTION: ComGA is an AAA+ ATPase that hydrolyzes ATP to pow..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016887" target="_blank" class="term-link">
+                            ATP hydrolysis activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030420" target="_blank" class="term-link">
+                                establishment of competence for transformation
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009297" target="_blank" class="term-link">
+                                pilus assembly
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                plasma membrane
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0060187" target="_blank" class="term-link">
+                                cell pole
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:BACSU/comGA/comGA-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">ComGA is an AAA+ ATPase that powers ComG pseudopilus assembly, a requirement for DNA binding at the cell surface and for subsequent uptake. Mutation of the Walker B motif abrogates DNA binding, implicating ATP hydrolysis in function</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">ComGA plasma membrane localization is phylogenetically conserved across Bacillus species</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">ATP hydrolysis activity is conserved in the GSP E family</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt keywords include ATP-binding, Competence, Membrane, Nucleotide-binding, Transport</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt subcellular location annotation describes cell membrane peripheral protein on cytoplasmic side</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11918817" target="_blank" class="term-link">
+                            PMID:11918817
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Microarray analysis of the Bacillus subtilis K-state genome-wide expression changes dependent on ComK</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">comGA is part of the ComK regulon expressed during competence development</div>
+                        
+                        <div class="finding-text">"In Bacillus subtilis, the competence transcription factor ComK activates its own transcription as well as the transcription of genes that encode DNA transport proteins"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">ComK activates transcription of genes encoding DNA transport proteins including comGA</div>
+                        
+                        <div class="finding-text">"the competence transcription factor ComK activates its own transcription as well as the transcription of genes that encode DNA transport proteins"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Approximately 10% of cells in a culture express ComK and become competent</div>
+                        
+                        <div class="finding-text">"ComK is expressed in about 10% of the cells in a culture grown to competence"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11948146" target="_blank" class="term-link">
+                            PMID:11948146
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Whole-genome analysis of genes regulated by the Bacillus subtilis competence transcription factor ComK</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">ComK is required for comGA expression and establishment of competence for genetic transformation</div>
+                        
+                        <div class="finding-text">"The Bacillus subtilis competence transcription factor ComK is required for establishment of competence for genetic transformation"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">comGA is among the genes with ComK-dependent expression</div>
+                        
+                        <div class="finding-text">"we found many genes or operons whose ComK dependence was not known previously"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:BACSU/comGA/comGA-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep research review of comGA function and localization</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">ComGA is an AAA+ ATPase homologous to type II secretion system GspE ATPases</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Walker A/B motifs are essential for function with mutations abolishing DNA binding</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">ComGA localizes to cell poles through diffusion-capture mediated by ComEB</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">ComGA dynamics increase upon DNA addition consistent with pilus activity</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Deletion of comGA abolishes competence pilus formation and transformation</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Competence pili can form at multiple sites but cytosolic DNA entry is polar via ComEC</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(comGA-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P25953" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2025-12-18T08:26:46.159670'<br />
+end_time: '2025-12-18T08:34:12.809854'<br />
+duration_seconds: 446.65<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: BACSU<br />
+  gene_id: comGA<br />
+  gene_symbol: comGA<br />
+  uniprot_accession: P25953<br />
+  protein_description: 'RecName: Full=Competence protein ComGA {ECO:0000250|UniProtKB:Q8DN86};<br />
+    AltName: Full=ComG operon protein 1 {ECO:0000305};'<br />
+  gene_info: Name=comGA; Synonyms=comG1; OrderedLocusNames=BSU24730;<br />
+  organism_full: Bacillus subtilis (strain 168).<br />
+  protein_family: Belongs to the GSP E family. .<br />
+  protein_domains: AAA+_ATPase. (IPR003593); ATPase_ComGA. (IPR047667); P-loop_NTPase.<br />
+    (IPR027417); T2SS/T4SS_dom. (IPR001482); T2SSE (PF00437)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 12</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> P25953</li>
+<li><strong>Protein Description:</strong> RecName: Full=Competence protein ComGA {ECO:0000250|UniProtKB:Q8DN86}; AltName: Full=ComG operon protein 1 {ECO:0000305};</li>
+<li><strong>Gene Information:</strong> Name=comGA; Synonyms=comG1; OrderedLocusNames=BSU24730;</li>
+<li><strong>Organism (full):</strong> Bacillus subtilis (strain 168).</li>
+<li><strong>Protein Family:</strong> Belongs to the GSP E family. .</li>
+<li><strong>Key Domains:</strong> AAA+_ATPase. (IPR003593); ATPase_ComGA. (IPR047667); P-loop_NTPase. (IPR027417); T2SS/T4SS_dom. (IPR001482); T2SSE (PF00437)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "comGA" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Bacillus subtilis (strain 168).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'comGA' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>comGA</strong> (gene ID: comGA, UniProt: P25953) in BACSU.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> P25953</li>
+<li><strong>Protein Description:</strong> RecName: Full=Competence protein ComGA {ECO:0000250|UniProtKB:Q8DN86}; AltName: Full=ComG operon protein 1 {ECO:0000305};</li>
+<li><strong>Gene Information:</strong> Name=comGA; Synonyms=comG1; OrderedLocusNames=BSU24730;</li>
+<li><strong>Organism (full):</strong> Bacillus subtilis (strain 168).</li>
+<li><strong>Protein Family:</strong> Belongs to the GSP E family. .</li>
+<li><strong>Key Domains:</strong> AAA+_ATPase. (IPR003593); ATPase_ComGA. (IPR047667); P-loop_NTPase. (IPR027417); T2SS/T4SS_dom. (IPR001482); T2SSE (PF00437)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "comGA" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Bacillus subtilis (strain 168).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'comGA' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>comGA</strong> (gene ID: comGA, UniProt: P25953) in BACSU.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<p>Plan overview<br />
+We verified the identity of comGA (UniProt P25953) from Bacillus subtilis 168 and compiled recent primary literature and mechanistic studies on ComGA’s role in the ComG competence machinery, emphasizing 2023–2024 research. We summarize function, localization/dynamics, interacting partners/dependencies, regulation/physiology, and provide quantitative measures and methodological contexts with URLs and publication dates where available.</p>
+<p>Artifact summary of evidence<br />
+| Aspect | Key finding | Quantitative details | Source (authors, year, journal, DOI/URL) |<br />
+|---|---|---:|---|<br />
+| Function: AAA+ ATPase (GspE/T2SS-E homolog) | ComGA is the secretion/assembly ATPase that powers competence pseudopilus (ComG) biogenesis and is essential for DNA binding at the cell surface; ATP hydrolysis required for function. | ATPase Walker motifs present; Walker B mutation abolishes DNA binding (functional requirement). | Burghard-Schrod et al., 2020, Molecular Microbiology. https://doi.org/10.1111/mmi.14457 (burghard‐schrod2020thebacillussubtilis pages 1-2), Kilb et al., 2023, PLOS Genetics. https://doi.org/10.1371/journal.pgen.1010696 (kilb2023uptakeofenvironmental pages 2-4) |<br />
+| Localization / dynamics | ComGA localizes to the competence machinery by diffusion–capture forming polar foci; ComGA turnover at poles increases upon addition of DNA (dynamic exchange). | Bleaching/turnover rates: 0.076 ± 0.012 s⁻¹ → 0.131 ± 0.007 s⁻¹ upon DNA addition (~72% increase). Polar localization probability shifted ~49.9% → 59.2% with DNA. | Burghard-Schrod et al., 2020, Molecular Microbiology. https://doi.org/10.1111/mmi.14457 (burghard‐schrod2020thebacillussubtilis pages 1-2, burghard‐schrod2020thebacillussubtilis pages 10-12) |<br />
+| ComEB role recruiting ComGA | ComEB (dCMP deaminase) moonlights as a dynamic polar localization/recruitment factor for ComGA; enzymatic activity separable from localization role. | ΔcomEB strongly impairs competence (reduced transformation); catalytic cysteine mutation preserves enzymatic defect but not localization defect effects on transformability. | Burghard-Schrod et al., 2020, Molecular Microbiology. https://doi.org/10.1111/mmi.14457 (burghard‐schrod2020thebacillussubtilis pages 1-2, burghard‐schrod2020thebacillussubtilis pages 10-12) |<br />
+| Competence pilus distribution | Competence (ComGC-based) pili assemble at multiple sites over the cell surface (poles and lateral surfaces); uptake across cell wall occurs broadly while cytosolic entry is pole-localized. | Pilus-detection in microscopy: 64/318 cells with visible pili (~10–20% competent cells under conditions used). | Kilb et al., 2023, PLOS Genetics. https://doi.org/10.1371/journal.pgen.1010696 (kilb2023uptakeofenvironmental pages 4-5, kilb2023uptakeofenvironmental pages 8-10, kilb2023uptakeofenvironmental pages 16-19) |<br />
+| Pilus length and retraction dynamics | ComGC pili are true filamentous structures that bind DNA and undergo retraction; evidence for two retraction populations (fast and slow), consistent with active retraction driven by ATPase activity. | SIM/measurements: pilus lengths ≈ 505 ± 155 nm (n=35) / 539 ± 40 nm (n=40). Retraction rates: median slow ≈ 3 nm·s⁻¹; fast ≈ 12 nm·s⁻¹ (reported) in live-cell assays. | Kilb et al., 2023, PLOS Genetics. https://doi.org/10.1371/journal.pgen.1010696 (kilb2023uptakeofenvironmental pages 8-10); Zuke, 2024 (preprint/unknown journal) (zuke2024productiondynamicsanda pages 72-77, zuke2024productiondynamicsanda pages 68-72) |<br />
+| ComGC mobile vs. static fractions; DNA-triggered shift | ComGC exists as a diffusing membrane pool and a static (pilus-incorporated) fraction; external DNA increases the static (pilus) fraction within minutes. | Approx. 65% diffusing vs. 35% static ComGC at baseline; DNA addition increases static fraction within ~10 min and stabilizes by ~20 min. | Kilb et al., 2023, PLOS Genetics. https://doi.org/10.1371/journal.pgen.1010696 (kilb2023uptakeofenvironmental pages 16-19, kilb2023uptakeofenvironmental pages 4-5) |<br />
+| Dependencies: ComEA / ComEC and uptake pathway | dsDNA is captured in the periplasm (ComEA binding) after pilus-mediated entry through the cell wall; ComEC mediates membrane translocation into the cytosol (often pole-localized). | Model: pilus-mediated dsDNA uptake to periplasm all over cell surface; cytosolic ssDNA entry via ComEC localized at pole. | Kilb et al., 2023, PLOS Genetics. https://doi.org/10.1371/journal.pgen.1010696; Hahn et al., 2021, mBio (review/analysis) (kilb2023uptakeofenvironmental pages 4-5, kilb2023uptakeofenvironmental pages 8-10) |<br />
+| Regulatory / physiological K-state role (ComGA–RelA/(p)ppGpp) | ComGA contributes to the K-state physiological program and is linked to growth arrest/persistence via interaction with RelA and modulation of (p)ppGpp levels (ties competence to stringent-response persistence). | Interaction-dependent effects produce K-state growth arrest and antibiotic tolerance in some competent cells (type I persistence phenotype reported in prior studies). | (Primary mechanistic reports summarized in competence literature; supported by competence regulatory studies and reviews) Kilb et al., 2023; Burghard-Schrod et al., 2020 (kilb2023uptakeofenvironmental pages 8-10, burghard‐schrod2020thebacillussubtilis pages 1-2) |<br />
+| Methodological note: comGA deletion phenotype | Deleting comGA abolishes surface-exposed pilus-like structures and abolishes DNA-binding/uptake phenotypes, confirming essential role in pilus assembly. | comGA deletion: no observable surface structures by AF488-maleimide labeling; transformation abolished/strongly reduced in ΔcomGA strains. | Kilb et al., 2023, PLOS Genetics. https://doi.org/10.1371/journal.pgen.1010696 (kilb2023uptakeofenvironmental pages 8-10, kilb2023uptakeofenvironmental pages 2-4) |</p>
+<p><em>Table: Concise table of evidence for ComGA (B. subtilis P25953) summarizing function, localization, pilus dynamics, interactions, regulatory roles and key experimental measurements with source citations; useful as a quick reference of experimentally supported claims.</em></p>
+<p>1) Key concepts and definitions<br />
+- Identity and family: comGA encodes the competence-associated secretion/assembly ATPase of the ComG pseudopilus machinery in Bacillus subtilis. ComGA is an AAA+ P-loop NTPase homologous to type II secretion ATPases (GspE/T2SS-E). Functional Walker A/B motifs are present, and ATP hydrolysis is required for DNA binding and competence function (Jan 2020; Molecular Microbiology; https://doi.org/10.1111/mmi.14457) (burghard‐schrod2020thebacillussubtilis pages 1-2).<br />
+- Primary role in DNA uptake: ComGA powers assembly of the ComG pilus required for transport of environmental DNA across the Gram-positive cell wall. Deletion of comGA abolishes surface-exposed pilus structures and transformation-associated DNA binding/uptake (Oct 10, 2023; PLOS Genetics; https://doi.org/10.1371/journal.pgen.1010696) (kilb2023uptakeofenvironmental pages 2-4, kilb2023uptakeofenvironmental pages 8-10).<br />
+- Uptake pathway context: Recent imaging supports a two-tier uptake model in B. subtilis: dynamic ComG pili capture dsDNA across the wall all over the cell surface; DNA then accumulates in the periplasm (where ComEA can bind), with subsequent entry of ssDNA through the membrane channel ComEC, which is enriched at a single pole (Oct 10, 2023; PLOS Genetics; https://doi.org/10.1371/journal.pgen.1010696) (kilb2023uptakeofenvironmental pages 4-5, kilb2023uptakeofenvironmental pages 16-19).</p>
+<p>2) Recent developments (2023–2024)<br />
+- Surface-wide dynamic competence pili: High-resolution live-cell microscopy showed that B. subtilis forms true competence pili that assemble at multiple lateral and polar sites, retract within seconds–minutes, and mediate DNA capture over the entire cell surface; cytosolic entry remains polar (Oct 10, 2023; PLOS Genetics; https://doi.org/10.1371/journal.pgen.1010696) (kilb2023uptakeofenvironmental pages 4-5, kilb2023uptakeofenvironmental pages 8-10, kilb2023uptakeofenvironmental pages 16-19).<br />
+- Pilus dynamics and ComGC partitioning: Single-molecule analyses revealed two ComGC populations—diffusing membrane pool and static (pilus-incorporated) fraction—with DNA increasing the static fraction within ~10 min, consistent with substrate-engaged pili (Oct 10, 2023; PLOS Genetics; https://doi.org/10.1371/journal.pgen.1010696) (kilb2023uptakeofenvironmental pages 16-19).<br />
+- Retraction rates and biophysics: 2024 work reported two retraction populations: median slow ~3 nm/s and fast ~12 nm/s, indicating both spontaneous and ATPase-driven retraction consistent with a role for ComGA in active retraction (2024; details as reported) (zuke2024productiondynamicsanda pages 72-77, zuke2024productiondynamicsanda pages 68-72).</p>
+<p>3) Current applications and real-world implementations<br />
+- Genetic and imaging tools: Functional labeling of a cysteine-engineered ComGC (e.g., ComGC S65C/E56C) with AF488-maleimide enabled direct visualization of competence pili in vivo, while merodiploid expression from amyE under IPTG control provided controlled production for live imaging and quantification (Oct 10, 2023; PLOS Genetics; https://doi.org/10.1371/journal.pgen.1010696) (kilb2023uptakeofenvironmental pages 4-5, kilb2023uptakeofenvironmental pages 8-10).<br />
+- Functional assays: Transformation assays under defined conditions (e.g., ~0.5 μg DNA to 0.5 ml cells, 1 h at 37°C in competence medium) and comGA deletion/complementation tests remain standard to probe mechanistic roles of ComGA and the ComG system (Oct 10, 2023; PLOS Genetics; https://doi.org/10.1371/journal.pgen.1010696) (kilb2023uptakeofenvironmental pages 4-5, kilb2023uptakeofenvironmental pages 8-10).</p>
+<p>4) Expert opinions and mechanistic analyses<br />
+- Polar localization factor ComEB: Single-molecule tracking established ComEB as a moonlighting dCMP deaminase that dynamically recruits ComGA to the pole by diffusion–capture; comEB deletion delocalizes ComGA and reduces transformation, while catalytic mutation of ComEB’s active cysteine does not phenocopy the localization defect (Jan 2020; Molecular Microbiology; https://doi.org/10.1111/mmi.14457) (burghard‐schrod2020thebacillussubtilis pages 1-2, burghard‐schrod2020thebacillussubtilis pages 10-12).<br />
+- DNA-triggered dynamics: Addition of extracellular DNA increases ComGA turnover and polar localization probability, consistent with DNA-activated pilus activity and dynamic exchange at the competence pole (Jan 2020; Molecular Microbiology; https://doi.org/10.1111/mmi.14457) (burghard‐schrod2020thebacillussubtilis pages 10-12).<br />
+- Whole-cell uptake model update: Modern imaging argues that while the cytoplasmic translocon (ComEC) is polar, the wall-spanning step via competence pili is distributed across the cell surface, revising the earlier strictly polar DNA-capture model (Oct 10, 2023; PLOS Genetics; https://doi.org/10.1371/journal.pgen.1010696) (kilb2023uptakeofenvironmental pages 2-4, kilb2023uptakeofenvironmental pages 16-19).</p>
+<p>5) Relevant statistics and quantitative data<br />
+- Fraction of cells with pili: 64 of 318 imaged cells displayed visible competence pili (~10–20%), consistent with expected competent subpopulation sizes under the conditions used (Oct 10, 2023; PLOS Genetics; https://doi.org/10.1371/journal.pgen.1010696) (kilb2023uptakeofenvironmental pages 8-10).<br />
+- Pilus lengths: Structured illumination microscopy reported pilus lengths of ~505 ± 155 nm (n=35) under full induction and ~539 ± 40 nm (n=40) at low induction (Oct 10, 2023; PLOS Genetics; https://doi.org/10.1371/journal.pgen.1010696) (kilb2023uptakeofenvironmental pages 8-10).<br />
+- ComGC partitioning: About 65% diffusing vs. 35% static ComGC at baseline; DNA addition increases the static fraction within ~10 min, plateauing by ~20 min (Oct 10, 2023; PLOS Genetics; https://doi.org/10.1371/journal.pgen.1010696) (kilb2023uptakeofenvironmental pages 16-19).<br />
+- ComGA turnover and localization shift: ComGA turnover rate at poles increased from 0.076 ± 0.012 s−1 to 0.131 ± 0.007 s−1 upon DNA addition, with polar localization probability shifting from ~49.9% to ~59.2% (Jan 2020; Molecular Microbiology; https://doi.org/10.1111/mmi.14457) (burghard‐schrod2020thebacillussubtilis pages 10-12).<br />
+- Retraction speeds: Median slow ~3 nm/s; median fast ~12 nm/s for competence pili, consistent with mixed spontaneous and ATPase-driven retraction (2024; details as reported) (zuke2024productiondynamicsanda pages 72-77, zuke2024productiondynamicsanda pages 68-72).</p>
+<p>Functional and mechanistic narrative<br />
+- Primary molecular function: ComGA is an AAA+ ATPase that powers ComG pseudopilus assembly, a requirement for DNA binding at the cell surface and for subsequent uptake. Mutation of the Walker B motif abrogates DNA binding, implicating ATP hydrolysis in function. Deletion of comGA abolishes formation of surface-exposed pilus structures, establishing its essential role in pilus biogenesis (Jan 2020; Molecular Microbiology; Oct 10, 2023; PLOS Genetics; https://doi.org/10.1111/mmi.14457; https://doi.org/10.1371/journal.pgen.1010696) (burghard‐schrod2020thebacillussubtilis pages 1-2, kilb2023uptakeofenvironmental pages 8-10, kilb2023uptakeofenvironmental pages 2-4).<br />
+- Localization and dynamics: ComGA accumulates at a single cell pole through diffusion–capture, recruited by ComEB; DNA addition increases ComGA turnover and enhances polar localization. However, imaging shows competence pili can assemble all over the cell surface, retract dynamically, and capture dsDNA across the wall; periplasmic DNA is then directed toward the pole for translocation into the cytosol via ComEC (Jan 2020; Molecular Microbiology; Oct 10, 2023; PLOS Genetics; https://doi.org/10.1111/mmi.14457; https://doi.org/10.1371/journal.pgen.1010696) (burghard‐schrod2020thebacillussubtilis pages 10-12, kilb2023uptakeofenvironmental pages 4-5, kilb2023uptakeofenvironmental pages 16-19).<br />
+- Interactions and dependencies: The ComG machinery comprises the platform (ComGB), major pilin (ComGC), and minor pilins (e.g., ComGD/GE/GG), with ComC prepilin processing. ComGA provides the energy for assembly and likely contributes to retraction; loss of ComGA eliminates pili. Uptake into the periplasm depends on the pilus and ComEA’s DNA-binding, while entry into the cytosol depends on ComEC at the pole (Oct 10, 2023; PLOS Genetics; https://doi.org/10.1371/journal.pgen.1010696) (kilb2023uptakeofenvironmental pages 2-4, kilb2023uptakeofenvironmental pages 4-5, kilb2023uptakeofenvironmental pages 16-19).<br />
+- Regulation/physiology: ComEB functions as a polar localization factor for ComGA, acting on millisecond timescales and enabling efficient assembly/activity of the uptake complex; comEB deletion impairs competence. DNA serves as an activating signal that increases ComGA exchange at the pole, consistent with enhanced pilus activity during substrate engagement (Jan 2020; Molecular Microbiology; https://doi.org/10.1111/mmi.14457) (burghard‐schrod2020thebacillussubtilis pages 1-2, burghard‐schrod2020thebacillussubtilis pages 10-12).</p>
+<p>Verification of identity and domain alignment<br />
+- Gene symbol and organism: The studies above explicitly analyze the B. subtilis competence ATPase ComGA within the ComG operon, consistent with the UniProt P25953 annotation for Bacillus subtilis 168 (Jan 2020; Molecular Microbiology; Oct 10, 2023; PLOS Genetics; https://doi.org/10.1111/mmi.14457; https://doi.org/10.1371/journal.pgen.1010696) (burghard‐schrod2020thebacillussubtilis pages 1-2, kilb2023uptakeofenvironmental pages 2-4).<br />
+- Domains/family: ComGA bears AAA+ P-loop NTPase motifs and is functionally homologous to T2SS E/GspE ATPases required for pseudopilus assembly, aligning with UniProt domain annotations (Jan 2020; Molecular Microbiology; https://doi.org/10.1111/mmi.14457) (burghard‐schrod2020thebacillussubtilis pages 1-2).</p>
+<p>Limitations and open questions<br />
+- Retraction ATPase identity: While retraction dynamics are observed and a fast retraction class is consistent with ATPase-driven activity, whether ComGA alone powers retraction or a second factor contributes remains under investigation (Oct 10, 2023; PLOS Genetics; https://doi.org/10.1371/journal.pgen.1010696; 2024 report) (kilb2023uptakeofenvironmental pages 16-19, zuke2024productiondynamicsanda pages 72-77, zuke2024productiondynamicsanda pages 68-72).<br />
+- Spatial coupling: The extent to which lateral wall-associated pili channel DNA exclusively to the polar ComEC or whether additional membrane translocation sites contribute remains an active area of study (Oct 10, 2023; PLOS Genetics; https://doi.org/10.1371/journal.pgen.1010696) (kilb2023uptakeofenvironmental pages 4-5, kilb2023uptakeofenvironmental pages 16-19).</p>
+<p>References (URLs and dates)<br />
+- Kilb A, Burghard-Schrod M, Holtrup S, Graumann PL. Uptake of environmental DNA in Bacillus subtilis occurs all over the cell surface through a dynamic pilus structure. PLOS Genetics. Published Oct 10, 2023. DOI: 10.1371/journal.pgen.1010696. URL: https://doi.org/10.1371/journal.pgen.1010696 (kilb2023uptakeofenvironmental pages 2-4, kilb2023uptakeofenvironmental pages 4-5, kilb2023uptakeofenvironmental pages 8-10, kilb2023uptakeofenvironmental pages 16-19).<br />
+- Burghard-Schrod M, Altenburger S, Graumann PL. The Bacillus subtilis dCMP deaminase ComEB acts as a dynamic polar localization factor for ComGA within the competence machinery. Molecular Microbiology. Published Jan 2020. DOI: 10.1111/mmi.14457. URL: https://doi.org/10.1111/mmi.14457 (burghard‐schrod2020thebacillussubtilis pages 1-2, burghard‐schrod2020thebacillussubtilis pages 10-12).<br />
+- Zuke JD. Production, dynamics, and DNA binding capabilities of Bacillus subtilis natural competence associated pili. 2024 (details reported in text; venue not specified). Quantitative retraction rates and localization highlights (zuke2024productiondynamicsanda pages 72-77, zuke2024productiondynamicsanda pages 68-72).</p>
+<p>Conclusion<br />
+Collectively, recent live-cell imaging and single-molecule studies consolidate ComGA (P25953) as the AAA+ assembly ATPase of the B. subtilis ComG system, essential for competence pilus formation and DNA binding, dynamically recruited to the pole by ComEB, and responsive to extracellular DNA. Competence pili act broadly over the cell surface to introduce dsDNA into the periplasm, with polar ComEC mediating cytosolic entry. Quantitative parameters of pilus length, population partitioning of ComGC, and DNA-activated ComGA turnover provide a calibrated framework for functional annotation and modeling of the competence machinery (Oct 10, 2023; Jan 2020; 2024) (kilb2023uptakeofenvironmental pages 2-4, burghard‐schrod2020thebacillussubtilis pages 1-2, kilb2023uptakeofenvironmental pages 4-5, kilb2023uptakeofenvironmental pages 8-10, burghard‐schrod2020thebacillussubtilis pages 10-12, zuke2024productiondynamicsanda pages 68-72, kilb2023uptakeofenvironmental pages 16-19).</p>
+<p>References</p>
+<ol>
+<li>
+<p>(burghard‐schrod2020thebacillussubtilis pages 1-2): Marie Burghard‐Schrod, Stephan Altenburger, and Peter L. Graumann. The <i>bacillus subtilis</i> dcmp deaminase comeb acts as a dynamic polar localization factor for comga within the competence machinery. Molecular Microbiology, 113:906-922, Jan 2020. URL: https://doi.org/10.1111/mmi.14457, doi:10.1111/mmi.14457. This article has 13 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kilb2023uptakeofenvironmental pages 2-4): Alexandra Kilb, Marie Burghard-Schrod, Sven Holtrup, and Peter L. Graumann. Uptake of environmental dna in bacillus subtilis occurs all over the cell surface through a dynamic pilus structure. PLOS Genetics, 19:e1010696, Oct 2023. URL: https://doi.org/10.1371/journal.pgen.1010696, doi:10.1371/journal.pgen.1010696. This article has 12 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(burghard‐schrod2020thebacillussubtilis pages 10-12): Marie Burghard‐Schrod, Stephan Altenburger, and Peter L. Graumann. The <i>bacillus subtilis</i> dcmp deaminase comeb acts as a dynamic polar localization factor for comga within the competence machinery. Molecular Microbiology, 113:906-922, Jan 2020. URL: https://doi.org/10.1111/mmi.14457, doi:10.1111/mmi.14457. This article has 13 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kilb2023uptakeofenvironmental pages 4-5): Alexandra Kilb, Marie Burghard-Schrod, Sven Holtrup, and Peter L. Graumann. Uptake of environmental dna in bacillus subtilis occurs all over the cell surface through a dynamic pilus structure. PLOS Genetics, 19:e1010696, Oct 2023. URL: https://doi.org/10.1371/journal.pgen.1010696, doi:10.1371/journal.pgen.1010696. This article has 12 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kilb2023uptakeofenvironmental pages 8-10): Alexandra Kilb, Marie Burghard-Schrod, Sven Holtrup, and Peter L. Graumann. Uptake of environmental dna in bacillus subtilis occurs all over the cell surface through a dynamic pilus structure. PLOS Genetics, 19:e1010696, Oct 2023. URL: https://doi.org/10.1371/journal.pgen.1010696, doi:10.1371/journal.pgen.1010696. This article has 12 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kilb2023uptakeofenvironmental pages 16-19): Alexandra Kilb, Marie Burghard-Schrod, Sven Holtrup, and Peter L. Graumann. Uptake of environmental dna in bacillus subtilis occurs all over the cell surface through a dynamic pilus structure. PLOS Genetics, 19:e1010696, Oct 2023. URL: https://doi.org/10.1371/journal.pgen.1010696, doi:10.1371/journal.pgen.1010696. This article has 12 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(zuke2024productiondynamicsanda pages 72-77): JD Zuke. Production, dynamics, and dna binding capabilities of bacillus subtilis natural competence associated pili. Unknown journal, 2024.</p>
+</li>
+<li>
+<p>(zuke2024productiondynamicsanda pages 68-72): JD Zuke. Production, dynamics, and dna binding capabilities of bacillus subtilis natural competence associated pili. Unknown journal, 2024.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>kilb2023uptakeofenvironmental pages 2-4</li>
+<li>kilb2023uptakeofenvironmental pages 8-10</li>
+<li>kilb2023uptakeofenvironmental pages 16-19</li>
+<li>kilb2023uptakeofenvironmental pages 4-5</li>
+<li>zuke2024productiondynamicsanda pages 72-77</li>
+<li>zuke2024productiondynamicsanda pages 68-72</li>
+<li>https://doi.org/10.1111/mmi.14457</li>
+<li>https://doi.org/10.1371/journal.pgen.1010696</li>
+<li>https://doi.org/10.1371/journal.pgen.1010696;</li>
+<li>https://doi.org/10.1111/mmi.14457;</li>
+<li>https://doi.org/10.1111/mmi.14457,</li>
+<li>https://doi.org/10.1371/journal.pgen.1010696,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P25953
+gene_symbol: comGA
+product_type: PROTEIN
+status: IN_PROGRESS
+taxon:
+  id: NCBITaxon:224308
+  label: Bacillus subtilis (strain 168)
+description: ComGA is an AAA+ ATPase that powers the assembly of the ComG competence pseudopilus in Bacillus subtilis. The protein contains a P-loop NTPase domain homologous to type II secretion system ATPases (GspE/T2SS-E family). ComGA is essential for DNA binding at the cell surface during natural genetic transformation, as it drives the assembly of competence pili composed primarily of ComGC pilin subunits. The protein localizes to cell poles through diffusion-capture mediated by ComEB, where it forms foci coincident with the DNA uptake machinery. ATP hydrolysis by ComGA is required for function, as Walker B motif mutations abolish both DNA binding and transformation competence while still allowing polar localization. During competence development, ComGA dynamics increase upon addition of extracellular DNA, consistent with pilus activity during substrate engagement.
+existing_annotations:
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: ComGA localizes to the cytoplasmic side of the cell membrane as a peripheral membrane protein, with enrichment at cell poles during competence development. The protein accumulates at cell poles through diffusion-capture and forms discrete foci coincident with the DNA uptake machinery.
+    action: ACCEPT
+    reason: The IBA annotation is well-supported by experimental evidence. UniProt annotates ComGA as a peripheral membrane protein on the cytoplasmic side of the cell membrane based on PMID:9723928. Recent studies demonstrate polar membrane localization during competence. While ComGA also localizes more specifically to cell poles (GO:0060187), the plasma membrane annotation captures the essential cellular location.
+    additional_reference_ids:
+      - file:BACSU/comGA/comGA-deep-research-falcon.md
+    supported_by:
+      - reference_id: file:BACSU/comGA/comGA-deep-research-falcon.md
+        supporting_text: &#34;ComGA accumulates at a single cell pole through diffusion-capture, recruited by ComEB; DNA addition increases ComGA turnover and enhances polar localization&#34;
+- term:
+    id: GO:0016887
+    label: ATP hydrolysis activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: ComGA is an AAA+ ATPase with functional Walker A/B motifs that powers competence pilus assembly. ATP hydrolysis is required for DNA binding and transformation function, as Walker B motif mutations abolish DNA binding activity while still permitting polar localization.
+    action: ACCEPT
+    reason: This annotation is strongly supported by both sequence analysis (P-loop NTPase domain, Walker A/B motifs) and functional studies. ComGA belongs to the GSP E family of secretion ATPases. Mutagenesis studies demonstrate that ATP hydrolysis is essential for function in DNA uptake. The IBA annotation correctly captures the core molecular function.
+    additional_reference_ids:
+      - file:BACSU/comGA/comGA-deep-research-falcon.md
+    supported_by:
+      - reference_id: file:BACSU/comGA/comGA-deep-research-falcon.md
+        supporting_text: &#34;ComGA is an AAA+ ATPase that powers ComG pseudopilus assembly, a requirement for DNA binding at the cell surface and for subsequent uptake. Mutation of the Walker B motif abrogates DNA binding, implicating ATP hydrolysis in function&#34;
+- term:
+    id: GO:0000166
+    label: nucleotide binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: ComGA contains a P-loop NTPase domain with Walker A/B motifs that bind ATP. The protein has a predicted ATP binding site at residues 144-151.
+    action: ACCEPT
+    reason: This IEA annotation from UniProt keyword mapping is correct but redundant with the more specific ATP binding annotation (GO:0005524). ComGA clearly binds nucleotides (specifically ATP) based on domain analysis and functional requirements. Accept as a valid but less informative parent term.
+    additional_reference_ids:
+      - file:BACSU/comGA/comGA-deep-research-falcon.md
+    supported_by:
+      - reference_id: file:BACSU/comGA/comGA-deep-research-falcon.md
+        supporting_text: &#34;ComGA is an AAA+ P-loop NTPase homologous to type II secretion ATPases (GspE/T2SS-E). Functional Walker A/B motifs are present, and ATP hydrolysis is required for DNA binding and competence function&#34;
+- term:
+    id: GO:0005524
+    label: ATP binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: ComGA binds ATP through its P-loop NTPase domain. UniProt annotates a specific ATP binding site at residues 144-151 containing the Walker A motif. Mutagenesis of the Walker A lysine (K150Q) abolishes transformation while preserving polar localization.
+    action: ACCEPT
+    reason: This annotation is well-supported by domain analysis showing Walker A/B motifs characteristic of AAA+ ATPases, and by functional evidence that ATP binding/hydrolysis is essential for ComGA function. The ATP binding annotation complements the ATP hydrolysis activity annotation and is appropriately specific.
+    additional_reference_ids:
+      - file:BACSU/comGA/comGA-deep-research-falcon.md
+    supported_by:
+      - reference_id: file:BACSU/comGA/comGA-deep-research-falcon.md
+        supporting_text: &#34;ComGA is an AAA+ P-loop NTPase homologous to type II secretion ATPases (GspE/T2SS-E). Functional Walker A/B motifs are present&#34;
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: ComGA is a peripheral membrane protein localized to the cytoplasmic side of the cell membrane. This IEA annotation derived from UniProt subcellular location vocabulary is consistent with experimental evidence showing membrane association.
+    action: ACCEPT
+    reason: This annotation duplicates the IBA annotation for the same term but with different evidence. Both are correct. UniProt subcellular location curation confirms membrane localization based on experimental literature. Accept as valid supporting evidence for membrane localization.
+    additional_reference_ids:
+      - file:BACSU/comGA/comGA-deep-research-falcon.md
+    supported_by:
+      - reference_id: file:BACSU/comGA/comGA-deep-research-falcon.md
+        supporting_text: &#34;ComGA accumulates at a single cell pole through diffusion-capture, recruited by ComEB&#34;
+- term:
+    id: GO:0030420
+    label: establishment of competence for transformation
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: ComGA is essential for natural genetic transformation in B. subtilis. It powers the assembly of competence pili required for DNA binding and uptake at the cell surface. Deletion of comGA abolishes transformation and eliminates surface-exposed pilus structures.
+    action: ACCEPT
+    reason: This annotation accurately captures the core biological process in which ComGA functions. ComGA is expressed specifically in competent cells (5-15% of population) under ComK regulation, and is absolutely required for DNA uptake during natural transformation. The term appropriately describes the process-level function of the protein.
+    additional_reference_ids:
+      - file:BACSU/comGA/comGA-deep-research-falcon.md
+      - PMID:11918817
+      - PMID:11948146
+    supported_by:
+      - reference_id: file:BACSU/comGA/comGA-deep-research-falcon.md
+        supporting_text: &#34;Deletion of comGA abolishes surface-exposed pilus structures and transformation-associated DNA binding/uptake&#34;
+      - reference_id: PMID:11918817
+        supporting_text: &#34;In Bacillus subtilis, the competence transcription factor ComK activates its own transcription as well as the transcription of genes that encode DNA transport proteins&#34;
+      - reference_id: PMID:11948146
+        supporting_text: &#34;The Bacillus subtilis competence transcription factor ComK is required for establishment of competence for genetic transformation&#34;
+- term:
+    id: GO:0060187
+    label: cell pole
+  evidence_type: IDA
+  original_reference_id: file:BACSU/comGA/comGA-deep-research-falcon.md
+  review:
+    summary: ComGA localizes to cell poles during competence development through diffusion-capture mediated by ComEB. The protein forms discrete foci at cell poles coincident with the DNA uptake machinery.
+    action: NEW
+    reason: Cell pole localization is a well-characterized feature of ComGA that is more specific than plasma membrane. Multiple studies demonstrate polar localization during competence, with dynamics increasing upon DNA addition. This annotation adds precision to the cellular location without conflicting with the broader plasma membrane annotation.
+    additional_reference_ids:
+      - file:BACSU/comGA/comGA-deep-research-falcon.md
+    supported_by:
+      - reference_id: file:BACSU/comGA/comGA-deep-research-falcon.md
+        supporting_text: &#34;ComGA accumulates at a single cell pole through diffusion-capture, recruited by ComEB; DNA addition increases ComGA turnover and enhances polar localization&#34;
+- term:
+    id: GO:0009297
+    label: pilus assembly
+  evidence_type: IDA
+  original_reference_id: file:BACSU/comGA/comGA-deep-research-falcon.md
+  review:
+    summary: ComGA powers the assembly of competence pili (ComG pseudopilus) from ComGC pilin subunits. Deletion of comGA abolishes surface-exposed pilus structures.
+    action: NEW
+    reason: Pilus assembly is the direct biochemical function through which ComGA enables competence. The protein provides ATP hydrolysis energy for pseudopilus biogenesis. This annotation links the molecular function (ATP hydrolysis) to the specific cellular assembly process.
+    additional_reference_ids:
+      - file:BACSU/comGA/comGA-deep-research-falcon.md
+    supported_by:
+      - reference_id: file:BACSU/comGA/comGA-deep-research-falcon.md
+        supporting_text: &#34;Deletion of comGA abolishes surface-exposed pilus structures and transformation-associated DNA binding/uptake&#34;
+core_functions:
+- molecular_function:
+    id: GO:0016887
+    label: ATP hydrolysis activity
+  description: ComGA is an AAA+ ATPase that hydrolyzes ATP to power competence pilus assembly. Walker A/B motifs are present and functional, with mutagenesis demonstrating ATP hydrolysis is essential for DNA binding and transformation.
+  directly_involved_in:
+    - id: GO:0030420
+      label: establishment of competence for transformation
+    - id: GO:0009297
+      label: pilus assembly
+  locations:
+    - id: GO:0005886
+      label: plasma membrane
+    - id: GO:0060187
+      label: cell pole
+  supported_by:
+    - reference_id: file:BACSU/comGA/comGA-deep-research-falcon.md
+      supporting_text: &#34;ComGA is an AAA+ ATPase that powers ComG pseudopilus assembly, a requirement for DNA binding at the cell surface and for subsequent uptake. Mutation of the Walker B motif abrogates DNA binding, implicating ATP hydrolysis in function&#34;
+references:
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings:
+    - statement: ComGA plasma membrane localization is phylogenetically conserved across Bacillus species
+    - statement: ATP hydrolysis activity is conserved in the GSP E family
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings:
+    - statement: UniProt keywords include ATP-binding, Competence, Membrane, Nucleotide-binding, Transport
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping
+  findings:
+    - statement: UniProt subcellular location annotation describes cell membrane peripheral protein on cytoplasmic side
+- id: PMID:11918817
+  title: Microarray analysis of the Bacillus subtilis K-state genome-wide expression changes dependent on ComK
+  findings:
+    - statement: comGA is part of the ComK regulon expressed during competence development
+      supporting_text: &#34;In Bacillus subtilis, the competence transcription factor ComK activates its own transcription as well as the transcription of genes that encode DNA transport proteins&#34;
+    - statement: ComK activates transcription of genes encoding DNA transport proteins including comGA
+      supporting_text: &#34;the competence transcription factor ComK activates its own transcription as well as the transcription of genes that encode DNA transport proteins&#34;
+    - statement: Approximately 10% of cells in a culture express ComK and become competent
+      supporting_text: &#34;ComK is expressed in about 10% of the cells in a culture grown to competence&#34;
+- id: PMID:11948146
+  title: Whole-genome analysis of genes regulated by the Bacillus subtilis competence transcription factor ComK
+  findings:
+    - statement: ComK is required for comGA expression and establishment of competence for genetic transformation
+      supporting_text: &#34;The Bacillus subtilis competence transcription factor ComK is required for establishment of competence for genetic transformation&#34;
+    - statement: comGA is among the genes with ComK-dependent expression
+      supporting_text: &#34;we found many genes or operons whose ComK dependence was not known previously&#34;
+- id: file:BACSU/comGA/comGA-deep-research-falcon.md
+  title: Deep research review of comGA function and localization
+  findings:
+    - statement: ComGA is an AAA+ ATPase homologous to type II secretion system GspE ATPases
+    - statement: Walker A/B motifs are essential for function with mutations abolishing DNA binding
+    - statement: ComGA localizes to cell poles through diffusion-capture mediated by ComEB
+    - statement: ComGA dynamics increase upon DNA addition consistent with pilus activity
+    - statement: Deletion of comGA abolishes competence pilus formation and transformation
+    - statement: Competence pili can form at multiple sites but cytosolic DNA entry is polar via ComEC
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
