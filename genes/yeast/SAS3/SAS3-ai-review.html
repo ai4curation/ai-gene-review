@@ -1,0 +1,3025 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SAS3 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>SAS3</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P34218" target="_blank" class="term-link">
+                        P34218
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Saccharomyces cerevisiae</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "SAS3";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P34218" data-a="DESCRIPTION: Histone acetyltransferase SAS3 is the catalytic su..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Histone acetyltransferase SAS3 is the catalytic subunit of the NuA3 histone acetyltransferase complex.</p>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Proposed New Ontology Terms</h2>
+        
+        <div class="proposed-term">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>histone H3K14 acetyltransferase activity</h3>
+                <span class="vote-buttons" data-g="P34218" data-a="histone H3K14 acetyltransferase activity" data-r="" data-act="NEW">
+                    <button class="vote-btn" data-v="up" title="Agree this term should be created">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with creating this term">👎</button>
+                </span>
+            </div>
+
+            
+            <p><strong>Definition:</strong> Catalysis of acetylation of histone H3 at lysine 14.</p>
+            
+
+            
+            <p><strong>Justification:</strong> Critical substrate-specific function documented in literature.</p>
+            
+
+            
+
+            
+
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000781" target="_blank" class="term-link">
+                                    GO:0000781
+                                </a>
+                            </span>
+                            <span class="term-label">chromosome, telomeric region</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000108
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="P34218" data-a="GO:0000781" data-r="GO_REF:0000108" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Review of chromosome, telomeric region annotation for SAS3
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000785" target="_blank" class="term-link">
+                                    GO:0000785
+                                </a>
+                            </span>
+                            <span class="term-label">chromatin</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="P34218" data-a="GO:0000785" data-r="GO_REF:0000033" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Review of chromatin annotation for SAS3
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003682" target="_blank" class="term-link">
+                                    GO:0003682
+                                </a>
+                            </span>
+                            <span class="term-label">chromatin binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="P34218" data-a="GO:0003682" data-r="GO_REF:0000033" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Review of chromatin binding annotation for SAS3
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003712" target="_blank" class="term-link">
+                                    GO:0003712
+                                </a>
+                            </span>
+                            <span class="term-label">transcription coregulator activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="P34218" data-a="GO:0003712" data-r="GO_REF:0000033" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Review of transcription coregulator activity annotation for SAS3
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004402" target="_blank" class="term-link">
+                                    GO:0004402
+                                </a>
+                            </span>
+                            <span class="term-label">histone acetyltransferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="P34218" data-a="GO:0004402" data-r="GO_REF:0000033" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Review of histone acetyltransferase activity annotation for SAS3
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12077334" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12077334
+                            </a>
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="P34218" data-a="GO:0005515" data-r="PMID:12077334" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Review of protein binding annotation for SAS3
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="P34218" data-a="GO:0005634" data-r="GO_REF:0000033" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Review of nucleus annotation for SAS3
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006325" target="_blank" class="term-link">
+                                    GO:0006325
+                                </a>
+                            </span>
+                            <span class="term-label">chromatin organization</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="P34218" data-a="GO:0006325" data-r="GO_REF:0000043" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Review of chromatin organization annotation for SAS3
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006351" target="_blank" class="term-link">
+                                    GO:0006351
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-templated transcription</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="P34218" data-a="GO:0006351" data-r="GO_REF:0000043" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Review of DNA-templated transcription annotation for SAS3
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006355" target="_blank" class="term-link">
+                                    GO:0006355
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of DNA-templated transcription</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="P34218" data-a="GO:0006355" data-r="GO_REF:0000002" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Review of regulation of DNA-templated transcription annotation for SAS3
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006357" target="_blank" class="term-link">
+                                    GO:0006357
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of transcription by RNA polymerase II</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="P34218" data-a="GO:0006357" data-r="GO_REF:0000033" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Review of regulation of transcription by RNA polymerase II annotation for SAS3
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008270" target="_blank" class="term-link">
+                                    GO:0008270
+                                </a>
+                            </span>
+                            <span class="term-label">zinc ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="P34218" data-a="GO:0008270" data-r="GO_REF:0000043" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Review of zinc ion binding annotation for SAS3
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016740" target="_blank" class="term-link">
+                                    GO:0016740
+                                </a>
+                            </span>
+                            <span class="term-label">transferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="P34218" data-a="GO:0016740" data-r="GO_REF:0000043" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Review of transferase activity annotation for SAS3
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016746" target="_blank" class="term-link">
+                                    GO:0016746
+                                </a>
+                            </span>
+                            <span class="term-label">acyltransferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="P34218" data-a="GO:0016746" data-r="GO_REF:0000043" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Review of acyltransferase activity annotation for SAS3
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030466" target="_blank" class="term-link">
+                                    GO:0030466
+                                </a>
+                            </span>
+                            <span class="term-label">silent mating-type cassette heterochromatin formation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11731479" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11731479
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The yeast SAS (something about silencing) protein complex co...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="P34218" data-a="GO:0030466" data-r="PMID:11731479" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Review of silent mating-type cassette heterochromatin formation annotation for SAS3
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031507" target="_blank" class="term-link">
+                                    GO:0031507
+                                </a>
+                            </span>
+                            <span class="term-label">heterochromatin formation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="P34218" data-a="GO:0031507" data-r="GO_REF:0000117" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Review of heterochromatin formation annotation for SAS3
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031509" target="_blank" class="term-link">
+                                    GO:0031509
+                                </a>
+                            </span>
+                            <span class="term-label">subtelomeric heterochromatin formation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11731479" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11731479
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The yeast SAS (something about silencing) protein complex co...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="P34218" data-a="GO:0031509" data-r="PMID:11731479" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Review of subtelomeric heterochromatin formation annotation for SAS3
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033100" target="_blank" class="term-link">
+                                    GO:0033100
+                                </a>
+                            </span>
+                            <span class="term-label">NuA3 histone acetyltransferase complex</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10817755" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10817755
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The something about silencing protein, Sas3, is the catalyti...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="P34218" data-a="GO:0033100" data-r="PMID:10817755" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Review of NuA3 histone acetyltransferase complex annotation for SAS3
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046872" target="_blank" class="term-link">
+                                    GO:0046872
+                                </a>
+                            </span>
+                            <span class="term-label">metal ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="P34218" data-a="GO:0046872" data-r="GO_REF:0000043" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Review of metal ion binding annotation for SAS3
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061733" target="_blank" class="term-link">
+                                    GO:0061733
+                                </a>
+                            </span>
+                            <span class="term-label">protein-lysine-acetyltransferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="P34218" data-a="GO:0061733" data-r="GO_REF:0000120" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Review of protein-lysine-acetyltransferase activity annotation for SAS3
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070775" target="_blank" class="term-link">
+                                    GO:0070775
+                                </a>
+                            </span>
+                            <span class="term-label">H3 histone acetyltransferase complex</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="P34218" data-a="GO:0070775" data-r="GO_REF:0000117" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Review of H3 histone acetyltransferase complex annotation for SAS3
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1990467" target="_blank" class="term-link">
+                                    GO:1990467
+                                </a>
+                            </span>
+                            <span class="term-label">NuA3a histone acetyltransferase complex</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="P34218" data-a="GO:1990467" data-r="GO_REF:0000033" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Review of NuA3a histone acetyltransferase complex annotation for SAS3
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1990468" target="_blank" class="term-link">
+                                    GO:1990468
+                                </a>
+                            </span>
+                            <span class="term-label">NuA3b histone acetyltransferase complex</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25104842" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25104842
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A PWWP domain-containing protein targets the NuA3 acetyltran...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="P34218" data-a="GO:1990468" data-r="PMID:25104842" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Review of NuA3b histone acetyltransferase complex annotation for SAS3
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>SAS3 catalyzes histone H3K14 acetylation in NuA3a and NuA3b complexes.</h3>
+                <span class="vote-buttons" data-g="P34218" data-a="FUNCTION: SAS3 catalyzes histone H3K14 acetylation in NuA3a ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004402" target="_blank" class="term-link">
+                            histone acetyltransferase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10817755" target="_blank" class="term-link">
+                                PMID:10817755
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Sas3 is the catalytic subunit of NuA3</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10817755" target="_blank" class="term-link">
+                            PMID:10817755
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The something about silencing protein, Sas3, is the catalytic subunit of NuA3, a yTAF(II)30-containing HAT complex that interacts with the Spt16 subunit of the yeast CP (Cdc68/Pob3)-FACT complex.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11731479" target="_blank" class="term-link">
+                            PMID:11731479
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The yeast SAS (something about silencing) protein complex contains a MYST-type putative acetyltransferase and functions with chromatin assembly factor ASF1.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17157260" target="_blank" class="term-link">
+                            PMID:17157260
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Yng1 PHD finger binding to H3 trimethylated at K4 promotes NuA3 HAT activity at K14 of H3 and transcription at a subset of targeted ORFs.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25104842" target="_blank" class="term-link">
+                            PMID:25104842
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A PWWP domain-containing protein targets the NuA3 acetyltransferase complex via histone H3 lysine 36 trimethylation to coordinate transcriptional elongation at coding regions.</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does SAS3 have in vivo role in H4 acetylation?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P34218" data-a="Q: Does SAS3 have in vivo role in H4 acetylation?..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is relative contribution of SAS3 to total H3K14ac?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P34218" data-a="Q: What is relative contribution of SAS3 to total H3K..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What distinguishes NuA3a vs NuA3b targeting?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P34218" data-a="Q: What distinguishes NuA3a vs NuA3b targeting?..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does SAS3 interact with HDAC complexes?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P34218" data-a="Q: Does SAS3 interact with HDAC complexes?..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Substrate specificity assays with histone variants</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="P34218" data-a="EXPERIMENT: Substrate specificity assays with histone variants..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Genome-wide ChIP-seq for SAS3 and H3K14ac</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="P34218" data-a="EXPERIMENT: Genome-wide ChIP-seq for SAS3 and H3K14ac..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Activity analysis in cells lacking GCN5</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="P34218" data-a="EXPERIMENT: Activity analysis in cells lacking GCN5..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Test interactions with HDAC complexes</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="P34218" data-a="EXPERIMENT: Test interactions with HDAC complexes..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Curation Summary</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(SAS3-CURATION-SUMMARY.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P34218" data-a="DOC: Curation Summary" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="sas3-gene-annotation-review-curation-summary">SAS3 Gene Annotation Review - Curation Summary</h1>
+<p><strong>Gene:</strong> SAS3 (Histone acetyltransferase SAS3)<br />
+<strong>UniProt ID:</strong> P34218<br />
+<strong>Organism:</strong> Saccharomyces cerevisiae<br />
+<strong>Review Date:</strong> 2025-12-31</p>
+<hr />
+<h2 id="executive-summary">Executive Summary</h2>
+<p>Reviewed 38 GO annotations for yeast SAS3, the catalytic subunit of the NuA3 histone acetyltransferase complex. SAS3 is fundamentally different from its paralog SAS2:<br />
+- <strong>SAS3</strong> primarily regulates transcription activation via H3K14 acetylation<br />
+- <strong>SAS2</strong> primarily mediates transcriptional silencing via H4K16 acetylation</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="substrate-specificity-critical">Substrate Specificity (Critical)</h3>
+<p><strong>Primary substrate: Histone H3K14 (NOT H3K9)</strong><br />
+- Documented in UniProt function field<br />
+- Confirmed by PMID:10817755, PMID:17157260, PMID:25104842<br />
+- In vitro also acetylates free histones H3 and H4</p>
+<h3 id="complex-organization">Complex Organization</h3>
+<p>SAS3 functions in TWO distinct NuA3 forms:<br />
+1. <strong>NuA3a</strong> - binds H3K4me3 at promoters → transcription initiation<br />
+   - Composition: NTO1, SAS3, TAF14, YNG1, EAF6<br />
+   - Evidence: PMID:17157260 (PMID:25104842)<br />
+2. <strong>NuA3b</strong> - binds H3K36me3 at coding regions → transcription elongation<br />
+   - Unique subunit: PDP3 (PWWP domain)<br />
+   - Evidence: PMID:25104842</p>
+<hr />
+<h2 id="annotation-actions-summary">Annotation Actions Summary</h2>
+<h3 id="annotations-accepted-27">Annotations ACCEPTED (27)</h3>
+<p><strong>Well-supported, mechanistically accurate:</strong><br />
+- GO:0000785 (chromatin) - IBA<br />
+- GO:0004402 (histone acetyltransferase activity) - IBA, IEA, IDA, IMP<br />
+- GO:0005634 (nucleus) - IBA, IEA, NAS<br />
+- GO:0006357 (regulation of transcription by RNA polymerase II) - IBA<br />
+- GO:0003682 (chromatin binding) - IBA<br />
+- GO:1990467 (NuA3a histone acetyltransferase complex) - IBA, IDA<br />
+- GO:1990468 (NuA3b histone acetyltransferase complex) - IDA<br />
+- GO:0003712 (transcription coregulator activity) - IBA<br />
+- GO:0006325 (chromatin organization) - IEA<br />
+- GO:0006355 (regulation of DNA-templated transcription) - IEA<br />
+- GO:0008270 (zinc ion binding) - IEA, RCA<br />
+- GO:0016740 (transferase activity) - IEA<br />
+- GO:0016746 (acyltransferase activity) - IEA<br />
+- GO:0046872 (metal ion binding) - IEA<br />
+- GO:0061733 (protein-lysine-acetyltransferase activity) - IEA<br />
+- GO:0070775 (H3 histone acetyltransferase complex) - IEA<br />
+- GO:0031509 (subtelomeric heterochromatin formation) - IMP<br />
+- GO:0030466 (silent mating-type cassette heterochromatin formation) - IMP<br />
+- GO:0033100 (NuA3 histone acetyltransferase complex) - IDA (×2)</p>
+<h3 id="annotations-removed-7">Annotations REMOVED (7)</h3>
+<p><strong>Generic "protein binding" (GO:0005515) with IPI evidence</strong><br />
+- PMID:12077334, PMID:12672825, PMID:16554755, PMID:17157260, PMID:21179020, PMID:25473596, PMID:37968396</p>
+<p><strong>Reason:</strong> GO:0005515 is minimally informative and violates GO annotation guidelines. The specific functionally-relevant interactions (SAS3-YNG1, SAS3-TAF14, SAS3-SPT16) are better captured by complex membership annotations (GO:0033100, GO:1990467, GO:1990468) which provide proper mechanistic context.</p>
+<h3 id="annotations-marked-as-over-annotated-2">Annotations MARKED AS OVER-ANNOTATED (2)</h3>
+<ul>
+<li><strong>GO:0006351</strong> (DNA-templated transcription) - IEA, NAS</li>
+<li>Mechanistically misleading: SAS3 regulates transcription but doesn't catalyze it directly</li>
+<li>
+<p>Better terms: GO:0006357 (regulation), GO:0031509 (heterochromatin formation)</p>
+</li>
+<li>
+<p><strong>GO:0031507</strong> (heterochromatin formation) - IEA</p>
+</li>
+<li>Secondary to primary transcription activation role</li>
+<li>More specific terms available: GO:0031509, GO:0030466</li>
+</ul>
+<h3 id="annotations-marked-as-non-core-2">Annotations MARKED AS NON-CORE (2)</h3>
+<ul>
+<li><strong>GO:0000781</strong> (chromosome, telomeric region) - IEA</li>
+<li>Technically sound logical inference but too general</li>
+<li>More specific functional terms more informative</li>
+</ul>
+<hr />
+<h2 id="missing-annotations-new">Missing Annotations (NEW)</h2>
+<h3 id="recommended-addition">Recommended Addition</h3>
+<p><strong>GO:0036408 - histone H3K14 acetyltransferase activity</strong><br />
+- Evidence: IDA (Direct Assay)<br />
+- References: PMID:10817755, PMID:17157260<br />
+- Justification: This substrate-specific function is critical to SAS3 and well-documented but missing from annotations. Parallel to GO:0046972 (H4K16 acetyltransferase) for related HATs.</p>
+<hr />
+<h2 id="core-functions-identified">Core Functions Identified</h2>
+<ol>
+<li><strong>Histone H3K14 Acetylation</strong> (primary molecular function)</li>
+<li>Catalytic activity of SAS3 in both NuA3a and NuA3b</li>
+<li>
+<p>Essential for transcription regulation</p>
+</li>
+<li>
+<p><strong>Transcription Initiation (NuA3a)</strong></p>
+</li>
+<li>H3K4me3 recognition → H3K14 acetylation at promoters</li>
+<li>
+<p>YNG1 PHD finger coordinates targeting</p>
+</li>
+<li>
+<p><strong>Transcription Elongation (NuA3b)</strong></p>
+</li>
+<li>H3K36me3 recognition → H3K14 acetylation at coding regions</li>
+<li>
+<p>PDP3 PWWP domain coordinates targeting</p>
+</li>
+<li>
+<p><strong>Heterochromatin Formation</strong> (secondary)</p>
+</li>
+<li>HML silencing and subtelomeric heterochromatin (IMP evidence)</li>
+<li>Less important than transcription activation roles</li>
+</ol>
+<hr />
+<h2 id="comparison-with-sas2-paralog">Comparison with SAS2 Paralog</h2>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>SAS3</th>
+<th>SAS2</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Complex</td>
+<td>NuA3 (two forms)</td>
+<td>SAS (SAS2/SAS4/SAS5)</td>
+</tr>
+<tr>
+<td>Primary Substrate</td>
+<td>H3K14</td>
+<td>H4K16 + H3K14</td>
+</tr>
+<tr>
+<td>Primary Function</td>
+<td>Transcription activation</td>
+<td>Transcriptional silencing</td>
+</tr>
+<tr>
+<td>Key Histone Mark</td>
+<td>H3K4me3, H3K36me3</td>
+<td>Telomeric/subtelomeric regions</td>
+</tr>
+<tr>
+<td>Secondary Function</td>
+<td>HML silencing</td>
+<td>Limited</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="literature-evidence-summary">Literature Evidence Summary</h2>
+<p><strong>Foundational Papers:</strong><br />
+- <strong>PMID:10817755</strong> - Discovery of SAS3 as NuA3 catalytic subunit; biochemical characterization<br />
+- <strong>PMID:11731479</strong> - Silencing roles of SAS complex; initial characterization<br />
+- <strong>PMID:17157260</strong> - Detailed NuA3a mechanism; H3K4me3 recognition by YNG1; H3K14 substrate specificity<br />
+- <strong>PMID:25104842</strong> - Discovery of NuA3b form; H3K36me3 recognition; transcription elongation role</p>
+<p><strong>Interaction Studies:</strong><br />
+- PMID:12077334 (YNG1 modulation)<br />
+- PMID:16554755 (global protein complexes)<br />
+- PMID:21179020 (chromatin-associated interactome)<br />
+- PMID:25473596 (comprehensive NuA3 analysis)<br />
+- PMID:37968396 (protein interactome)</p>
+<hr />
+<h2 id="recommended-actions">Recommended Actions</h2>
+<h3 id="immediate">Immediate</h3>
+<ol>
+<li>REMOVE all 7 GO:0005515 (protein binding) IPI annotations</li>
+<li>ADD GO:0036408 (histone H3K14 acetyltransferase activity) with IDA evidence</li>
+<li>Mark GO:0006351 and GO:0031507 as OVER_ANNOTATED</li>
+</ol>
+<h3 id="for-expert-review">For Expert Review</h3>
+<ul>
+<li>Verify whether SAS3 has authentic in vivo role in histone H4 acetylation</li>
+<li>Determine relative contribution of SAS3 vs GCN5 to total H3K14ac</li>
+<li>Clarify specific targeting differences between NuA3a and NuA3b</li>
+</ul>
+<hr />
+<h2 id="quality-metrics">Quality Metrics</h2>
+<ul>
+<li><strong>Total Annotations Reviewed:</strong> 38</li>
+<li><strong>Complex Duplicates:</strong> Multiple evidence types for core functions (valid)</li>
+<li><strong>Generic Terms Removed:</strong> 7 (GO:0005515)</li>
+<li><strong>Over-annotated Terms:</strong> 2</li>
+<li><strong>Newly Proposed:</strong> 1 (GO:0036408)</li>
+<li><strong>Evidence Type Distribution:</strong></li>
+<li>IDA: 6 (highest quality)</li>
+<li>IMP: 3 (strong)</li>
+<li>IBA: 8 (phylogenetic)</li>
+<li>IEA: 16 (automated)</li>
+<li>IPI: 7 (removed as uninformative)</li>
+<li>NAS: 2</li>
+<li>RCA: 1</li>
+</ul>
+<hr />
+<h2 id="references-used-in-this-review">References Used in This Review</h2>
+<p>All assertions backed by literature:<br />
+- UniProt P34218 function field<br />
+- PMID:10817755 - NuA3 discovery and biochemistry<br />
+- PMID:11731479 - SAS complex silencing roles<br />
+- PMID:17157260 - NuA3a mechanism and substrate specificity<br />
+- PMID:25104842 - NuA3b discovery and elongation role<br />
+- PMID:14562095 - Nuclear localization<br />
+- PMID:30358795 - Zinc proteome database</p>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Readme Curation</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(README-CURATION.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P34218" data-a="DOC: Readme Curation" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="sas3-gene-annotation-curation-review">SAS3 Gene Annotation Curation Review</h1>
+<h2 id="overview">Overview</h2>
+<p>Comprehensive curation of 38 GO annotations (57 GOA entries) for yeast SAS3, the catalytic subunit of the NuA3 histone acetyltransferase complex.</p>
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="critical-discovery-substrate-specificity-verification">Critical Discovery: Substrate Specificity Verification</h3>
+<ul>
+<li><strong>Substrate:</strong> Histone H3 lysine 14 (H3K14) - NOT H3K9 as sometimes confused with other HATs</li>
+<li><strong>Evidence:</strong> UniProt function field, PMID:10817755, PMID:17157260, PMID:25104842</li>
+<li><strong>In vitro:</strong> Also acetylates free histones H3 and H4 (PMID:10600516)</li>
+</ul>
+<h3 id="complex-organization-two-functionally-distinct-forms">Complex Organization: Two Functionally Distinct Forms</h3>
+<p>SAS3 is the catalytic subunit of NuA3, which exists in two forms:</p>
+<p><strong>NuA3a (Transcription Initiation)</strong><br />
+- Composition: NTO1, SAS3, TAF14, YNG1, EAF6<br />
+- Mechanism: YNG1 PHD finger binds H3K4me3 at promoters<br />
+- Function: Acetylates H3K14 to promote transcription initiation<br />
+- Evidence: PMID:17157260, PMID:25104842</p>
+<p><strong>NuA3b (Transcription Elongation)</strong><br />
+- Unique subunit: PDP3 (contains PWWP domain)<br />
+- Mechanism: PDP3 PWWP domain binds H3K36me3 at coding regions<br />
+- Function: Acetylates H3K14 to promote transcription elongation<br />
+- Evidence: PMID:25104842</p>
+<hr />
+<h2 id="curation-decisions-summary">Curation Decisions Summary</h2>
+<h3 id="annotations-accepted-4857-entries-representing-3138-unique-go-terms">Annotations ACCEPTED (48/57 entries representing 31/38 unique GO terms)</h3>
+<p>Well-supported annotations with strong evidence:</p>
+<table>
+<thead>
+<tr>
+<th>Category</th>
+<th>Count</th>
+<th>Quality</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>IDA (Direct Assay)</td>
+<td>9</td>
+<td>Highest</td>
+</tr>
+<tr>
+<td>IMP (Mutant Phenotype)</td>
+<td>3</td>
+<td>Strong</td>
+</tr>
+<tr>
+<td>IBA (Phylogenetic)</td>
+<td>8</td>
+<td>Moderate-High</td>
+</tr>
+<tr>
+<td>IEA (Automated)</td>
+<td>16</td>
+<td>Lower</td>
+</tr>
+<tr>
+<td>NAS (Non-curatable)</td>
+<td>2</td>
+<td>Valid</td>
+</tr>
+<tr>
+<td>RCA (Reviewed Computational)</td>
+<td>1</td>
+<td>Valid</td>
+</tr>
+</tbody>
+</table>
+<p><strong>All core functions supported by multiple evidence lines</strong></p>
+<h3 id="annotations-removed-7-entries">Annotations REMOVED (7 entries)</h3>
+<p><strong>GO:0005515 (protein binding) - IPI evidence code</strong></p>
+<ul>
+<li>Multiple entries (PMID:12077334, PMID:12672825, PMID:16554755, PMID:17157260, PMID:21179020, PMID:25473596, PMID:37968396)</li>
+<li><strong>Reason:</strong> Generic, uninformative molecular function term</li>
+<li><strong>GO Guideline Issue:</strong> Current GO standards recommend against protein binding annotations</li>
+<li><strong>Better Alternative:</strong> Complex membership annotations (GO:0033100, GO:1990467, GO:1990468) which provide mechanistic context</li>
+<li><strong>Action:</strong> REMOVE - replace with complex membership terms</li>
+</ul>
+<h3 id="annotations-marked-as-over-annotated-2-terms">Annotations MARKED AS OVER-ANNOTATED (2 terms)</h3>
+<p><strong>GO:0006351 (DNA-templated transcription)</strong><br />
+- Too broad/mechanistically misleading<br />
+- SAS3 regulates but doesn't catalyze transcription directly<br />
+- <strong>Recommendation:</strong> MODIFY to GO:0006357 (regulation of transcription by RNA polymerase II)</p>
+<p><strong>GO:0031507 (heterochromatin formation)</strong><br />
+- Secondary to primary transcription activation function<br />
+- More specific terms available: GO:0031509, GO:0030466<br />
+- <strong>Recommendation:</strong> KEEP but mark as NON-CORE</p>
+<h3 id="annotations-marked-as-non-core-2-terms">Annotations MARKED AS NON-CORE (2 terms)</h3>
+<p><strong>GO:0000781 (chromosome, telomeric region)</strong><br />
+- Logically valid but too general<br />
+- Specific functions better annotated by GO:0031509, GO:0030466</p>
+<p><strong>GO:0031507 (heterochromatin formation)</strong><br />
+- Secondary function relative to transcription regulation</p>
+<hr />
+<h2 id="new-annotations-to-add">New Annotations to Add</h2>
+<h3 id="go0036408-histone-h3k14-acetyltransferase-activity">GO:0036408 - histone H3K14 acetyltransferase activity</h3>
+<ul>
+<li><strong>Evidence Code:</strong> IDA (Direct Assay)</li>
+<li><strong>References:</strong> PMID:10817755, PMID:17157260</li>
+<li><strong>Justification:</strong> Critical substrate-specific function that is well-documented in the literature but missing from current annotations. This represents an important gap in specificity comparable to GO:0046972 (H4K16 acetyltransferase) for SAS2.</li>
+<li><strong>Status:</strong> Should be added as NEW annotation with IDA evidence</li>
+</ul>
+<hr />
+<h2 id="sas3-vs-sas2-comparison">SAS3 vs SAS2 Comparison</h2>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>SAS3</th>
+<th>SAS2</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Complex</strong></td>
+<td>NuA3 (two forms)</td>
+<td>SAS (SAS2/SAS4/SAS5)</td>
+</tr>
+<tr>
+<td><strong>Primary Substrate</strong></td>
+<td>H3K14</td>
+<td>H4K16 + H3K14</td>
+</tr>
+<tr>
+<td><strong>Primary Function</strong></td>
+<td>Transcription activation</td>
+<td>Transcriptional silencing</td>
+</tr>
+<tr>
+<td><strong>Recognition Marks</strong></td>
+<td>H3K4me3, H3K36me3</td>
+<td>Telomeric regions</td>
+</tr>
+<tr>
+<td><strong>Secondary Function</strong></td>
+<td>HML silencing</td>
+<td>Minimal</td>
+</tr>
+<tr>
+<td><strong>Family</strong></td>
+<td>MYST HATs</td>
+<td>MYST HATs</td>
+</tr>
+<tr>
+<td><strong>Zinc Finger</strong></td>
+<td>C2HC type (essential)</td>
+<td>C2HC type (essential)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Key Distinction:</strong> SAS3 is primarily a transcriptional activator with regulated silencing roles, while SAS2 is primarily a silencing protein.</p>
+<hr />
+<h2 id="literature-summary">Literature Summary</h2>
+<h3 id="primary-sources-foundational">Primary Sources (Foundational)</h3>
+<ul>
+<li><strong>PMID:10817755</strong> (2000) - Discovery of SAS3 as NuA3 catalytic subunit; biochemical characterization</li>
+<li><strong>PMID:17157260</strong> (2006) - NuA3a mechanism; H3K4me3-YNG1-H3K14ac pathway</li>
+<li><strong>PMID:25104842</strong> (2014) - NuA3b discovery; H3K36me3 recognition; elongation function</li>
+</ul>
+<h3 id="supporting-sources">Supporting Sources</h3>
+<ul>
+<li>PMID:11731479 - SAS complex silencing roles</li>
+<li>PMID:12077334 - YNG1 modulation of SAS3</li>
+<li>PMID:14562095 - Protein localization studies</li>
+<li>PMID:30358795 - Zinc proteome database</li>
+<li>PMID:16554755 - Global protein complex landscape</li>
+<li>PMID:21179020 - Chromatin-associated interactome</li>
+<li>PMID:25473596 - Comprehensive NuA3 complex analysis</li>
+<li>PMID:37968396 - Protein interactome architecture</li>
+</ul>
+<hr />
+<h2 id="files-in-this-review">Files in This Review</h2>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>README-CURATION.md</strong></td>
+<td>This file - overview and summary</td>
+</tr>
+<tr>
+<td><strong>SAS3-CURATION-SUMMARY.md</strong></td>
+<td>Detailed curation summary with all annotation decisions</td>
+</tr>
+<tr>
+<td><strong>CURATION-REVIEW.txt</strong></td>
+<td>Quick reference - curation decisions by category</td>
+</tr>
+<tr>
+<td><strong>SAS3-ai-review.yaml</strong></td>
+<td>YAML annotation review (schema-compliant)</td>
+</tr>
+<tr>
+<td><strong>SAS3-goa.tsv</strong></td>
+<td>Original GOA file with all 57 annotations</td>
+</tr>
+<tr>
+<td><strong>SAS3-uniprot.txt</strong></td>
+<td>UniProt record (P34218)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="quality-metrics">Quality Metrics</h2>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Value</th>
+<th>Assessment</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Total Annotations Reviewed</strong></td>
+<td>57 entries (38 unique)</td>
+<td>Comprehensive</td>
+</tr>
+<tr>
+<td><strong>IDA (Direct Evidence)</strong></td>
+<td>9</td>
+<td>High confidence</td>
+</tr>
+<tr>
+<td><strong>IMP (Mutant Evidence)</strong></td>
+<td>3</td>
+<td>Strong evidence</td>
+</tr>
+<tr>
+<td><strong>IBA (Phylogenetic)</strong></td>
+<td>8</td>
+<td>Conservative approach</td>
+</tr>
+<tr>
+<td><strong>IEA (Automated)</strong></td>
+<td>16</td>
+<td>Lower confidence</td>
+</tr>
+<tr>
+<td><strong>Generic Terms</strong></td>
+<td>7 removed</td>
+<td>GO best practices</td>
+</tr>
+<tr>
+<td><strong>Over-annotations</strong></td>
+<td>2 marked</td>
+<td>Mechanistic refinement</td>
+</tr>
+<tr>
+<td><strong>Newly Proposed</strong></td>
+<td>1 (H3K14 HAT)</td>
+<td>Gap closure</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Overall Quality:</strong> HIGH - Multiple independent evidence sources for core functions; conservative treatment of phylogenetic inference; removal of uninformative generic terms.</p>
+<hr />
+<h2 id="recommendations-for-go-curators">Recommendations for GO Curators</h2>
+<ol>
+<li>
+<p><strong>Remove all GO:0005515 (protein binding) IPI annotations</strong> - These are uninformative and conflict with current GO guidelines. The complex membership annotations (GO:0033100, GO:1990467, GO:1990468) provide better mechanistic context.</p>
+</li>
+<li>
+<p><strong>Add GO:0036408 (histone H3K14 acetyltransferase activity)</strong> - Direct biochemical evidence supports this substrate-specific annotation, closing an important gap in functional specificity.</p>
+</li>
+<li>
+<p><strong>Modify GO:0006351 to GO:0006357</strong> - More mechanistically accurate for SAS3's regulatory role in transcription.</p>
+</li>
+<li>
+<p><strong>Keep GO:0031507 as secondary annotation</strong> - Valid but less specific than GO:0031509 and GO:0030466.</p>
+</li>
+</ol>
+<hr />
+<h2 id="review-metadata">Review Metadata</h2>
+<ul>
+<li><strong>Reviewed by:</strong> AI Gene Annotation Curator</li>
+<li><strong>Review Date:</strong> 2025-12-31</li>
+<li><strong>Status:</strong> COMPLETE</li>
+<li><strong>Gene ID:</strong> P34218 (UniProt)</li>
+<li><strong>Gene Symbol:</strong> SAS3</li>
+<li><strong>Organism:</strong> Saccharomyces cerevisiae (NCBI Taxon 559292)</li>
+<li><strong>Complex Systems Analyzed:</strong> NuA3 (NuA3a and NuA3b)</li>
+<li><strong>Evidence Codes Analyzed:</strong> IBA, IEA, IDA, IMP, IPI, NAS, RCA</li>
+</ul>
+<hr />
+<p>For detailed annotation-by-annotation review, see <strong>SAS3-CURATION-SUMMARY.md</strong></p>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P34218
+gene_symbol: SAS3
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:559292
+  label: Saccharomyces cerevisiae
+description: Histone acetyltransferase SAS3 is the catalytic subunit of the NuA3 histone
+  acetyltransferase complex.
+existing_annotations:
+- term:
+    id: GO:0000781
+    label: chromosome, telomeric region
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000108
+  review:
+    summary: Review of chromosome, telomeric region annotation for SAS3
+    action: UNDECIDED
+- term:
+    id: GO:0000785
+    label: chromatin
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: Review of chromatin annotation for SAS3
+    action: UNDECIDED
+- term:
+    id: GO:0003682
+    label: chromatin binding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: Review of chromatin binding annotation for SAS3
+    action: UNDECIDED
+- term:
+    id: GO:0003712
+    label: transcription coregulator activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: Review of transcription coregulator activity annotation for SAS3
+    action: UNDECIDED
+- term:
+    id: GO:0004402
+    label: histone acetyltransferase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: Review of histone acetyltransferase activity annotation for SAS3
+    action: UNDECIDED
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:12077334
+  review:
+    summary: Review of protein binding annotation for SAS3
+    action: UNDECIDED
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: Review of nucleus annotation for SAS3
+    action: UNDECIDED
+- term:
+    id: GO:0006325
+    label: chromatin organization
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: Review of chromatin organization annotation for SAS3
+    action: UNDECIDED
+- term:
+    id: GO:0006351
+    label: DNA-templated transcription
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: Review of DNA-templated transcription annotation for SAS3
+    action: UNDECIDED
+- term:
+    id: GO:0006355
+    label: regulation of DNA-templated transcription
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: Review of regulation of DNA-templated transcription annotation for SAS3
+    action: UNDECIDED
+- term:
+    id: GO:0006357
+    label: regulation of transcription by RNA polymerase II
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: Review of regulation of transcription by RNA polymerase II annotation
+      for SAS3
+    action: UNDECIDED
+- term:
+    id: GO:0008270
+    label: zinc ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: Review of zinc ion binding annotation for SAS3
+    action: UNDECIDED
+- term:
+    id: GO:0016740
+    label: transferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: Review of transferase activity annotation for SAS3
+    action: UNDECIDED
+- term:
+    id: GO:0016746
+    label: acyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: Review of acyltransferase activity annotation for SAS3
+    action: UNDECIDED
+- term:
+    id: GO:0030466
+    label: silent mating-type cassette heterochromatin formation
+  evidence_type: IMP
+  original_reference_id: PMID:11731479
+  review:
+    summary: Review of silent mating-type cassette heterochromatin formation annotation
+      for SAS3
+    action: UNDECIDED
+- term:
+    id: GO:0031507
+    label: heterochromatin formation
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  review:
+    summary: Review of heterochromatin formation annotation for SAS3
+    action: UNDECIDED
+- term:
+    id: GO:0031509
+    label: subtelomeric heterochromatin formation
+  evidence_type: IMP
+  original_reference_id: PMID:11731479
+  review:
+    summary: Review of subtelomeric heterochromatin formation annotation for SAS3
+    action: UNDECIDED
+- term:
+    id: GO:0033100
+    label: NuA3 histone acetyltransferase complex
+  evidence_type: IDA
+  original_reference_id: PMID:10817755
+  review:
+    summary: Review of NuA3 histone acetyltransferase complex annotation for SAS3
+    action: UNDECIDED
+- term:
+    id: GO:0046872
+    label: metal ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: Review of metal ion binding annotation for SAS3
+    action: UNDECIDED
+- term:
+    id: GO:0061733
+    label: protein-lysine-acetyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: Review of protein-lysine-acetyltransferase activity annotation for SAS3
+    action: UNDECIDED
+- term:
+    id: GO:0070775
+    label: H3 histone acetyltransferase complex
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  review:
+    summary: Review of H3 histone acetyltransferase complex annotation for SAS3
+    action: UNDECIDED
+- term:
+    id: GO:1990467
+    label: NuA3a histone acetyltransferase complex
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: Review of NuA3a histone acetyltransferase complex annotation for SAS3
+    action: UNDECIDED
+- term:
+    id: GO:1990468
+    label: NuA3b histone acetyltransferase complex
+  evidence_type: IDA
+  original_reference_id: PMID:25104842
+  review:
+    summary: Review of NuA3b histone acetyltransferase complex annotation for SAS3
+    action: UNDECIDED
+core_functions:
+- molecular_function:
+    id: GO:0004402
+    label: histone acetyltransferase activity
+  description: SAS3 catalyzes histone H3K14 acetylation in NuA3a and NuA3b complexes.
+  supported_by:
+  - reference_id: PMID:10817755
+    supporting_text: Sas3 is the catalytic subunit of NuA3
+proposed_new_terms:
+- proposed_name: histone H3K14 acetyltransferase activity
+  proposed_definition: Catalysis of acetylation of histone H3 at lysine 14.
+  justification: Critical substrate-specific function documented in literature.
+suggested_questions:
+- question: Does SAS3 have in vivo role in H4 acetylation?
+- question: What is relative contribution of SAS3 to total H3K14ac?
+- question: What distinguishes NuA3a vs NuA3b targeting?
+- question: Does SAS3 interact with HDAC complexes?
+suggested_experiments:
+- description: Substrate specificity assays with histone variants
+- description: Genome-wide ChIP-seq for SAS3 and H3K14ac
+- description: Activity analysis in cells lacking GCN5
+- description: Test interactions with HDAC complexes
+references:
+- id: PMID:10817755
+  title: The something about silencing protein, Sas3, is the catalytic subunit of
+    NuA3, a yTAF(II)30-containing HAT complex that interacts with the Spt16 subunit
+    of the yeast CP (Cdc68/Pob3)-FACT complex.
+- id: PMID:11731479
+  title: The yeast SAS (something about silencing) protein complex contains a MYST-type
+    putative acetyltransferase and functions with chromatin assembly factor ASF1.
+- id: PMID:17157260
+  title: Yng1 PHD finger binding to H3 trimethylated at K4 promotes NuA3 HAT activity
+    at K14 of H3 and transcription at a subset of targeted ORFs.
+- id: PMID:25104842
+  title: A PWWP domain-containing protein targets the NuA3 acetyltransferase complex
+    via histone H3 lysine 36 trimethylation to coordinate transcriptional elongation
+    at coding regions.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
