@@ -1,0 +1,2862 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>wago-1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>wago-1</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q21770" target="_blank" class="term-link">
+                        Q21770
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Caenorhabditis elegans</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "wago-1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q21770" data-a="DESCRIPTION: WAGO-1 (Worm-specific Argonaute 1) is a member of ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>WAGO-1 (Worm-specific Argonaute 1) is a member of the WAGO subfamily of Argonaute proteins that functions as a key effector in the endogenous small interfering RNA (endo-siRNA) pathway in the C. elegans germline. WAGO-1 binds 22G-RNAs, which are RNA-dependent RNA polymerase-derived secondary siRNAs characterized by their 22-nucleotide length and 5&#39;-guanosine. Unlike canonical Argonaute proteins, WAGO subfamily members lack conserved metal-binding residues required for catalytic slicer activity and likely function through recruitment of other nucleases for target degradation. WAGO-1 localizes to P granules (germline nuage structures) where it functions in a genome surveillance system to silence transposons, pseudogenes, and cryptic loci. WAGO-1 acts downstream of the primary Argonaute PRG-1 in the piRNA pathway, where piRNA-triggered 22G-RNA production leads to loading of these secondary siRNAs into WAGO-1 and HRDE-1. WAGO-1 interacts with the Vasa homolog RDE-12 and the zinc-finger helicase ZNFX-1 as part of the RNA silencing machinery. The protein is enriched in sperm and oocytes and is essential for germline integrity and transposon control.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q21770" data-a="GO:0005634" data-r="GO_REF:0000033" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA annotation based on phylogenetic inference from other Argonaute family members. While some Argonaute proteins do localize to the nucleus, the primary literature for WAGO-1 specifically demonstrates cytoplasmic P granule localization in the germline (PMID:19800275, PMID:24684931). UniProt annotation describes WAGO-1 subcellular location as &#34;Cytoplasmic granule&#34; with no nuclear localization reported.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> WAGO-1 has been experimentally characterized as localizing to cytoplasmic P granules (PMID:19800275). The nuclear annotation appears to be an over-generalization from other Argonaute family members. WAGO-1 functions in cytoplasmic post-transcriptional gene silencing and there is no direct evidence for nuclear localization in C. elegans.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19800275" target="_blank" class="term-link">
+                                        PMID:19800275
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We show that, in the germline, one system is dependent on worm-specific AGOs, including WAGO-1, which localizes to germline nuage structures called P granules</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/24684931" target="_blank" class="term-link">
+                                        PMID:24684931
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">RDE-12 colocalizes with WAGO-1 in germline P granules and in cytoplasmic and perinuclear foci in somatic cells</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q21770" data-a="GO:0005737" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA annotation for cytoplasmic localization is broadly consistent with experimental evidence showing WAGO-1 in cytoplasmic P granules. However, the more specific term GO:0043186 (P granule) is preferable as it captures the precise subcellular localization.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Cytoplasmic localization is accurate - WAGO-1 localizes to cytoplasmic P granules (PMID:19800275, PMID:24684931). This is a valid parent term for the more specific P granule localization. Retaining as it provides broader context.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19800275" target="_blank" class="term-link">
+                                        PMID:19800275
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We show that, in the germline, one system is dependent on worm-specific AGOs, including WAGO-1, which localizes to germline nuage structures called P granules</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004521" target="_blank" class="term-link">
+                                    GO:0004521
+                                </a>
+                            </span>
+                            <span class="term-label">RNA endonuclease activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q21770" data-a="GO:0004521" data-r="GO_REF:0000033" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is phylogenetically inferred from slicer-competent Argonaute proteins. However, WAGO subfamily Argonautes specifically lack the conserved metal-binding residues (DDH/DDX catalytic tetrad) required for endonuclease activity. UniProt explicitly notes that WAGO subfamily members lack conserved metal-binding residues and probably do not cleave target mRNAs directly (PMID:17110334).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> WAGO-1 lacks the catalytic tetrad required for RNA endonuclease (slicer) activity. This is a known distinguishing feature of the WAGO subfamily. The protein likely recruits other endonucleases for target degradation rather than performing cleavage itself. This annotation is an over-annotation based on ancestral function that has been lost in this subfamily.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17110334" target="_blank" class="term-link">
+                                        PMID:17110334
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">these AGO proteins lack key residues required for mRNA cleavage</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035194" target="_blank" class="term-link">
+                                    GO:0035194
+                                </a>
+                            </span>
+                            <span class="term-label">regulatory ncRNA-mediated post-transcriptional gene silencing</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q21770" data-a="GO:0035194" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> WAGO-1 is a central effector in the 22G-RNA pathway, which is a form of endo-siRNA-mediated gene silencing. The protein binds 22G-RNAs and mediates silencing of transposons, pseudogenes, and aberrant transcripts in the germline (PMID:19800275). This is a core function of WAGO-1.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation accurately captures WAGO-1&#39;s primary biological function. WAGO-1 participates in a regulatory ncRNA-mediated silencing pathway using endogenous 22G-RNAs. Experimental evidence from PMID:19800275 demonstrates this function directly.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19800275" target="_blank" class="term-link">
+                                        PMID:19800275
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">WAGO-1 silences certain genes, transposons, pseudogenes, and cryptic loci</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016442" target="_blank" class="term-link">
+                                    GO:0016442
+                                </a>
+                            </span>
+                            <span class="term-label">RISC complex</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q21770" data-a="GO:0016442" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> As an Argonaute protein that binds small RNAs and mediates gene silencing, WAGO-1 functions as part of an RNA-induced silencing complex. While the worm-specific WAGO-1-containing complex may have distinct features, RISC complex is an appropriate general term for Argonaute-containing silencing effector complexes.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> WAGO-1 is the core Argonaute component of a small RNA-mediated silencing complex. It associates with 22G-RNAs and interacts with RDE-12 (PMID:24684931) and ZNFX-1 (PMID:29775580) as part of the silencing machinery. RISC complex appropriately describes this functional complex.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/24684931" target="_blank" class="term-link">
+                                        PMID:24684931
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">RDE-12 forms an RNase-resistant (target mRNA-independent) complex with WAGO-1</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17110334" target="_blank" class="term-link">
+                                        PMID:17110334
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">several other AGO proteins interact with amplified siRNAs to mediate downstream silencing</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0036464" target="_blank" class="term-link">
+                                    GO:0036464
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasmic ribonucleoprotein granule</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q21770" data-a="GO:0036464" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> P granules are a type of cytoplasmic ribonucleoprotein granule. WAGO-1 has been directly demonstrated to localize to P granules (PMID:19800275). This term is appropriate as a parent term, though the more specific GO:0043186 (P granule) is also annotated with experimental evidence.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a valid broader annotation. P granules are cytoplasmic ribonucleoprotein granules, and WAGO-1 localizes to P granules (PMID:19800275, PMID:24684931). The IBA annotation is consistent with experimental data.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19800275" target="_blank" class="term-link">
+                                        PMID:19800275
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We show that, in the germline, one system is dependent on worm-specific AGOs, including WAGO-1, which localizes to germline nuage structures called P granules</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035198" target="_blank" class="term-link">
+                                    GO:0035198
+                                </a>
+                            </span>
+                            <span class="term-label">miRNA binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q21770" data-a="GO:0035198" data-r="GO_REF:0000033" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is phylogenetically inferred from miRNA-binding Argonautes. However, WAGO-1 specifically binds 22G-RNAs (endogenous siRNAs), not miRNAs. The 22G-RNA pathway is distinct from the miRNA pathway in C. elegans. WAGO-1 binds secondary siRNAs produced by RNA-dependent RNA polymerases, which are structurally and functionally distinct from miRNAs.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> WAGO-1 binds 22G-RNAs (endogenous siRNAs), not miRNAs. The miRNA binding annotation is an over-generalization from other Argonaute family members. The appropriate term is siRNA binding (GO:0035197), which accurately describes binding to the 21-23 nt small interfering RNAs that WAGO-1 associates with.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035197" target="_blank" class="term-link">
+                                    siRNA binding
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17110334" target="_blank" class="term-link">
+                                        PMID:17110334
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">several other AGO proteins interact with amplified siRNAs to mediate downstream silencing</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003727" target="_blank" class="term-link">
+                                    GO:0003727
+                                </a>
+                            </span>
+                            <span class="term-label">single-stranded RNA binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q21770" data-a="GO:0003727" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Argonaute proteins bind single-stranded guide RNAs. WAGO-1 binds 22G-RNAs in their single-stranded form after processing. This is a valid general molecular function annotation for an Argonaute protein.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> WAGO-1 binds single-stranded 22G-RNAs as guide RNAs for target recognition. This is a core molecular function of Argonaute proteins. The annotation is appropriate though more specific terms like siRNA binding would also be accurate.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17110334" target="_blank" class="term-link">
+                                        PMID:17110334
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Argonaute (AGO) proteins interact with small RNAs to mediate gene silencing</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003676" target="_blank" class="term-link">
+                                    GO:0003676
+                                </a>
+                            </span>
+                            <span class="term-label">nucleic acid binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q21770" data-a="GO:0003676" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation based on InterPro domains (PAZ and Piwi domains). This is a very broad term that is subsumed by more specific RNA binding annotations. While technically correct, it provides little informative value given the more specific annotations.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a valid but very general annotation based on domain composition. The PAZ and Piwi domains are nucleic acid binding domains. More specific annotations (RNA binding, siRNA binding) are also present and more informative.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003723" target="_blank" class="term-link">
+                                    GO:0003723
+                                </a>
+                            </span>
+                            <span class="term-label">RNA binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q21770" data-a="GO:0003723" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation based on InterPro PAZ domain (IPR003100). WAGO-1 contains PAZ and Piwi domains characteristic of Argonaute proteins that bind small RNAs. This is a valid general annotation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> WAGO-1 binds 22G-RNAs through its PAZ and Piwi domains. RNA binding is a core molecular function. This annotation is appropriate as a broader classification of the siRNA binding activity.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031047" target="_blank" class="term-link">
+                                    GO:0031047
+                                </a>
+                            </span>
+                            <span class="term-label">regulatory ncRNA-mediated gene silencing</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q21770" data-a="GO:0031047" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation based on UniProtKB keyword mapping (RNA-mediated gene silencing). This term encompasses both transcriptional and post-transcriptional silencing. WAGO-1 primarily functions in post-transcriptional silencing (GO:0035194), which is a child term already annotated.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a valid parent term for the more specific post-transcriptional silencing annotation. WAGO-1 is involved in regulatory ncRNA-mediated gene silencing using 22G-RNAs. Both this term and the more specific GO:0035194 are appropriate.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0017151" target="_blank" class="term-link">
+                                    GO:0017151
+                                </a>
+                            </span>
+                            <span class="term-label">DEAD/H-box RNA helicase binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24684931" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:24684931
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The Vasa Homolog RDE-12 engages target mRNA and multiple arg...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q21770" data-a="GO:0017151" data-r="PMID:24684931" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is based on the physical interaction between WAGO-1 and RDE-12, a Vasa homolog DEAD-box RNA helicase. PMID:24684931 identified RDE-12 as a robust interaction partner of WAGO-1 through immunoprecipitation studies. RDE-12 is required for secondary siRNA production and colocalizes with WAGO-1 in P granules.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a well-supported experimental annotation. PMID:24684931 directly demonstrated physical interaction between WAGO-1 and RDE-12 (P90897), a DEAD-box RNA helicase. This interaction is functionally important for RNAi and endo-siRNA pathways.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/24684931" target="_blank" class="term-link">
+                                        PMID:24684931
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">These studies identified a robust association between WAGO-1 and a conserved Vasa ATPase-related protein RDE-12</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/24684931" target="_blank" class="term-link">
+                                        PMID:24684931
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">RDE-12 colocalizes with WAGO-1 in germline P granules and in cytoplasmic and perinuclear foci in somatic cells</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043186" target="_blank" class="term-link">
+                                    GO:0043186
+                                </a>
+                            </span>
+                            <span class="term-label">P granule</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19800275" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19800275
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Distinct argonaute-mediated 22G-RNA pathways direct genome s...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q21770" data-a="GO:0043186" data-r="PMID:19800275" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is a direct experimental annotation showing WAGO-1 localization to P granules. PMID:19800275 demonstrated that WAGO-1 localizes to germline nuage structures called P granules. This is a key finding that establishes the subcellular context for WAGO-1 function in germline gene silencing.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Direct experimental evidence (IDA) demonstrating P granule localization. This is a core cellular component annotation supported by primary literature. P granule localization is essential for WAGO-1&#39;s function in germline surveillance.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19800275" target="_blank" class="term-link">
+                                        PMID:19800275
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We show that, in the germline, one system is dependent on worm-specific AGOs, including WAGO-1, which localizes to germline nuage structures called P granules</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/24684931" target="_blank" class="term-link">
+                                        PMID:24684931
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">RDE-12 colocalizes with WAGO-1 in germline P granules and in cytoplasmic and perinuclear foci in somatic cells</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035197" target="_blank" class="term-link">
+                                    GO:0035197
+                                </a>
+                            </span>
+                            <span class="term-label">siRNA binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19800275" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19800275
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Distinct argonaute-mediated 22G-RNA pathways direct genome s...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q21770" data-a="GO:0035197" data-r="PMID:19800275" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> WAGO-1 specifically binds 22G-RNAs, which are endogenous siRNAs. This binding activity is central to WAGO-1&#39;s function and is directly demonstrated in PMID:19800275.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> WAGO-1 binds 22G-RNAs (endogenous siRNAs). This is a more accurate molecular function annotation than miRNA binding, which was incorrectly inferred phylogenetically. 22G-RNAs are siRNAs by definition - 22 nucleotide small RNAs processed by RdRP.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17110334" target="_blank" class="term-link">
+                                        PMID:17110334
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">several other AGO proteins interact with amplified siRNAs to mediate downstream silencing</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010526" target="_blank" class="term-link">
+                                    GO:0010526
+                                </a>
+                            </span>
+                            <span class="term-label">transposable element silencing</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19800275" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19800275
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Distinct argonaute-mediated 22G-RNA pathways direct genome s...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q21770" data-a="GO:0010526" data-r="PMID:19800275" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> WAGO-1 functions in silencing transposons as part of the germline genome surveillance system. This is a key biological process function demonstrated in PMID:19800275.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Transposon silencing is a primary function of the WAGO-1 22G-RNA pathway in the germline. This should be annotated as a core biological process function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19800275" target="_blank" class="term-link">
+                                        PMID:19800275
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">WAGO-1 silences certain genes, transposons, pseudogenes, and cryptic loci</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>WAGO-1 binds 22G-RNAs (endogenous siRNAs) and functions as a core effector in post-transcriptional gene silencing of transposons and aberrant transcripts in the C. elegans germline.</h3>
+                <span class="vote-buttons" data-g="Q21770" data-a="FUNCTION: WAGO-1 binds 22G-RNAs (endogenous siRNAs) and func..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035197" target="_blank" class="term-link">
+                            siRNA binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035194" target="_blank" class="term-link">
+                                regulatory ncRNA-mediated post-transcriptional gene silencing
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010526" target="_blank" class="term-link">
+                                transposable element silencing
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043186" target="_blank" class="term-link">
+                                P granule
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016442" target="_blank" class="term-link">
+                            RISC complex
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19800275" target="_blank" class="term-link">
+                                PMID:19800275
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">WAGO-1 silences certain genes, transposons, pseudogenes, and cryptic loci</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">InterPro PAZ domain (IPR003100) predicts RNA binding</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">InterPro Piwi domain (IPR003165) predicts nucleic acid binding</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Phylogenetic inference from Argonaute family members</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Some inferred functions may not apply to WAGO subfamily due to loss of catalytic residues</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">RNA-mediated gene silencing keyword mapped to GO terms</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19800275" target="_blank" class="term-link">
+                            PMID:19800275
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Distinct argonaute-mediated 22G-RNA pathways direct genome surveillance in the C. elegans germline.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">WAGO-1 localizes to P granules in the germline</div>
+                        
+                        <div class="finding-text">"We show that, in the germline, one system is dependent on worm-specific AGOs, including WAGO-1, which localizes to germline nuage structures called P granules"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">WAGO-1 binds 22G-RNAs (secondary siRNAs)</div>
+                        
+                        <div class="finding-text">"Endogenous small RNAs (endo-siRNAs) interact with Argonaute (AGO) proteins to mediate sequence-specific regulation of diverse biological processes"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">WAGO-1 silences transposons, pseudogenes, and cryptic loci</div>
+                        
+                        <div class="finding-text">"WAGO-1 silences certain genes, transposons, pseudogenes, and cryptic loci"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">WAGO-1 is part of a genome surveillance system distinct from CSR-1 pathway</div>
+                        
+                        <div class="finding-text">"We show that, in the germline, one system is dependent on worm-specific AGOs, including WAGO-1"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">DRH-3 is required for 22G-RNA biogenesis</div>
+                        
+                        <div class="finding-text">"DRH-3 is a core component of RNA-dependent RNA polymerase (RdRP) complexes essential for several distinct 22G-RNA systems"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/24684931" target="_blank" class="term-link">
+                            PMID:24684931
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The Vasa Homolog RDE-12 engages target mRNA and multiple argonaute proteins to promote RNAi in C. elegans.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">WAGO-1 physically interacts with RDE-12 (Vasa homolog DEAD-box helicase)</div>
+                        
+                        <div class="finding-text">"These studies identified a robust association between WAGO-1 and a conserved Vasa ATPase-related protein RDE-12"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">RDE-12 colocalizes with WAGO-1 in P granules</div>
+                        
+                        <div class="finding-text">"RDE-12 colocalizes with WAGO-1 in germline P granules and in cytoplasmic and perinuclear foci in somatic cells"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">RDE-12 is required for secondary siRNA production</div>
+                        
+                        <div class="finding-text">"rde-12 mutants are deficient in RNAi, including viral suppression, and fail to produce amplified secondary siRNAs and certain endogenous siRNAs (endo-siRNAs)"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">RDE-12 forms RNase-resistant complex with WAGO-1</div>
+                        
+                        <div class="finding-text">"RDE-12 forms an RNase-resistant (target mRNA-independent) complex with WAGO-1"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17110334" target="_blank" class="term-link">
+                            PMID:17110334
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Analysis of the C. elegans Argonaute family reveals that distinct Argonautes act sequentially during RNAi.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">WAGO subfamily Argonautes lack conserved metal-binding residues</div>
+                        
+                        <div class="finding-text">"these AGO proteins lack key residues required for mRNA cleavage"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">WAGO proteins probably do not cleave target mRNAs directly</div>
+                        
+                        <div class="finding-text">"these AGO proteins lack key residues required for mRNA cleavage"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Distinct Argonautes act sequentially in RNAi pathway</div>
+                        
+                        <div class="finding-text">"functionally and structurally distinct AGOs act sequentially to direct gene silencing"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/29775580" target="_blank" class="term-link">
+                            PMID:29775580
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">ZNFX-1 Functions within Perinuclear Nuage to Balance Epigenetic Signals.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">WAGO-1 interacts with ZNFX-1</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">ZNFX-1 functions in perinuclear nuage for epigenetic regulation</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the mechanism by which WAGO-1, lacking endonuclease activity, achieves target mRNA degradation? Does it recruit specific nucleases?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q21770" data-a="Q: What is the mechanism by which WAGO-1, lacking end..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How is the balance between WAGO-1 (silencing) and CSR-1 (protecting) pathways maintained for genome surveillance in the germline?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q21770" data-a="Q: How is the balance between WAGO-1 (silencing) and ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does WAGO-1 have any transcriptional silencing functions in addition to post-transcriptional silencing?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q21770" data-a="Q: Does WAGO-1 have any transcriptional silencing fun..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Identify nucleases recruited by WAGO-1 for target degradation using proximity labeling or co-IP followed by mass spectrometry</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: WAGO-1 recruits specific endonucleases to P granules for target mRNA cleavage since it lacks intrinsic slicer activity</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q21770" data-a="EXPERIMENT: Identify nucleases recruited by WAGO-1 for target ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Determine the complete catalog of WAGO-1 22G-RNA targets using CLIP-seq or similar approaches</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: WAGO-1 targets a defined set of transposons, pseudogenes, and cryptic loci distinct from CSR-1 targets</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q21770" data-a="EXPERIMENT: Determine the complete catalog of WAGO-1 22G-RNA t..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Test whether WAGO-1 has any role in chromatin-level silencing using ChIP-seq for silencing-associated histone marks in wago-1 mutants</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: WAGO-1 may indirectly influence heterochromatin formation through its interaction with ZNFX-1 and nuclear Argonautes like HRDE-1</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q21770" data-a="EXPERIMENT: Test whether WAGO-1 has any role in chromatin-leve..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Tags</h2>
+        <div class="aliases">
+            
+            <span class="badge">caeel-p-granules</span>
+            
+        </div>
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q21770
+gene_symbol: wago-1
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:6239
+  label: Caenorhabditis elegans
+description: WAGO-1 (Worm-specific Argonaute 1) is a member of the WAGO subfamily
+  of Argonaute proteins that functions as a key effector in the endogenous small interfering
+  RNA (endo-siRNA) pathway in the C. elegans germline. WAGO-1 binds 22G-RNAs, which
+  are RNA-dependent RNA polymerase-derived secondary siRNAs characterized by their
+  22-nucleotide length and 5&#39;-guanosine. Unlike canonical Argonaute proteins, WAGO
+  subfamily members lack conserved metal-binding residues required for catalytic slicer
+  activity and likely function through recruitment of other nucleases for target degradation.
+  WAGO-1 localizes to P granules (germline nuage structures) where it functions in
+  a genome surveillance system to silence transposons, pseudogenes, and cryptic loci.
+  WAGO-1 acts downstream of the primary Argonaute PRG-1 in the piRNA pathway, where
+  piRNA-triggered 22G-RNA production leads to loading of these secondary siRNAs into
+  WAGO-1 and HRDE-1. WAGO-1 interacts with the Vasa homolog RDE-12 and the zinc-finger
+  helicase ZNFX-1 as part of the RNA silencing machinery. The protein is enriched
+  in sperm and oocytes and is essential for germline integrity and transposon control.
+existing_annotations:
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: IBA annotation based on phylogenetic inference from other Argonaute family
+      members. While some Argonaute proteins do localize to the nucleus, the primary
+      literature for WAGO-1 specifically demonstrates cytoplasmic P granule localization
+      in the germline (PMID:19800275, PMID:24684931). UniProt annotation describes
+      WAGO-1 subcellular location as &#34;Cytoplasmic granule&#34; with no nuclear localization
+      reported.
+    action: REMOVE
+    reason: WAGO-1 has been experimentally characterized as localizing to cytoplasmic
+      P granules (PMID:19800275). The nuclear annotation appears to be an over-generalization
+      from other Argonaute family members. WAGO-1 functions in cytoplasmic post-transcriptional
+      gene silencing and there is no direct evidence for nuclear localization in C.
+      elegans.
+    supported_by:
+    - reference_id: PMID:19800275
+      supporting_text: We show that, in the germline, one system is dependent on worm-specific
+        AGOs, including WAGO-1, which localizes to germline nuage structures called
+        P granules
+    - reference_id: PMID:24684931
+      supporting_text: RDE-12 colocalizes with WAGO-1 in germline P granules and in
+        cytoplasmic and perinuclear foci in somatic cells
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: IBA annotation for cytoplasmic localization is broadly consistent with
+      experimental evidence showing WAGO-1 in cytoplasmic P granules. However, the
+      more specific term GO:0043186 (P granule) is preferable as it captures the precise
+      subcellular localization.
+    action: ACCEPT
+    reason: Cytoplasmic localization is accurate - WAGO-1 localizes to cytoplasmic
+      P granules (PMID:19800275, PMID:24684931). This is a valid parent term for the
+      more specific P granule localization. Retaining as it provides broader context.
+    supported_by:
+    - reference_id: PMID:19800275
+      supporting_text: We show that, in the germline, one system is dependent on worm-specific
+        AGOs, including WAGO-1, which localizes to germline nuage structures called
+        P granules
+- term:
+    id: GO:0004521
+    label: RNA endonuclease activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: This annotation is phylogenetically inferred from slicer-competent Argonaute
+      proteins. However, WAGO subfamily Argonautes specifically lack the conserved
+      metal-binding residues (DDH/DDX catalytic tetrad) required for endonuclease
+      activity. UniProt explicitly notes that WAGO subfamily members lack conserved
+      metal-binding residues and probably do not cleave target mRNAs directly (PMID:17110334).
+    action: REMOVE
+    reason: WAGO-1 lacks the catalytic tetrad required for RNA endonuclease (slicer)
+      activity. This is a known distinguishing feature of the WAGO subfamily. The
+      protein likely recruits other endonucleases for target degradation rather than
+      performing cleavage itself. This annotation is an over-annotation based on ancestral
+      function that has been lost in this subfamily.
+    supported_by:
+    - reference_id: PMID:17110334
+      supporting_text: these AGO proteins lack key residues required for mRNA cleavage
+- term:
+    id: GO:0035194
+    label: regulatory ncRNA-mediated post-transcriptional gene silencing
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: WAGO-1 is a central effector in the 22G-RNA pathway, which is a form
+      of endo-siRNA-mediated gene silencing. The protein binds 22G-RNAs and mediates
+      silencing of transposons, pseudogenes, and aberrant transcripts in the germline
+      (PMID:19800275). This is a core function of WAGO-1.
+    action: ACCEPT
+    reason: This annotation accurately captures WAGO-1&#39;s primary biological function.
+      WAGO-1 participates in a regulatory ncRNA-mediated silencing pathway using endogenous
+      22G-RNAs. Experimental evidence from PMID:19800275 demonstrates this function
+      directly.
+    supported_by:
+    - reference_id: PMID:19800275
+      supporting_text: WAGO-1 silences certain genes, transposons, pseudogenes, and
+        cryptic loci
+- term:
+    id: GO:0016442
+    label: RISC complex
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: As an Argonaute protein that binds small RNAs and mediates gene silencing,
+      WAGO-1 functions as part of an RNA-induced silencing complex. While the worm-specific
+      WAGO-1-containing complex may have distinct features, RISC complex is an appropriate
+      general term for Argonaute-containing silencing effector complexes.
+    action: ACCEPT
+    reason: WAGO-1 is the core Argonaute component of a small RNA-mediated silencing
+      complex. It associates with 22G-RNAs and interacts with RDE-12 (PMID:24684931)
+      and ZNFX-1 (PMID:29775580) as part of the silencing machinery. RISC complex
+      appropriately describes this functional complex.
+    supported_by:
+    - reference_id: PMID:24684931
+      supporting_text: RDE-12 forms an RNase-resistant (target mRNA-independent) complex
+        with WAGO-1
+    - reference_id: PMID:17110334
+      supporting_text: several other AGO proteins interact with amplified siRNAs to
+        mediate downstream silencing
+- term:
+    id: GO:0036464
+    label: cytoplasmic ribonucleoprotein granule
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: P granules are a type of cytoplasmic ribonucleoprotein granule. WAGO-1
+      has been directly demonstrated to localize to P granules (PMID:19800275). This
+      term is appropriate as a parent term, though the more specific GO:0043186 (P
+      granule) is also annotated with experimental evidence.
+    action: ACCEPT
+    reason: This is a valid broader annotation. P granules are cytoplasmic ribonucleoprotein
+      granules, and WAGO-1 localizes to P granules (PMID:19800275, PMID:24684931).
+      The IBA annotation is consistent with experimental data.
+    supported_by:
+    - reference_id: PMID:19800275
+      supporting_text: We show that, in the germline, one system is dependent on worm-specific
+        AGOs, including WAGO-1, which localizes to germline nuage structures called
+        P granules
+- term:
+    id: GO:0035198
+    label: miRNA binding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: This annotation is phylogenetically inferred from miRNA-binding Argonautes.
+      However, WAGO-1 specifically binds 22G-RNAs (endogenous siRNAs), not miRNAs.
+      The 22G-RNA pathway is distinct from the miRNA pathway in C. elegans. WAGO-1
+      binds secondary siRNAs produced by RNA-dependent RNA polymerases, which are
+      structurally and functionally distinct from miRNAs.
+    action: MODIFY
+    reason: WAGO-1 binds 22G-RNAs (endogenous siRNAs), not miRNAs. The miRNA binding
+      annotation is an over-generalization from other Argonaute family members. The
+      appropriate term is siRNA binding (GO:0035197), which accurately describes binding
+      to the 21-23 nt small interfering RNAs that WAGO-1 associates with.
+    proposed_replacement_terms:
+    - id: GO:0035197
+      label: siRNA binding
+    supported_by:
+    - reference_id: PMID:17110334
+      supporting_text: several other AGO proteins interact with amplified siRNAs to
+        mediate downstream silencing
+- term:
+    id: GO:0003727
+    label: single-stranded RNA binding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: Argonaute proteins bind single-stranded guide RNAs. WAGO-1 binds 22G-RNAs
+      in their single-stranded form after processing. This is a valid general molecular
+      function annotation for an Argonaute protein.
+    action: ACCEPT
+    reason: WAGO-1 binds single-stranded 22G-RNAs as guide RNAs for target recognition.
+      This is a core molecular function of Argonaute proteins. The annotation is appropriate
+      though more specific terms like siRNA binding would also be accurate.
+    supported_by:
+    - reference_id: PMID:17110334
+      supporting_text: Argonaute (AGO) proteins interact with small RNAs to mediate
+        gene silencing
+- term:
+    id: GO:0003676
+    label: nucleic acid binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: IEA annotation based on InterPro domains (PAZ and Piwi domains). This
+      is a very broad term that is subsumed by more specific RNA binding annotations.
+      While technically correct, it provides little informative value given the more
+      specific annotations.
+    action: ACCEPT
+    reason: This is a valid but very general annotation based on domain composition.
+      The PAZ and Piwi domains are nucleic acid binding domains. More specific annotations
+      (RNA binding, siRNA binding) are also present and more informative.
+- term:
+    id: GO:0003723
+    label: RNA binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: IEA annotation based on InterPro PAZ domain (IPR003100). WAGO-1 contains
+      PAZ and Piwi domains characteristic of Argonaute proteins that bind small RNAs.
+      This is a valid general annotation.
+    action: ACCEPT
+    reason: WAGO-1 binds 22G-RNAs through its PAZ and Piwi domains. RNA binding is
+      a core molecular function. This annotation is appropriate as a broader classification
+      of the siRNA binding activity.
+- term:
+    id: GO:0031047
+    label: regulatory ncRNA-mediated gene silencing
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: IEA annotation based on UniProtKB keyword mapping (RNA-mediated gene
+      silencing). This term encompasses both transcriptional and post-transcriptional
+      silencing. WAGO-1 primarily functions in post-transcriptional silencing (GO:0035194),
+      which is a child term already annotated.
+    action: ACCEPT
+    reason: This is a valid parent term for the more specific post-transcriptional
+      silencing annotation. WAGO-1 is involved in regulatory ncRNA-mediated gene silencing
+      using 22G-RNAs. Both this term and the more specific GO:0035194 are appropriate.
+- term:
+    id: GO:0017151
+    label: DEAD/H-box RNA helicase binding
+  evidence_type: IPI
+  original_reference_id: PMID:24684931
+  review:
+    summary: This annotation is based on the physical interaction between WAGO-1 and
+      RDE-12, a Vasa homolog DEAD-box RNA helicase. PMID:24684931 identified RDE-12
+      as a robust interaction partner of WAGO-1 through immunoprecipitation studies.
+      RDE-12 is required for secondary siRNA production and colocalizes with WAGO-1
+      in P granules.
+    action: ACCEPT
+    reason: This is a well-supported experimental annotation. PMID:24684931 directly
+      demonstrated physical interaction between WAGO-1 and RDE-12 (P90897), a DEAD-box
+      RNA helicase. This interaction is functionally important for RNAi and endo-siRNA
+      pathways.
+    supported_by:
+    - reference_id: PMID:24684931
+      supporting_text: These studies identified a robust association between WAGO-1
+        and a conserved Vasa ATPase-related protein RDE-12
+    - reference_id: PMID:24684931
+      supporting_text: RDE-12 colocalizes with WAGO-1 in germline P granules and in
+        cytoplasmic and perinuclear foci in somatic cells
+- term:
+    id: GO:0043186
+    label: P granule
+  evidence_type: IDA
+  original_reference_id: PMID:19800275
+  review:
+    summary: This is a direct experimental annotation showing WAGO-1 localization
+      to P granules. PMID:19800275 demonstrated that WAGO-1 localizes to germline
+      nuage structures called P granules. This is a key finding that establishes the
+      subcellular context for WAGO-1 function in germline gene silencing.
+    action: ACCEPT
+    reason: Direct experimental evidence (IDA) demonstrating P granule localization.
+      This is a core cellular component annotation supported by primary literature.
+      P granule localization is essential for WAGO-1&#39;s function in germline surveillance.
+    supported_by:
+    - reference_id: PMID:19800275
+      supporting_text: We show that, in the germline, one system is dependent on worm-specific
+        AGOs, including WAGO-1, which localizes to germline nuage structures called
+        P granules
+    - reference_id: PMID:24684931
+      supporting_text: RDE-12 colocalizes with WAGO-1 in germline P granules and in
+        cytoplasmic and perinuclear foci in somatic cells
+- term:
+    id: GO:0035197
+    label: siRNA binding
+  evidence_type: IDA
+  original_reference_id: PMID:19800275
+  review:
+    summary: WAGO-1 specifically binds 22G-RNAs, which are endogenous siRNAs. This
+      binding activity is central to WAGO-1&#39;s function and is directly demonstrated
+      in PMID:19800275.
+    action: NEW
+    reason: WAGO-1 binds 22G-RNAs (endogenous siRNAs). This is a more accurate molecular
+      function annotation than miRNA binding, which was incorrectly inferred phylogenetically.
+      22G-RNAs are siRNAs by definition - 22 nucleotide small RNAs processed by RdRP.
+    supported_by:
+    - reference_id: PMID:17110334
+      supporting_text: several other AGO proteins interact with amplified siRNAs to
+        mediate downstream silencing
+- term:
+    id: GO:0010526
+    label: transposable element silencing
+  evidence_type: IMP
+  original_reference_id: PMID:19800275
+  review:
+    summary: WAGO-1 functions in silencing transposons as part of the germline genome
+      surveillance system. This is a key biological process function demonstrated
+      in PMID:19800275.
+    action: NEW
+    reason: Transposon silencing is a primary function of the WAGO-1 22G-RNA pathway
+      in the germline. This should be annotated as a core biological process function.
+    supported_by:
+    - reference_id: PMID:19800275
+      supporting_text: WAGO-1 silences certain genes, transposons, pseudogenes, and
+        cryptic loci
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings:
+  - statement: InterPro PAZ domain (IPR003100) predicts RNA binding
+  - statement: InterPro Piwi domain (IPR003165) predicts nucleic acid binding
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings:
+  - statement: Phylogenetic inference from Argonaute family members
+  - statement: Some inferred functions may not apply to WAGO subfamily due to loss
+      of catalytic residues
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings:
+  - statement: RNA-mediated gene silencing keyword mapped to GO terms
+- id: PMID:19800275
+  title: Distinct argonaute-mediated 22G-RNA pathways direct genome surveillance in
+    the C. elegans germline.
+  findings:
+  - statement: WAGO-1 localizes to P granules in the germline
+    supporting_text: We show that, in the germline, one system is dependent on worm-specific
+      AGOs, including WAGO-1, which localizes to germline nuage structures called
+      P granules
+  - statement: WAGO-1 binds 22G-RNAs (secondary siRNAs)
+    supporting_text: Endogenous small RNAs (endo-siRNAs) interact with Argonaute (AGO)
+      proteins to mediate sequence-specific regulation of diverse biological processes
+  - statement: WAGO-1 silences transposons, pseudogenes, and cryptic loci
+    supporting_text: WAGO-1 silences certain genes, transposons, pseudogenes, and
+      cryptic loci
+  - statement: WAGO-1 is part of a genome surveillance system distinct from CSR-1
+      pathway
+    supporting_text: We show that, in the germline, one system is dependent on worm-specific
+      AGOs, including WAGO-1
+  - statement: DRH-3 is required for 22G-RNA biogenesis
+    supporting_text: DRH-3 is a core component of RNA-dependent RNA polymerase (RdRP)
+      complexes essential for several distinct 22G-RNA systems
+- id: PMID:24684931
+  title: The Vasa Homolog RDE-12 engages target mRNA and multiple argonaute proteins
+    to promote RNAi in C. elegans.
+  findings:
+  - statement: WAGO-1 physically interacts with RDE-12 (Vasa homolog DEAD-box helicase)
+    supporting_text: These studies identified a robust association between WAGO-1
+      and a conserved Vasa ATPase-related protein RDE-12
+  - statement: RDE-12 colocalizes with WAGO-1 in P granules
+    supporting_text: RDE-12 colocalizes with WAGO-1 in germline P granules and in
+      cytoplasmic and perinuclear foci in somatic cells
+  - statement: RDE-12 is required for secondary siRNA production
+    supporting_text: rde-12 mutants are deficient in RNAi, including viral suppression,
+      and fail to produce amplified secondary siRNAs and certain endogenous siRNAs
+      (endo-siRNAs)
+  - statement: RDE-12 forms RNase-resistant complex with WAGO-1
+    supporting_text: RDE-12 forms an RNase-resistant (target mRNA-independent) complex
+      with WAGO-1
+- id: PMID:17110334
+  title: Analysis of the C. elegans Argonaute family reveals that distinct Argonautes
+    act sequentially during RNAi.
+  findings:
+  - statement: WAGO subfamily Argonautes lack conserved metal-binding residues
+    supporting_text: these AGO proteins lack key residues required for mRNA cleavage
+  - statement: WAGO proteins probably do not cleave target mRNAs directly
+    supporting_text: these AGO proteins lack key residues required for mRNA cleavage
+  - statement: Distinct Argonautes act sequentially in RNAi pathway
+    supporting_text: functionally and structurally distinct AGOs act sequentially
+      to direct gene silencing
+- id: PMID:29775580
+  title: ZNFX-1 Functions within Perinuclear Nuage to Balance Epigenetic Signals.
+  full_text_unavailable: true
+  findings:
+  - statement: WAGO-1 interacts with ZNFX-1
+  - statement: ZNFX-1 functions in perinuclear nuage for epigenetic regulation
+core_functions:
+- description: WAGO-1 binds 22G-RNAs (endogenous siRNAs) and functions as a core effector
+    in post-transcriptional gene silencing of transposons and aberrant transcripts
+    in the C. elegans germline.
+  molecular_function:
+    id: GO:0035197
+    label: siRNA binding
+  directly_involved_in:
+  - id: GO:0035194
+    label: regulatory ncRNA-mediated post-transcriptional gene silencing
+  - id: GO:0010526
+    label: transposable element silencing
+  locations:
+  - id: GO:0043186
+    label: P granule
+  in_complex:
+    id: GO:0016442
+    label: RISC complex
+  supported_by:
+  - reference_id: PMID:19800275
+    supporting_text: WAGO-1 silences certain genes, transposons, pseudogenes, and
+      cryptic loci
+proposed_new_terms: []
+suggested_questions:
+- question: What is the mechanism by which WAGO-1, lacking endonuclease activity,
+    achieves target mRNA degradation? Does it recruit specific nucleases?
+- question: How is the balance between WAGO-1 (silencing) and CSR-1 (protecting) pathways
+    maintained for genome surveillance in the germline?
+- question: Does WAGO-1 have any transcriptional silencing functions in addition to
+    post-transcriptional silencing?
+suggested_experiments:
+- description: Identify nucleases recruited by WAGO-1 for target degradation using
+    proximity labeling or co-IP followed by mass spectrometry
+  hypothesis: WAGO-1 recruits specific endonucleases to P granules for target mRNA
+    cleavage since it lacks intrinsic slicer activity
+- description: Determine the complete catalog of WAGO-1 22G-RNA targets using CLIP-seq
+    or similar approaches
+  hypothesis: WAGO-1 targets a defined set of transposons, pseudogenes, and cryptic
+    loci distinct from CSR-1 targets
+- description: Test whether WAGO-1 has any role in chromatin-level silencing using
+    ChIP-seq for silencing-associated histone marks in wago-1 mutants
+  hypothesis: WAGO-1 may indirectly influence heterochromatin formation through its
+    interaction with ZNFX-1 and nuclear Argonautes like HRDE-1
+tags:
+- caeel-p-granules
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

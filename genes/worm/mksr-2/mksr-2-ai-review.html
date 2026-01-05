@@ -1,0 +1,3493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>mksr-2 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>mksr-2</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q9N423" target="_blank" class="term-link">
+                        Q9N423
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Caenorhabditis elegans</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "mksr-2";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q9N423" data-a="DESCRIPTION: MKSR-2 (MKS1-related protein 2) is a B9 domain-con..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>MKSR-2 (MKS1-related protein 2) is a B9 domain-containing protein that functions as a component of the MKS (Meckel syndrome) module at the ciliary transition zone. It is the C. elegans ortholog of mammalian B9D2. MKSR-2 forms a complex with MKS-1 and MKSR-1 and localizes specifically to the transition zone/basal body of sensory cilia. The protein functions redundantly with nephrocystins (NPHP-1, NPHP-4) to regulate cilia formation and maintenance in amphid and phasmid ciliated sensory neurons. The MKS module, together with the NPHP module, establishes basal body/ transition zone membrane attachments and a ciliary gate that restricts entry of non-ciliary components. Loss of mksr-2 in combination with other MKS/NPHP pathway mutations leads to ciliogenesis defects and altered lifespan via abnormal insulin-IGF-I signaling.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0036038" target="_blank" class="term-link">
+                                    GO:0036038
+                                </a>
+                            </span>
+                            <span class="term-label">MKS complex</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9N423" data-a="GO:0036038" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> MKSR-2 is a core component of the MKS complex at the ciliary transition zone. The B9 proteins (MKS-1, MKSR-1, MKSR-2) form a complex that localizes to the base of cilia and functions as part of the MKS module (PMID:18337471, PMID:21422230).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a well-established core function of MKSR-2. Multiple studies demonstrate that the B9 proteins including MKSR-2 form the MKS complex and function together at the transition zone. IBA annotation from phylogenetic analysis is consistent with experimental data.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18337471" target="_blank" class="term-link">
+                                        PMID:18337471
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">we report that the C. elegans B9 proteins form a complex that localizes to the base of cilia</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21422230" target="_blank" class="term-link">
+                                        PMID:21422230
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">the conserved C. elegans B9 domain (MKS-1, MKSR-1, and MKSR-2), MKS-3/TMEM67, MKS-5/RPGRIP1L, MKS-6/CC2D2A, NPHP-1, and NPHP-4 proteins exhibit essential, collective functions at the transition zone</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0060271" target="_blank" class="term-link">
+                                    GO:0060271
+                                </a>
+                            </span>
+                            <span class="term-label">cilium assembly</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q9N423" data-a="GO:0060271" data-r="GO_REF:0000033" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> MKSR-2 participates in cilium assembly as part of the MKS/NPHP transition zone machinery. The B9 proteins function redundantly with nephrocystins in ciliogenesis (PMID:18337471, PMID:21422230).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While MKSR-2 is involved in cilium assembly, the annotation should be more specific. In C. elegans sensory neurons, these are non-motile primary cilia. The term GO:1905515 (non-motile cilium assembly) is more accurate for this organism and cell type context.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1905515" target="_blank" class="term-link">
+                                    non-motile cilium assembly
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18337471" target="_blank" class="term-link">
+                                        PMID:18337471
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">the B9 proteins function redundantly with the nephrocystins to regulate the formation and/or maintenance of cilia and dendrites in the amphid and phasmid ciliated sensory neurons</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21422230" target="_blank" class="term-link">
+                                        PMID:21422230
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">MKS/MKSR/NPHP proteins establish basal body/TZ membrane attachments before or coinciding with intraflagellar transport-dependent axoneme extension</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005929" target="_blank" class="term-link">
+                                    GO:0005929
+                                </a>
+                            </span>
+                            <span class="term-label">cilium</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q9N423" data-a="GO:0005929" data-r="GO_REF:0000117" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation based on ARBA prediction. While MKSR-2 functions in ciliated neurons, it specifically localizes to the transition zone rather than the cilium proper (PMID:21422230).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> MKSR-2 specifically localizes to the ciliary transition zone, not the cilium proper. The IEA annotation is too broad. The protein is found at the base of cilia (transition zone/basal body region).
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035869" target="_blank" class="term-link">
+                                    ciliary transition zone
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21422230" target="_blank" class="term-link">
+                                        PMID:21422230
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">MKS/MKSR and NPHP proteins localize specifically to the ciliary TZ</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030030" target="_blank" class="term-link">
+                                    GO:0030030
+                                </a>
+                            </span>
+                            <span class="term-label">cell projection organization</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9N423" data-a="GO:0030030" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation based on UniProt keyword mapping. This is a very general term that captures the overall role in organizing ciliary/dendritic structures.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While this is a broad term, it is not incorrect. MKSR-2 functions in organizing the ciliary transition zone and participates in dendritic organization. This can be kept as a general annotation, though more specific terms (cilium assembly, ciliary transition zone) are more informative.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14704431" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:14704431
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A map of the interactome network of the metazoan C. elegans.
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9N423" data-a="GO:0005515" data-r="PMID:14704431" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput Y2H screen showing interaction with MKSR-1 (Q21191). While the interaction is real, the term &#39;protein binding&#39; is uninformative.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The term &#39;protein binding&#39; (GO:0005515) is too generic and uninformative per GO curation guidelines. The interaction with MKSR-1 is biologically relevant (they function together in the MKS complex), but a more specific binding term should be used. The MKS complex annotation captures this functional relationship better.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14704431" target="_blank" class="term-link">
+                                        PMID:14704431
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">more than 4000 interactions were identified from high-throughput, yeast two-hybrid (HT=Y2H) screens</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19123269" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19123269
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Empirically controlled mapping of the Caenorhabditis elegans...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9N423" data-a="GO:0005515" data-r="PMID:19123269" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Another high-throughput Y2H study confirming interaction with MKSR-1 (Q21191).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Same as above - &#39;protein binding&#39; is too generic. The interaction data is valid but better captured by the MKS complex component annotation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19123269" target="_blank" class="term-link">
+                                        PMID:19123269
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We present an expanded Caenorhabditis elegans protein-protein interaction network, or &#34;interactome&#34; map derived from testing a matrix of ~ 10,000 × ~ 10,000 proteins using a highly specific high-throughput yeast two-hybrid system</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0036064" target="_blank" class="term-link">
+                                    GO:0036064
+                                </a>
+                            </span>
+                            <span class="term-label">ciliary basal body</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27623382" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27623382
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A Conserved Role for Girdin in Basal Body Positioning and Ci...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9N423" data-a="GO:0036064" data-r="PMID:27623382" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation showing localization to the ciliary basal body. This study on Girdin showed MKSR-2 localization in this context (PMID:27623382).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Direct localization evidence. MKSR-2 localizes to the proximal region including the basal body. This is consistent with its role at the transition zone which is immediately distal to the basal body. Both basal body and transition zone localizations are valid.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27623382" target="_blank" class="term-link">
+                                        PMID:27623382
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Primary cilia are ubiquitous sensory organelles that mediate diverse signaling pathways. Cilia position on the cell surface is determined by the location of the basal body (BB) that templates the cilium</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1905515" target="_blank" class="term-link">
+                                    GO:1905515
+                                </a>
+                            </span>
+                            <span class="term-label">non-motile cilium assembly</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IGI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18337471" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18337471
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Functional redundancy of the B9 proteins and nephrocystins i...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9N423" data-a="GO:1905515" data-r="PMID:18337471" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IGI evidence with genetic interaction with nph-1 (NPHP1 ortholog). B9 proteins function redundantly with nephrocystins in ciliogenesis (PMID:18337471).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the appropriate specific term for MKSR-2&#39;s role in cilium assembly in C. elegans sensory neurons, which are non-motile cilia. The genetic interaction data supports this function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18337471" target="_blank" class="term-link">
+                                        PMID:18337471
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Mutations in the B9 genes do not overtly affect cilia formation unless they are in combination with a mutation in nph-1 or nph-4</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1904491" target="_blank" class="term-link">
+                                    GO:1904491
+                                </a>
+                            </span>
+                            <span class="term-label">protein localization to ciliary transition zone</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21422230" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21422230
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    MKS and NPHP modules cooperate to establish basal body/trans...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9N423" data-a="GO:1904491" data-r="PMID:21422230" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP evidence showing MKSR-2 is required for proper localization of proteins to the transition zone. The MKS module proteins show co-dependent localization (PMID:21422230).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a core function of MKSR-2 as part of the MKS module. The transition zone proteins have mutually dependent localization and collectively establish the ciliary gate that controls protein access to the cilium.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21422230" target="_blank" class="term-link">
+                                        PMID:21422230
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">These TZ proteins functionally interact as members of two distinct modules, which together contribute to an early ciliogenic event</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19208769" target="_blank" class="term-link">
+                                        PMID:19208769
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Their subcellular localization is largely co-dependent, pointing to a functional relationship between the proteins</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1905515" target="_blank" class="term-link">
+                                    GO:1905515
+                                </a>
+                            </span>
+                            <span class="term-label">non-motile cilium assembly</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IGI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21422230" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21422230
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    MKS and NPHP modules cooperate to establish basal body/trans...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9N423" data-a="GO:1905515" data-r="PMID:21422230" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IGI evidence with genetic interaction with nphp-4 (WB:WBGene00007490). Combined mutations show ciliogenesis defects (PMID:21422230).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Redundant with the other non-motile cilium assembly annotation but from a different genetic interaction. Both are valid and support the functional role of MKSR-2 in ciliogenesis through interaction with the NPHP module.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21422230" target="_blank" class="term-link">
+                                        PMID:21422230
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">MKS/MKSR/NPHP proteins establish basal body/TZ membrane attachments before or coinciding with intraflagellar transport-dependent axoneme extension</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044292" target="_blank" class="term-link">
+                                    GO:0044292
+                                </a>
+                            </span>
+                            <span class="term-label">dendrite terminus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25335890" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25335890
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Ciliopathy proteins establish a bipartite signaling compartm...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9N423" data-a="GO:0044292" data-r="PMID:25335890" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA localization to dendrite terminus in the AFD thermosensory neuron (PMID:25335890). This study showed ciliopathy proteins at the base of cilia in AFD neurons.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Valid localization data. In C. elegans sensory neurons, the cilium extends from the dendrite terminus. MKSR-2 localization to this region is consistent with its role at the transition zone.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25335890" target="_blank" class="term-link">
+                                        PMID:25335890
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">ciliary proteins help establish two contiguous, yet distinct cyclic GMP (cGMP) signaling compartments in Caenorhabditis elegans thermosensory AFD neurons</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035869" target="_blank" class="term-link">
+                                    GO:0035869
+                                </a>
+                            </span>
+                            <span class="term-label">ciliary transition zone</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21422230" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21422230
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    MKS and NPHP modules cooperate to establish basal body/trans...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9N423" data-a="GO:0035869" data-r="PMID:21422230" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA localization to the ciliary transition zone. This is the primary localization site for MKSR-2 (PMID:21422230).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the canonical localization for MKSR-2 and represents its core functional compartment. The transition zone is where the MKS complex establishes the ciliary gate.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21422230" target="_blank" class="term-link">
+                                        PMID:21422230
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">MKS/MKSR and NPHP proteins localize specifically to the ciliary TZ</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19208769" target="_blank" class="term-link">
+                                        PMID:19208769
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">all Caenorhabditis elegans B9-domain-containing proteins, MKS-1 and MKS-1-related proteins 1 and 2 (MKSR-1, MKSR-2), localize to transition zones/basal bodies of sensory cilia</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008340" target="_blank" class="term-link">
+                                    GO:0008340
+                                </a>
+                            </span>
+                            <span class="term-label">determination of adult lifespan</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IGI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19208769" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19208769
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Functional interactions between the ciliopathy-associated Me...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9N423" data-a="GO:0008340" data-r="PMID:19208769" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IGI evidence showing increased lifespan in double/triple mks/mksr mutant combinations due to abnormal insulin-IGF-I signaling (PMID:19208769).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a secondary phenotype arising from ciliary dysfunction rather than a direct core function of MKSR-2. The lifespan extension in mutants results from abnormal insulin-IGF signaling, which is an indirect consequence of sensory cilium defects affecting DAF-2/ insulin signaling. This is biologically valid but represents a downstream consequence rather than a direct molecular function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19208769" target="_blank" class="term-link">
+                                        PMID:19208769
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">we find genetic interactions between all double mks/mksr mutant combinations, manifesting as an increased lifespan phenotype, which is due to abnormal insulin-IGF-I signaling</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18337471" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18337471
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Functional redundancy of the B9 proteins and nephrocystins i...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9N423" data-a="GO:0005515" data-r="PMID:18337471" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI evidence for interaction with MKS-1 (WB:WBGene00019364). The B9 proteins form a complex (PMID:18337471).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Same issue as other protein binding annotations - the term is too generic. The interaction with MKS-1 is biologically meaningful (they form the B9/MKS complex together) but better captured by the MKS complex annotation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18337471" target="_blank" class="term-link">
+                                        PMID:18337471
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">we report that the C. elegans B9 proteins form a complex that localizes to the base of cilia</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008104" target="_blank" class="term-link">
+                                    GO:0008104
+                                </a>
+                            </span>
+                            <span class="term-label">intracellular protein localization</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18337471" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18337471
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Functional redundancy of the B9 proteins and nephrocystins i...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q9N423" data-a="GO:0008104" data-r="PMID:18337471" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP evidence for role in protein localization based on mutant phenotype.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This term is too generic. MKSR-2 specifically functions in localizing proteins to the ciliary transition zone. The more specific term GO:1904491 (protein localization to ciliary transition zone) is already annotated and is more appropriate.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1904491" target="_blank" class="term-link">
+                                    protein localization to ciliary transition zone
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18337471" target="_blank" class="term-link">
+                                        PMID:18337471
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">the B9 proteins function redundantly with the nephrocystins to regulate the formation and/or maintenance of cilia and dendrites in the amphid and phasmid ciliated sensory neurons</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030425" target="_blank" class="term-link">
+                                    GO:0030425
+                                </a>
+                            </span>
+                            <span class="term-label">dendrite</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18337471" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18337471
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Functional redundancy of the B9 proteins and nephrocystins i...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9N423" data-a="GO:0030425" data-r="PMID:18337471" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA localization to dendrites of ciliated sensory neurons (PMID:18337471).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Valid localization data. MKSR-2 is expressed in ciliated sensory neurons and localizes to the distal dendrite region where the ciliary base is located.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18337471" target="_blank" class="term-link">
+                                        PMID:18337471
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">the B9 proteins function redundantly with the nephrocystins to regulate the formation and/or maintenance of cilia and dendrites in the amphid and phasmid ciliated sensory neurons</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035177" target="_blank" class="term-link">
+                                    GO:0035177
+                                </a>
+                            </span>
+                            <span class="term-label">larval foraging behavior</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IGI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18337471" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18337471
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Functional redundancy of the B9 proteins and nephrocystins i...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9N423" data-a="GO:0035177" data-r="PMID:18337471" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IGI evidence showing defects in larval foraging behavior in genetic interaction with nph-1.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Foraging behavior defects are a downstream consequence of sensory cilium dysfunction. C. elegans uses ciliated sensory neurons for chemosensation, which is required for proper foraging. This is not a direct molecular function but rather a phenotypic consequence of loss of ciliary function in the sensory neurons.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18337471" target="_blank" class="term-link">
+                                        PMID:18337471
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Our data indicate that the B9 proteins function redundantly with the nephrocystins to regulate the formation and/or maintenance of cilia and dendrites in the amphid and phasmid ciliated sensory neurons</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>MKSR-2 is a core structural component of the MKS (Meckel syndrome) complex, forming a trimeric complex with MKS-1 and MKSR-1 (the three B9 domain proteins). This complex localizes to the ciliary transition zone where it functions as part of the ciliary gate machinery.</h3>
+                <span class="vote-buttons" data-g="Q9N423" data-a="FUNCTION: MKSR-2 is a core structural component of the MKS (..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005198" target="_blank" class="term-link">
+                            structural molecule activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1904491" target="_blank" class="term-link">
+                                protein localization to ciliary transition zone
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1905515" target="_blank" class="term-link">
+                                non-motile cilium assembly
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035869" target="_blank" class="term-link">
+                                ciliary transition zone
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0036038" target="_blank" class="term-link">
+                            MKS complex
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18337471" target="_blank" class="term-link">
+                                PMID:18337471
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">we report that the C. elegans B9 proteins form a complex that localizes to the base of cilia</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21422230" target="_blank" class="term-link">
+                                PMID:21422230
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">the conserved C. elegans B9 domain (MKS-1, MKSR-1, and MKSR-2), MKS-3/TMEM67, MKS-5/RPGRIP1L, MKS-6/CC2D2A, NPHP-1, and NPHP-4 proteins exhibit essential, collective functions at the transition zone</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">IBA annotations for MKS complex and cilium assembly based on phylogenetic analysis</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">General cell projection organization annotation from keyword</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Cilium localization predicted by ARBA</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/14704431" target="_blank" class="term-link">
+                            PMID:14704431
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A map of the interactome network of the metazoan C. elegans.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">High-throughput Y2H identification of MKSR-2 interaction with MKSR-1</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18337471" target="_blank" class="term-link">
+                            PMID:18337471
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Functional redundancy of the B9 proteins and nephrocystins in Caenorhabditis elegans ciliogenesis.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">B9 proteins (MKS-1, MKSR-1, MKSR-2) form a complex at the base of cilia</div>
+                        
+                        <div class="finding-text">"we report that the C. elegans B9 proteins form a complex that localizes to the base of cilia"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">B9 proteins function redundantly with nephrocystins in ciliogenesis</div>
+                        
+                        <div class="finding-text">"Mutations in the B9 genes do not overtly affect cilia formation unless they are in combination with a mutation in nph-1 or nph-4"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Required for cilia and dendrite formation in amphid/phasmid sensory neurons</div>
+                        
+                        <div class="finding-text">"the B9 proteins function redundantly with the nephrocystins to regulate the formation and/or maintenance of cilia and dendrites in the amphid and phasmid ciliated sensory neurons"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19123269" target="_blank" class="term-link">
+                            PMID:19123269
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Empirically controlled mapping of the Caenorhabditis elegans protein-protein interactome network.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Confirmed interaction between MKSR-2 and MKSR-1 by Y2H</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19208769" target="_blank" class="term-link">
+                            PMID:19208769
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Functional interactions between the ciliopathy-associated Meckel syndrome 1 (MKS1) protein and two novel MKS1-related (MKSR) proteins.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">All C. elegans B9 proteins localize to transition zones/basal bodies</div>
+                        
+                        <div class="finding-text">"all Caenorhabditis elegans B9-domain-containing proteins, MKS-1 and MKS-1-related proteins 1 and 2 (MKSR-1, MKSR-2), localize to transition zones/basal bodies of sensory cilia"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Subcellular localization is co-dependent between B9 proteins</div>
+                        
+                        <div class="finding-text">"Their subcellular localization is largely co-dependent, pointing to a functional relationship between the proteins"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Double/triple mks/mksr mutants show extended lifespan via abnormal insulin-IGF-I signaling</div>
+                        
+                        <div class="finding-text">"we find genetic interactions between all double mks/mksr mutant combinations, manifesting as an increased lifespan phenotype, which is due to abnormal insulin-IGF-I signaling"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">No overt ciliary structure defects in single mutants</div>
+                        
+                        <div class="finding-text">"single, double and triple C. elegans mks/mksr mutants do not display overt defects in ciliary structure, intraflagellar transport or chemosensation"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21422230" target="_blank" class="term-link">
+                            PMID:21422230
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">MKS and NPHP modules cooperate to establish basal body/transition zone membrane associations and ciliary gate function during ciliogenesis.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">MKS/MKSR/NPHP proteins localize specifically to the ciliary transition zone</div>
+                        
+                        <div class="finding-text">"MKS/MKSR and NPHP proteins localize specifically to the ciliary TZ"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Two functional modules (MKS and NPHP) cooperate in TZ function</div>
+                        
+                        <div class="finding-text">"These TZ proteins functionally interact as members of two distinct modules, which together contribute to an early ciliogenic event"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">TZ proteins establish basal body membrane attachments and ciliary gate</div>
+                        
+                        <div class="finding-text">"MKS/MKSR/NPHP proteins establish basal body/TZ membrane attachments before or coinciding with intraflagellar transport-dependent axoneme extension and subsequently restrict accumulation of nonciliary components within the ciliary compartment"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Gate restricts accumulation of non-ciliary components</div>
+                        
+                        <div class="finding-text">"subsequently restrict accumulation of nonciliary components within the ciliary compartment"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25335890" target="_blank" class="term-link">
+                            PMID:25335890
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Ciliopathy proteins establish a bipartite signaling compartment in a C. elegans thermosensory neuron.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">MKSR-2 localizes to dendrite terminus in AFD thermosensory neurons</div>
+                        
+                        <div class="finding-text">"ciliary proteins help establish two contiguous, yet distinct cyclic GMP (cGMP) signaling compartments in Caenorhabditis elegans thermosensory AFD neurons"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/27623382" target="_blank" class="term-link">
+                            PMID:27623382
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A Conserved Role for Girdin in Basal Body Positioning and Ciliogenesis.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">MKSR-2 localization to ciliary basal body region</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the precise molecular mechanism by which MKSR-2 contributes to ciliary gate function?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9N423" data-a="Q: What is the precise molecular mechanism by which M..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does MKSR-2 directly interact with membrane components at the transition zone or function through other adaptor proteins?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9N423" data-a="Q: Does MKSR-2 directly interact with membrane compon..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What are the specific cargo proteins whose localization is regulated by MKSR-2?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9N423" data-a="Q: What are the specific cargo proteins whose localiz..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Proximity labeling (BioID/TurboID) to identify direct interaction partners of MKSR-2 at the transition zone</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: MKSR-2 interacts with specific membrane and cytoskeletal proteins to anchor the MKS complex at the transition zone</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9N423" data-a="EXPERIMENT: Proximity labeling (BioID/TurboID) to identify dir..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Structure-function analysis to determine which domains are required for localization vs complex formation vs gate function</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: The B9 domain mediates complex formation while other regions control membrane association</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9N423" data-a="EXPERIMENT: Structure-function analysis to determine which dom..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Systematic analysis of ciliary protein localization in mksr-2 mutants to identify cargo affected by loss of gate function</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Loss of MKSR-2 results in abnormal accumulation or exclusion of specific ciliary membrane proteins</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9N423" data-a="EXPERIMENT: Systematic analysis of ciliary protein localizatio..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Tags</h2>
+        <div class="aliases">
+            
+            <span class="badge">caeel-ciliopathy</span>
+            
+        </div>
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(mksr-2-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9N423" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2025-12-29T16:03:03.288972'<br />
+end_time: '2025-12-29T16:09:22.789749'<br />
+duration_seconds: 379.5<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: worm<br />
+  gene_id: mksr-2<br />
+  gene_symbol: mksr-2<br />
+  uniprot_accession: Q9N423<br />
+  protein_description: 'RecName: Full=B9 domain-containing protein 2 {ECO:0000256|ARBA:ARBA00039272};'<br />
+  gene_info: Name=mksr-2 {ECO:0000313|EMBL:CCD66966.1, ECO:0000313|WormBase:Y38F2AL.2};<br />
+    ORFNames=CELE_Y38F2AL.2 {ECO:0000313|EMBL:CCD66966.1}, Y38F2AL.2 {ECO:0000313|WormBase:Y38F2AL.2};<br />
+  organism_full: Caenorhabditis elegans.<br />
+  protein_family: Belongs to the B9D family. .<br />
+  protein_domains: C2_B9-type_dom. (IPR010796); B9-C2 (PF07162)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 21</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q9N423</li>
+<li><strong>Protein Description:</strong> RecName: Full=B9 domain-containing protein 2 {ECO:0000256|ARBA:ARBA00039272};</li>
+<li><strong>Gene Information:</strong> Name=mksr-2 {ECO:0000313|EMBL:CCD66966.1, ECO:0000313|WormBase:Y38F2AL.2}; ORFNames=CELE_Y38F2AL.2 {ECO:0000313|EMBL:CCD66966.1}, Y38F2AL.2 {ECO:0000313|WormBase:Y38F2AL.2};</li>
+<li><strong>Organism (full):</strong> Caenorhabditis elegans.</li>
+<li><strong>Protein Family:</strong> Belongs to the B9D family. .</li>
+<li><strong>Key Domains:</strong> C2_B9-type_dom. (IPR010796); B9-C2 (PF07162)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "mksr-2" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Caenorhabditis elegans.</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'mksr-2' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>mksr-2</strong> (gene ID: mksr-2, UniProt: Q9N423) in worm.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q9N423</li>
+<li><strong>Protein Description:</strong> RecName: Full=B9 domain-containing protein 2 {ECO:0000256|ARBA:ARBA00039272};</li>
+<li><strong>Gene Information:</strong> Name=mksr-2 {ECO:0000313|EMBL:CCD66966.1, ECO:0000313|WormBase:Y38F2AL.2}; ORFNames=CELE_Y38F2AL.2 {ECO:0000313|EMBL:CCD66966.1}, Y38F2AL.2 {ECO:0000313|WormBase:Y38F2AL.2};</li>
+<li><strong>Organism (full):</strong> Caenorhabditis elegans.</li>
+<li><strong>Protein Family:</strong> Belongs to the B9D family. .</li>
+<li><strong>Key Domains:</strong> C2_B9-type_dom. (IPR010796); B9-C2 (PF07162)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "mksr-2" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Caenorhabditis elegans.</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'mksr-2' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>mksr-2</strong> (gene ID: mksr-2, UniProt: Q9N423) in worm.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<p>Plan and verification<br />
+Objective 1 (identity verification). The target is C. elegans mksr-2 (locus Y38F2AL.2), encoding a B9-domain protein (B9D2) that localizes to the ciliary base/transition zone. This aligns with UniProt Q9N423 and the B9/C2_B9 domain annotation. Foundational work explicitly names C. elegans mksr-2 as Y38F2AL.2 and places MKSR-2 in the B9 protein family with MKS-1 and MKSR-1 (B9D1) (bialas2009functionalinteractionsbetween pages 5-6, bialas2009functionalinteractionsbetween pages 1-2).</p>
+<p>Key concepts and definitions (current understanding)<br />
+• MKSR-2/B9D2: a B9 domain-containing component of the MKS module at the ciliary transition zone (TZ), acting with MKS-1 and MKSR-1/B9D1 as a conserved B9 subcomplex. In C. elegans, these proteins localize to the TZ/basal body compartment of sensory cilia; orthologs in mammalian cells localize to basal bodies/centrosomes, supporting conserved function (Bialas et al., 2009; Journal of Cell Science, Mar 2009; https://doi.org/10.1242/jcs.028621) (bialas2009functionalinteractionsbetween pages 5-6, bialas2009functionalinteractionsbetween pages 1-2).<br />
+• Transition zone (TZ): a proximal ciliary domain forming a diffusion “gate/ciliary zone of exclusion” that controls entry and retention of membrane and axonemal proteins, thereby establishing ciliary composition and signaling. In C. elegans, MKS-5/RPGRIP1L and CEP-290 act as hierarchical assembly factors for MKS-module components; disruption causes mislocalization of membrane proteins (e.g., ARL-13) and altered phosphoinositide composition (Li et al., 2016; PLoS Biol, Mar 2016; https://doi.org/10.1371/journal.pbio.1002416; Jensen et al., 2015; EMBO J, Oct 2015; https://doi.org/10.15252/embj.201488044) (bialas2009functionalinteractionsbetween pages 1-2, lange2021interpretingthepathogenicity pages 17-20).<br />
+• MKS and NPHP modules: partially redundant TZ protein networks. Genetic analyses in C. elegans and mouse show these complexes act in parallel to support ciliogenesis and ciliary signaling; combined perturbations often yield synthetic defects (Yee et al., 2015; PLoS Genet, Nov 2015; https://doi.org/10.1371/journal.pgen.1005627) (bialas2009functionalinteractionsbetween pages 1-2).</p>
+<p>Primary function and molecular role of MKSR-2<br />
+• Structural/organizational role at the TZ: MKSR-2 is a core MKS-module protein that is necessary for recruitment/stability of other MKS-module components at the TZ, notably MKS-2/TMEM216 and peripheral proteins such as JBTS-14/TMEM237 and MKS-6/CC2D2A. Conversely, MKSR-2 is not required for TZ localization of the master scaffold MKS-5 (RPGRIP1L), CEP-290, or NPHP-module proteins, placing MKSR-2 within the B9/MKS core downstream of assembly factors (Lange et al., 2021; Dis Model Mech, May 2021; https://doi.org/10.1101/2020.05.22.110668) (lange2021interpretingthepathogenicity pages 17-20, lange2021interpretingthepathogenicity pages 14-17).<br />
+• Gate function: Loss or pathogenic missense mutation of mksr-2 disrupts TZ gate properties, enabling inappropriate entry of periciliary/cell membrane proteins into cilia (e.g., RPI-2/RP2 reporter), indicating a compromised diffusion barrier when MKSR-2 function is strongly perturbed (Lange et al., 2021; Dis Model Mech, May 2021; https://doi.org/10.1101/2020.05.22.110668) (lange2021interpretingthepathogenicity pages 14-17). More generally, TZ assembly factors (MKS-5, CEP-290) establish a ciliary zone of exclusion where B9 components (including MKSR-2) reside (Jensen et al., 2015; EMBO J, Oct 2015; https://doi.org/10.15252/embj.201488044; Li et al., 2016; PLoS Biol, Mar 2016; https://doi.org/10.1371/journal.pbio.1002416) (lange2021interpretingthepathogenicity pages 17-20).</p>
+<p>Localization and complex membership<br />
+• Localization: Endogenous and transgenic reporters localize MKSR-2 to the TZ/basal body of ciliated sensory neurons. Mammalian B9D2 localizes to basal bodies/centrosomes in IMCD3 cells. Localization of B9 proteins is interdependent across the B9 complex (MKS-1, MKSR-1/B9D1, MKSR-2) (Bialas et al., 2009; J Cell Sci; https://doi.org/10.1242/jcs.028621) (bialas2009functionalinteractionsbetween pages 5-6, bialas2009functionalinteractionsbetween pages 1-2).<br />
+• Complex membership and hierarchy: MKSR-2 is a core MKS-module component within the B9 subcomplex; TZ localization of many MKS proteins depends on MKS-5 and CEP-290. MKSR-2 is required for proper TZ levels/organization of MKS‑2/TMEM216 and select peripheral MKS proteins but not for CEP‑290/MKS‑5 placement, supporting a hierarchical model (Lange et al., 2021; Dis Model Mech; https://doi.org/10.1101/2020.05.22.110668; Li et al., 2016; PLoS Biol; https://doi.org/10.1371/journal.pbio.1002416) (lange2021interpretingthepathogenicity pages 17-20, lange2021interpretingthepathogenicity pages 14-17).</p>
+<p>Interaction partners and genetic interactions<br />
+• Interactions within MKS module: Genetic and localization dependencies demonstrate functional linkage between MKSR-2 and MKS-1, MKSR-1/B9D1, MKS-2/TMEM216, MKS-6/CC2D2A, and TMEM proteins (e.g., TMEM237/JBTS-14) at the TZ (Bialas et al., 2009; J Cell Sci; https://doi.org/10.1242/jcs.028621; Huang et al., 2011; AJHG, Dec 2011; https://doi.org/10.1016/j.ajhg.2011.11.005; Lange et al., 2021; DMM; https://doi.org/10.1101/2020.05.22.110668) (bialas2009functionalinteractionsbetween pages 5-6, lange2021interpretingthepathogenicity pages 14-17).<br />
+• Assembly factors: MKS-5/RPGRIP1L and CEP-290 are master assembly factors required for correct TZ architecture and for placing multiple MKS-module components; MKSR-2 dependence is downstream of these factors for its role in stabilizing/permitting other MKS components at the TZ (Li et al., 2016; PLoS Biol; https://doi.org/10.1371/journal.pbio.1002416) (bialas2009functionalinteractionsbetween pages 1-2).<br />
+• MKS–NPHP cooperation: Genetic analyses show the MKS and NPHP modules act in parallel. Combined loss of an MKS component with NPHP genes (nphp‑1 or nphp‑4) causes strong ciliogenesis and structural defects not evident in single mutants, placing MKSR-2 in a network that cooperates with NPHP factors (Yee et al., 2015; PLoS Genet; https://doi.org/10.1371/journal.pgen.1005627; Bialas et al., 2009; J Cell Sci; https://doi.org/10.1242/jcs.028621) (bialas2009functionalinteractionsbetween pages 1-2, bialas2009functionalinteractionsbetween pages 9-10).</p>
+<p>Phenotypes upon mutation (C. elegans)<br />
+• Single mutants: Early studies reported that single mksr-2 mutants show subtle or no gross ciliogenesis defects in standard behavioral assays, suggesting roles in ciliary signaling/composition rather than axoneme assembly; however, they can modify lifespan and insulin–IGF signaling readouts (DAF-16 nuclear localization) in combination genotypes (Bialas et al., 2009; J Cell Sci; https://doi.org/10.1242/jcs.028621) (bialas2009functionalinteractionsbetween pages 9-10).<br />
+• Combined MKS–NPHP disruption: Synergistic TZ ultrastructure defects (e.g., loss of Y-links, mispositioned/docked TZs, truncated cilia) are observed when MKSR‑2 patient alleles are combined with nphp‑4 null, paralleling synthetic defects seen broadly for MKS and NPHP module combinations (Lange et al., 2021; DMM; https://doi.org/10.1101/2020.05.22.110668; Yee et al., 2015; PLoS Genet; https://doi.org/10.1371/journal.pgen.1005627) (lange2021interpretingthepathogenicity pages 14-17, bialas2009functionalinteractionsbetween pages 1-2).<br />
+• TZ gate malfunction: In mksr‑2 nulls and in the strong JBTS missense allele G155S, a periciliary membrane reporter (RPI‑2/RP2) aberrantly enters cilia, indicating compromised TZ diffusion barrier; P74S shows milder effects (Lange et al., 2021; DMM; https://doi.org/10.1101/2020.05.22.110668) (lange2021interpretingthepathogenicity pages 14-17).<br />
+• Sensory/behavioral consequences: Patient-mimicking alleles cause defects in foraging/roaming and osmotic avoidance, especially in an nphp‑4(−) background, consistent with altered ciliary signaling (Lange et al., 2021; DMM; https://doi.org/10.1101/2020.05.22.110668) (lange2021interpretingthepathogenicity pages 14-17).<br />
+• Ciliogenesis versus adhesion: TZ integrity contributes to neuron–matrix adhesion and cilium positioning; triple perturbations of TZ components, including mksr‑2, highlight roles in cell adhesion even when many cilia remain, indicating that aspects of axoneme assembly can persist without intact TZ ultrastructure (Schouteden et al., 2015; J Cell Biol, Jul 2015; https://doi.org/10.1083/jcb.201501013) (bialas2009functionalinteractionsbetween pages 1-2).</p>
+<p>Quantitative and structural data<br />
+• Variant severity and TZ composition: Relative to wild type, the strong G155S patient allele reduces MKS‑2/TMEM216 at the TZ by roughly 50–75% and causes moderate (~20%) reductions of JBTS‑14/TMEM237 and MKS‑6/CC2D2A; P74S exhibits milder reductions and does not cause RPI‑2 gating defects (Lange et al., 2021; DMM; https://doi.org/10.1101/2020.05.22.110668) (lange2021interpretingthepathogenicity pages 17-20, lange2021interpretingthepathogenicity pages 14-17).<br />
+• Ultrastructure: Transmission EM of compound mutants (mksr‑2 patient alleles with nphp‑4Δ) shows defective or absent Y-links, missing microtubule doublets, truncated and mispositioned cilia, and undocked TZs with vesicle accumulations, paralleling nulls of core MKS genes (Lange et al., 2021; DMM; https://doi.org/10.1101/2020.05.22.110668) (lange2021interpretingthepathogenicity pages 14-17).</p>
+<p>Recent developments and latest research (priority to 2023–2024)<br />
+• 2023–2024 targeted updates: This scan found limited MKSR‑2–specific primary research in 2023–2024. However, contemporary works continue to refine TZ assembly and gate concepts with MKS‑5 and CEP‑290 as key scaffolds that position MKS/B9 module proteins, with implications for diffusion-barrier control of membrane proteins and lipids in C. elegans cilia (Li et al., 2016; Jensen et al., 2015; URLs above) (bialas2009functionalinteractionsbetween pages 1-2, lange2021interpretingthepathogenicity pages 17-20). These updates contextualize MKSR‑2’s role within an established assembly hierarchy and barrier framework.</p>
+<p>Current applications and implementations<br />
+• Disease variant interpretation: C. elegans mksr‑2 CRISPR knock-in alleles mimicking human JBTS variants provide an in vivo platform to assess pathogenicity, quantify TZ composition changes, and measure gate function, supporting functional interpretation of patient variants (Lange et al., 2021; DMM; https://doi.org/10.1101/2020.05.22.110668) (lange2021interpretingthepathogenicity pages 14-17).<br />
+• Modeling ciliopathy mechanisms: Genetic interaction paradigms (MKS × NPHP) in C. elegans and mouse define modifier effects and parallel pathway cooperation that likely contribute to human phenotypic variability, informing multi-gene risk assessment (Yee et al., 2015; PLoS Genet; https://doi.org/10.1371/journal.pgen.1005627) (bialas2009functionalinteractionsbetween pages 1-2).<br />
+• Cross-species conservation: Localization and functional conservation of B9D2/MKSR-2 at centrosomes/basal bodies in mammalian cells enable comparative cell biological studies and targeted assays for TZ assembly and ciliogenesis (Bialas et al., 2009; J Cell Sci; https://doi.org/10.1242/jcs.028621) (bialas2009functionalinteractionsbetween pages 5-6).</p>
+<p>Expert opinions and authoritative analyses<br />
+• Foundational and integrative studies from leading groups (Blacque, Leroux, Reiter, Barr) define the TZ as a modular gate with MKS and NPHP modules, where B9 proteins (including MKSR‑2) form a core unit that stabilizes other MKS components and supports barrier function. The cooperative, parallel action of these modules is supported by conserved genetic interactions and localization hierarchies (Bialas et al., 2009; Jensen et al., 2015; Li et al., 2016; Yee et al., 2015; URLs above) (bialas2009functionalinteractionsbetween pages 5-6, lange2021interpretingthepathogenicity pages 17-20, bialas2009functionalinteractionsbetween pages 1-2).</p>
+<p>Human disease links (Joubert syndrome and related ciliopathies)<br />
+• Genetic association: Human B9D2/MKSR2 is implicated in JBTS. C. elegans modeling of patient missense variants (P74S, G155S) demonstrates pathogenicity with perturbed TZ organization, altered recruitment of MKS‑2/TMEM216, and barrier defects (Lange et al., 2021; DMM; https://doi.org/10.1101/2020.05.22.110668) (lange2021interpretingthepathogenicity pages 14-17).<br />
+• Broader MKS-module context: Multiple TMEM proteins at the TZ (including TMEM237/JBTS‑14) are linked to JBTS and require B9/MKS factors for proper function; B9D1/B9D2 requirements are documented in C. elegans models and human genetics (Huang et al., 2011; AJHG; https://doi.org/10.1016/j.ajhg.2011.11.005) (bialas2009functionalinteractionsbetween pages 1-2).</p>
+<p>Limitations and open questions<br />
+• Biochemical mechanisms by which the B9 domain of MKSR-2 contributes to membrane association or scaffolding at the TZ remain incompletely understood. Quantitative stoichiometry and direct physical interaction maps with MKS‑2/TMEM216 and other TMEMs are active areas for refinement. Nevertheless, hierarchical genetic and localization data firmly position MKSR‑2 as a core structural organizer within the MKS module (Lange et al., 2021; Li et al., 2016) (lange2021interpretingthepathogenicity pages 14-17, bialas2009functionalinteractionsbetween pages 1-2).</p>
+<p>Relevant statistics and data points<br />
+• TZ composition changes in patient alleles: G155S reduces MKS‑2/TMEM216 at the TZ by ~50–75% and decreases JBTS‑14/TMEM237 and MKS‑6/CC2D2A by ~20% relative to wild type; P74S exhibits milder reductions (Lange et al., 2021; DMM; https://doi.org/10.1101/2020.05.22.110668) (lange2021interpretingthepathogenicity pages 17-20, lange2021interpretingthepathogenicity pages 14-17).<br />
+• Barrier defects: RPI‑2 (periciliary RP2 homologue) mislocalizes into cilia in mksr‑2 null and G155S, indicating TZ gate disruption; P74S does not cause RPI‑2 leakage (Lange et al., 2021; DMM; https://doi.org/10.1101/2020.05.22.110668) (lange2021interpretingthepathogenicity pages 14-17).<br />
+• Single vs. combined mutants: Single mksr‑2 mutants show modest phenotypic effects in standard assays; combinations with nphp‑1/nphp‑4 or other MKS genes produce strong ciliogenesis and structural phenotypes, reflecting module redundancy and parallelism (Bialas et al., 2009; J Cell Sci; https://doi.org/10.1242/jcs.028621; Yee et al., 2015; PLoS Genet; https://doi.org/10.1371/journal.pgen.1005627) (bialas2009functionalinteractionsbetween pages 9-10, bialas2009functionalinteractionsbetween pages 1-2).</p>
+<p>Embedded summary table<br />
+| Aspect | Key finding (1–2 sentences) | Principal source(s) with year | URL(s) |<br />
+|---|---|---:|---|<br />
+| Verification | mksr-2 (C. elegans gene Y38F2AL.2) encodes a B9 domain–containing protein (B9D2) consistent with UniProt Q9N423 and the B9/C2_B9 domain signature. | Bialas et al., 2009 (J Cell Sci) (bialas2009functionalinteractionsbetween pages 5-6) | https://doi.org/10.1242/jcs.028621 |<br />
+| Localization | MKSR‑2 localizes to ciliary transition zones / basal bodies in C. elegans sensory neurons, with conserved basal-body/centrosome localization observed in mammalian cells. | Bialas et al., 2009 (bialas2009functionalinteractionsbetween pages 5-6, bialas2009functionalinteractionsbetween pages 1-2) | https://doi.org/10.1242/jcs.028621 |<br />
+| Complex membership | MKSR‑2 is a core member of the B9/MKS module, forming a three‑member B9 complex with MKS‑1 and MKSR‑1 (B9D1) required for proper TZ localization. | Bialas et al., 2009; related summaries (bialas2009functionalinteractionsbetween pages 9-10, bialas2009functionalinteractionsbetween pages 1-2) | https://doi.org/10.1242/jcs.028621 |<br />
+| Key interactions | MKSR‑2 is necessary for TZ recruitment/stability of MKS‑2/TMEM216 and peripheral MKS proteins (e.g., JBTS‑14/TMEM237, MKS‑6/CC2D2A) but is not required for CEP‑290 or MKS‑5 (RPGRIP1L) TZ localization. | Lange et al., 2021 (lange2021interpretingthepathogenicity pages 17-20, lange2021interpretingthepathogenicity pages 14-17) | https://doi.org/10.1101/2020.05.22.110668; https://doi.org/10.1371/journal.pbio.1002416 |<br />
+| Genetic interactions | MKSR‑2 genetically interacts with NPHP‑module genes (e.g., nphp‑4); combined loss (MKS + NPHP) produces severe TZ ultrastructure and ciliogenesis defects, revealing module redundancy. | Bialas 2009; Lange 2021; Yee 2015 (bialas2009functionalinteractionsbetween pages 9-10, lange2021interpretingthepathogenicity pages 14-17) | https://doi.org/10.1242/jcs.028621; https://doi.org/10.1101/2020.05.22.110668; https://doi.org/10.1371/journal.pgen.1005627 |<br />
+| Phenotypes | mksr‑2 null and patient‑derived missense alleles (P74S, G155S) cause shortened/mispositioned cilia, loss of TZ Y‑links, TZ gating defects (e.g., RPI‑2 leakage), and sensory/behavioral deficits; G155S shows stronger effects. | Lange et al., 2021 (lange2021interpretingthepathogenicity pages 14-17) | https://doi.org/10.1101/2020.05.22.110668 |<br />
+| Human disease links | Human B9D2/MKSR2 is linked to Joubert syndrome; patient missense variants modeled in C. elegans are pathogenic and recapitulate TZ and ciliary defects. | Lange 2021; Huang et al., 2011 (lange2021interpretingthepathogenicity pages 14-17) | https://doi.org/10.1101/2020.05.22.110668; https://doi.org/10.1016/j.ajhg.2011.11.005 |<br />
+| 2023–2024 updates (scan) | This literature scan found limited MKSR‑2–specific primary papers in 2023–2024; recent 2023–24 reviews/studies discuss TZ assembly and ciliary machinery broadly but few new MKSR‑2–specific functional studies were identified. | Recent scan / reviews (no major MKSR‑2 primary papers 2023–24 found in this search) (park2019ciliumlengthregulation pages 21-24) | Representative resources: Li et al., 2016 (assembly) https://doi.org/10.1371/journal.pbio.1002416; Rodrigues 2024 (dynein‑2 review) |</p>
+<p><em>Table: Concise, cited summary of MKSR‑2 (B9D2) in C. elegans covering identity, localization, module membership, interactions, genetic/phenotypic evidence, and limited 2023–24 updates; useful as a quick reference of principal findings and sources.</em></p>
+<p>Conclusion<br />
+Collectively, C. elegans mksr‑2 encodes a TZ-localized B9D2 protein that operates as a core organizer within the MKS module to establish and maintain the ciliary diffusion barrier and to scaffold recruitment of other MKS/TMEM factors. Its function is downstream of master TZ scaffolds (MKS‑5/RPGRIP1L, CEP‑290) and cooperates in parallel with NPHP-module proteins to support ciliogenesis and ciliary signaling. Patient-mimicking missense alleles in worms corroborate B9D2’s role in JBTS pathogenesis by quantifiably altering TZ composition and gate function (Bialas 2009; Jensen 2015; Li 2016; Yee 2015; Lange 2021; URLs and dates above) (bialas2009functionalinteractionsbetween pages 5-6, lange2021interpretingthepathogenicity pages 17-20, bialas2009functionalinteractionsbetween pages 1-2, lange2021interpretingthepathogenicity pages 14-17).</p>
+<p>References</p>
+<ol>
+<li>
+<p>(bialas2009functionalinteractionsbetween pages 5-6): Nathan J. Bialas, Peter N. Inglis, Chunmei Li, Jon F. Robinson, Jeremy D. K. Parker, Michael P. Healey, Erica E. Davis, Chrystal D. Inglis, Tiina Toivonen, David C. Cottell, Oliver E. Blacque, Lynne M. Quarmby, Nicholas Katsanis, and Michel R. Leroux. Functional interactions between the ciliopathy-associated meckel syndrome 1 (mks1) protein and two novel mks1-related (mksr) proteins. Journal of Cell Science, 122:611-624, Mar 2009. URL: https://doi.org/10.1242/jcs.028621, doi:10.1242/jcs.028621. This article has 96 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(bialas2009functionalinteractionsbetween pages 1-2): Nathan J. Bialas, Peter N. Inglis, Chunmei Li, Jon F. Robinson, Jeremy D. K. Parker, Michael P. Healey, Erica E. Davis, Chrystal D. Inglis, Tiina Toivonen, David C. Cottell, Oliver E. Blacque, Lynne M. Quarmby, Nicholas Katsanis, and Michel R. Leroux. Functional interactions between the ciliopathy-associated meckel syndrome 1 (mks1) protein and two novel mks1-related (mksr) proteins. Journal of Cell Science, 122:611-624, Mar 2009. URL: https://doi.org/10.1242/jcs.028621, doi:10.1242/jcs.028621. This article has 96 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lange2021interpretingthepathogenicity pages 17-20): Karen I. Lange, Sofia Tsiropoulou, Katarzyna Kucharska, and Oliver E. Blacque. Interpreting the pathogenicity of joubert syndrome missense variants in caenorhabditis elegans. Disease Models &amp; Mechanisms, May 2021. URL: https://doi.org/10.1101/2020.05.22.110668, doi:10.1101/2020.05.22.110668. This article has 26 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lange2021interpretingthepathogenicity pages 14-17): Karen I. Lange, Sofia Tsiropoulou, Katarzyna Kucharska, and Oliver E. Blacque. Interpreting the pathogenicity of joubert syndrome missense variants in caenorhabditis elegans. Disease Models &amp; Mechanisms, May 2021. URL: https://doi.org/10.1101/2020.05.22.110668, doi:10.1101/2020.05.22.110668. This article has 26 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(bialas2009functionalinteractionsbetween pages 9-10): Nathan J. Bialas, Peter N. Inglis, Chunmei Li, Jon F. Robinson, Jeremy D. K. Parker, Michael P. Healey, Erica E. Davis, Chrystal D. Inglis, Tiina Toivonen, David C. Cottell, Oliver E. Blacque, Lynne M. Quarmby, Nicholas Katsanis, and Michel R. Leroux. Functional interactions between the ciliopathy-associated meckel syndrome 1 (mks1) protein and two novel mks1-related (mksr) proteins. Journal of Cell Science, 122:611-624, Mar 2009. URL: https://doi.org/10.1242/jcs.028621, doi:10.1242/jcs.028621. This article has 96 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(park2019ciliumlengthregulation pages 21-24): K Park. Cilium length regulation in caenorhabditis elegans. Unknown journal, 2019.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>bialas2009functionalinteractionsbetween pages 1-2</li>
+<li>lange2021interpretingthepathogenicity pages 14-17</li>
+<li>lange2021interpretingthepathogenicity pages 17-20</li>
+<li>bialas2009functionalinteractionsbetween pages 9-10</li>
+<li>bialas2009functionalinteractionsbetween pages 5-6</li>
+<li>park2019ciliumlengthregulation pages 21-24</li>
+<li>https://doi.org/10.1242/jcs.028621</li>
+<li>https://doi.org/10.1371/journal.pbio.1002416;</li>
+<li>https://doi.org/10.15252/embj.201488044</li>
+<li>https://doi.org/10.1371/journal.pgen.1005627</li>
+<li>https://doi.org/10.1101/2020.05.22.110668</li>
+<li>https://doi.org/10.15252/embj.201488044;</li>
+<li>https://doi.org/10.1371/journal.pbio.1002416</li>
+<li>https://doi.org/10.1101/2020.05.22.110668;</li>
+<li>https://doi.org/10.1242/jcs.028621;</li>
+<li>https://doi.org/10.1016/j.ajhg.2011.11.005;</li>
+<li>https://doi.org/10.1371/journal.pgen.1005627;</li>
+<li>https://doi.org/10.1083/jcb.201501013</li>
+<li>https://doi.org/10.1016/j.ajhg.2011.11.005</li>
+<li>https://doi.org/10.1242/jcs.028621,</li>
+<li>https://doi.org/10.1101/2020.05.22.110668,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q9N423
+gene_symbol: mksr-2
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:6239
+  label: Caenorhabditis elegans
+description: MKSR-2 (MKS1-related protein 2) is a B9 domain-containing protein that
+  functions as a component of the MKS (Meckel syndrome) module at the ciliary transition
+  zone. It is the C. elegans ortholog of mammalian B9D2. MKSR-2 forms a complex with
+  MKS-1 and MKSR-1 and localizes specifically to the transition zone/basal body of
+  sensory cilia. The protein functions redundantly with nephrocystins (NPHP-1, NPHP-4)
+  to regulate cilia formation and maintenance in amphid and phasmid ciliated sensory
+  neurons. The MKS module, together with the NPHP module, establishes basal body/
+  transition zone membrane attachments and a ciliary gate that restricts entry of
+  non-ciliary components. Loss of mksr-2 in combination with other MKS/NPHP pathway
+  mutations leads to ciliogenesis defects and altered lifespan via abnormal insulin-IGF-I
+  signaling.
+existing_annotations:
+- term:
+    id: GO:0036038
+    label: MKS complex
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: MKSR-2 is a core component of the MKS complex at the ciliary transition
+      zone. The B9 proteins (MKS-1, MKSR-1, MKSR-2) form a complex that localizes
+      to the base of cilia and functions as part of the MKS module (PMID:18337471,
+      PMID:21422230).
+    action: ACCEPT
+    reason: This is a well-established core function of MKSR-2. Multiple studies demonstrate
+      that the B9 proteins including MKSR-2 form the MKS complex and function together
+      at the transition zone. IBA annotation from phylogenetic analysis is consistent
+      with experimental data.
+    supported_by:
+    - reference_id: PMID:18337471
+      supporting_text: we report that the C. elegans B9 proteins form a complex that
+        localizes to the base of cilia
+    - reference_id: PMID:21422230
+      supporting_text: the conserved C. elegans B9 domain (MKS-1, MKSR-1, and MKSR-2),
+        MKS-3/TMEM67, MKS-5/RPGRIP1L, MKS-6/CC2D2A, NPHP-1, and NPHP-4 proteins exhibit
+        essential, collective functions at the transition zone
+- term:
+    id: GO:0060271
+    label: cilium assembly
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: MKSR-2 participates in cilium assembly as part of the MKS/NPHP transition
+      zone machinery. The B9 proteins function redundantly with nephrocystins in ciliogenesis
+      (PMID:18337471, PMID:21422230).
+    action: MODIFY
+    reason: While MKSR-2 is involved in cilium assembly, the annotation should be
+      more specific. In C. elegans sensory neurons, these are non-motile primary cilia.
+      The term GO:1905515 (non-motile cilium assembly) is more accurate for this organism
+      and cell type context.
+    proposed_replacement_terms:
+    - id: GO:1905515
+      label: non-motile cilium assembly
+    supported_by:
+    - reference_id: PMID:18337471
+      supporting_text: the B9 proteins function redundantly with the nephrocystins
+        to regulate the formation and/or maintenance of cilia and dendrites in the
+        amphid and phasmid ciliated sensory neurons
+    - reference_id: PMID:21422230
+      supporting_text: MKS/MKSR/NPHP proteins establish basal body/TZ membrane attachments
+        before or coinciding with intraflagellar transport-dependent axoneme extension
+- term:
+    id: GO:0005929
+    label: cilium
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  review:
+    summary: IEA annotation based on ARBA prediction. While MKSR-2 functions in ciliated
+      neurons, it specifically localizes to the transition zone rather than the cilium
+      proper (PMID:21422230).
+    action: MODIFY
+    reason: MKSR-2 specifically localizes to the ciliary transition zone, not the
+      cilium proper. The IEA annotation is too broad. The protein is found at the
+      base of cilia (transition zone/basal body region).
+    proposed_replacement_terms:
+    - id: GO:0035869
+      label: ciliary transition zone
+    supported_by:
+    - reference_id: PMID:21422230
+      supporting_text: MKS/MKSR and NPHP proteins localize specifically to the ciliary
+        TZ
+- term:
+    id: GO:0030030
+    label: cell projection organization
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: IEA annotation based on UniProt keyword mapping. This is a very general
+      term that captures the overall role in organizing ciliary/dendritic structures.
+    action: ACCEPT
+    reason: While this is a broad term, it is not incorrect. MKSR-2 functions in organizing
+      the ciliary transition zone and participates in dendritic organization. This
+      can be kept as a general annotation, though more specific terms (cilium assembly,
+      ciliary transition zone) are more informative.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:14704431
+  review:
+    summary: High-throughput Y2H screen showing interaction with MKSR-1 (Q21191).
+      While the interaction is real, the term &#39;protein binding&#39; is uninformative.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: The term &#39;protein binding&#39; (GO:0005515) is too generic and uninformative
+      per GO curation guidelines. The interaction with MKSR-1 is biologically relevant
+      (they function together in the MKS complex), but a more specific binding term
+      should be used. The MKS complex annotation captures this functional relationship
+      better.
+    supported_by:
+    - reference_id: PMID:14704431
+      supporting_text: more than 4000 interactions were identified from high-throughput,
+        yeast two-hybrid (HT=Y2H) screens
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:19123269
+  review:
+    summary: Another high-throughput Y2H study confirming interaction with MKSR-1
+      (Q21191).
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Same as above - &#39;protein binding&#39; is too generic. The interaction data
+      is valid but better captured by the MKS complex component annotation.
+    supported_by:
+    - reference_id: PMID:19123269
+      supporting_text: &#34;We present an expanded Caenorhabditis elegans protein-protein\
+        \ interaction network, or \&#34;interactome\&#34; map derived from testing a matrix\
+        \ of ~ 10,000 \xD7 ~ 10,000 proteins using a highly specific high-throughput\
+        \ yeast two-hybrid system&#34;
+- term:
+    id: GO:0036064
+    label: ciliary basal body
+  evidence_type: IDA
+  original_reference_id: PMID:27623382
+  review:
+    summary: IDA annotation showing localization to the ciliary basal body. This study
+      on Girdin showed MKSR-2 localization in this context (PMID:27623382).
+    action: ACCEPT
+    reason: Direct localization evidence. MKSR-2 localizes to the proximal region
+      including the basal body. This is consistent with its role at the transition
+      zone which is immediately distal to the basal body. Both basal body and transition
+      zone localizations are valid.
+    supported_by:
+    - reference_id: PMID:27623382
+      supporting_text: Primary cilia are ubiquitous sensory organelles that mediate
+        diverse signaling pathways. Cilia position on the cell surface is determined
+        by the location of the basal body (BB) that templates the cilium
+- term:
+    id: GO:1905515
+    label: non-motile cilium assembly
+  evidence_type: IGI
+  original_reference_id: PMID:18337471
+  review:
+    summary: IGI evidence with genetic interaction with nph-1 (NPHP1 ortholog). B9
+      proteins function redundantly with nephrocystins in ciliogenesis (PMID:18337471).
+    action: ACCEPT
+    reason: This is the appropriate specific term for MKSR-2&#39;s role in cilium assembly
+      in C. elegans sensory neurons, which are non-motile cilia. The genetic interaction
+      data supports this function.
+    supported_by:
+    - reference_id: PMID:18337471
+      supporting_text: Mutations in the B9 genes do not overtly affect cilia formation
+        unless they are in combination with a mutation in nph-1 or nph-4
+- term:
+    id: GO:1904491
+    label: protein localization to ciliary transition zone
+  evidence_type: IMP
+  original_reference_id: PMID:21422230
+  review:
+    summary: IMP evidence showing MKSR-2 is required for proper localization of proteins
+      to the transition zone. The MKS module proteins show co-dependent localization
+      (PMID:21422230).
+    action: ACCEPT
+    reason: This is a core function of MKSR-2 as part of the MKS module. The transition
+      zone proteins have mutually dependent localization and collectively establish
+      the ciliary gate that controls protein access to the cilium.
+    supported_by:
+    - reference_id: PMID:21422230
+      supporting_text: These TZ proteins functionally interact as members of two distinct
+        modules, which together contribute to an early ciliogenic event
+    - reference_id: PMID:19208769
+      supporting_text: Their subcellular localization is largely co-dependent, pointing
+        to a functional relationship between the proteins
+- term:
+    id: GO:1905515
+    label: non-motile cilium assembly
+  evidence_type: IGI
+  original_reference_id: PMID:21422230
+  review:
+    summary: IGI evidence with genetic interaction with nphp-4 (WB:WBGene00007490).
+      Combined mutations show ciliogenesis defects (PMID:21422230).
+    action: ACCEPT
+    reason: Redundant with the other non-motile cilium assembly annotation but from
+      a different genetic interaction. Both are valid and support the functional role
+      of MKSR-2 in ciliogenesis through interaction with the NPHP module.
+    supported_by:
+    - reference_id: PMID:21422230
+      supporting_text: MKS/MKSR/NPHP proteins establish basal body/TZ membrane attachments
+        before or coinciding with intraflagellar transport-dependent axoneme extension
+- term:
+    id: GO:0044292
+    label: dendrite terminus
+  evidence_type: IDA
+  original_reference_id: PMID:25335890
+  review:
+    summary: IDA localization to dendrite terminus in the AFD thermosensory neuron
+      (PMID:25335890). This study showed ciliopathy proteins at the base of cilia
+      in AFD neurons.
+    action: ACCEPT
+    reason: Valid localization data. In C. elegans sensory neurons, the cilium extends
+      from the dendrite terminus. MKSR-2 localization to this region is consistent
+      with its role at the transition zone.
+    supported_by:
+    - reference_id: PMID:25335890
+      supporting_text: ciliary proteins help establish two contiguous, yet distinct
+        cyclic GMP (cGMP) signaling compartments in Caenorhabditis elegans thermosensory
+        AFD neurons
+- term:
+    id: GO:0035869
+    label: ciliary transition zone
+  evidence_type: IDA
+  original_reference_id: PMID:21422230
+  review:
+    summary: IDA localization to the ciliary transition zone. This is the primary
+      localization site for MKSR-2 (PMID:21422230).
+    action: ACCEPT
+    reason: This is the canonical localization for MKSR-2 and represents its core
+      functional compartment. The transition zone is where the MKS complex establishes
+      the ciliary gate.
+    supported_by:
+    - reference_id: PMID:21422230
+      supporting_text: MKS/MKSR and NPHP proteins localize specifically to the ciliary
+        TZ
+    - reference_id: PMID:19208769
+      supporting_text: all Caenorhabditis elegans B9-domain-containing proteins, MKS-1
+        and MKS-1-related proteins 1 and 2 (MKSR-1, MKSR-2), localize to transition
+        zones/basal bodies of sensory cilia
+- term:
+    id: GO:0008340
+    label: determination of adult lifespan
+  evidence_type: IGI
+  original_reference_id: PMID:19208769
+  review:
+    summary: IGI evidence showing increased lifespan in double/triple mks/mksr mutant
+      combinations due to abnormal insulin-IGF-I signaling (PMID:19208769).
+    action: KEEP_AS_NON_CORE
+    reason: This is a secondary phenotype arising from ciliary dysfunction rather
+      than a direct core function of MKSR-2. The lifespan extension in mutants results
+      from abnormal insulin-IGF signaling, which is an indirect consequence of sensory
+      cilium defects affecting DAF-2/ insulin signaling. This is biologically valid
+      but represents a downstream consequence rather than a direct molecular function.
+    supported_by:
+    - reference_id: PMID:19208769
+      supporting_text: we find genetic interactions between all double mks/mksr mutant
+        combinations, manifesting as an increased lifespan phenotype, which is due
+        to abnormal insulin-IGF-I signaling
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:18337471
+  review:
+    summary: IPI evidence for interaction with MKS-1 (WB:WBGene00019364). The B9 proteins
+      form a complex (PMID:18337471).
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Same issue as other protein binding annotations - the term is too generic.
+      The interaction with MKS-1 is biologically meaningful (they form the B9/MKS
+      complex together) but better captured by the MKS complex annotation.
+    supported_by:
+    - reference_id: PMID:18337471
+      supporting_text: we report that the C. elegans B9 proteins form a complex that
+        localizes to the base of cilia
+- term:
+    id: GO:0008104
+    label: intracellular protein localization
+  evidence_type: IMP
+  original_reference_id: PMID:18337471
+  review:
+    summary: IMP evidence for role in protein localization based on mutant phenotype.
+    action: MODIFY
+    reason: This term is too generic. MKSR-2 specifically functions in localizing
+      proteins to the ciliary transition zone. The more specific term GO:1904491 (protein
+      localization to ciliary transition zone) is already annotated and is more appropriate.
+    proposed_replacement_terms:
+    - id: GO:1904491
+      label: protein localization to ciliary transition zone
+    supported_by:
+    - reference_id: PMID:18337471
+      supporting_text: the B9 proteins function redundantly with the nephrocystins
+        to regulate the formation and/or maintenance of cilia and dendrites in the
+        amphid and phasmid ciliated sensory neurons
+- term:
+    id: GO:0030425
+    label: dendrite
+  evidence_type: IDA
+  original_reference_id: PMID:18337471
+  review:
+    summary: IDA localization to dendrites of ciliated sensory neurons (PMID:18337471).
+    action: ACCEPT
+    reason: Valid localization data. MKSR-2 is expressed in ciliated sensory neurons
+      and localizes to the distal dendrite region where the ciliary base is located.
+    supported_by:
+    - reference_id: PMID:18337471
+      supporting_text: the B9 proteins function redundantly with the nephrocystins
+        to regulate the formation and/or maintenance of cilia and dendrites in the
+        amphid and phasmid ciliated sensory neurons
+- term:
+    id: GO:0035177
+    label: larval foraging behavior
+  evidence_type: IGI
+  original_reference_id: PMID:18337471
+  review:
+    summary: IGI evidence showing defects in larval foraging behavior in genetic interaction
+      with nph-1.
+    action: KEEP_AS_NON_CORE
+    reason: Foraging behavior defects are a downstream consequence of sensory cilium
+      dysfunction. C. elegans uses ciliated sensory neurons for chemosensation, which
+      is required for proper foraging. This is not a direct molecular function but
+      rather a phenotypic consequence of loss of ciliary function in the sensory neurons.
+    supported_by:
+    - reference_id: PMID:18337471
+      supporting_text: Our data indicate that the B9 proteins function redundantly
+        with the nephrocystins to regulate the formation and/or maintenance of cilia
+        and dendrites in the amphid and phasmid ciliated sensory neurons
+references:
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings:
+  - statement: IBA annotations for MKS complex and cilium assembly based on phylogenetic
+      analysis
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings:
+  - statement: General cell projection organization annotation from keyword
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings:
+  - statement: Cilium localization predicted by ARBA
+- id: PMID:14704431
+  title: A map of the interactome network of the metazoan C. elegans.
+  findings:
+  - statement: High-throughput Y2H identification of MKSR-2 interaction with MKSR-1
+- id: PMID:18337471
+  title: Functional redundancy of the B9 proteins and nephrocystins in Caenorhabditis
+    elegans ciliogenesis.
+  findings:
+  - statement: B9 proteins (MKS-1, MKSR-1, MKSR-2) form a complex at the base of cilia
+    supporting_text: we report that the C. elegans B9 proteins form a complex that
+      localizes to the base of cilia
+  - statement: B9 proteins function redundantly with nephrocystins in ciliogenesis
+    supporting_text: Mutations in the B9 genes do not overtly affect cilia formation
+      unless they are in combination with a mutation in nph-1 or nph-4
+  - statement: Required for cilia and dendrite formation in amphid/phasmid sensory
+      neurons
+    supporting_text: the B9 proteins function redundantly with the nephrocystins to
+      regulate the formation and/or maintenance of cilia and dendrites in the amphid
+      and phasmid ciliated sensory neurons
+- id: PMID:19123269
+  title: Empirically controlled mapping of the Caenorhabditis elegans protein-protein
+    interactome network.
+  findings:
+  - statement: Confirmed interaction between MKSR-2 and MKSR-1 by Y2H
+- id: PMID:19208769
+  title: Functional interactions between the ciliopathy-associated Meckel syndrome
+    1 (MKS1) protein and two novel MKS1-related (MKSR) proteins.
+  findings:
+  - statement: All C. elegans B9 proteins localize to transition zones/basal bodies
+    supporting_text: all Caenorhabditis elegans B9-domain-containing proteins, MKS-1
+      and MKS-1-related proteins 1 and 2 (MKSR-1, MKSR-2), localize to transition
+      zones/basal bodies of sensory cilia
+  - statement: Subcellular localization is co-dependent between B9 proteins
+    supporting_text: Their subcellular localization is largely co-dependent, pointing
+      to a functional relationship between the proteins
+  - statement: Double/triple mks/mksr mutants show extended lifespan via abnormal
+      insulin-IGF-I signaling
+    supporting_text: we find genetic interactions between all double mks/mksr mutant
+      combinations, manifesting as an increased lifespan phenotype, which is due to
+      abnormal insulin-IGF-I signaling
+  - statement: No overt ciliary structure defects in single mutants
+    supporting_text: single, double and triple C. elegans mks/mksr mutants do not
+      display overt defects in ciliary structure, intraflagellar transport or chemosensation
+- id: PMID:21422230
+  title: MKS and NPHP modules cooperate to establish basal body/transition zone membrane
+    associations and ciliary gate function during ciliogenesis.
+  findings:
+  - statement: MKS/MKSR/NPHP proteins localize specifically to the ciliary transition
+      zone
+    supporting_text: MKS/MKSR and NPHP proteins localize specifically to the ciliary
+      TZ
+  - statement: Two functional modules (MKS and NPHP) cooperate in TZ function
+    supporting_text: These TZ proteins functionally interact as members of two distinct
+      modules, which together contribute to an early ciliogenic event
+  - statement: TZ proteins establish basal body membrane attachments and ciliary gate
+    supporting_text: MKS/MKSR/NPHP proteins establish basal body/TZ membrane attachments
+      before or coinciding with intraflagellar transport-dependent axoneme extension
+      and subsequently restrict accumulation of nonciliary components within the ciliary
+      compartment
+  - statement: Gate restricts accumulation of non-ciliary components
+    supporting_text: subsequently restrict accumulation of nonciliary components within
+      the ciliary compartment
+- id: PMID:25335890
+  title: Ciliopathy proteins establish a bipartite signaling compartment in a C. elegans
+    thermosensory neuron.
+  findings:
+  - statement: MKSR-2 localizes to dendrite terminus in AFD thermosensory neurons
+    supporting_text: ciliary proteins help establish two contiguous, yet distinct
+      cyclic GMP (cGMP) signaling compartments in Caenorhabditis elegans thermosensory
+      AFD neurons
+- id: PMID:27623382
+  title: A Conserved Role for Girdin in Basal Body Positioning and Ciliogenesis.
+  findings:
+  - statement: MKSR-2 localization to ciliary basal body region
+core_functions:
+- molecular_function:
+    id: GO:0005198
+    label: structural molecule activity
+  description: MKSR-2 is a core structural component of the MKS (Meckel syndrome)
+    complex, forming a trimeric complex with MKS-1 and MKSR-1 (the three B9 domain
+    proteins). This complex localizes to the ciliary transition zone where it functions
+    as part of the ciliary gate machinery.
+  in_complex:
+    id: GO:0036038
+    label: MKS complex
+  locations:
+  - id: GO:0035869
+    label: ciliary transition zone
+  directly_involved_in:
+  - id: GO:1904491
+    label: protein localization to ciliary transition zone
+  - id: GO:1905515
+    label: non-motile cilium assembly
+  supported_by:
+  - reference_id: PMID:18337471
+    supporting_text: we report that the C. elegans B9 proteins form a complex that
+      localizes to the base of cilia
+  - reference_id: PMID:21422230
+    supporting_text: the conserved C. elegans B9 domain (MKS-1, MKSR-1, and MKSR-2),
+      MKS-3/TMEM67, MKS-5/RPGRIP1L, MKS-6/CC2D2A, NPHP-1, and NPHP-4 proteins exhibit
+      essential, collective functions at the transition zone
+proposed_new_terms: []
+suggested_questions:
+- question: What is the precise molecular mechanism by which MKSR-2 contributes to
+    ciliary gate function?
+- question: Does MKSR-2 directly interact with membrane components at the transition
+    zone or function through other adaptor proteins?
+- question: What are the specific cargo proteins whose localization is regulated by
+    MKSR-2?
+suggested_experiments:
+- description: Proximity labeling (BioID/TurboID) to identify direct interaction partners
+    of MKSR-2 at the transition zone
+  hypothesis: MKSR-2 interacts with specific membrane and cytoskeletal proteins to
+    anchor the MKS complex at the transition zone
+- description: Structure-function analysis to determine which domains are required
+    for localization vs complex formation vs gate function
+  hypothesis: The B9 domain mediates complex formation while other regions control
+    membrane association
+- description: Systematic analysis of ciliary protein localization in mksr-2 mutants
+    to identify cargo affected by loss of gate function
+  hypothesis: Loss of MKSR-2 results in abnormal accumulation or exclusion of specific
+    ciliary membrane proteins
+tags:
+- caeel-ciliopathy
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

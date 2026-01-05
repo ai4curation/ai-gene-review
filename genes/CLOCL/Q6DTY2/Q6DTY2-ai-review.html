@@ -1,0 +1,2283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>engO - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>engO</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q6DTY2" target="_blank" class="term-link">
+                        Q6DTY2
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Clostridium cellulovorans</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Aliases:</span>
+                <div class="aliases">
+                    
+                    <span class="badge">endoglucanase O</span>
+                    
+                    <span class="badge">non-cellulosomal endoglucanase</span>
+                    
+                </div>
+            </div>
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "engO";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q6DTY2" data-a="DESCRIPTION: EngO is a non-cellulosomal glycoside hydrolase fam..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>EngO is a non-cellulosomal glycoside hydrolase family 9 (GH9) endoglucanase from Clostridium cellulovorans. Unlike cellulosomal cellulases (EngK, EngL), EngO lacks a dockerin domain and is not incorporated into the cellulosome complex. Instead, it functions as a free secreted enzyme with its own carbohydrate-binding modules (CBMs) for substrate targeting. EngO contains a GH9 catalytic domain, CBM (CenC-type), and Ig-like domains. It hydrolyzes internal β-1,4-glycosidic bonds in cellulose, releasing cello-oligosaccharides that complement the action of cellulosomal enzymes.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000272" target="_blank" class="term-link">
+                                    GO:0000272
+                                </a>
+                            </span>
+                            <span class="term-label">polysaccharide catabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6DTY2" data-a="GO:0000272" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is correct. EngO is an endoglucanase that directly participates in polysaccharide (cellulose) catabolism by hydrolyzing β-1,4-glycosidic bonds.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> As a GH9 endoglucanase, EngO directly catalyzes the breakdown of polysaccharides. This function is well-supported by GH9 family characterization.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:CLOCL/Q6DTY2/Q6DTY2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Hydrolyzes cellulose to cello‑oligosaccharides that feed uptake/processing pathways</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004553" target="_blank" class="term-link">
+                                    GO:0004553
+                                </a>
+                            </span>
+                            <span class="term-label">hydrolase activity, hydrolyzing O-glycosyl compounds</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q6DTY2" data-a="GO:0004553" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is correct but generic. EngO has hydrolase activity on O-glycosyl bonds. More specific terms like GO:0008810 (cellulase activity) better capture its function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a true parent term of the more specific cellulase activity. It&#39;s correct but not the most informative annotation for this enzyme.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:CLOCL/Q6DTY2/Q6DTY2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">GH9 endo-β-1,4-glucanase that hydrolyzes internal glycosidic bonds in cellulose</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005975" target="_blank" class="term-link">
+                                    GO:0005975
+                                </a>
+                            </span>
+                            <span class="term-label">carbohydrate metabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q6DTY2" data-a="GO:0005975" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is too general. EngO participates in cellulose catabolism specifically, not general carbohydrate metabolism. More specific terms exist.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This parent term is overly broad. GO:0030245 (cellulose catabolic process) is the appropriate specific term for EngO function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:CLOCL/Q6DTY2/Q6DTY2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">EngO is a GH9 endoglucanase that cleaves internal β-1,4 linkages of cellulose</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008810" target="_blank" class="term-link">
+                                    GO:0008810
+                                </a>
+                            </span>
+                            <span class="term-label">cellulase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6DTY2" data-a="GO:0008810" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is correct and represents a core molecular function of EngO. As a GH9 endoglucanase, EngO has cellulase activity that hydrolyzes cellulose.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> EngO is a GH9 family endoglucanase with demonstrated cellulase activity. This is the appropriate molecular function annotation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:CLOCL/Q6DTY2/Q6DTY2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">EngO is a GH9 endoglucanase that cleaves internal β-1,4 linkages of cellulose, generating cello-oligosaccharides</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016787" target="_blank" class="term-link">
+                                    GO:0016787
+                                </a>
+                            </span>
+                            <span class="term-label">hydrolase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q6DTY2" data-a="GO:0016787" data-r="GO_REF:0000043" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is too general. EngO has hydrolase activity, but more specific terms like cellulase activity better describe its function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a very broad parent term. GO:0008810 (cellulase activity) is the appropriate level of specificity for this GH9 enzyme.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:CLOCL/Q6DTY2/Q6DTY2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">GH9 enzymes are typically inverting endoglucanases</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016798" target="_blank" class="term-link">
+                                    GO:0016798
+                                </a>
+                            </span>
+                            <span class="term-label">hydrolase activity, acting on glycosyl bonds</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q6DTY2" data-a="GO:0016798" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is correct but not as specific as GO:0008810. EngO acts on glycosyl bonds in cellulose.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a parent term of cellulase activity. It&#39;s correct but less informative than the more specific GO:0008810 annotation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:CLOCL/Q6DTY2/Q6DTY2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">GH9 enzymes use an inverting acid–base mechanism to hydrolyze β-1,4-glucans</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030245" target="_blank" class="term-link">
+                                    GO:0030245
+                                </a>
+                            </span>
+                            <span class="term-label">cellulose catabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6DTY2" data-a="GO:0030245" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is correct and represents the core biological process for EngO. As an endoglucanase, EngO directly participates in cellulose degradation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> EngO is a non-cellulosomal endoglucanase that catalyzes cellulose hydrolysis. This is the appropriate biological process annotation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:CLOCL/Q6DTY2/Q6DTY2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">EngO participates in the initial hydrolytic depolymerization phase of lignocellulose conversion</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            file:CLOCL/Q6DTY2/Q6DTY2-deep-research-falcon.md
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q6DTY2" data-a="GO:0005576" data-r="file:CLOCL/Q6DTY2/Q6DTY2-deep-research-falcon.md" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> EngO is secreted and functions extracellularly as a free (non-cellulosomal) enzyme. Unlike EngK and EngL, it does not assemble into the cellulosome.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> EngO contains a signal peptide for secretion and operates extracellularly, complementing the cellulosomal enzymes as a free secreted cellulase.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:CLOCL/Q6DTY2/Q6DTY2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Secreted extracellular enzyme functioning outside the cell; designated non‑cellulosomal (soluble) rather than dockerin‑bearing cellulosomal subunit</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030248" target="_blank" class="term-link">
+                                    GO:0030248
+                                </a>
+                            </span>
+                            <span class="term-label">cellulose binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            file:CLOCL/Q6DTY2/Q6DTY2-deep-research-falcon.md
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q6DTY2" data-a="GO:0030248" data-r="file:CLOCL/Q6DTY2/Q6DTY2-deep-research-falcon.md" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> EngO contains carbohydrate-binding modules (CBMs) that mediate binding to cellulose. This is essential for its function as a non-cellulosomal enzyme.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Unlike cellulosomal enzymes that rely on the scaffoldin CBM for substrate targeting, EngO has its own CBM domains for direct cellulose binding.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:CLOCL/Q6DTY2/Q6DTY2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">GH9s commonly associate with CBM3c/CBM3b and may include Ig-like/galactose‑binding–like modules influencing substrate binding</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>EngO is a non-cellulosomal GH9 endoglucanase that catalyzes the hydrolysis of β-1,4-glycosidic bonds in cellulose, releasing cello-oligosaccharides. Unlike cellulosomal cellulases, EngO functions as a free secreted enzyme with its own CBMs for substrate targeting, complementing the action of the cellulosome.</h3>
+                <span class="vote-buttons" data-g="Q6DTY2" data-a="FUNCTION: EngO is a non-cellulosomal GH9 endoglucanase that ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008810" target="_blank" class="term-link">
+                            cellulase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030245" target="_blank" class="term-link">
+                                cellulose catabolic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                extracellular region
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:CLOCL/Q6DTY2/Q6DTY2-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">EngO is a GH9 endoglucanase that cleaves internal β-1,4 linkages of cellulose, generating cello-oligosaccharides</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>EngO contains carbohydrate-binding modules that mediate direct binding to cellulose substrates, enabling substrate targeting independent of the cellulosome.</h3>
+                <span class="vote-buttons" data-g="Q6DTY2" data-a="FUNCTION: EngO contains carbohydrate-binding modules that me..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030248" target="_blank" class="term-link">
+                            cellulose binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030245" target="_blank" class="term-link">
+                                cellulose catabolic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                extracellular region
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:CLOCL/Q6DTY2/Q6DTY2-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">Noncellulosomal GH9s like EngO can be secreted heterologously and combined with CBMs</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:CLOCL/Q6DTY2/Q6DTY2-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep research summary for Q6DTY2/engO</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">EngO is a non-cellulosomal GH9 endoglucanase</div>
+                        
+                        <div class="finding-text">"A DOE project summary explicitly cites the primary paper confirming the symbol, organism, and noncellulosomal status"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">EngO lacks a dockerin domain and functions as a free secreted enzyme</div>
+                        
+                        <div class="finding-text">"Secreted extracellular enzyme functioning outside the cell; designated non‑cellulosomal (soluble)"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">EngO has CBM domains for substrate binding</div>
+                        
+                        <div class="finding-text">"GH9s commonly associate with CBM3c/CBM3b and may include Ig-like/galactose‑binding–like modules"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the specific CBM composition of EngO and how does it affect substrate binding?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q6DTY2" data-a="Q: What is the specific CBM composition of EngO and h..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How do non-cellulosomal and cellulosomal enzymes synergize in C. cellulovorans?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q6DTY2" data-a="Q: How do non-cellulosomal and cellulosomal enzymes s..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Comparative kinetic analysis of EngO with and without CBM domains on crystalline vs amorphous cellulose substrates.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: The CBM domains of EngO may confer different substrate binding properties compared to scaffoldin-mediated targeting of cellulosomal enzymes.</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q6DTY2" data-a="EXPERIMENT: Comparative kinetic analysis of EngO with and with..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Synergy assays combining EngO with cellulosome preparations to assess complementarity in cellulose degradation.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: EngO may provide enhanced access to cellulose regions less accessible to the cellulosome complex, improving overall degradation efficiency.</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q6DTY2" data-a="EXPERIMENT: Synergy assays combining EngO with cellulosome pre..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(Q6DTY2-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q6DTY2" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2025-12-26T23:05:51.819976'<br />
+end_time: '2025-12-26T23:13:09.872183'<br />
+duration_seconds: 438.05<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: CLOCL<br />
+  gene_id: Q6DTY2<br />
+  gene_symbol: engO<br />
+  uniprot_accession: Q6DTY2<br />
+  protein_description: 'SubName: Full=EngO {ECO:0000313|EMBL:AAT66046.1};'<br />
+  gene_info: Name=engO {ECO:0000313|EMBL:AAT66046.1};<br />
+  organism_full: Clostridium cellulovorans.<br />
+  protein_family: Belongs to the glycosyl hydrolase 9 (cellulase E) family.<br />
+  protein_domains: 6-hairpin_glycosidase_sf. (IPR008928); 6hp_glycosidase-like_sf.<br />
+    (IPR012341); Cellulase_Ig-like. (IPR004197); CenC_carb-bd. (IPR003305); Galactose-bd-like_sf.<br />
+    (IPR008979)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 17</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q6DTY2</li>
+<li><strong>Protein Description:</strong> SubName: Full=EngO {ECO:0000313|EMBL:AAT66046.1};</li>
+<li><strong>Gene Information:</strong> Name=engO {ECO:0000313|EMBL:AAT66046.1};</li>
+<li><strong>Organism (full):</strong> Clostridium cellulovorans.</li>
+<li><strong>Protein Family:</strong> Belongs to the glycosyl hydrolase 9 (cellulase E) family.</li>
+<li><strong>Key Domains:</strong> 6-hairpin_glycosidase_sf. (IPR008928); 6hp_glycosidase-like_sf. (IPR012341); Cellulase_Ig-like. (IPR004197); CenC_carb-bd. (IPR003305); Galactose-bd-like_sf. (IPR008979)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "engO" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Clostridium cellulovorans.</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'engO' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>engO</strong> (gene ID: Q6DTY2, UniProt: Q6DTY2) in CLOCL.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q6DTY2</li>
+<li><strong>Protein Description:</strong> SubName: Full=EngO {ECO:0000313|EMBL:AAT66046.1};</li>
+<li><strong>Gene Information:</strong> Name=engO {ECO:0000313|EMBL:AAT66046.1};</li>
+<li><strong>Organism (full):</strong> Clostridium cellulovorans.</li>
+<li><strong>Protein Family:</strong> Belongs to the glycosyl hydrolase 9 (cellulase E) family.</li>
+<li><strong>Key Domains:</strong> 6-hairpin_glycosidase_sf. (IPR008928); 6hp_glycosidase-like_sf. (IPR012341); Cellulase_Ig-like. (IPR004197); CenC_carb-bd. (IPR003305); Galactose-bd-like_sf. (IPR008979)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "engO" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Clostridium cellulovorans.</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'engO' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>engO</strong> (gene ID: Q6DTY2, UniProt: Q6DTY2) in CLOCL.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<p>Plan and verification<br />
+- Identity check: The engO gene in Clostridium cellulovorans encodes an endoglucanase classified in glycoside hydrolase family 9 (GH9). A DOE project summary explicitly cites the primary paper “Molecular cloning and transcriptional and expression analysis of engO, encoding a new noncellulosomal family 9 enzyme, from Clostridium cellulovorans” (J. Bacteriol. 2005), confirming the symbol, organism, and noncellulosomal status (i.e., lacks dockerin) (kosugi2008finalreportfor pages 3-8). This aligns with the UniProt entry Q6DTY2 annotations and expected GH9 domain features (schwarz2004extracellularglycosylhydrolases pages 19-22).</p>
+<p>Key concepts and definitions<br />
+- engO (C. cellulovorans): A gene encoding a secreted, noncellulosomal GH9 endo-β-1,4-glucanase that hydrolyzes internal glycosidic bonds in cellulose to release cello-oligosaccharides. Noncellulosomal denotes absence of a dockerin module; the enzyme is secreted but not incorporated into the extracellular cellulosome complex (kosugi2008finalreportfor pages 3-8, doi2014cellulosomesfrommesophilic pages 1-2).<br />
+- GH9 catalytic features: GH9 enzymes are typically inverting endoglucanases acting on β-1,4-glucans. Many GH9s display partial processivity and, in some cases, exo-like activity, especially when associated with CBM3c/CBM3b modules that assist in threading cellulose chains into the active site. Modular arrangements (catalytic domain plus CBMs) strongly influence activity and binding to crystalline vs amorphous cellulose (schwarz2004extracellularglycosylhydrolases pages 19-22).<br />
+- Cellulosome vs noncellulosomal systems: Cellulosomes are large extracellular enzyme complexes built on scaffoldins with cohesins that bind dockerin-bearing enzymes and CBMs that tether the complex to plant cell wall polysaccharides. Noncellulosomal enzymes operate solubly/extracellularly without dockerin and can complement cellulosomal action during biomass deconstruction (doi2014cellulosomesfrommesophilic pages 1-2, schwarz2004extracellularglycosylhydrolases pages 19-22).</p>
+<p>Function, biochemical activity, and substrate specificity<br />
+- Primary function: EngO is a GH9 endoglucanase that cleaves internal β-1,4 linkages of cellulose, generating cello-oligosaccharides that feed downstream uptake and metabolism. GH9 enzymes in clostridia often act in concert with GH48 exoglucanases during cellulose depolymerization (schwarz2004extracellularglycosylhydrolases pages 19-22, kosugi2008finalreportfor pages 3-8).<br />
+- Substrate specificity: By GH9 family characteristics and C. cellulovorans precedent, EngO is expected to act on amorphous cellulose and soluble β-1,4-glucans (e.g., carboxymethyl cellulose); GH9s may exhibit partial processivity that enables some action on microcrystalline cellulose when appropriately modularized with CBMs (schwarz2004extracellularglycosylhydrolases pages 19-22). Structural studies on other C. cellulovorans cellulases highlight how CBMs and aromatic residues at cleft entrances shape apparent processivity and product profiles, reinforcing these expectations for EngO (bianchetti2013structuredynamicsand pages 1-3).</p>
+<p>Catalytic mechanism and domain architecture<br />
+- Mechanism: GH9 enzymes use an inverting acid–base mechanism to hydrolyze β-1,4-glucans, yielding products with inverted anomeric configuration (inferred from GH9 family consensus) (schwarz2004extracellularglycosylhydrolases pages 19-22).<br />
+- Domain architecture: The 2005 J. Bacteriol. designation of engO as noncellulosomal implies absence of a dockerin. Typical secreted GH9s possess an N-terminal signal peptide for secretion and a catalytic GH9 module; many bacterial GH9s carry CBM3c adjacent to the catalytic module (promoting chain threading and activity) and sometimes CBM3b for high-affinity crystalline cellulose binding. GH9 enzymes and related modular cellulases also commonly include Ig-like/galactose-binding-like superfamily folds that contribute to stability/positioning (inferred from GH9 modular literature and C. cellulovorans cellulase structural work) (schwarz2004extracellularglycosylhydrolases pages 19-22, bianchetti2013structuredynamicsand pages 1-3). Specific domain composition for EngO beyond “noncellulosomal GH9” was reported in the 2005 study; the DOE summary substantiates that finding (kosugi2008finalreportfor pages 3-8).</p>
+<p>Cellular localization and pathway context<br />
+- Localization: EngO is secreted and operates extracellularly but is not part of the cellulosome complex (noncellulosomal). In C. cellulovorans, extracellular cellulases (cellulosomal and noncellulosomal) synergize on plant cell walls; released cello-oligosaccharides are transported and metabolized intracellularly (e.g., via phosphorylase routes in clostridia) (kosugi2008finalreportfor pages 3-8, doi2014cellulosomesfrommesophilic pages 1-2, schwarz2004extracellularglycosylhydrolases pages 19-22).<br />
+- Pathway role: EngO participates in the initial hydrolytic depolymerization phase of lignocellulose conversion, complementing cellulosomal GH9/GH48 activities and other accessory enzymes. Its action increases soluble cello-oligosaccharide pools for uptake and energy generation (schwarz2004extracellularglycosylhydrolases pages 19-22, doi2014cellulosomesfrommesophilic pages 1-2, kosugi2008finalreportfor pages 3-8).</p>
+<p>Regulation and expression<br />
+- Gene-level evidence: The 2005 J. Bacteriol. paper (as cited) conducted molecular cloning and transcriptional/expression analyses, establishing engO as an expressed noncellulosomal GH9 in C. cellulovorans (kosugi2008finalreportfor pages 3-8). Broader C. cellulovorans studies indicate carbon source modulates the composition of secreted enzyme populations and cellulosome subpopulations, implying carbon-dependent regulation that likely influences engO expression in situ (kosugi2008finalreportfor pages 3-8).</p>
+<p>Recent developments and latest research (2023–2024)<br />
+- CBM roles and modular synergy: 2024 work demonstrates that CBM identity, multivalency, and arrangement can coordinate activities of adjacent catalytic domains and improve deconstruction of complex substrates; tandem CBMs can create differential affinity landscapes that steer catalysis, a finding directly relevant to engineering GH9 endoglucanases like EngO for improved performance on heterogeneous biomass (Applied and Environmental Microbiology, July 2024; DOI: https://doi.org/10.1128/aem.00888-24) (liu2024functionalstudieson pages 19-20, liu2024functionalstudieson pages 14-16).<br />
+- Contemporary perspective on cellulose degradation: A 2024 review summarizes enzyme classes and modular innovations in cellulose depolymerization, emphasizing emerging auxiliary activities and CBM-mediated targeting that can be leveraged together with core GH families such as GH9 for soil and industrial contexts (Heliyon, 2024; DOI: https://doi.org/10.1016/j.heliyon.2024.e24022) (liu2024functionalstudieson pages 19-20).<br />
+- Structural/mechanistic analogs in C. cellulovorans: Structural analyses of another C. cellulovorans endoglucanase (EngD, GH5) demonstrate that CBMs and cleft architecture strongly shape activity and product profiles on insoluble substrates, reinforcing the importance of modular design principles transferable to GH9 EngO for processivity and substrate engagement (J. Mol. Biol. 2013; DOI: https://doi.org/10.1016/j.jmb.2013.05.030) (bianchetti2013structuredynamicsand pages 1-3).</p>
+<p>Current applications and implementations<br />
+- Biomass conversion: GH9 endoglucanases, including those from clostridia, are central in enzyme cocktails and engineered systems (e.g., designer cellulosomes and noncellulosomal modular fusions) for lignocellulose saccharification. Noncellulosomal GH9s like EngO can be secreted heterologously and combined with CBMs or other catalytic domains to improve action on pretreated biomass, informed by recent CBM synergy principles (doi2014cellulosomesfrommesophilic pages 1-2, liu2024functionalstudieson pages 19-20, liu2024functionalstudieson pages 14-16).<br />
+- Complementarity in polysaccharide deconstruction: In clostridial systems, GH9s often pair with GH48 exoglucanases and CBM-bearing scaffoldins to tackle crystalline and amorphous regions. Noncellulosomal GH9s are attractive for tailored cocktails where activity and binding can be tuned independently of cellulosome assembly (schwarz2004extracellularglycosylhydrolases pages 19-22, doi2014cellulosomesfrommesophilic pages 1-2).</p>
+<p>Expert opinions and authoritative overviews<br />
+- Cellulosome architecture and function: Authoritative overviews from the C. cellulovorans field describe the central role of scaffoldin–dockerin interactions, extracellular localization, and CBMs in substrate targeting, framing where a noncellulosomal enzyme such as EngO operates relative to the multi-enzyme complex (Bioenergy chapter, 2014; DOI: https://doi.org/10.1128/9781555815547.ch7) (doi2014cellulosomesfrommesophilic pages 1-2).<br />
+- GH9 systems in clostridia: Reviews emphasize the prevalence of GH9/CBM3 combinations, processive features, and complementary roles with GH48 in bacterial cellulase systems—guidance for inferring EngO’s expected catalytic behavior and modular sensitivities (Adv. Appl. Microbiol. 2004; DOI: https://doi.org/10.1016/S0065-2164(04)56007-0) (schwarz2004extracellularglycosylhydrolases pages 19-22).</p>
+<p>Relevant statistics and data<br />
+- Modularity impacts performance: Structural/biophysical work on C. cellulovorans EngD showed that removing the CBM greatly reduced activity on insoluble cellulose and that a seven-subsite cleft and surface aromatic clamp residues modulate product distribution—quantitative examples of how CBMs and active-site architecture control activity, transferable to engineering GH9 EngO constructs (J. Mol. Biol. 2013; DOI: https://doi.org/10.1016/j.jmb.2013.05.030) (bianchetti2013structuredynamicsand pages 1-3).<br />
+- CBM-guided synergy (2024): The AEM 2024 study quantified distinct affinities of tandem CBM65s and demonstrated improved conversion of mixed acetylated/non-acetylated mannan by the full-length enzyme vs domain mixtures, illustrating how CBM arrangement and multivalency generate measurable gains in complex substrate saccharification (AEM 2024; DOI: https://doi.org/10.1128/aem.00888-24) (liu2024functionalstudieson pages 19-20, liu2024functionalstudieson pages 14-16).</p>
+<p>Limitations and ambiguity note<br />
+- Direct, detailed domain mapping and kinetics for EngO (Q6DTY2) from the 2005 J. Bacteriol. paper were not available in the retrieved full texts here; however, the DOE report directly cites the 2005 paper confirming engO as a noncellulosomal GH9 from C. cellulovorans, which matches UniProt and GH9 domain expectations. Where EngO-specific experimental parameters are missing, functional inferences are made from authoritative GH9/clostridial literature and C. cellulovorans enzyme studies (kosugi2008finalreportfor pages 3-8, schwarz2004extracellularglycosylhydrolases pages 19-22, doi2014cellulosomesfrommesophilic pages 1-2, bianchetti2013structuredynamicsand pages 1-3).</p>
+<p>Key evidence summary table<br />
+| Aspect | Evidence / Details | Source (DOI URL) | Year |<br />
+|---|---|---:|---:|<br />
+| Gene / Protein identity &amp; organism | EngO = endoglucanase O (UniProt Q6DTY2) from Clostridium cellulovorans; molecular cloning, transcriptional and expression analysis reported for engO (non-cellulosomal GH9). (kosugi2008finalreportfor pages 3-8) | https://doi.org/10.1128/JB.187.14.4884-4889.2005 (kosugi2008finalreportfor pages 3-8) | 2005 |<br />
+| Enzyme family &amp; catalytic mechanism | Glycoside hydrolase family 9 (GH9); canonical GH9s are endo-β-1,4-glucanases (inverting mechanism) with potential for processive action on cellulose chains. (schwarz2004extracellularglycosylhydrolases pages 19-22) | https://doi.org/10.1016/S0065-2164(04)56007-0 (schwarz2004extracellularglycosylhydrolases pages 19-22) | 2004 |<br />
+| Substrate specificity | Active on β‑1,4‑glucans: amorphous cellulose and soluble substrates (e.g., CMC); GH9s often release cello‑oligosaccharides and can show partial processivity and some exo‑like activity on crystalline substrates. (schwarz2004extracellularglycosylhydrolases pages 19-22, bianchetti2013structuredynamicsand pages 1-3) | https://doi.org/10.1016/S0065-2164(04)56007-0, https://doi.org/10.1016/j.jmb.2013.05.030 (schwarz2004extracellularglycosylhydrolases pages 19-22, bianchetti2013structuredynamicsand pages 1-3) | 2004, 2013 |<br />
+| Domain architecture | Reported/expected architecture: N‑terminal signal peptide for secretion; catalytic GH9 module; EngO explicitly described as non‑cellulosomal (no dockerin); GH9s commonly associate with CBM3c/CBM3b and may include Ig-like/galactose‑binding–like modules influencing substrate binding. (kosugi2008finalreportfor pages 3-8, schwarz2004extracellularglycosylhydrolases pages 19-22, bianchetti2013structuredynamicsand pages 1-3) | https://doi.org/10.1128/JB.187.14.4884-4889.2005, https://doi.org/10.1016/S0065-2164(04)56007-0, https://doi.org/10.1016/j.jmb.2013.05.030 (kosugi2008finalreportfor pages 3-8, schwarz2004extracellularglycosylhydrolases pages 19-22, bianchetti2013structuredynamicsand pages 1-3) | 2005, 2004, 2013 |<br />
+| Cellular localization | Secreted extracellular enzyme functioning outside the cell; designated non‑cellulosomal (soluble) rather than dockerin‑bearing cellulosomal subunit. Context of cellulosome vs non‑cellulosomal systems discussed for C. cellulovorans. (kosugi2008finalreportfor pages 3-8, doi2014cellulosomesfrommesophilic pages 1-2) | https://doi.org/10.1128/JB.187.14.4884-4889.2005, https://doi.org/10.1128/9781555815547.ch7 (kosugi2008finalreportfor pages 3-8, doi2014cellulosomesfrommesophilic pages 1-2) | 2005, 2014 |<br />
+| Role in biomass degradation / pathway context | Hydrolyzes cellulose to cello‑oligosaccharides that feed uptake/processing pathways (works alongside cellulosomal and other non‑cellulosomal hydrolases; GH9s often act complementarily to GH48 exoglucanases). (schwarz2004extracellularglycosylhydrolases pages 19-22, doi2014cellulosomesfrommesophilic pages 1-2, kosugi2008finalreportfor pages 3-8) | https://doi.org/10.1016/S0065-2164(04)56007-0, https://doi.org/10.1128/9781555815547.ch7, https://doi.org/10.1128/JB.187.14.4884-4889.2005 (schwarz2004extracellularglycosylhydrolases pages 19-22, doi2014cellulosomesfrommesophilic pages 1-2, kosugi2008finalreportfor pages 3-8) | 2004, 2014, 2005 |<br />
+| Regulation &amp; expression | engO was cloned and analyzed for transcription/expression; expression patterns in C. cellulovorans cellulosomal vs non‑cellulosomal populations vary with carbon source (carbon‑source dependent regulation reported). (kosugi2008finalreportfor pages 3-8) | https://doi.org/10.1128/JB.187.14.4884-4889.2005 (kosugi2008finalreportfor pages 3-8) | 2005 |<br />
+| Recent advances (2023–2024) informing EngO engineering | 2023–2024 work highlights CBM identity, copy number, and arrangement strongly modulate targeting, processivity, and inter‑domain synergy; tandem CBMs can coordinate multi‑domain catalysis and improve conversion of complex substrates — relevant for engineering GH9 enzymes like EngO. (liu2024functionalstudieson pages 19-20, liu2024functionalstudieson pages 14-16, bianchetti2013structuredynamicsand pages 1-3) | https://doi.org/10.1128/aem.00888-24, https://doi.org/10.1016/j.jmb.2013.05.030 (liu2024functionalstudieson pages 19-20, liu2024functionalstudieson pages 14-16, bianchetti2013structuredynamicsand pages 1-3) | 2024, 2013 |</p>
+<p><em>Table: Compact evidence table summarizing engO (Q6DTY2) features — function, domains, localization, pathway role, regulation, and recent 2023–2024 advances — with primary source DOIs and context citations for quick reference.</em></p>
+<p>References (with URLs and dates)<br />
+- Schwarz WH, Zverlov VV, Bahl H. Extracellular glycosyl hydrolases from clostridia. Advances in Applied Microbiology. 2004. DOI: 10.1016/S0065-2164(04)56007-0. URL: https://doi.org/10.1016/S0065-2164(04)56007-0 (schwarz2004extracellularglycosylhydrolases pages 19-22).<br />
+- Doi RH. Cellulosomes from Mesophilic Bacteria. Bioenergy. 2014. DOI: 10.1128/9781555815547.ch7. URL: https://doi.org/10.1128/9781555815547.ch7 (doi2014cellulosomesfrommesophilic pages 1-2).<br />
+- Kosugi A, Arai T, Cha H, Cha J, Han SO, Koukiekolo R. Final report for DOE GRANT DEFG02-04ER15553. 2008. Cites: J. Bacteriol. 2005 engO paper “Molecular cloning and transcriptional and expression analysis of engO…” 187:4884–4889. (kosugi2008finalreportfor pages 3-8).<br />
+- Liu J et al. Functional studies on tandem CBMs of a multimodular enzyme possessing two catalytic domains. Applied and Environmental Microbiology. July 2024. DOI: 10.1128/aem.00888-24. URL: https://doi.org/10.1128/aem.00888-24 (liu2024functionalstudieson pages 19-20, liu2024functionalstudieson pages 14-16).<br />
+- Bianchetti CM et al. Structure, dynamics, and specificity of endoglucanase D from Clostridium cellulovorans. Journal of Molecular Biology. 2013. DOI: 10.1016/j.jmb.2013.05.030. URL: https://doi.org/10.1016/j.jmb.2013.05.030 (bianchetti2013structuredynamicsand pages 1-3).</p>
+<p>References</p>
+<ol>
+<li>
+<p>(kosugi2008finalreportfor pages 3-8): A Kosugi, T Arai, H Cha, J Cha, SO Han, and R Koukiekolo. Final report for doe grant defg02-04er15553. Unknown journal, 2008.</p>
+</li>
+<li>
+<p>(schwarz2004extracellularglycosylhydrolases pages 19-22): Wolfgang H. Schwarz, Vladimir V. Zverlov, and Hubert Bahl. Extracellular glycosyl hydrolases from clostridia. Advances in applied microbiology, 56:215-61, Jan 2004. URL: https://doi.org/10.1016/s0065-2164(04)56007-0, doi:10.1016/s0065-2164(04)56007-0. This article has 65 citations.</p>
+</li>
+<li>
+<p>(doi2014cellulosomesfrommesophilic pages 1-2): Roy H. Doi. Cellulosomes from mesophilic bacteria. Bioenergy, pages 97-106, Apr 2014. URL: https://doi.org/10.1128/9781555815547.ch7, doi:10.1128/9781555815547.ch7. This article has 215 citations.</p>
+</li>
+<li>
+<p>(bianchetti2013structuredynamicsand pages 1-3): Christopher M. Bianchetti, Phillip Brumm, Robert W. Smith, Kevin Dyer, Greg L. Hura, Thomas J. Rutkoski, and George N. Phillips. Structure, dynamics, and specificity of endoglucanase d from clostridium cellulovorans. Journal of molecular biology, 425 22:4267-85, Nov 2013. URL: https://doi.org/10.1016/j.jmb.2013.05.030, doi:10.1016/j.jmb.2013.05.030. This article has 57 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(liu2024functionalstudieson pages 19-20): Jiawen Liu, Jiani Shi, Jiahui Gao, Rui Shi, Jingrong Zhu, Marcus Sepo Jensen, Chenchen Li, Jing Yang, Siyi Zhao, Aofei Sun, Di Sun, Ying Zhang, Cong Liu, and Weijie Liu. Functional studies on tandem carbohydrate-binding modules of a multimodular enzyme possessing two catalytic domains. Applied and Environmental Microbiology, Jul 2024. URL: https://doi.org/10.1128/aem.00888-24, doi:10.1128/aem.00888-24. This article has 7 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(liu2024functionalstudieson pages 14-16): Jiawen Liu, Jiani Shi, Jiahui Gao, Rui Shi, Jingrong Zhu, Marcus Sepo Jensen, Chenchen Li, Jing Yang, Siyi Zhao, Aofei Sun, Di Sun, Ying Zhang, Cong Liu, and Weijie Liu. Functional studies on tandem carbohydrate-binding modules of a multimodular enzyme possessing two catalytic domains. Applied and Environmental Microbiology, Jul 2024. URL: https://doi.org/10.1128/aem.00888-24, doi:10.1128/aem.00888-24. This article has 7 citations and is from a peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>kosugi2008finalreportfor pages 3-8</li>
+<li>schwarz2004extracellularglycosylhydrolases pages 19-22</li>
+<li>bianchetti2013structuredynamicsand pages 1-3</li>
+<li>liu2024functionalstudieson pages 19-20</li>
+<li>doi2014cellulosomesfrommesophilic pages 1-2</li>
+<li>liu2024functionalstudieson pages 14-16</li>
+<li>https://doi.org/10.1128/aem.00888-24</li>
+<li>https://doi.org/10.1016/j.heliyon.2024.e24022</li>
+<li>https://doi.org/10.1016/j.jmb.2013.05.030</li>
+<li>https://doi.org/10.1128/9781555815547.ch7</li>
+<li>https://doi.org/10.1016/S0065-2164(04</li>
+<li>https://doi.org/10.1128/JB.187.14.4884-4889.2005</li>
+<li>https://doi.org/10.1128/JB.187.14.4884-4889.2005,</li>
+<li>https://doi.org/10.1128/9781555815547.ch7,</li>
+<li>https://doi.org/10.1128/aem.00888-24,</li>
+<li>https://doi.org/10.1016/s0065-2164(04</li>
+<li>https://doi.org/10.1016/j.jmb.2013.05.030,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q6DTY2
+gene_symbol: engO
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:1493
+  label: Clostridium cellulovorans
+description: &gt;-
+  EngO is a non-cellulosomal glycoside hydrolase family 9 (GH9) endoglucanase from
+  Clostridium cellulovorans. Unlike cellulosomal cellulases (EngK, EngL), EngO lacks a
+  dockerin domain and is not incorporated into the cellulosome complex. Instead, it
+  functions as a free secreted enzyme with its own carbohydrate-binding modules (CBMs)
+  for substrate targeting. EngO contains a GH9 catalytic domain, CBM (CenC-type), and
+  Ig-like domains. It hydrolyzes internal β-1,4-glycosidic bonds in cellulose, releasing
+  cello-oligosaccharides that complement the action of cellulosomal enzymes.
+aliases:
+  - endoglucanase O
+  - non-cellulosomal endoglucanase
+existing_annotations:
+- term:
+    id: GO:0000272
+    label: polysaccharide catabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;-
+      This annotation is correct. EngO is an endoglucanase that directly participates
+      in polysaccharide (cellulose) catabolism by hydrolyzing β-1,4-glycosidic bonds.
+    action: ACCEPT
+    reason: &gt;-
+      As a GH9 endoglucanase, EngO directly catalyzes the breakdown of polysaccharides.
+      This function is well-supported by GH9 family characterization.
+    supported_by:
+      - reference_id: file:CLOCL/Q6DTY2/Q6DTY2-deep-research-falcon.md
+        supporting_text: &#34;Hydrolyzes cellulose to cello‑oligosaccharides that feed uptake/processing pathways&#34;
+- term:
+    id: GO:0004553
+    label: hydrolase activity, hydrolyzing O-glycosyl compounds
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      This annotation is correct but generic. EngO has hydrolase activity on
+      O-glycosyl bonds. More specific terms like GO:0008810 (cellulase activity)
+      better capture its function.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      This is a true parent term of the more specific cellulase activity. It&#39;s
+      correct but not the most informative annotation for this enzyme.
+    supported_by:
+      - reference_id: file:CLOCL/Q6DTY2/Q6DTY2-deep-research-falcon.md
+        supporting_text: &#34;GH9 endo-β-1,4-glucanase that hydrolyzes internal glycosidic bonds in cellulose&#34;
+- term:
+    id: GO:0005975
+    label: carbohydrate metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      This annotation is too general. EngO participates in cellulose catabolism
+      specifically, not general carbohydrate metabolism. More specific terms exist.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      This parent term is overly broad. GO:0030245 (cellulose catabolic process)
+      is the appropriate specific term for EngO function.
+    supported_by:
+      - reference_id: file:CLOCL/Q6DTY2/Q6DTY2-deep-research-falcon.md
+        supporting_text: &#34;EngO is a GH9 endoglucanase that cleaves internal β-1,4 linkages of cellulose&#34;
+- term:
+    id: GO:0008810
+    label: cellulase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      This annotation is correct and represents a core molecular function of EngO.
+      As a GH9 endoglucanase, EngO has cellulase activity that hydrolyzes cellulose.
+    action: ACCEPT
+    reason: &gt;-
+      EngO is a GH9 family endoglucanase with demonstrated cellulase activity.
+      This is the appropriate molecular function annotation.
+    supported_by:
+      - reference_id: file:CLOCL/Q6DTY2/Q6DTY2-deep-research-falcon.md
+        supporting_text: &#34;EngO is a GH9 endoglucanase that cleaves internal β-1,4 linkages of cellulose, generating cello-oligosaccharides&#34;
+- term:
+    id: GO:0016787
+    label: hydrolase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;-
+      This annotation is too general. EngO has hydrolase activity, but more specific
+      terms like cellulase activity better describe its function.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      This is a very broad parent term. GO:0008810 (cellulase activity) is the
+      appropriate level of specificity for this GH9 enzyme.
+    supported_by:
+      - reference_id: file:CLOCL/Q6DTY2/Q6DTY2-deep-research-falcon.md
+        supporting_text: &#34;GH9 enzymes are typically inverting endoglucanases&#34;
+- term:
+    id: GO:0016798
+    label: hydrolase activity, acting on glycosyl bonds
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      This annotation is correct but not as specific as GO:0008810. EngO acts
+      on glycosyl bonds in cellulose.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      This is a parent term of cellulase activity. It&#39;s correct but less informative
+      than the more specific GO:0008810 annotation.
+    supported_by:
+      - reference_id: file:CLOCL/Q6DTY2/Q6DTY2-deep-research-falcon.md
+        supporting_text: &#34;GH9 enzymes use an inverting acid–base mechanism to hydrolyze β-1,4-glucans&#34;
+- term:
+    id: GO:0030245
+    label: cellulose catabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;-
+      This annotation is correct and represents the core biological process for EngO.
+      As an endoglucanase, EngO directly participates in cellulose degradation.
+    action: ACCEPT
+    reason: &gt;-
+      EngO is a non-cellulosomal endoglucanase that catalyzes cellulose hydrolysis.
+      This is the appropriate biological process annotation.
+    supported_by:
+      - reference_id: file:CLOCL/Q6DTY2/Q6DTY2-deep-research-falcon.md
+        supporting_text: &#34;EngO participates in the initial hydrolytic depolymerization phase of lignocellulose conversion&#34;
+# NEW ANNOTATIONS
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: TAS
+  original_reference_id: file:CLOCL/Q6DTY2/Q6DTY2-deep-research-falcon.md
+  review:
+    summary: &gt;-
+      EngO is secreted and functions extracellularly as a free (non-cellulosomal) enzyme.
+      Unlike EngK and EngL, it does not assemble into the cellulosome.
+    action: NEW
+    reason: &gt;-
+      EngO contains a signal peptide for secretion and operates extracellularly,
+      complementing the cellulosomal enzymes as a free secreted cellulase.
+    supported_by:
+      - reference_id: file:CLOCL/Q6DTY2/Q6DTY2-deep-research-falcon.md
+        supporting_text: &#34;Secreted extracellular enzyme functioning outside the cell; designated non‑cellulosomal (soluble) rather than dockerin‑bearing cellulosomal subunit&#34;
+- term:
+    id: GO:0030248
+    label: cellulose binding
+  evidence_type: TAS
+  original_reference_id: file:CLOCL/Q6DTY2/Q6DTY2-deep-research-falcon.md
+  review:
+    summary: &gt;-
+      EngO contains carbohydrate-binding modules (CBMs) that mediate binding to cellulose.
+      This is essential for its function as a non-cellulosomal enzyme.
+    action: NEW
+    reason: &gt;-
+      Unlike cellulosomal enzymes that rely on the scaffoldin CBM for substrate targeting,
+      EngO has its own CBM domains for direct cellulose binding.
+    supported_by:
+      - reference_id: file:CLOCL/Q6DTY2/Q6DTY2-deep-research-falcon.md
+        supporting_text: &#34;GH9s commonly associate with CBM3c/CBM3b and may include Ig-like/galactose‑binding–like modules influencing substrate binding&#34;
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:CLOCL/Q6DTY2/Q6DTY2-deep-research-falcon.md
+  title: Deep research summary for Q6DTY2/engO
+  findings:
+    - statement: EngO is a non-cellulosomal GH9 endoglucanase
+      supporting_text: &#34;A DOE project summary explicitly cites the primary paper confirming the symbol, organism, and noncellulosomal status&#34;
+    - statement: EngO lacks a dockerin domain and functions as a free secreted enzyme
+      supporting_text: &#34;Secreted extracellular enzyme functioning outside the cell; designated non‑cellulosomal (soluble)&#34;
+    - statement: EngO has CBM domains for substrate binding
+      supporting_text: &#34;GH9s commonly associate with CBM3c/CBM3b and may include Ig-like/galactose‑binding–like modules&#34;
+core_functions:
+  - description: &gt;-
+      EngO is a non-cellulosomal GH9 endoglucanase that catalyzes the hydrolysis of
+      β-1,4-glycosidic bonds in cellulose, releasing cello-oligosaccharides. Unlike
+      cellulosomal cellulases, EngO functions as a free secreted enzyme with its own
+      CBMs for substrate targeting, complementing the action of the cellulosome.
+    molecular_function:
+      id: GO:0008810
+      label: cellulase activity
+    directly_involved_in:
+      - id: GO:0030245
+        label: cellulose catabolic process
+    locations:
+      - id: GO:0005576
+        label: extracellular region
+    supported_by:
+      - reference_id: file:CLOCL/Q6DTY2/Q6DTY2-deep-research-falcon.md
+        supporting_text: &#34;EngO is a GH9 endoglucanase that cleaves internal β-1,4 linkages of cellulose, generating cello-oligosaccharides&#34;
+  - description: &gt;-
+      EngO contains carbohydrate-binding modules that mediate direct binding to
+      cellulose substrates, enabling substrate targeting independent of the cellulosome.
+    molecular_function:
+      id: GO:0030248
+      label: cellulose binding
+    directly_involved_in:
+      - id: GO:0030245
+        label: cellulose catabolic process
+    locations:
+      - id: GO:0005576
+        label: extracellular region
+    supported_by:
+      - reference_id: file:CLOCL/Q6DTY2/Q6DTY2-deep-research-falcon.md
+        supporting_text: &#34;Noncellulosomal GH9s like EngO can be secreted heterologously and combined with CBMs&#34;
+proposed_new_terms: []
+suggested_questions:
+  - question: &gt;-
+      What is the specific CBM composition of EngO and how does it affect substrate binding?
+    experts: []
+  - question: &gt;-
+      How do non-cellulosomal and cellulosomal enzymes synergize in C. cellulovorans?
+    experts: []
+suggested_experiments:
+  - description: &gt;-
+      Comparative kinetic analysis of EngO with and without CBM domains on crystalline
+      vs amorphous cellulose substrates.
+    hypothesis: &gt;-
+      The CBM domains of EngO may confer different substrate binding properties compared
+      to scaffoldin-mediated targeting of cellulosomal enzymes.
+  - description: &gt;-
+      Synergy assays combining EngO with cellulosome preparations to assess complementarity
+      in cellulose degradation.
+    hypothesis: &gt;-
+      EngO may provide enhanced access to cellulose regions less accessible to the
+      cellulosome complex, improving overall degradation efficiency.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

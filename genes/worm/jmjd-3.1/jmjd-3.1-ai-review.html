@@ -1,0 +1,3550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>jmjd-3.1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>jmjd-3.1</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q95QK3" target="_blank" class="term-link">
+                        Q95QK3
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Caenorhabditis elegans</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "jmjd-3.1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q95QK3" data-a="DESCRIPTION: JMJD-3.1 is a JmjC domain-containing lysine-specif..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>JMJD-3.1 is a JmjC domain-containing lysine-specific demethylase belonging to the UTX/KDM6 family that specifically demethylates H3K27me2/me3, marks associated with transcriptional repression. The enzyme requires Fe(II) as a cofactor for its dioxygenase activity. JMJD-3.1 functions in the nucleus where it removes repressive H3K27 methylation marks at specific loci to enable gene activation. Unlike the related UTX-1 which is the dominant global H3K27 demethylase during development, JMJD-3.1 acts more locus-specifically and contributes primarily to stress response pathways including the mitochondrial unfolded protein response (UPRmt) and heat shock response. It is required for the robust transdifferentiation of the Y rectal epithelial cell into the PDA motor neuron during larval development. Overexpression of jmjd-3.1 extends lifespan in a manner dependent on UPRmt components (ATFS-1, UBL-5, CLPP-1).</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010468" target="_blank" class="term-link">
+                                    GO:0010468
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of gene expression</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q95QK3" data-a="GO:0010468" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> JMJD-3.1 regulates gene expression by removing repressive H3K27me2/me3 marks, thereby enabling transcriptional activation. This is well-supported by studies showing jmjd-3.1 is required for stress-induced gene expression programs (UPRmt, HSR) and for gene activation during transdifferentiation (PMID:25124442, PMID:27133168).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The IBA annotation accurately captures that jmjd-3.1 regulates gene expression. As an H3K27 demethylase, its core function is to remove repressive chromatin marks and enable transcriptional activation of specific gene sets. This is a parent term to more specific processes and is appropriate for the phylogenetic inference.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25124442" target="_blank" class="term-link">
+                                        PMID:25124442
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">a conserved H3K27me3/me2 demethylase, JMJD-3.1, and the H3K4 methyltransferase Set1 complex cooperate to ensure invariant transdifferentiation (Td) of postmitotic Caenorhabditis elegans hindgut cells into motor neurons</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27133168" target="_blank" class="term-link">
+                                        PMID:27133168
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We identify the conserved histone lysine demethylases jmjd-1.2/PHF8 and jmjd-3.1/JMJD3 as positive regulators of lifespan in response to mitochondrial dysfunction across species</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071558" target="_blank" class="term-link">
+                                    GO:0071558
+                                </a>
+                            </span>
+                            <span class="term-label">histone H3K27me2/H3K27me3 demethylase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q95QK3" data-a="GO:0071558" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> JMJD-3.1 is a member of the UTX/KDM6 family and contains the conserved JmjC catalytic domain. Experimental evidence from PMID:17713478 and PMID:25124442 demonstrates H3K27me2/me3 demethylase activity. Mutations in catalytic residues abolish function in transdifferentiation assays (PMID:25124442).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the core molecular function of jmjd-3.1. The IBA annotation is consistent with direct experimental evidence from IDA annotations and the known domain architecture (JmjC domain with conserved Fe-binding residues). This represents the primary enzymatic activity of the protein.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17713478" target="_blank" class="term-link">
+                                        PMID:17713478
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">mutation of F18E9.5, a Caenorhabditis elegans JMJD3 orthologue, or inhibition of its expression, results in abnormal gonad development</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25124442" target="_blank" class="term-link">
+                                        PMID:25124442
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">a conserved H3K27me3/me2 demethylase, JMJD-3.1</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044666" target="_blank" class="term-link">
+                                    GO:0044666
+                                </a>
+                            </span>
+                            <span class="term-label">MLL3/4 complex</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="Q95QK3" data-a="GO:0044666" data-r="GO_REF:0000033" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The IBA annotation infers MLL3/4 complex membership based on orthology to mammalian JMJD3/KDM6B. However, in C. elegans, UTX-1 (not jmjd-3.1) has been shown to associate with SET-16/MLL-like complexes. The literature explicitly notes that jmjd-3.1 partners are not well established and it may act more locus-specifically rather than as part of large chromatin assemblies.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While mammalian JMJD3/KDM6B is associated with MLL3/4 complexes, direct evidence for C. elegans jmjd-3.1 membership in an equivalent complex is lacking. The literature (Vandamme et al. 2012) specifically found UTX-1 in complex with SET-16 but did not identify jmjd-3.1 complex partners. The phylogenetic inference may not hold in this case given the functional divergence between UTX-1 and JMJD-3 paralogs in C. elegans. More biochemical evidence is needed to confirm or refute this annotation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22570628" target="_blank" class="term-link">
+                                        PMID:22570628
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Biochemical analysis identified UTX-1 as a component of a complex that includes SET-16(MLL)</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000978" target="_blank" class="term-link">
+                                    GO:0000978
+                                </a>
+                            </span>
+                            <span class="term-label">RNA polymerase II cis-regulatory region sequence-specific DNA binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q95QK3" data-a="GO:0000978" data-r="GO_REF:0000033" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation suggests jmjd-3.1 has sequence-specific DNA binding activity at Pol II regulatory regions. However, jmjd-3.1 is recruited to chromatin through protein-protein interactions (e.g., with transcription factors like UNC-3) rather than through intrinsic sequence-specific DNA binding. The protein lacks recognizable DNA-binding domains.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> JMJD-3.1 does not contain canonical sequence-specific DNA-binding domains. While it functions at regulatory regions to demethylate H3K27, it is recruited through interactions with transcription factors (e.g., UNC-3 as shown in PMID:25124442) rather than through direct sequence-specific DNA recognition. The chromatin DNA binding annotation (GO:0031490) is more appropriate.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25124442" target="_blank" class="term-link">
+                                        PMID:25124442
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">phase-specific interactions with transcription factors that have conserved roles in cell plasticity and terminal fate selection</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031490" target="_blank" class="term-link">
+                                    GO:0031490
+                                </a>
+                            </span>
+                            <span class="term-label">chromatin DNA binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q95QK3" data-a="GO:0031490" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> JMJD-3.1 functions at chromatin where it demethylates H3K27. The protein requires recognition of the H3 tail for its function (PMID:25124442). This general chromatin binding activity is consistent with its role as a histone demethylase.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> As a histone demethylase that acts on chromatin-bound histones, jmjd-3.1 must bind to chromatin to carry out its function. The annotation is appropriate and consistent with the enzymatic mechanism. UniProt also notes a region required for binding and function (residues 418-759).
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25124442" target="_blank" class="term-link">
+                                        PMID:25124442
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">robust conversion requires stepwise histone-modifying activities, functionally partitioned into discrete phases of Td</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q95QK3" data-a="GO:0005634" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Nuclear localization is well-established for jmjd-3.1 by direct experimental evidence. The protein contains a region required for nuclear localization (residues 369-417) and overexpressed jmjd-3.1::mCherry shows diffuse nuclear localization.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This IEA annotation is correct and supported by direct experimental evidence (IDA from PMID:25124442). Nuclear localization is essential for jmjd-3.1 function as a chromatin modifier.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25124442" target="_blank" class="term-link">
+                                        PMID:25124442
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">functionally partitioned into discrete phases of Td through nuclear degradation of JMJD-3.1</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006325" target="_blank" class="term-link">
+                                    GO:0006325
+                                </a>
+                            </span>
+                            <span class="term-label">chromatin organization</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q95QK3" data-a="GO:0006325" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> As an H3K27 demethylase, jmjd-3.1 directly modifies chromatin structure by removing methyl groups from histones. This alters the chromatin state from repressive to permissive for transcription.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> H3K27 demethylation directly affects chromatin organization by removing repressive marks and enabling chromatin state transitions. This is a core aspect of jmjd-3.1 function as a histone-modifying enzyme.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25124442" target="_blank" class="term-link">
+                                        PMID:25124442
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Sequential histone-modifying activities determine the robustness of transdifferentiation</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006338" target="_blank" class="term-link">
+                                    GO:0006338
+                                </a>
+                            </span>
+                            <span class="term-label">chromatin remodeling</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q95QK3" data-a="GO:0006338" data-r="GO_REF:0000120" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> While jmjd-3.1 modifies chromatin through histone demethylation, chromatin remodeling (GO:0006338) specifically refers to ATP-dependent alteration of nucleosome structure. Histone demethylation is a distinct process from ATP-dependent chromatin remodeling.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Chromatin remodeling in GO specifically refers to ATP-dependent nucleosome repositioning or eviction. JMJD-3.1 is not an ATP-dependent chromatin remodeler but rather a covalent histone modifier. The more appropriate term is &#39;histone H3-K27 demethylation&#39; (GO:0071557) or &#39;chromatin organization&#39; (GO:0006325).
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071557" target="_blank" class="term-link">
+                                    histone H3-K27 demethylation
+                                </a>
+                            </span>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006325" target="_blank" class="term-link">
+                                    chromatin organization
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016491" target="_blank" class="term-link">
+                                    GO:0016491
+                                </a>
+                            </span>
+                            <span class="term-label">oxidoreductase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q95QK3" data-a="GO:0016491" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> JMJD-3.1 catalyzes an oxidative demethylation reaction using Fe(II) and 2-oxoglutarate as cofactors, making it technically an oxidoreductase. However, this is a very general term.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> As a JmjC domain dioxygenase, jmjd-3.1 does have oxidoreductase activity. While this is a broad parent term, it is technically correct for an IEA annotation derived from keyword mapping. The more specific H3K27me2/me3 demethylase activity annotation captures the precise function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032452" target="_blank" class="term-link">
+                                    GO:0032452
+                                </a>
+                            </span>
+                            <span class="term-label">histone demethylase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q95QK3" data-a="GO:0032452" data-r="GO_REF:0000117" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> JMJD-3.1 is a bona fide histone demethylase with specificity for H3K27me2/me3. This parent term is appropriate.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a correct parent term for the more specific H3K27me2/me3 demethylase activity. The IEA annotation is consistent with experimental evidence.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17713478" target="_blank" class="term-link">
+                                        PMID:17713478
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">UTX and JMJD3 are histone H3K27 demethylases involved in HOX gene regulation and development</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046872" target="_blank" class="term-link">
+                                    GO:0046872
+                                </a>
+                            </span>
+                            <span class="term-label">metal ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q95QK3" data-a="GO:0046872" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> JMJD-3.1 binds Fe(II) as a required cofactor for its dioxygenase activity. The JmjC domain contains conserved histidine and glutamate residues (H811, E813, H891) that coordinate Fe(II). Additionally, the C-terminal region contains a zinc-binding site (C998, C1001, C1025, C1028).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Metal ion binding is essential for jmjd-3.1 function. UniProt annotation confirms Fe(II) as cofactor and zinc binding at the C-terminus. While a more specific term like &#39;iron ion binding&#39; could be used, this general annotation is appropriate for an IEA.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051213" target="_blank" class="term-link">
+                                    GO:0051213
+                                </a>
+                            </span>
+                            <span class="term-label">dioxygenase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q95QK3" data-a="GO:0051213" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The JmjC domain of jmjd-3.1 catalyzes an Fe(II)/2-oxoglutarate-dependent dioxygenase reaction that demethylates H3K27. This is the mechanistic basis for histone demethylation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> JmjC domain histone demethylases function as dioxygenases, using molecular oxygen and 2-oxoglutarate in a hydroxylation reaction that leads to demethylation. This is biochemically accurate for the enzymatic mechanism.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25124442" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25124442
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Transdifferentiation. Sequential histone-modifying activitie...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q95QK3" data-a="GO:0005634" data-r="PMID:25124442" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct observation of jmjd-3.1 localization using tagged constructs showed diffuse nuclear localization. The protein contains a region (residues 369-417) required for nuclear localization.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Nuclear localization is directly demonstrated by imaging of tagged jmjd-3.1 constructs. This is essential for its function as a chromatin modifier acting on nuclear histones.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25124442" target="_blank" class="term-link">
+                                        PMID:25124442
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">functionally partitioned into discrete phases of Td through nuclear degradation of JMJD-3.1</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0060290" target="_blank" class="term-link">
+                                    GO:0060290
+                                </a>
+                            </span>
+                            <span class="term-label">transdifferentiation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25124442" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25124442
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Transdifferentiation. Sequential histone-modifying activitie...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q95QK3" data-a="GO:0060290" data-r="PMID:25124442" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> JMJD-3.1 is required for the robust transdifferentiation of the Y rectal epithelial cell into the PDA motor neuron. Loss of function or catalytic dead mutations disrupt this invariant cell fate conversion. The demethylase activity and H3 tail recognition are required for this function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is one of the best-characterized biological processes for jmjd-3.1 in C. elegans. The study demonstrates cell-autonomous requirement and dependence on catalytic activity. However, this represents a specific developmental role rather than the core molecular function of the protein.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25124442" target="_blank" class="term-link">
+                                        PMID:25124442
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">a conserved H3K27me3/me2 demethylase, JMJD-3.1, and the H3K4 methyltransferase Set1 complex cooperate to ensure invariant transdifferentiation (Td) of postmitotic Caenorhabditis elegans hindgut cells into motor neurons</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25124442" target="_blank" class="term-link">
+                                        PMID:25124442
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">robust conversion requires stepwise histone-modifying activities, functionally partitioned into discrete phases of Td through nuclear degradation of JMJD-3.1</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071558" target="_blank" class="term-link">
+                                    GO:0071558
+                                </a>
+                            </span>
+                            <span class="term-label">histone H3K27me2/H3K27me3 demethylase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25124442" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25124442
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Transdifferentiation. Sequential histone-modifying activitie...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q95QK3" data-a="GO:0071558" data-r="PMID:25124442" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The study demonstrates that jmjd-3.1 functions as an H3K27me3/me2 demethylase in the context of transdifferentiation. Mutations in catalytic residues (G888E, S903F) abolish demethylase activity and function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Direct experimental evidence demonstrates H3K27 demethylase activity through functional assays showing that catalytic domain mutations abolish the ability to promote transdifferentiation and demethylate H3K27.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25124442" target="_blank" class="term-link">
+                                        PMID:25124442
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">a conserved H3K27me3/me2 demethylase, JMJD-3.1</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071558" target="_blank" class="term-link">
+                                    GO:0071558
+                                </a>
+                            </span>
+                            <span class="term-label">histone H3K27me2/H3K27me3 demethylase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25124442" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25124442
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Transdifferentiation. Sequential histone-modifying activitie...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q95QK3" data-a="GO:0071558" data-r="PMID:25124442" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Mutant phenotype analysis shows that loss of jmjd-3.1 or catalytic dead mutations result in failure of transdifferentiation and correlate with H3K27 methylation status.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> IMP evidence from mutant analysis supports the demethylase activity assignment. Mutations in the JmjC catalytic domain residues (HME-&gt;TMG at 811-813, G888E, S903F) disrupt function consistent with loss of demethylase activity.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25124442" target="_blank" class="term-link">
+                                        PMID:25124442
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">robust conversion requires stepwise histone-modifying activities, functionally partitioned into discrete phases of Td through nuclear degradation of JMJD-3.1</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071558" target="_blank" class="term-link">
+                                    GO:0071558
+                                </a>
+                            </span>
+                            <span class="term-label">histone H3K27me2/H3K27me3 demethylase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17713478" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17713478
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    UTX and JMJD3 are histone H3K27 demethylases involved in HOX...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q95QK3" data-a="GO:0071558" data-r="PMID:17713478" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This foundational study identified jmjd-3.1 (F18E9.5) as a C. elegans ortholog of human JMJD3 and demonstrated that mutation or RNAi knockdown causes developmental defects consistent with loss of H3K27 demethylase function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the original study identifying jmjd-3.1 as an H3K27 demethylase ortholog. While the biochemical demonstration was primarily done with human JMJD3, the C. elegans ortholog showed functional conservation in gonad development assays.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17713478" target="_blank" class="term-link">
+                                        PMID:17713478
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">mutation of F18E9.5, a Caenorhabditis elegans JMJD3 orthologue, or inhibition of its expression, results in abnormal gonad development</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034620" target="_blank" class="term-link">
+                                    GO:0034620
+                                </a>
+                            </span>
+                            <span class="term-label">cellular response to unfolded protein</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27133168" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27133168
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Two Conserved Histone Demethylases Regulate Mitochondrial St...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q95QK3" data-a="GO:0034620" data-r="PMID:27133168" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> JMJD-3.1 is necessary and sufficient for activation of the mitochondrial unfolded protein response (UPRmt). Overexpression of jmjd-3.1 induces UPRmt gene expression including hsp-6, dve-1, and spg-7. The lifespan extension by jmjd-3.1 overexpression depends on UPRmt components ATFS-1, UBL-5, and CLPP-1.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The role of jmjd-3.1 in UPRmt activation is a major characterized function not captured in the current annotation set. Reduction of function of the demethylases potently suppresses longevity and UPRmt induction.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27133168" target="_blank" class="term-link">
+                                        PMID:27133168
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Reduction of function of the demethylases potently suppresses longevity and UPR(mt) induction, while gain of function is sufficient to extend lifespan in a UPR(mt)-dependent manner</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008340" target="_blank" class="term-link">
+                                    GO:0008340
+                                </a>
+                            </span>
+                            <span class="term-label">determination of adult lifespan</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27133168" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27133168
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Two Conserved Histone Demethylases Regulate Mitochondrial St...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q95QK3" data-a="GO:0008340" data-r="PMID:27133168" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> JMJD-3.1 regulates lifespan in C. elegans. Overexpression extends lifespan while knockdown reduces lifespan and suppresses mitochondrial stress-induced longevity. This is an evolutionarily conserved role as mammalian orthologs also regulate longevity.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Lifespan regulation is a well-documented phenotype for jmjd-3.1, mediated through its effects on stress response gene expression and proteostasis.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27133168" target="_blank" class="term-link">
+                                        PMID:27133168
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We identify the conserved histone lysine demethylases jmjd-1.2/PHF8 and jmjd-3.1/JMJD3 as positive regulators of lifespan in response to mitochondrial dysfunction across species</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27133168" target="_blank" class="term-link">
+                                        PMID:27133168
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Reduction of function of the demethylases potently suppresses longevity and UPR(mt) induction, while gain of function is sufficient to extend lifespan in a UPR(mt)-dependent manner</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>JMJD-3.1 is a JmjC domain-containing dioxygenase that specifically demethylates H3K27me2 and H3K27me3 marks. This is supported by conserved JmjC domain with Fe(II)-binding catalytic residues and orthology to characterized mammalian JMJD3/KDM6B. Unlike UTX-1, jmjd-3.1 acts more at specific loci rather than globally.</h3>
+                <span class="vote-buttons" data-g="Q95QK3" data-a="FUNCTION: JMJD-3.1 is a JmjC domain-containing dioxygenase t..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071558" target="_blank" class="term-link">
+                            histone H3K27me2/H3K27me3 demethylase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006325" target="_blank" class="term-link">
+                                chromatin organization
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010468" target="_blank" class="term-link">
+                                regulation of gene expression
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                nucleus
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>JMJD-3.1 is a key regulator of the mitochondrial UPR. Gain of function is sufficient to extend lifespan in a UPRmt-dependent manner. The lifespan-extending effects of jmjd-3.1 depend on UPRmt components ATFS-1, UBL-5, and CLPP-1.</h3>
+                <span class="vote-buttons" data-g="Q95QK3" data-a="FUNCTION: JMJD-3.1 is a key regulator of the mitochondrial U..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071558" target="_blank" class="term-link">
+                            histone H3K27me2/H3K27me3 demethylase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034620" target="_blank" class="term-link">
+                                cellular response to unfolded protein
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008340" target="_blank" class="term-link">
+                                determination of adult lifespan
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                nucleus
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">IBA annotations based on orthology to mammalian KDM6B/JMJD3</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Keyword-based IEA annotations for oxidoreductase, metal binding, dioxygenase</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Nuclear localization from UniProt subcellular location</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Histone demethylase activity from ARBA predictions</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Chromatin remodeling annotation (potentially over-annotated)</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17713478" target="_blank" class="term-link">
+                            PMID:17713478
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">UTX and JMJD3 are histone H3K27 demethylases involved in HOX gene regulation and development.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">First identification of jmjd-3.1 (F18E9.5) as C. elegans JMJD3 ortholog</div>
+                        
+                        <div class="finding-text">"mutation of F18E9.5, a Caenorhabditis elegans JMJD3 orthologue"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">RNAi knockdown causes abnormal gonad development</div>
+                        
+                        <div class="finding-text">"mutation of F18E9.5, a Caenorhabditis elegans JMJD3 orthologue, or inhibition of its expression, results in abnormal gonad development"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Established H3K27 demethylase activity for JMJD3 family</div>
+                        
+                        <div class="finding-text">"UTX and JMJD3 are histone H3K27 demethylases involved in HOX gene regulation and development"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25124442" target="_blank" class="term-link">
+                            PMID:25124442
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Transdifferentiation. Sequential histone-modifying activities determine the robustness of transdifferentiation.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Direct demonstration of H3K27me3/me2 demethylase activity</div>
+                        
+                        <div class="finding-text">"a conserved H3K27me3/me2 demethylase, JMJD-3.1"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Required for Y-to-PDA transdifferentiation</div>
+                        
+                        <div class="finding-text">"JMJD-3.1, and the H3K4 methyltransferase Set1 complex cooperate to ensure invariant transdifferentiation (Td) of postmitotic Caenorhabditis elegans hindgut cells into motor neurons"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Functions cell-autonomously with catalytic activity required</div>
+                        
+                        <div class="finding-text">"robust conversion requires stepwise histone-modifying activities"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Nuclear localization demonstrated</div>
+                        
+                        <div class="finding-text">"functionally partitioned into discrete phases of Td through nuclear degradation of JMJD-3.1"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Interacts with transcription factors including UNC-3</div>
+                        
+                        <div class="finding-text">"phase-specific interactions with transcription factors that have conserved roles in cell plasticity and terminal fate selection"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22570628" target="_blank" class="term-link">
+                            PMID:22570628
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The C. elegans H3K27 demethylase UTX-1 is essential for normal development, independent of its enzymatic activity.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">UTX-1 is dominant developmental H3K27 demethylase</div>
+                        
+                        <div class="finding-text">"UTX-1 regulates global levels of H3K27me2/3 in C. elegans"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">JMJD-3.1 paralogs contribute to locus-specific H3K27 demethylation</div>
+                        
+                        <div class="finding-text">"the loss of utx-1 leads to a more severe phenotype than the loss of jmjd-3.1, which only influences gonadal processes at high temperature and moderately reduces fertility"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Triple jmjd-3.1/3.2/3.3 deletion increases global H3K27me3</div>
+                        
+                        <div class="finding-text">"We generated mutant animals carrying mutations in all three JMJD3-like genes and, unexpectedly, we did not detect any additional phenotypes in the triple mutants"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">UTX-1 associates with SET-16/MLL-like complexes</div>
+                        
+                        <div class="finding-text">"Biochemical analysis identified UTX-1 as a component of a complex that includes SET-16(MLL)"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/27133168" target="_blank" class="term-link">
+                            PMID:27133168
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Two Conserved Histone Demethylases Regulate Mitochondrial Stress-Induced Longevity.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">jmjd-3.1 necessary and sufficient for UPRmt activation</div>
+                        
+                        <div class="finding-text">"Reduction of function of the demethylases potently suppresses longevity and UPR(mt) induction, while gain of function is sufficient to extend lifespan in a UPR(mt)-dependent manner"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">jmjd-3.1 is a positive regulator of lifespan</div>
+                        
+                        <div class="finding-text">"We identify the conserved histone lysine demethylases jmjd-1.2/PHF8 and jmjd-3.1/JMJD3 as positive regulators of lifespan in response to mitochondrial dysfunction across species"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Evolutionarily conserved role in longevity signaling</div>
+                        
+                        <div class="finding-text">"These findings illustrate an evolutionary conserved epigenetic mechanism that determines the rate of aging downstream of mitochondrial perturbations"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does jmjd-3.1 function as part of a larger chromatin-modifying complex in C. elegans, similar to mammalian JMJD3 in MLL3/4 complexes? While UTX-1 associates with SET-16/MLL-like complexes, jmjd-3.1 protein partners remain poorly defined. Understanding whether it acts alone or in a complex would clarify its recruitment mechanism.</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q95QK3" data-a="Q: Does jmjd-3.1 function as part of a larger chromat..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the genomic targeting mechanism for jmjd-3.1 at stress-responsive loci? JMJD-3.1 appears to act at specific loci rather than globally. The interaction with UNC-3 provides one example, but genome-wide ChIP studies would reveal the full scope of its targets.</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q95QK3" data-a="Q: What is the genomic targeting mechanism for jmjd-3..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How do the three JMJD3 paralogs (jmjd-3.1, jmjd-3.2, jmjd-3.3) partition their functions? Triple deletion shows no additional phenotypes beyond jmjd-3.1 single mutants, suggesting potential redundancy, but individual paralogs may have distinct stress-specific or tissue-specific roles.</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q95QK3" data-a="Q: How do the three JMJD3 paralogs (jmjd-3.1, jmjd-3...." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> ChIP-seq for jmjd-3.1 under basal and stress conditions to map genome-wide binding sites and correlate with H3K27me3 changes</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q95QK3" data-a="EXPERIMENT: ChIP-seq for jmjd-3.1 under basal and stress condi..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Co-immunoprecipitation/mass spectrometry of jmjd-3.1 to identify protein interaction partners and potential complex membership</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q95QK3" data-a="EXPERIMENT: Co-immunoprecipitation/mass spectrometry of jmjd-3..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Single-cell transcriptomics during Y-to-PDA transdifferentiation in jmjd-3.1 mutants to identify specific gene targets deregulated during cell fate conversion</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q95QK3" data-a="EXPERIMENT: Single-cell transcriptomics during Y-to-PDA transd..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Tags</h2>
+        <div class="aliases">
+            
+            <span class="badge">caeel-upr-stress</span>
+            
+        </div>
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(jmjd-3.1-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q95QK3" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2025-12-28T10:56:46.045829'<br />
+end_time: '2025-12-28T11:03:36.846098'<br />
+duration_seconds: 410.8<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: worm<br />
+  gene_id: jmjd-3.1<br />
+  gene_symbol: jmjd-3.1<br />
+  uniprot_accession: Q95QK3<br />
+  protein_description: 'RecName: Full=Lysine-specific demethylase jmjd-3.1 {ECO:0000305};<br />
+    EC=1.14.11.- {ECO:0000269|PubMed:17713478}; AltName: Full=JmjC domain-containing<br />
+    protein 3.1 {ECO:0000305};'<br />
+  gene_info: Name=jmjd-3.1 {ECO:0000312|WormBase:F18E9.5b}; ORFNames=F18E9.5 {ECO:0000312|WormBase:F18E9.5b};<br />
+  organism_full: Caenorhabditis elegans.<br />
+  protein_family: Belongs to the UTX family. .<br />
+  protein_domains: Corepressor-Demethylase. (IPR051630); JmjC_dom. (IPR003347); KDM6_GATAL_sf.<br />
+    (IPR046941); KDM6A_B-like_C-hel. (IPR048562); JmjC (PF02373)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 13</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q95QK3</li>
+<li><strong>Protein Description:</strong> RecName: Full=Lysine-specific demethylase jmjd-3.1 {ECO:0000305}; EC=1.14.11.- {ECO:0000269|PubMed:17713478}; AltName: Full=JmjC domain-containing protein 3.1 {ECO:0000305};</li>
+<li><strong>Gene Information:</strong> Name=jmjd-3.1 {ECO:0000312|WormBase:F18E9.5b}; ORFNames=F18E9.5 {ECO:0000312|WormBase:F18E9.5b};</li>
+<li><strong>Organism (full):</strong> Caenorhabditis elegans.</li>
+<li><strong>Protein Family:</strong> Belongs to the UTX family. .</li>
+<li><strong>Key Domains:</strong> Corepressor-Demethylase. (IPR051630); JmjC_dom. (IPR003347); KDM6_GATAL_sf. (IPR046941); KDM6A_B-like_C-hel. (IPR048562); JmjC (PF02373)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "jmjd-3.1" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Caenorhabditis elegans.</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'jmjd-3.1' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>jmjd-3.1</strong> (gene ID: jmjd-3.1, UniProt: Q95QK3) in worm.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q95QK3</li>
+<li><strong>Protein Description:</strong> RecName: Full=Lysine-specific demethylase jmjd-3.1 {ECO:0000305}; EC=1.14.11.- {ECO:0000269|PubMed:17713478}; AltName: Full=JmjC domain-containing protein 3.1 {ECO:0000305};</li>
+<li><strong>Gene Information:</strong> Name=jmjd-3.1 {ECO:0000312|WormBase:F18E9.5b}; ORFNames=F18E9.5 {ECO:0000312|WormBase:F18E9.5b};</li>
+<li><strong>Organism (full):</strong> Caenorhabditis elegans.</li>
+<li><strong>Protein Family:</strong> Belongs to the UTX family. .</li>
+<li><strong>Key Domains:</strong> Corepressor-Demethylase. (IPR051630); JmjC_dom. (IPR003347); KDM6_GATAL_sf. (IPR046941); KDM6A_B-like_C-hel. (IPR048562); JmjC (PF02373)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "jmjd-3.1" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Caenorhabditis elegans.</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'jmjd-3.1' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>jmjd-3.1</strong> (gene ID: jmjd-3.1, UniProt: Q95QK3) in worm.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<p>Plan overview<br />
+- Verified identity and context: jmjd-3.1 (UniProt Q95QK3; WormBase F18E9.5/F18E9.5b) encodes a JMJD3-like JmjC-domain histone demethylase of the UTX/KDM6 family in Caenorhabditis elegans. It carries the conserved JmjC catalytic motif and has been genetically and functionally linked to H3K27 demethylation and stress-responsive transcriptional programs (see Evidence Table). (vandamme2012thec.elegans pages 4-4)</p>
+<p>Research report: jmjd-3.1 (Q95QK3) functional annotation in C. elegans</p>
+<p>1) Key concepts and definitions<br />
+- Molecular identity and domains: jmjd-3.1 encodes a JmjC-domain lysine demethylase in the KDM6/UTX family, orthologous to vertebrate JMJD3/KDM6B. The JmjC catalytic domain supports Fe(II)/α-ketoglutarate–dependent demethylation. In nematodes, JMJD3-like proteins (jmjd-3.1/3.2/3.3) and UTX-1 comprise the H3K27 demethylase set. Family assignments and domain architecture in C. elegans are consistent with a corepressor–demethylase role for jmjd-3.1. URL: https://doi.org/10.1371/journal.pgen.1002647 (May 2012). (vandamme2012thec.elegans pages 4-4, vandamme2012thec.elegans pages 8-10)<br />
+- Catalytic activity and substrate specificity: Functional and genetic data position jmjd-3.1 as an H3K27me2/3 demethylase acting at specific loci. While triple deletion of jmjd-3.1/3.2/3.3 increases global H3K27me3, single jmjd-3.1 mutants often lack strong global effects, implying locus specificity and partial redundancy with other KDM6 enzymes (UTX-1 being the dominant global H3K27 demethylase). URL: https://doi.org/10.1371/journal.pgen.1002647 (May 2012); supportive functional placement in stress pathways: https://doi.org/10.1016/j.cell.2016.04.012 (May 2016). (vandamme2012thec.elegans pages 4-4, vandamme2012thec.elegans pages 8-10, merkwirth2016twoconservedhistone pages 4-6, merkwirth2016twoconservedhistone pages 1-3)<br />
+- Subcellular localization: jmjd-3.1 functions in the nucleus; nuclear entry is required for transcriptional effects. Overexpressed jmjd-3.1::mCherry shows diffuse nuclear localization across multiple tissues in transgenic worms. URL: https://doi.org/10.1016/j.molcel.2015.06.027 (Aug 2015). (labbadia2015repressionofthe pages 6-8)</p>
+<p>2) Recent developments and latest research<br />
+- Mitochondrial stress reprogramming and longevity: jmjd-3.1 is necessary and sufficient to activate the mitochondrial unfolded protein response (UPRmt) and to mediate transcriptional programs downstream of respiratory-chain perturbation. Overexpression of jmjd-3.1 (under its endogenous promoter) induces UPRmt gene expression and extends lifespan, and this pro-longevity effect requires canonical UPRmt components (ATFS-1, UBL-5, CLPP-1). URL: https://doi.org/10.1016/j.cell.2016.04.012 (May 2016). While not 2023–2024, this remains the most definitive mechanistic study of jmjd-3.1 in stress-induced longevity. (merkwirth2016twoconservedhistone pages 7-10, merkwirth2016twoconservedhistone pages 4-6, merkwirth2016twoconservedhistone pages 6-7)<br />
+- Heat-shock response (HSR) maintenance with age: jmjd-3.1 supports stress-gene inducibility during early adulthood. Loss of jmjd-3.1 compromises HSR target induction and survival after heat shock, while overexpression preserves HSR inducibility and stress resilience in aging adults. URL: https://doi.org/10.1016/j.molcel.2015.06.027 (Aug 2015). (labbadia2015repressionofthe pages 6-8)<br />
+- KDM6 family context in development and redundancy: Comparative C. elegans work indicates UTX-1 is the predominant enzyme for global H3K27me2/3 removal during development, whereas JMJD3-like paralogs (including jmjd-3.1) contribute more locus-specifically and in stress/aging contexts. URL: https://doi.org/10.1371/journal.pgen.1002647 (May 2012). (vandamme2012thec.elegans pages 4-4, vandamme2012thec.elegans pages 8-10)</p>
+<p>3) Current applications and real-world implementations<br />
+- Genetic epistasis to place jmjd-3.1 in UPRmt: RNAi against ubl-5 or atfs-1 suppresses UPRmt induction and lifespan extension in jmjd-3.1 overexpressors, establishing dependency on core UPRmt machinery. This has become a common strategy to test UPRmt involvement in long-lived genetic backgrounds. URL: https://doi.org/10.1016/j.cell.2016.04.012 (May 2016). (merkwirth2016twoconservedhistone pages 6-7)<br />
+- Chemical probing of H3K27 demethylase activity: The cell-permeable inhibitor GSK-J4 attenuates UPRmt activation in C. elegans, functionally linking H3K27 demethylase activity to mitochondrial stress signaling. URL: https://doi.org/10.1016/j.cell.2016.04.012 (May 2016). (merkwirth2016twoconservedhistone pages 4-6)<br />
+- Stress-physiology assays in aging: Heat shock survival, thermotolerance, and late-life transcriptional inducibility assays have used jmjd-3.1 mutants and overexpressors to dissect chromatin control of proteostasis with age. URL: https://doi.org/10.1016/j.molcel.2015.06.027 (Aug 2015). (labbadia2015repressionofthe pages 6-8)</p>
+<p>4) Expert opinions and analysis from authoritative sources<br />
+- Stress and longevity programs require chromatin remodeling: Cell and Molecular Cell studies conclude that histone demethylases act as upstream effectors that license stress-specific transcriptional programs and lifespan extension. jmjd-3.1/JMJD3 is a conserved arthropod/vertebrate demethylase whose induction or activity correlates with UPRmt output and longevity phenotypes. URLs: https://doi.org/10.1016/j.cell.2016.04.012 (May 2016); https://doi.org/10.1016/j.molcel.2015.06.027 (Aug 2015). (merkwirth2016twoconservedhistone pages 1-3, labbadia2015repressionofthe pages 6-8)<br />
+- Developmental vs stress roles: In C. elegans, UTX-1 plays the dominant developmental H3K27 demethylase role (enzymatic activity-independent developmental functions also reported for UTX-1), while jmjd-3.1 contributes more evidently to stress responses and aging pathways under laboratory conditions. URL: https://doi.org/10.1371/journal.pgen.1002647 (May 2012). (vandamme2012thec.elegans pages 4-4, vandamme2012thec.elegans pages 16-16)</p>
+<p>5) Statistics and data from recent studies<br />
+- Transcriptional overlap with mitochondrial ETC perturbation: RNA-seq comparing jmjd-3.1 overexpression to cco-1(RNAi) ETC knockdown revealed 1,405 overlapping differentially expressed genes, with 99% (1,385/1,405) concordant directionality; UPRmt genes (e.g., hsp-6, dve-1, spg-7) upregulated and nuclear OXPHOS genes broadly downregulated in both contexts. URL: https://doi.org/10.1016/j.cell.2016.04.012 (May 2016). (merkwirth2016twoconservedhistone pages 7-10)<br />
+- Genetic dependencies for longevity: Lifespan extension by jmjd-3.1 overexpression is suppressed by ubl-5 RNAi and requires atfs-1 and clpp-1 for UPRmt signaling; jmjd-3.1 knockdown suppresses lifespan extension induced by cco-1(RNAi). URL: https://doi.org/10.1016/j.cell.2016.04.012 (May 2016). (merkwirth2016twoconservedhistone pages 6-7)<br />
+- Heat-shock response metrics: jmjd-3.1 null mutants show approximately 60% reduction in heat-shock gene induction and diminished survival/recovery after acute heat stress; jmjd-3.1 overexpression increases thermotolerance and preserves inducibility of stress genes. URL: https://doi.org/10.1016/j.molcel.2015.06.027 (Aug 2015). (labbadia2015repressionofthe pages 6-8)<br />
+- Longevity effects in adult worms: In a transgenic context, jmjd-3.1 overexpression increased median lifespan by roughly 20% and maximal lifespan by approximately 12% in day-2 adults, with a concomitant ≈20% reduction in brood size and mitigation of age-related motility and pharyngeal phenotypes. URL: https://doi.org/10.1016/j.molcel.2015.06.027 (Aug 2015). (labbadia2015repressionofthe pages 6-8)</p>
+<p>Biological processes and pathways<br />
+- Mitochondrial UPR pathway positioning: jmjd-3.1 acts upstream of UPRmt transcriptional modules and requires UBL-5 and ATFS-1. Its overexpression is sufficient to recapitulate most of the ETC perturbation–driven transcriptome, emphasizing a chromatin-priming role for mitochondrial stress responses. URL: https://doi.org/10.1016/j.cell.2016.04.012 (May 2016). (merkwirth2016twoconservedhistone pages 7-10, merkwirth2016twoconservedhistone pages 6-7)<br />
+- Heat-shock response and proteostasis: jmjd-3.1 maintains stress gene inducibility during the reproductive transition, when the HSR is normally repressed, highlighting a role in age-related proteostasis decline. Nuclear localization is necessary for these effects. URL: https://doi.org/10.1016/j.molcel.2015.06.027 (Aug 2015). (labbadia2015repressionofthe pages 6-8)<br />
+- Development and H3K27 demethylation landscape: Family-level work shows UTX-1 strongly controls developmental H3K27me2/3 levels, while jmjd-3.1 and paralogs modulate specific gene sets and contribute to stress/aging programs. Triple deletion of JMJD3-like genes increases global H3K27me3, yet animals remain viable, consistent with nonessential developmental roles for jmjd-3.1 under standard conditions. URL: https://doi.org/10.1371/journal.pgen.1002647 (May 2012). (vandamme2012thec.elegans pages 4-4, vandamme2012thec.elegans pages 8-10)</p>
+<p>Subcellular localization and expression<br />
+- Localization: Nuclear; nuclear entry is required for transcriptional reprogramming. URL: https://doi.org/10.1016/j.molcel.2015.06.027 (Aug 2015). (labbadia2015repressionofthe pages 6-8)<br />
+- Tissue expression: Reporter and qPCR data indicate expression in neurons, intestine, muscle, and hypodermis in overexpression lines; endogenous jmjd-3.1 is expressed at levels comparable to utx-1, whereas jmjd-3.2/3.3 are weaker. URL: https://doi.org/10.1371/journal.pgen.1002647 (May 2012); https://doi.org/10.1016/j.molcel.2015.06.027 (Aug 2015). (vandamme2012thec.elegans pages 4-4, labbadia2015repressionofthe pages 6-8)</p>
+<p>Interaction partners and complexes<br />
+- jmjd-3.1 partners are not firmly established in the retrieved literature. By contrast, the related UTX-1 co-purifies with SET-16/MLL-like complexes, suggesting that while UTX-1 integrates into large chromatin assemblies, jmjd-3.1 may be more locus-specific or conditionally recruited during stress responses. URL: https://doi.org/10.1371/journal.pgen.1002647 (May 2012). (vandamme2012thec.elegans pages 4-4, vandamme2012thec.elegans pages 16-16)</p>
+<p>Ambiguity check and symbol verification<br />
+- The symbol “jmjd-3.1” in C. elegans refers specifically to the JMJD3-like KDM6 family demethylase encoded by F18E9.5; this is distinct from human JMJD3/KDM6B. All claims herein refer to the C. elegans protein matching UniProt Q95QK3. (vandamme2012thec.elegans pages 4-4)</p>
+<p>Limitations and open questions<br />
+- Direct biochemical assays in C. elegans establishing jmjd-3.1’s kinetic parameters and genome-wide H3K27 substrate maps under defined stresses remain areas for expansion. Most precise pathway placement derives from genetic/chemical epistasis and transcriptomics. While 2023–2024 nematode reviews acknowledge the KDM6/JMJD3 role in embryonic chromatin and stress physiology, the definitive mechanistic jmjd-3.1 studies remain the 2012–2016 primary literature cited here. (merkwirth2016twoconservedhistone pages 7-10, vandamme2012thec.elegans pages 4-4)</p>
+<p>Practical takeaways<br />
+- Primary function: H3K27me2/3 demethylase that licenses stress-responsive transcriptional programs, notably UPRmt and aspects of the HSR, in the nucleus. (merkwirth2016twoconservedhistone pages 7-10, labbadia2015repressionofthe pages 6-8, vandamme2012thec.elegans pages 4-4)<br />
+- Localization and context: Nuclear demethylase acting at select loci; functions prominently under mitochondrial stress and during early adult proteostasis transitions. (merkwirth2016twoconservedhistone pages 7-10, labbadia2015repressionofthe pages 6-8)<br />
+- Pathways: UPRmt (requires ATFS-1, UBL-5, CLPP-1), with reported effects on heat-shock inducibility and longevity; developmental H3K27 regulation predominantly mediated by UTX-1. (merkwirth2016twoconservedhistone pages 6-7, labbadia2015repressionofthe pages 6-8, vandamme2012thec.elegans pages 4-4)</p>
+<p>Key evidence table<br />
+| Aspect | Key finding (1–3 sentences) | Quantitative details | Organism/context | Source | Citation IDs |<br />
+|---|---|---:|---|---|---|<br />
+| Identity / family / domains | jmjd-3.1 is a JMJD3-like member of the KDM6 (UTX/JMJD3) family; contains a JmjC catalytic domain and corepressor‑demethylase annotations (matches UniProt Q95QK3 / ORF F18E9.5). | — | Caenorhabditis elegans | Vandamme et al., PLoS Genet (2012) - https://doi.org/10.1371/journal.pgen.1002647 | (vandamme2012thec.elegans pages 4-4) |<br />
+| Catalytic activity &amp; substrate | Evidence consistent with H3K27me2/3 demethylase activity (JmjC catalytic motif present); contributes to removal of H3K27me3 at specific loci rather than globally (UTX-1 is dominant global demethylase). | Triple jmjd-3.1/3.2/3.3 deletions ↑ global H3K27me3; single jmjd-3.1 loss often shows little global change. | C. elegans; biochemical/ genetics | Merkwirth et al., Cell (2016) - https://doi.org/10.1016/j.cell.2016.04.012; Vandamme et al., PLoS Genet (2012) - https://doi.org/10.1371/journal.pgen.1002647 | (merkwirth2016twoconservedhistone pages 7-10, vandamme2012thec.elegans pages 4-4) |<br />
+| Subcellular localization | jmjd-3.1 shows diffuse nuclear localization; nuclear entry is required for its transcriptional effects (nuclear targeting needed for overexpression phenotypes). | Overexpressed jmjd-3.1::mCherry line shows ~30-fold higher expression than WT (transgenic context). | C. elegans; transgenic reporter studies | Labbadia &amp; Morimoto, Mol Cell (2015) - https://doi.org/10.1016/j.molcel.2015.06.027 | (labbadia2015repressionofthe pages 6-8) |<br />
+| Expression / tissue pattern | Expressed in multiple somatic tissues (reported in neurons, intestine, muscle, hypodermis for overexpression reporter); endogenous jmjd-3.1 expressed at levels comparable to utx-1, while jmjd-3.2/3.3 are weaker. | Endogenous comparisons reported qualitatively; transgenic overexpression ≈30× WT (reporter line). | C. elegans | Vandamme et al., PLoS Genet (2012); Labbadia &amp; Morimoto (2015) - https://doi.org/10.1371/journal.pgen.1002647; https://doi.org/10.1016/j.molcel.2015.06.027 | (vandamme2012thec.elegans pages 4-4, labbadia2015repressionofthe pages 6-8) |<br />
+| Heat shock response role | jmjd-3.1 is implicated in regulating heat-shock/stress-gene induction: loss reduces stress-induced HSR gene activation and survival after heat shock; overexpression preserves inducibility and increases thermotolerance. | jmjd-3.1 nulls show ~60% reduction in stress-induced HSR gene expression; overexpression increases median and maximal lifespan by ~20% and ~12% respectively in one report (day-2 adults) and reduces brood size ≈20% (transgenic context). | C. elegans; stress assays, transgenics | Labbadia &amp; Morimoto, Mol Cell (2015) - https://doi.org/10.1016/j.molcel.2015.06.027 | (labbadia2015repressionofthe pages 6-8) |<br />
+| Mitochondrial UPR (UPRmt) role | jmjd-3.1 is necessary and sufficient to induce the mitochondrial unfolded protein response (UPRmt) and to mediate transcriptional programs downstream of mitochondrial ETC perturbation; acts upstream of core UPRmt factors. | Overexpression overlaps cco-1 RNAi transcriptional response: 1,405 overlapping genes with 99% concordance; pharmacologic inhibitor GSK-J4 blocks UPRmt activation. | C. elegans; UPRmt reporter and RNA‑seq | Merkwirth et al., Cell (2016) - https://doi.org/10.1016/j.cell.2016.04.012 | (merkwirth2016twoconservedhistone pages 7-10) |<br />
+| Longevity effects &amp; dependencies | jmjd-3.1 overexpression extends lifespan; jmjd-3.1 is required for ETC/mitochondrial‑stress induced longevity and its lifespan effects depend on UPRmt components. | Lifespan extension reported with jmjd-3.1 OE (percent change context-dependent; Labbadia reported ~20% median increase for OE line); ubl-5, atfs-1, clpp-1 RNAi suppress jmjd-3.1 OE lifespan extension; jmjd-3.1 RNAi suppresses cco-1–mediated longevity. | C. elegans; genetic epistasis &amp; RNAi | Merkwirth et al., Cell (2016) - https://doi.org/10.1016/j.cell.2016.04.012; Labbadia &amp; Morimoto (2015) - https://doi.org/10.1016/j.molcel.2015.06.027 | (merkwirth2016twoconservedhistone pages 7-10, labbadia2015repressionofthe pages 6-8) |<br />
+| Developmental phenotypes | Single jmjd-3.1 mutants are viable with minor/no strong global developmental defects; combined deletion of JMJD3-like genes yields increased H3K27me3 but animals remain largely viable (suggesting redundancy or limited developmental requirement). | Triple jmjd-3.1/3.2/3.3 deletion increased global H3K27me3 but animals remained fertile/viable with modest gonadal defects; utx-1 shows stronger developmental necessity. | C. elegans; genetic deletion studies | Vandamme et al., PLoS Genet (2012) - https://doi.org/10.1371/journal.pgen.1002647 | (vandamme2012thec.elegans pages 4-4) |<br />
+| Specificity vs other stress pathways | Evidence is context-dependent: Merkwirth et al. report jmjd-3.1 specifically affects UPRmt with little effect on ER UPR or antioxidant reporters; Labbadia et al. report jmjd-3.1 influences heat-shock response—implying pathway-specific and experimental-condition differences. | Merkwirth: little/no effect on hsp-4p::gfp (ER UPR) or hsp-16.2p::gfp (HSR) in their assays; Labbadia: ~60% reduction in HS gene induction in jmjd-3.1 nulls. | C. elegans; stress-pathway assays | Merkwirth et al., Cell (2016) - https://doi.org/10.1016/j.cell.2016.04.012; Labbadia &amp; Morimoto (2015) - https://doi.org/10.1016/j.molcel.2015.06.027 | (merkwirth2016twoconservedhistone pages 7-10, labbadia2015repressionofthe pages 6-8) |<br />
+| Interaction partners / complexes | Direct interaction partners for jmjd-3.1 are not well defined in available studies; by contrast UTX‑1 was biochemically found in complexes with SET‑16 (MLL‑like) and associated chromatin regulators, suggesting jmjd-3.1 may act more locus‑specifically while UTX‑1 engages multi‑subunit complexes. | UTX‑1 biochemical complex membership reported (SET‑16); jmjd-3.1 partners not specified in retrieved literature. | C. elegans; biochemical pulldown/genetics | Vandamme et al., PLoS Genet (2012) - https://doi.org/10.1371/journal.pgen.1002647 | (vandamme2012thec.elegans pages 4-4, vandamme2012thec.elegans pages 16-16) |</p>
+<p><em>Table: Concise, source-linked summary of experimental evidence for C. elegans jmjd-3.1 (UniProt Q95QK3), covering identity, catalytic activity, localization, pathway roles, phenotypes and quantitative outcomes from Vandamme 2012, Merkwirth 2016, and Labbadia 2015.</em></p>
+<p>References</p>
+<ol>
+<li>
+<p>(vandamme2012thec.elegans pages 4-4): Julien Vandamme, Gaëlle Lettier, Simone Sidoli, Elia Di Schiavi, Ole Nørregaard Jensen, and Anna Elisabetta Salcini. The c. elegans h3k27 demethylase utx-1 is essential for normal development, independent of its enzymatic activity. PLoS Genetics, 8:e1002647, May 2012. URL: https://doi.org/10.1371/journal.pgen.1002647, doi:10.1371/journal.pgen.1002647. This article has 84 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(vandamme2012thec.elegans pages 8-10): Julien Vandamme, Gaëlle Lettier, Simone Sidoli, Elia Di Schiavi, Ole Nørregaard Jensen, and Anna Elisabetta Salcini. The c. elegans h3k27 demethylase utx-1 is essential for normal development, independent of its enzymatic activity. PLoS Genetics, 8:e1002647, May 2012. URL: https://doi.org/10.1371/journal.pgen.1002647, doi:10.1371/journal.pgen.1002647. This article has 84 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(merkwirth2016twoconservedhistone pages 4-6): Carsten Merkwirth, Virginija Jovaisaite, Jenni Durieux, Olli Matilainen, Sabine D. Jordan, Pedro M. Quiros, Kristan K. Steffen, Evan G. Williams, Laurent Mouchiroud, Sarah U. Tronnes, Virginia Murillo, Suzanne C. Wolff, Reuben J. Shaw, Johan Auwerx, and Andrew Dillin. Two conserved histone demethylases regulate mitochondrial stress-induced longevity. Cell, 165:1209-1223, May 2016. URL: https://doi.org/10.1016/j.cell.2016.04.012, doi:10.1016/j.cell.2016.04.012. This article has 388 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(merkwirth2016twoconservedhistone pages 1-3): Carsten Merkwirth, Virginija Jovaisaite, Jenni Durieux, Olli Matilainen, Sabine D. Jordan, Pedro M. Quiros, Kristan K. Steffen, Evan G. Williams, Laurent Mouchiroud, Sarah U. Tronnes, Virginia Murillo, Suzanne C. Wolff, Reuben J. Shaw, Johan Auwerx, and Andrew Dillin. Two conserved histone demethylases regulate mitochondrial stress-induced longevity. Cell, 165:1209-1223, May 2016. URL: https://doi.org/10.1016/j.cell.2016.04.012, doi:10.1016/j.cell.2016.04.012. This article has 388 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(labbadia2015repressionofthe pages 6-8): Johnathan Labbadia and Richard I. Morimoto. Repression of the heat shock response is a programmed event at the onset of reproduction. Molecular cell, 59 4:639-50, Aug 2015. URL: https://doi.org/10.1016/j.molcel.2015.06.027, doi:10.1016/j.molcel.2015.06.027. This article has 365 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(merkwirth2016twoconservedhistone pages 7-10): Carsten Merkwirth, Virginija Jovaisaite, Jenni Durieux, Olli Matilainen, Sabine D. Jordan, Pedro M. Quiros, Kristan K. Steffen, Evan G. Williams, Laurent Mouchiroud, Sarah U. Tronnes, Virginia Murillo, Suzanne C. Wolff, Reuben J. Shaw, Johan Auwerx, and Andrew Dillin. Two conserved histone demethylases regulate mitochondrial stress-induced longevity. Cell, 165:1209-1223, May 2016. URL: https://doi.org/10.1016/j.cell.2016.04.012, doi:10.1016/j.cell.2016.04.012. This article has 388 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(merkwirth2016twoconservedhistone pages 6-7): Carsten Merkwirth, Virginija Jovaisaite, Jenni Durieux, Olli Matilainen, Sabine D. Jordan, Pedro M. Quiros, Kristan K. Steffen, Evan G. Williams, Laurent Mouchiroud, Sarah U. Tronnes, Virginia Murillo, Suzanne C. Wolff, Reuben J. Shaw, Johan Auwerx, and Andrew Dillin. Two conserved histone demethylases regulate mitochondrial stress-induced longevity. Cell, 165:1209-1223, May 2016. URL: https://doi.org/10.1016/j.cell.2016.04.012, doi:10.1016/j.cell.2016.04.012. This article has 388 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(vandamme2012thec.elegans pages 16-16): Julien Vandamme, Gaëlle Lettier, Simone Sidoli, Elia Di Schiavi, Ole Nørregaard Jensen, and Anna Elisabetta Salcini. The c. elegans h3k27 demethylase utx-1 is essential for normal development, independent of its enzymatic activity. PLoS Genetics, 8:e1002647, May 2012. URL: https://doi.org/10.1371/journal.pgen.1002647, doi:10.1371/journal.pgen.1002647. This article has 84 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>labbadia2015repressionofthe pages 6-8</li>
+<li>merkwirth2016twoconservedhistone pages 6-7</li>
+<li>merkwirth2016twoconservedhistone pages 4-6</li>
+<li>merkwirth2016twoconservedhistone pages 7-10</li>
+<li>merkwirth2016twoconservedhistone pages 1-3</li>
+<li>https://doi.org/10.1371/journal.pgen.1002647</li>
+<li>https://doi.org/10.1016/j.cell.2016.04.012</li>
+<li>https://doi.org/10.1016/j.molcel.2015.06.027</li>
+<li>https://doi.org/10.1016/j.cell.2016.04.012;</li>
+<li>https://doi.org/10.1371/journal.pgen.1002647;</li>
+<li>https://doi.org/10.1371/journal.pgen.1002647,</li>
+<li>https://doi.org/10.1016/j.cell.2016.04.012,</li>
+<li>https://doi.org/10.1016/j.molcel.2015.06.027,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q95QK3
+gene_symbol: jmjd-3.1
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:6239
+  label: Caenorhabditis elegans
+description: JMJD-3.1 is a JmjC domain-containing lysine-specific demethylase belonging
+  to the UTX/KDM6 family that specifically demethylates H3K27me2/me3, marks associated
+  with transcriptional repression. The enzyme requires Fe(II) as a cofactor for its
+  dioxygenase activity. JMJD-3.1 functions in the nucleus where it removes repressive
+  H3K27 methylation marks at specific loci to enable gene activation. Unlike the related
+  UTX-1 which is the dominant global H3K27 demethylase during development, JMJD-3.1
+  acts more locus-specifically and contributes primarily to stress response pathways
+  including the mitochondrial unfolded protein response (UPRmt) and heat shock response.
+  It is required for the robust transdifferentiation of the Y rectal epithelial cell
+  into the PDA motor neuron during larval development. Overexpression of jmjd-3.1
+  extends lifespan in a manner dependent on UPRmt components (ATFS-1, UBL-5, CLPP-1).
+existing_annotations:
+- term:
+    id: GO:0010468
+    label: regulation of gene expression
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: JMJD-3.1 regulates gene expression by removing repressive H3K27me2/me3
+      marks, thereby enabling transcriptional activation. This is well-supported by
+      studies showing jmjd-3.1 is required for stress-induced gene expression programs
+      (UPRmt, HSR) and for gene activation during transdifferentiation (PMID:25124442,
+      PMID:27133168).
+    action: ACCEPT
+    reason: The IBA annotation accurately captures that jmjd-3.1 regulates gene expression.
+      As an H3K27 demethylase, its core function is to remove repressive chromatin
+      marks and enable transcriptional activation of specific gene sets. This is a
+      parent term to more specific processes and is appropriate for the phylogenetic
+      inference.
+    supported_by:
+    - reference_id: PMID:25124442
+      supporting_text: a conserved H3K27me3/me2 demethylase, JMJD-3.1, and the H3K4
+        methyltransferase Set1 complex cooperate to ensure invariant transdifferentiation
+        (Td) of postmitotic Caenorhabditis elegans hindgut cells into motor neurons
+    - reference_id: PMID:27133168
+      supporting_text: We identify the conserved histone lysine demethylases jmjd-1.2/PHF8
+        and jmjd-3.1/JMJD3 as positive regulators of lifespan in response to mitochondrial
+        dysfunction across species
+- term:
+    id: GO:0071558
+    label: histone H3K27me2/H3K27me3 demethylase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: JMJD-3.1 is a member of the UTX/KDM6 family and contains the conserved
+      JmjC catalytic domain. Experimental evidence from PMID:17713478 and PMID:25124442
+      demonstrates H3K27me2/me3 demethylase activity. Mutations in catalytic residues
+      abolish function in transdifferentiation assays (PMID:25124442).
+    action: ACCEPT
+    reason: This is the core molecular function of jmjd-3.1. The IBA annotation is
+      consistent with direct experimental evidence from IDA annotations and the known
+      domain architecture (JmjC domain with conserved Fe-binding residues). This represents
+      the primary enzymatic activity of the protein.
+    supported_by:
+    - reference_id: PMID:17713478
+      supporting_text: mutation of F18E9.5, a Caenorhabditis elegans JMJD3 orthologue,
+        or inhibition of its expression, results in abnormal gonad development
+    - reference_id: PMID:25124442
+      supporting_text: a conserved H3K27me3/me2 demethylase, JMJD-3.1
+- term:
+    id: GO:0044666
+    label: MLL3/4 complex
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: The IBA annotation infers MLL3/4 complex membership based on orthology
+      to mammalian JMJD3/KDM6B. However, in C. elegans, UTX-1 (not jmjd-3.1) has been
+      shown to associate with SET-16/MLL-like complexes. The literature explicitly
+      notes that jmjd-3.1 partners are not well established and it may act more locus-specifically
+      rather than as part of large chromatin assemblies.
+    action: UNDECIDED
+    reason: While mammalian JMJD3/KDM6B is associated with MLL3/4 complexes, direct
+      evidence for C. elegans jmjd-3.1 membership in an equivalent complex is lacking.
+      The literature (Vandamme et al. 2012) specifically found UTX-1 in complex with
+      SET-16 but did not identify jmjd-3.1 complex partners. The phylogenetic inference
+      may not hold in this case given the functional divergence between UTX-1 and
+      JMJD-3 paralogs in C. elegans. More biochemical evidence is needed to confirm
+      or refute this annotation.
+    additional_reference_ids:
+    - PMID:22570628
+    supported_by:
+    - reference_id: PMID:22570628
+      supporting_text: Biochemical analysis identified UTX-1 as a component of a complex
+        that includes SET-16(MLL)
+- term:
+    id: GO:0000978
+    label: RNA polymerase II cis-regulatory region sequence-specific DNA binding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: This annotation suggests jmjd-3.1 has sequence-specific DNA binding activity
+      at Pol II regulatory regions. However, jmjd-3.1 is recruited to chromatin through
+      protein-protein interactions (e.g., with transcription factors like UNC-3) rather
+      than through intrinsic sequence-specific DNA binding. The protein lacks recognizable
+      DNA-binding domains.
+    action: REMOVE
+    reason: JMJD-3.1 does not contain canonical sequence-specific DNA-binding domains.
+      While it functions at regulatory regions to demethylate H3K27, it is recruited
+      through interactions with transcription factors (e.g., UNC-3 as shown in PMID:25124442)
+      rather than through direct sequence-specific DNA recognition. The chromatin
+      DNA binding annotation (GO:0031490) is more appropriate.
+    supported_by:
+    - reference_id: PMID:25124442
+      supporting_text: phase-specific interactions with transcription factors that
+        have conserved roles in cell plasticity and terminal fate selection
+- term:
+    id: GO:0031490
+    label: chromatin DNA binding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: JMJD-3.1 functions at chromatin where it demethylates H3K27. The protein
+      requires recognition of the H3 tail for its function (PMID:25124442). This general
+      chromatin binding activity is consistent with its role as a histone demethylase.
+    action: ACCEPT
+    reason: As a histone demethylase that acts on chromatin-bound histones, jmjd-3.1
+      must bind to chromatin to carry out its function. The annotation is appropriate
+      and consistent with the enzymatic mechanism. UniProt also notes a region required
+      for binding and function (residues 418-759).
+    supported_by:
+    - reference_id: PMID:25124442
+      supporting_text: robust conversion requires stepwise histone-modifying activities,
+        functionally partitioned into discrete phases of Td
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: Nuclear localization is well-established for jmjd-3.1 by direct experimental
+      evidence. The protein contains a region required for nuclear localization (residues
+      369-417) and overexpressed jmjd-3.1::mCherry shows diffuse nuclear localization.
+    action: ACCEPT
+    reason: This IEA annotation is correct and supported by direct experimental evidence
+      (IDA from PMID:25124442). Nuclear localization is essential for jmjd-3.1 function
+      as a chromatin modifier.
+    supported_by:
+    - reference_id: PMID:25124442
+      supporting_text: functionally partitioned into discrete phases of Td through
+        nuclear degradation of JMJD-3.1
+- term:
+    id: GO:0006325
+    label: chromatin organization
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: As an H3K27 demethylase, jmjd-3.1 directly modifies chromatin structure
+      by removing methyl groups from histones. This alters the chromatin state from
+      repressive to permissive for transcription.
+    action: ACCEPT
+    reason: H3K27 demethylation directly affects chromatin organization by removing
+      repressive marks and enabling chromatin state transitions. This is a core aspect
+      of jmjd-3.1 function as a histone-modifying enzyme.
+    supported_by:
+    - reference_id: PMID:25124442
+      supporting_text: Sequential histone-modifying activities determine the robustness
+        of transdifferentiation
+- term:
+    id: GO:0006338
+    label: chromatin remodeling
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: While jmjd-3.1 modifies chromatin through histone demethylation, chromatin
+      remodeling (GO:0006338) specifically refers to ATP-dependent alteration of nucleosome
+      structure. Histone demethylation is a distinct process from ATP-dependent chromatin
+      remodeling.
+    action: MODIFY
+    reason: Chromatin remodeling in GO specifically refers to ATP-dependent nucleosome
+      repositioning or eviction. JMJD-3.1 is not an ATP-dependent chromatin remodeler
+      but rather a covalent histone modifier. The more appropriate term is &#39;histone
+      H3-K27 demethylation&#39; (GO:0071557) or &#39;chromatin organization&#39; (GO:0006325).
+    proposed_replacement_terms:
+    - id: GO:0071557
+      label: histone H3-K27 demethylation
+    - id: GO:0006325
+      label: chromatin organization
+- term:
+    id: GO:0016491
+    label: oxidoreductase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: JMJD-3.1 catalyzes an oxidative demethylation reaction using Fe(II) and
+      2-oxoglutarate as cofactors, making it technically an oxidoreductase. However,
+      this is a very general term.
+    action: ACCEPT
+    reason: As a JmjC domain dioxygenase, jmjd-3.1 does have oxidoreductase activity.
+      While this is a broad parent term, it is technically correct for an IEA annotation
+      derived from keyword mapping. The more specific H3K27me2/me3 demethylase activity
+      annotation captures the precise function.
+- term:
+    id: GO:0032452
+    label: histone demethylase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  review:
+    summary: JMJD-3.1 is a bona fide histone demethylase with specificity for H3K27me2/me3.
+      This parent term is appropriate.
+    action: ACCEPT
+    reason: This is a correct parent term for the more specific H3K27me2/me3 demethylase
+      activity. The IEA annotation is consistent with experimental evidence.
+    supported_by:
+    - reference_id: PMID:17713478
+      supporting_text: UTX and JMJD3 are histone H3K27 demethylases involved in HOX
+        gene regulation and development
+- term:
+    id: GO:0046872
+    label: metal ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: JMJD-3.1 binds Fe(II) as a required cofactor for its dioxygenase activity.
+      The JmjC domain contains conserved histidine and glutamate residues (H811, E813,
+      H891) that coordinate Fe(II). Additionally, the C-terminal region contains a
+      zinc-binding site (C998, C1001, C1025, C1028).
+    action: ACCEPT
+    reason: Metal ion binding is essential for jmjd-3.1 function. UniProt annotation
+      confirms Fe(II) as cofactor and zinc binding at the C-terminus. While a more
+      specific term like &#39;iron ion binding&#39; could be used, this general annotation
+      is appropriate for an IEA.
+- term:
+    id: GO:0051213
+    label: dioxygenase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: The JmjC domain of jmjd-3.1 catalyzes an Fe(II)/2-oxoglutarate-dependent
+      dioxygenase reaction that demethylates H3K27. This is the mechanistic basis
+      for histone demethylation.
+    action: ACCEPT
+    reason: JmjC domain histone demethylases function as dioxygenases, using molecular
+      oxygen and 2-oxoglutarate in a hydroxylation reaction that leads to demethylation.
+      This is biochemically accurate for the enzymatic mechanism.
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IDA
+  original_reference_id: PMID:25124442
+  review:
+    summary: Direct observation of jmjd-3.1 localization using tagged constructs showed
+      diffuse nuclear localization. The protein contains a region (residues 369-417)
+      required for nuclear localization.
+    action: ACCEPT
+    reason: Nuclear localization is directly demonstrated by imaging of tagged jmjd-3.1
+      constructs. This is essential for its function as a chromatin modifier acting
+      on nuclear histones.
+    supported_by:
+    - reference_id: PMID:25124442
+      supporting_text: functionally partitioned into discrete phases of Td through
+        nuclear degradation of JMJD-3.1
+- term:
+    id: GO:0060290
+    label: transdifferentiation
+  evidence_type: IMP
+  original_reference_id: PMID:25124442
+  review:
+    summary: JMJD-3.1 is required for the robust transdifferentiation of the Y rectal
+      epithelial cell into the PDA motor neuron. Loss of function or catalytic dead
+      mutations disrupt this invariant cell fate conversion. The demethylase activity
+      and H3 tail recognition are required for this function.
+    action: ACCEPT
+    reason: This is one of the best-characterized biological processes for jmjd-3.1
+      in C. elegans. The study demonstrates cell-autonomous requirement and dependence
+      on catalytic activity. However, this represents a specific developmental role
+      rather than the core molecular function of the protein.
+    supported_by:
+    - reference_id: PMID:25124442
+      supporting_text: a conserved H3K27me3/me2 demethylase, JMJD-3.1, and the H3K4
+        methyltransferase Set1 complex cooperate to ensure invariant transdifferentiation
+        (Td) of postmitotic Caenorhabditis elegans hindgut cells into motor neurons
+    - reference_id: PMID:25124442
+      supporting_text: robust conversion requires stepwise histone-modifying activities,
+        functionally partitioned into discrete phases of Td through nuclear degradation
+        of JMJD-3.1
+- term:
+    id: GO:0071558
+    label: histone H3K27me2/H3K27me3 demethylase activity
+  evidence_type: IDA
+  original_reference_id: PMID:25124442
+  review:
+    summary: The study demonstrates that jmjd-3.1 functions as an H3K27me3/me2 demethylase
+      in the context of transdifferentiation. Mutations in catalytic residues (G888E,
+      S903F) abolish demethylase activity and function.
+    action: ACCEPT
+    reason: Direct experimental evidence demonstrates H3K27 demethylase activity through
+      functional assays showing that catalytic domain mutations abolish the ability
+      to promote transdifferentiation and demethylate H3K27.
+    supported_by:
+    - reference_id: PMID:25124442
+      supporting_text: a conserved H3K27me3/me2 demethylase, JMJD-3.1
+- term:
+    id: GO:0071558
+    label: histone H3K27me2/H3K27me3 demethylase activity
+  evidence_type: IMP
+  original_reference_id: PMID:25124442
+  review:
+    summary: Mutant phenotype analysis shows that loss of jmjd-3.1 or catalytic dead
+      mutations result in failure of transdifferentiation and correlate with H3K27
+      methylation status.
+    action: ACCEPT
+    reason: IMP evidence from mutant analysis supports the demethylase activity assignment.
+      Mutations in the JmjC catalytic domain residues (HME-&gt;TMG at 811-813, G888E,
+      S903F) disrupt function consistent with loss of demethylase activity.
+    supported_by:
+    - reference_id: PMID:25124442
+      supporting_text: robust conversion requires stepwise histone-modifying activities,
+        functionally partitioned into discrete phases of Td through nuclear degradation
+        of JMJD-3.1
+- term:
+    id: GO:0071558
+    label: histone H3K27me2/H3K27me3 demethylase activity
+  evidence_type: IDA
+  original_reference_id: PMID:17713478
+  review:
+    summary: This foundational study identified jmjd-3.1 (F18E9.5) as a C. elegans
+      ortholog of human JMJD3 and demonstrated that mutation or RNAi knockdown causes
+      developmental defects consistent with loss of H3K27 demethylase function.
+    action: ACCEPT
+    reason: This is the original study identifying jmjd-3.1 as an H3K27 demethylase
+      ortholog. While the biochemical demonstration was primarily done with human
+      JMJD3, the C. elegans ortholog showed functional conservation in gonad development
+      assays.
+    supported_by:
+    - reference_id: PMID:17713478
+      supporting_text: mutation of F18E9.5, a Caenorhabditis elegans JMJD3 orthologue,
+        or inhibition of its expression, results in abnormal gonad development
+- term:
+    id: GO:0034620
+    label: cellular response to unfolded protein
+  evidence_type: IMP
+  original_reference_id: PMID:27133168
+  review:
+    summary: JMJD-3.1 is necessary and sufficient for activation of the mitochondrial
+      unfolded protein response (UPRmt). Overexpression of jmjd-3.1 induces UPRmt
+      gene expression including hsp-6, dve-1, and spg-7. The lifespan extension by
+      jmjd-3.1 overexpression depends on UPRmt components ATFS-1, UBL-5, and CLPP-1.
+    action: NEW
+    reason: The role of jmjd-3.1 in UPRmt activation is a major characterized function
+      not captured in the current annotation set. Reduction of function of the demethylases
+      potently suppresses longevity and UPRmt induction.
+    supported_by:
+    - reference_id: PMID:27133168
+      supporting_text: Reduction of function of the demethylases potently suppresses
+        longevity and UPR(mt) induction, while gain of function is sufficient to extend
+        lifespan in a UPR(mt)-dependent manner
+- term:
+    id: GO:0008340
+    label: determination of adult lifespan
+  evidence_type: IMP
+  original_reference_id: PMID:27133168
+  review:
+    summary: JMJD-3.1 regulates lifespan in C. elegans. Overexpression extends lifespan
+      while knockdown reduces lifespan and suppresses mitochondrial stress-induced
+      longevity. This is an evolutionarily conserved role as mammalian orthologs also
+      regulate longevity.
+    action: NEW
+    reason: Lifespan regulation is a well-documented phenotype for jmjd-3.1, mediated
+      through its effects on stress response gene expression and proteostasis.
+    supported_by:
+    - reference_id: PMID:27133168
+      supporting_text: We identify the conserved histone lysine demethylases jmjd-1.2/PHF8
+        and jmjd-3.1/JMJD3 as positive regulators of lifespan in response to mitochondrial
+        dysfunction across species
+    - reference_id: PMID:27133168
+      supporting_text: Reduction of function of the demethylases potently suppresses
+        longevity and UPR(mt) induction, while gain of function is sufficient to extend
+        lifespan in a UPR(mt)-dependent manner
+references:
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings:
+  - statement: IBA annotations based on orthology to mammalian KDM6B/JMJD3
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings:
+  - statement: Keyword-based IEA annotations for oxidoreductase, metal binding, dioxygenase
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping
+  findings:
+  - statement: Nuclear localization from UniProt subcellular location
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings:
+  - statement: Histone demethylase activity from ARBA predictions
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings:
+  - statement: Chromatin remodeling annotation (potentially over-annotated)
+- id: PMID:17713478
+  title: UTX and JMJD3 are histone H3K27 demethylases involved in HOX gene regulation
+    and development.
+  findings:
+  - statement: First identification of jmjd-3.1 (F18E9.5) as C. elegans JMJD3 ortholog
+    supporting_text: mutation of F18E9.5, a Caenorhabditis elegans JMJD3 orthologue
+  - statement: RNAi knockdown causes abnormal gonad development
+    supporting_text: mutation of F18E9.5, a Caenorhabditis elegans JMJD3 orthologue,
+      or inhibition of its expression, results in abnormal gonad development
+  - statement: Established H3K27 demethylase activity for JMJD3 family
+    supporting_text: UTX and JMJD3 are histone H3K27 demethylases involved in HOX
+      gene regulation and development
+- id: PMID:25124442
+  title: Transdifferentiation. Sequential histone-modifying activities determine the
+    robustness of transdifferentiation.
+  findings:
+  - statement: Direct demonstration of H3K27me3/me2 demethylase activity
+    supporting_text: a conserved H3K27me3/me2 demethylase, JMJD-3.1
+  - statement: Required for Y-to-PDA transdifferentiation
+    supporting_text: JMJD-3.1, and the H3K4 methyltransferase Set1 complex cooperate
+      to ensure invariant transdifferentiation (Td) of postmitotic Caenorhabditis
+      elegans hindgut cells into motor neurons
+  - statement: Functions cell-autonomously with catalytic activity required
+    supporting_text: robust conversion requires stepwise histone-modifying activities
+  - statement: Nuclear localization demonstrated
+    supporting_text: functionally partitioned into discrete phases of Td through nuclear
+      degradation of JMJD-3.1
+  - statement: Interacts with transcription factors including UNC-3
+    supporting_text: phase-specific interactions with transcription factors that have
+      conserved roles in cell plasticity and terminal fate selection
+- id: PMID:22570628
+  title: The C. elegans H3K27 demethylase UTX-1 is essential for normal development,
+    independent of its enzymatic activity.
+  findings:
+  - statement: UTX-1 is dominant developmental H3K27 demethylase
+    supporting_text: UTX-1 regulates global levels of H3K27me2/3 in C. elegans
+  - statement: JMJD-3.1 paralogs contribute to locus-specific H3K27 demethylation
+    supporting_text: the loss of utx-1 leads to a more severe phenotype than the loss
+      of jmjd-3.1, which only influences gonadal processes at high temperature and
+      moderately reduces fertility
+  - statement: Triple jmjd-3.1/3.2/3.3 deletion increases global H3K27me3
+    supporting_text: We generated mutant animals carrying mutations in all three JMJD3-like
+      genes and, unexpectedly, we did not detect any additional phenotypes in the
+      triple mutants
+  - statement: UTX-1 associates with SET-16/MLL-like complexes
+    supporting_text: Biochemical analysis identified UTX-1 as a component of a complex
+      that includes SET-16(MLL)
+- id: PMID:27133168
+  title: Two Conserved Histone Demethylases Regulate Mitochondrial Stress-Induced
+    Longevity.
+  findings:
+  - statement: jmjd-3.1 necessary and sufficient for UPRmt activation
+    supporting_text: Reduction of function of the demethylases potently suppresses
+      longevity and UPR(mt) induction, while gain of function is sufficient to extend
+      lifespan in a UPR(mt)-dependent manner
+  - statement: jmjd-3.1 is a positive regulator of lifespan
+    supporting_text: We identify the conserved histone lysine demethylases jmjd-1.2/PHF8
+      and jmjd-3.1/JMJD3 as positive regulators of lifespan in response to mitochondrial
+      dysfunction across species
+  - statement: Evolutionarily conserved role in longevity signaling
+    supporting_text: These findings illustrate an evolutionary conserved epigenetic
+      mechanism that determines the rate of aging downstream of mitochondrial perturbations
+core_functions:
+- description: JMJD-3.1 is a JmjC domain-containing dioxygenase that specifically
+    demethylates H3K27me2 and H3K27me3 marks. This is supported by conserved JmjC
+    domain with Fe(II)-binding catalytic residues and orthology to characterized mammalian
+    JMJD3/KDM6B. Unlike UTX-1, jmjd-3.1 acts more at specific loci rather than globally.
+  molecular_function:
+    id: GO:0071558
+    label: histone H3K27me2/H3K27me3 demethylase activity
+  locations:
+  - id: GO:0005634
+    label: nucleus
+  directly_involved_in:
+  - id: GO:0006325
+    label: chromatin organization
+  - id: GO:0010468
+    label: regulation of gene expression
+- description: JMJD-3.1 is a key regulator of the mitochondrial UPR. Gain of function
+    is sufficient to extend lifespan in a UPRmt-dependent manner. The lifespan-extending
+    effects of jmjd-3.1 depend on UPRmt components ATFS-1, UBL-5, and CLPP-1.
+  molecular_function:
+    id: GO:0071558
+    label: histone H3K27me2/H3K27me3 demethylase activity
+  locations:
+  - id: GO:0005634
+    label: nucleus
+  directly_involved_in:
+  - id: GO:0034620
+    label: cellular response to unfolded protein
+  - id: GO:0008340
+    label: determination of adult lifespan
+proposed_new_terms: []
+suggested_questions:
+- question: Does jmjd-3.1 function as part of a larger chromatin-modifying complex
+    in C. elegans, similar to mammalian JMJD3 in MLL3/4 complexes? While UTX-1 associates
+    with SET-16/MLL-like complexes, jmjd-3.1 protein partners remain poorly defined.
+    Understanding whether it acts alone or in a complex would clarify its recruitment
+    mechanism.
+- question: What is the genomic targeting mechanism for jmjd-3.1 at stress-responsive
+    loci? JMJD-3.1 appears to act at specific loci rather than globally. The interaction
+    with UNC-3 provides one example, but genome-wide ChIP studies would reveal the
+    full scope of its targets.
+- question: How do the three JMJD3 paralogs (jmjd-3.1, jmjd-3.2, jmjd-3.3) partition
+    their functions? Triple deletion shows no additional phenotypes beyond jmjd-3.1
+    single mutants, suggesting potential redundancy, but individual paralogs may have
+    distinct stress-specific or tissue-specific roles.
+suggested_experiments:
+- description: ChIP-seq for jmjd-3.1 under basal and stress conditions to map genome-wide
+    binding sites and correlate with H3K27me3 changes
+- description: Co-immunoprecipitation/mass spectrometry of jmjd-3.1 to identify protein
+    interaction partners and potential complex membership
+- description: Single-cell transcriptomics during Y-to-PDA transdifferentiation in
+    jmjd-3.1 mutants to identify specific gene targets deregulated during cell fate
+    conversion
+tags:
+- caeel-upr-stress
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

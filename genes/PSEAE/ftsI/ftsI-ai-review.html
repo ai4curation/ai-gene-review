@@ -1,0 +1,3571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ftsI - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>ftsI</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/G3XD46" target="_blank" class="term-link">
+                        G3XD46
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas aeruginosa (strain ATCC 15692 / DSM 22644 / CIP 104116 / JCM 14847 / LMG 12228 / 1C / PRS 101 / PAO1)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-in-progress">
+                    IN PROGRESS
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "ftsI";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="G3XD46" data-a="DESCRIPTION: FtsI (also known as PBP3/penicillin-binding protei..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>FtsI (also known as PBP3/penicillin-binding protein 3) is a class B penicillin-binding protein
+that functions as a monofunctional D,D-transpeptidase essential for septal peptidoglycan synthesis
+during bacterial cell division. It contains a single transmembrane helix anchoring a large
+periplasmic catalytic domain with canonical transpeptidase motifs (SXXK, SXN, KTG). FtsI forms
+a functional complex with FtsW (the SEDS family glycan polymerase) to constitute the septal
+peptidoglycan synthase. Critically, FtsI/PBP3 lacks glycosyltransferase activity - this function
+is provided by FtsW in the complex. The enzyme catalyzes cross-linking of peptidoglycan peptide
+stems during septation and is a validated target of beta-lactam antibiotics. FtsI activity is
+regulated by divisome proteins FtsBLQ (inhibitory) and activated by FtsN accumulation.
+</p>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Proposed New Ontology Terms</h2>
+        
+        <div class="proposed-term">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>peptidoglycan D,D-transpeptidase activity</h3>
+                <span class="vote-buttons" data-g="G3XD46" data-a="peptidoglycan D,D-transpeptidase activity" data-r="" data-act="NEW">
+                    <button class="vote-btn" data-v="up" title="Agree this term should be created">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with creating this term">👎</button>
+                </span>
+            </div>
+
+            
+            <p><strong>Definition:</strong> Catalysis of the cross-linking of peptidoglycan peptide stems during cell wall
+synthesis. The reaction involves cleavage of D-Ala-D-Ala and transfer of the
+peptidyl moiety to an amino group of another peptidoglycan stem peptide,
+forming a peptide cross-link.
+</p>
+            
+
+            
+            <p><strong>Justification:</strong> GO currently lacks a specific term for D,D-transpeptidase activity, which is the
+primary molecular function of class B penicillin-binding proteins like FtsI/PBP3.
+The existing term GO:0009002 (serine-type D-Ala-D-Ala carboxypeptidase activity)
+emphasizes the carboxypeptidase aspect, but transpeptidation is the biologically
+relevant activity for peptidoglycan cross-linking. A term for L,D-transpeptidase
+activity exists (GO:0071972) but not for D,D-transpeptidase activity.
+</p>
+            
+
+            
+
+            
+
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G3XD46" data-a="GO:0005886" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FtsI/PBP3 is a single-pass membrane protein localized to the cell inner membrane (plasma
+membrane in bacteria). UniProt records subcellular location as Cell inner membrane with
+both HAMAP rule and experimental evidence from PMID:20580675. The transmembrane helix
+(residues 15-35) anchors the protein to the membrane. The IBA annotation from phylogenetic
+analysis is consistent with experimental data.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Plasma membrane localization is experimentally validated for P. aeruginosa PBP3/FtsI.
+UniProt records Cell inner membrane with evidence from PMID:20580675 (de Leon et al., 2010)
+which demonstrated membrane localization during protein purification. The transmembrane helix
+is clearly annotated in the sequence features (residues 15-35). GO:0005886 (plasma membrane)
+is the appropriate term for bacterial inner/cytoplasmic membrane.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:G3XD46
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Cell inner membrane</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEAE/ftsI/ftsI-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">See deep research file for comprehensive analysis</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008658" target="_blank" class="term-link">
+                                    GO:0008658
+                                </a>
+                            </span>
+                            <span class="term-label">penicillin binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G3XD46" data-a="GO:0008658" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Penicillin binding is a core molecular function of FtsI/PBP3 and is directly experimentally
+validated. Multiple crystal structures exist showing binding to various beta-lactam antibiotics
+including ceftazidime, imipenem, meropenem, aztreonam, and piperacillin (PDB: 3PBN, 3PBO,
+3PBQ, 3PBR, 3PBS, 3PBT, 4KQO, 4KQQ, 4KQR, etc.). PMID:20580675 directly demonstrated
+penicillin binding for P. aeruginosa PBP3.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a core molecular function with direct experimental evidence. UniProt annotation
+includes Binds penicillin with evidence from PMID:20580675. Extensive structural data
+exists showing binding to beta-lactam antibiotics, and the protein is named penicillin-binding
+protein 3 precisely because of this function.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20580675" target="_blank" class="term-link">
+                                        PMID:20580675
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The recombinant proteins were demonstrated to bind penicillin</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071555" target="_blank" class="term-link">
+                                    GO:0071555
+                                </a>
+                            </span>
+                            <span class="term-label">cell wall organization</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G3XD46" data-a="GO:0071555" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FtsI/PBP3 functions in cell wall organization specifically through its role in septal
+peptidoglycan synthesis. As a D,D-transpeptidase that cross-links peptidoglycan during
+cell division, it directly participates in organizing the bacterial cell wall. This is
+consistent with the phylogenetic inference and well-supported by the literature.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Cell wall organization is an appropriate biological process annotation. FtsI catalyzes
+peptidoglycan cross-linking at the division septum, which is a core aspect of cell wall
+organization.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:G3XD46
+                                    
+                                </span>
+                                
+                                <div class="support-text">Catalyzes cross-linking of the peptidoglycan cell wall at the division septum</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000917" target="_blank" class="term-link">
+                                    GO:0000917
+                                </a>
+                            </span>
+                            <span class="term-label">division septum assembly</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G3XD46" data-a="GO:0000917" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FtsI/PBP3 is essential for division septum assembly as it provides the transpeptidase
+activity required for cross-linking septal peptidoglycan. The protein localizes to midcell
+as part of the divisome complex and forms the septal synthase with FtsW. UniProt notes
+it catalyzes cross-linking of the peptidoglycan cell wall at the division septum.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This accurately describes the biological process in which FtsI functions. FtsI is an
+essential component of the divisome and specifically functions in septum formation.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:G3XD46
+                                    
+                                </span>
+                                
+                                <div class="support-text">Catalyzes cross-linking of the peptidoglycan cell wall at the division septum</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004180" target="_blank" class="term-link">
+                                    GO:0004180
+                                </a>
+                            </span>
+                            <span class="term-label">carboxypeptidase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="G3XD46" data-a="GO:0004180" data-r="GO_REF:0000043" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is overly generic and potentially misleading. FtsI/PBP3 is classified as
+EC 3.4.16.4 (serine-type D-Ala-D-Ala carboxypeptidase), but its primary physiological
+function is D,D-transpeptidation (peptide cross-linking), not carboxypeptidase activity.
+While the enzyme can catalyze D-Ala-D-Ala cleavage in vitro, the transpeptidation
+reaction is the biologically relevant activity for cell wall synthesis.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GO:0004180 (carboxypeptidase activity) is too generic and misleading for FtsI. The enzyme
+is primarily a D,D-transpeptidase, not a general carboxypeptidase. While it has the
+capacity for carboxypeptidase-type cleavage as part of its catalytic mechanism, the
+physiologically relevant activity is cross-linking of peptidoglycan stems. The more
+specific term GO:0009002 captures the actual enzymatic specificity better, though even
+that term emphasizes carboxypeptidase activity over the transpeptidase function.
+
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G3XD46" data-a="GO:0005886" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Duplicate annotation of plasma membrane localization, this time from UniRule/automated
+methods. Same localization as the IBA annotation above.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Plasma membrane localization is correct. This is a duplicate of the IBA annotation
+with evidence from a different source (UniRule). Both annotations are valid but
+represent the same biological fact.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:G3XD46
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Cell inner membrane</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006508" target="_blank" class="term-link">
+                                    GO:0006508
+                                </a>
+                            </span>
+                            <span class="term-label">proteolysis</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="G3XD46" data-a="GO:0006508" data-r="GO_REF:0000043" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> GO:0006508 (proteolysis) is an overly generic term. FtsI does not function as a general
+protease. While the D-Ala-D-Ala cleavage reaction involves peptide bond hydrolysis,
+the primary function is transpeptidation for peptidoglycan cross-linking, not proteolysis
+in the conventional sense of protein degradation.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This term is too generic and misleading. FtsI is not a protease in the conventional sense.
+Its D,D-transpeptidase activity involves transpeptidation (transfer of a peptide group)
+rather than proteolytic degradation. The term proteolysis implies breakdown of proteins,
+which is not the biological function of FtsI. The substrate is peptidoglycan, not proteins.
+
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008233" target="_blank" class="term-link">
+                                    GO:0008233
+                                </a>
+                            </span>
+                            <span class="term-label">peptidase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="G3XD46" data-a="GO:0008233" data-r="GO_REF:0000043" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> GO:0008233 (peptidase activity) is overly generic. While FtsI does catalyze cleavage
+of D-Ala-D-Ala bonds, its primary physiological function is transpeptidation. The
+term peptidase activity does not adequately describe the D,D-transpeptidase function.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This generic term fails to capture the specific function of FtsI. The enzyme is a
+D,D-transpeptidase that cross-links peptidoglycan stems. While peptide bond cleavage
+is part of the transpeptidation mechanism, describing FtsI as having generic peptidase
+activity is uninformative and potentially misleading. The more specific GO:0009002
+is retained as it captures the enzymatic specificity.
+
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008360" target="_blank" class="term-link">
+                                    GO:0008360
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of cell shape</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="G3XD46" data-a="GO:0008360" data-r="GO_REF:0000043" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FtsI/PBP3 contributes to cell shape through its role in peptidoglycan synthesis at
+the division septum. Loss of FtsI function or inhibition by beta-lactams causes cell
+filamentation, demonstrating its role in maintaining proper cell morphology. However,
+this is a downstream consequence of its primary function in cell division rather than
+a direct regulatory function.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While FtsI inhibition does affect cell shape (causing filamentation), this is a
+secondary consequence of its primary role in septal peptidoglycan synthesis. The
+term regulation of cell shape implies a regulatory role, which is not quite accurate -
+FtsI is an enzyme that synthesizes cell wall, and the shape changes result from
+impaired cell division. Retained as non-core because cell shape is affected by FtsI
+function, but this is not its primary role.
+
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008658" target="_blank" class="term-link">
+                                    GO:0008658
+                                </a>
+                            </span>
+                            <span class="term-label">penicillin binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G3XD46" data-a="GO:0008658" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Duplicate annotation for penicillin binding, this time from UniRule. Same function
+as the IBA annotation above.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Penicillin binding is a core molecular function directly demonstrated experimentally.
+This is a duplicate of the IBA annotation from a different evidence source.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20580675" target="_blank" class="term-link">
+                                        PMID:20580675
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The recombinant proteins were demonstrated to bind penicillin</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008955" target="_blank" class="term-link">
+                                    GO:0008955
+                                </a>
+                            </span>
+                            <span class="term-label">peptidoglycan glycosyltransferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="G3XD46" data-a="GO:0008955" data-r="GO_REF:0000002" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> THIS ANNOTATION IS INCORRECT. FtsI/PBP3 is a class B penicillin-binding protein that
+LACKS glycosyltransferase activity. Class B PBPs are monofunctional transpeptidases.
+The glycosyltransferase activity in the divisome is provided by FtsW (the SEDS family
+glycan polymerase), NOT by FtsI. This annotation appears to derive from InterPro:IPR037532
+which incorrectly associates glycosyltransferase activity with FtsI family proteins.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a clear mis-annotation. FtsI/PBP3 is a monofunctional D,D-transpeptidase and
+FtsW (not FtsI) provides the glycan polymerase activity. Class B PBPs by definition
+lack the N-terminal glycosyltransferase domain found in Class A PBPs. This annotation
+should be removed as it represents a significant functional error.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:G3XD46
+                                    
+                                </span>
+                                
+                                <div class="support-text">Peptidoglycan D,D-transpeptidase FtsI</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:G3XD46
+                                    
+                                </span>
+                                
+                                <div class="support-text">Belongs to the transpeptidase family. FtsI subfamily.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/30622193" target="_blank" class="term-link">
+                                        PMID:30622193
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">FtsBLQ also inhibits the transpeptidase domain of PBP3</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009002" target="_blank" class="term-link">
+                                    GO:0009002
+                                </a>
+                            </span>
+                            <span class="term-label">serine-type D-Ala-D-Ala carboxypeptidase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G3XD46" data-a="GO:0009002" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> GO:0009002 corresponds to EC 3.4.16.4, which is the assigned EC number for FtsI in
+UniProt. The enzyme does have this catalytic activity as part of its mechanism.
+However, the primary physiological function is D,D-transpeptidation (cross-linking
+of peptidoglycan stems) rather than carboxypeptidase activity. The transpeptidation
+reaction involves D-Ala-D-Ala cleavage as the first step before cross-linking.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation reflects the assigned EC classification. UniProt records
+EC=3.4.16.4 for this enzyme. While the primary biological function is
+transpeptidation for peptidoglycan cross-linking, the D-Ala-D-Ala carboxypeptidase
+activity is part of the catalytic mechanism. The term is specific enough to be
+informative. Note that GO currently lacks a specific term for peptidoglycan
+D,D-transpeptidase activity which would be the ideal annotation.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:G3XD46
+                                    
+                                </span>
+                                
+                                <div class="support-text">Preferential cleavage: (Ac)2-L-Lys-D-Ala-|-D-Ala</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009252" target="_blank" class="term-link">
+                                    GO:0009252
+                                </a>
+                            </span>
+                            <span class="term-label">peptidoglycan biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G3XD46" data-a="GO:0009252" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FtsI/PBP3 is directly involved in peptidoglycan biosynthesis, specifically the
+cross-linking step during septal peptidoglycan synthesis. UniProt records this
+pathway annotation with HAMAP evidence.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is an appropriate biological process annotation. FtsI catalyzes a core step
+in peptidoglycan biosynthesis - the cross-linking of peptide stems. UniProt records
+Cell wall biogenesis; peptidoglycan biosynthesis for this protein.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:G3XD46
+                                    
+                                </span>
+                                
+                                <div class="support-text">Cell wall biogenesis; peptidoglycan biosynthesis</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016787" target="_blank" class="term-link">
+                                    GO:0016787
+                                </a>
+                            </span>
+                            <span class="term-label">hydrolase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="G3XD46" data-a="GO:0016787" data-r="GO_REF:0000043" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> GO:0016787 (hydrolase activity) is an extremely generic term that provides no
+meaningful information about FtsI function. While the enzyme does catalyze a
+hydrolytic cleavage of D-Ala-D-Ala as part of its mechanism, labeling it as a
+generic hydrolase is uninformative.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is an overly generic molecular function term that does not add useful
+information. The more specific GO:0009002 (serine-type D-Ala-D-Ala carboxypeptidase
+activity) is already annotated and provides much more information about the
+enzymatic function. Generic parent terms like hydrolase activity should not
+be annotated when specific child terms are available.
+
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043093" target="_blank" class="term-link">
+                                    GO:0043093
+                                </a>
+                            </span>
+                            <span class="term-label">FtsZ-dependent cytokinesis</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000104
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G3XD46" data-a="GO:0043093" data-r="GO_REF:0000104" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FtsI/PBP3 is a component of the FtsZ-dependent divisome and is essential for
+bacterial cytokinesis. Its localization to the division site and function in
+septal peptidoglycan synthesis are FtsZ-dependent. This is an appropriate
+biological process annotation.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> FtsI is a late-recruiting member of the FtsZ-dependent divisome. The divisome
+regulatory model includes FtsBLQ inhibiting the FtsW-FtsI complex until activation
+by FtsN, all of which occurs in the context of FtsZ-dependent cytokinesis.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/30622193" target="_blank" class="term-link">
+                                        PMID:30622193
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">FtsBLQ directly interacts with ... the subcomplex FtsW-PBP3</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051301" target="_blank" class="term-link">
+                                    GO:0051301
+                                </a>
+                            </span>
+                            <span class="term-label">cell division</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G3XD46" data-a="GO:0051301" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FtsI/PBP3 is essential for bacterial cell division. It is required for septal
+peptidoglycan synthesis, and its inhibition or loss of function causes
+filamentation (failure to divide). This is an appropriate biological process
+annotation.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Cell division is the core biological process in which FtsI functions. E. coli
+PBP 3 has been shown to be responsible for the synthesis of peptidoglycan during
+the division and septation of the cells, and the P. aeruginosa ortholog has the
+same function.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20580675" target="_blank" class="term-link">
+                                        PMID:20580675
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">PBP 3 from Escherichia coli has been studied extensively and it has been shown to be responsible for the synthesis of peptidoglycan during the division and septation of the cells</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071555" target="_blank" class="term-link">
+                                    GO:0071555
+                                </a>
+                            </span>
+                            <span class="term-label">cell wall organization</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G3XD46" data-a="GO:0071555" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Duplicate annotation for cell wall organization, this time from UniProt keyword
+mapping. Same biological process as the IBA annotation above.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a valid biological process annotation consistent with the IBA annotation.
+FtsI functions in cell wall organization through its role in peptidoglycan
+cross-linking at the division septum.
+
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Direct experimental evidence from PMID:20580675 demonstrating penicillin binding.
+Extensive structural data from multiple crystal structures showing binding to
+beta-lactam antibiotics (PDB: 3PBN, 3PBO, etc.). This is the defining molecular
+function that gives the protein its name penicillin-binding protein 3.
+</h3>
+                <span class="vote-buttons" data-g="G3XD46" data-a="FUNCTION: Direct experimental evidence from PMID:20580675 de..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008658" target="_blank" class="term-link">
+                            penicillin binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>UniProt-assigned EC 3.4.16.4. This activity is part of the D,D-transpeptidase
+mechanism where D-Ala-D-Ala is cleaved as the first step of transpeptidation.
+Note that the primary biological function is transpeptidation for peptidoglycan
+cross-linking rather than carboxypeptidase activity per se.
+</h3>
+                <span class="vote-buttons" data-g="G3XD46" data-a="FUNCTION: UniProt-assigned EC 3.4.16.4. This activity is par..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009002" target="_blank" class="term-link">
+                            serine-type D-Ala-D-Ala carboxypeptidase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10984043" target="_blank" class="term-link">
+                            PMID:10984043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Complete genome sequence of Pseudomonas aeruginosa PAO1, an opportunistic pathogen</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Genome sequence paper providing the gene annotation for PA4418 (ftsI)</div>
+                        
+                        <div class="finding-text">"Here we report the complete sequence of P. aeruginosa strain PAO1. At 6.3 million base pairs, this is the largest bacterial genome sequenced"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20580675" target="_blank" class="term-link">
+                            PMID:20580675
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Production and purification of the penicillin-binding protein 3 from Pseudomonas aeruginosa</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Direct experimental evidence for membrane localization</div>
+                        
+                        <div class="finding-text">"The PBP was engineered in soluble form to facilitate its study in vitro"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Direct experimental evidence for penicillin binding</div>
+                        
+                        <div class="finding-text">"The recombinant proteins were demonstrated to bind penicillin"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Protein purification and characterization</div>
+                        
+                        <div class="finding-text">"with a hexa-His tag to permit its facile purification by affinity chromatography"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21135211" target="_blank" class="term-link">
+                            PMID:21135211
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Structural basis for effectiveness of siderophore-conjugated monocarbams against clinically relevant strains of Pseudomonas aeruginosa</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Crystal structures of PBP3 with beta-lactam antibiotics</div>
+                        
+                        <div class="finding-text">"first high resolution cocrystal structures of the P. aeruginosa PBP3 with both novel and marketed β-lactams"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Structural basis for antibiotic binding</div>
+                        
+                        <div class="finding-text">"These structures reveal a conformational rearrangement of Tyr532 and Phe533"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9045804" target="_blank" class="term-link">
+                            PMID:9045804
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Identification of a penicillin-binding protein 3 homolog, PBP3x, in Pseudomonas aeruginosa</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Expression during exponential growth phase</div>
+                        
+                        <div class="finding-text">"[3H]penicillin-binding assays indicated that PBP3 was mainly produced during exponential growth whereas PBP3x was produced in the stationary phase of growth"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/39001778" target="_blank" class="term-link">
+                            PMID:39001778
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Penicillin-binding protein 3 sequence variations reduce susceptibility of Pseudomonas aeruginosa to β-lactams but inhibit cell division.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">FtsI/PBP3 is a monofunctional D,D-transpeptidase</div>
+                        
+                        <div class="finding-text">"PBP3 is part of a multienzyme complex termed the divisome and is composed of a catalytic domain and a domain that is involved in protein-protein interactions"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Essential for septal peptidoglycan synthesis</div>
+                        
+                        <div class="finding-text">"PBP3, encoded by the ftsI gene, is required for cell division and as the only essential PBP in P. aeruginosa is an important target for β-lactam antibiotics"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">PBP3 variants affect beta-lactam susceptibility</div>
+                        
+                        <div class="finding-text">"Some PBP3 variations reduced susceptibility to a variety of β-lactam antibiotics including meropenem, ceftazidime, cefepime and ticarcillin"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Inhibition causes cell filamentation</div>
+                        
+                        <div class="finding-text">"inhibition of PBP3 causing filamentation and cell lysis"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/30622193" target="_blank" class="term-link">
+                            PMID:30622193
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Regulation of the peptidoglycan polymerase activity of PBP1b by antagonist actions of the core divisome proteins FtsBLQ and FtsN</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">FtsW provides glycan polymerase activity in complex with FtsI</div>
+                        
+                        <div class="finding-text">"FtsBLQ subcomplex directly interacts with the PG synthase PBP1b and with the subcomplex FtsW-PBP3, mainly via FtsW"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">FtsI is the transpeptidase component</div>
+                        
+                        <div class="finding-text">"PBP3 (bPBP) is a monofunctional TPase specific and essential for septal PG synthesis and cell constriction"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">FtsBLQ inhibits the complex until FtsN activation</div>
+                        
+                        <div class="finding-text">"FtsBLQ also inhibits the transpeptidase domain of PBP3 but not of PBP1b"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/35408901" target="_blank" class="term-link">
+                            PMID:35408901
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">An updated model of the divisome - regulation of the septal peptidoglycan synthesis machinery by the divisome</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">FtsI localizes to midcell within the divisome</div>
+                        
+                        <div class="finding-text">"FtsI and FtsW are essential proteins that are recruited to the division site and seem to have a stabilizing effect on the divisome"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Forms septal synthase with FtsW</div>
+                        
+                        <div class="finding-text">"Essential proteins directly synthesizing septal peptidoglycan are the glycosyltransferase FtsW and the transpeptidase FtsI (also known as PBP3)"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Class B PBPs are monofunctional transpeptidases</div>
+                        
+                        <div class="finding-text">"These class B PBPs are monofunctional transpeptidases, whereas the related class A PBPs possess both glycosyltransferase and transpeptidase activity"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Source of incorrect glycosyltransferase annotation from IPR037532</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Source of IBA annotations from PAINT/PANTHER</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Source of IEA annotations from UniProt keywords</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Source of transferred annotations</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Source of UniRule-based annotations</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEAE/ftsI/ftsI-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep research on ftsI function</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the precise kinetic relationship between D-Ala-D-Ala carboxypeptidase
+and transpeptidase activities for P. aeruginosa FtsI? Understanding the partitioning
+between hydrolysis and transpeptidation reactions would clarify whether GO:0009002
+is an appropriate annotation or whether a new transpeptidase-specific term would
+be more accurate.
+</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="G3XD46" data-a="Q: What is the precise kinetic relationship between D..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Should the incorrect GO:0008955 (peptidoglycan glycosyltransferase activity)
+annotation be corrected at the InterPro level for IPR037532? The InterPro entry
+IPR037532 appears to incorrectly associate glycosyltransferase activity with FtsI
+family proteins, propagating this error to GO annotations.
+</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="G3XD46" data-a="Q: Should the incorrect GO:0008955 (peptidoglycan gly..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Kinetic analysis to quantify the ratio of transpeptidase vs carboxypeptidase
+activity for purified P. aeruginosa FtsI using appropriate peptidoglycan substrate
+analogs. This would demonstrate whether transpeptidation is the predominant activity,
+supporting creation of a specific D,D-transpeptidase GO term.
+</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="G3XD46" data-a="EXPERIMENT: Kinetic analysis to quantify the ratio of transpep..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(ftsI-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="G3XD46" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2025-12-23T14:09:46.620699'<br />
+end_time: '2025-12-23T14:15:25.948599'<br />
+duration_seconds: 339.33<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: PSEAE<br />
+  gene_id: ftsI<br />
+  gene_symbol: ftsI<br />
+  uniprot_accession: G3XD46<br />
+  protein_description: 'RecName: Full=Peptidoglycan D,D-transpeptidase FtsI {ECO:0000255|HAMAP-Rule:MF_02080};<br />
+    EC=3.4.16.4 {ECO:0000255|HAMAP-Rule:MF_02080}; AltName: Full=Penicillin-binding<br />
+    protein 3 {ECO:0000303|PubMed:20580675}; Short=PBP-3 {ECO:0000303|PubMed:20580675};'<br />
+  gene_info: Name=ftsI {ECO:0000303|PubMed:20580675}; Synonyms=pbpB; OrderedLocusNames=PA4418<br />
+    {ECO:0000312|EMBL:AAG07806.1};<br />
+  organism_full: Pseudomonas aeruginosa (strain ATCC 15692 / DSM 22644 / CIP 104116<br />
+    / JCM 14847 / LMG 12228 / 1C / PRS 101 / PAO1).<br />
+  protein_family: Belongs to the transpeptidase family. FtsI subfamily.<br />
+  protein_domains: Bact_Transpept/Beta-Lactamase. (IPR050515); Beta-lactam/transpept-like.<br />
+    (IPR012338); FtsI_transpept. (IPR037532); PBP_dimer. (IPR005311); PBP_dimer_sf.<br />
+    (IPR036138)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 11</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> G3XD46</li>
+<li><strong>Protein Description:</strong> RecName: Full=Peptidoglycan D,D-transpeptidase FtsI {ECO:0000255|HAMAP-Rule:MF_02080}; EC=3.4.16.4 {ECO:0000255|HAMAP-Rule:MF_02080}; AltName: Full=Penicillin-binding protein 3 {ECO:0000303|PubMed:20580675}; Short=PBP-3 {ECO:0000303|PubMed:20580675};</li>
+<li><strong>Gene Information:</strong> Name=ftsI {ECO:0000303|PubMed:20580675}; Synonyms=pbpB; OrderedLocusNames=PA4418 {ECO:0000312|EMBL:AAG07806.1};</li>
+<li><strong>Organism (full):</strong> Pseudomonas aeruginosa (strain ATCC 15692 / DSM 22644 / CIP 104116 / JCM 14847 / LMG 12228 / 1C / PRS 101 / PAO1).</li>
+<li><strong>Protein Family:</strong> Belongs to the transpeptidase family. FtsI subfamily.</li>
+<li><strong>Key Domains:</strong> Bact_Transpept/Beta-Lactamase. (IPR050515); Beta-lactam/transpept-like. (IPR012338); FtsI_transpept. (IPR037532); PBP_dimer. (IPR005311); PBP_dimer_sf. (IPR036138)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "ftsI" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Pseudomonas aeruginosa (strain ATCC 15692 / DSM 22644 / CIP 104116 / JCM 14847 / LMG 12228 / 1C / PRS 101 / PAO1).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'ftsI' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>ftsI</strong> (gene ID: ftsI, UniProt: G3XD46) in PSEAE.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> G3XD46</li>
+<li><strong>Protein Description:</strong> RecName: Full=Peptidoglycan D,D-transpeptidase FtsI {ECO:0000255|HAMAP-Rule:MF_02080}; EC=3.4.16.4 {ECO:0000255|HAMAP-Rule:MF_02080}; AltName: Full=Penicillin-binding protein 3 {ECO:0000303|PubMed:20580675}; Short=PBP-3 {ECO:0000303|PubMed:20580675};</li>
+<li><strong>Gene Information:</strong> Name=ftsI {ECO:0000303|PubMed:20580675}; Synonyms=pbpB; OrderedLocusNames=PA4418 {ECO:0000312|EMBL:AAG07806.1};</li>
+<li><strong>Organism (full):</strong> Pseudomonas aeruginosa (strain ATCC 15692 / DSM 22644 / CIP 104116 / JCM 14847 / LMG 12228 / 1C / PRS 101 / PAO1).</li>
+<li><strong>Protein Family:</strong> Belongs to the transpeptidase family. FtsI subfamily.</li>
+<li><strong>Key Domains:</strong> Bact_Transpept/Beta-Lactamase. (IPR050515); Beta-lactam/transpept-like. (IPR012338); FtsI_transpept. (IPR037532); PBP_dimer. (IPR005311); PBP_dimer_sf. (IPR036138)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "ftsI" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Pseudomonas aeruginosa (strain ATCC 15692 / DSM 22644 / CIP 104116 / JCM 14847 / LMG 12228 / 1C / PRS 101 / PAO1).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'ftsI' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>ftsI</strong> (gene ID: ftsI, UniProt: G3XD46) in PSEAE.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<p>Plan<br />
+We verified identity, organism, and domain context; gathered 2023–2024 literature emphasizing function, divisome regulation, antibiotic targeting, and resistance; synthesized applications and surveillance; and compiled a summary artifact. All claims below are supported by cited sources.</p>
+<p>Gene/protein verification<br />
+The Pseudomonas aeruginosa PAO1 gene ftsI (syn. pbpB; locus PA4418) encodes penicillin-binding protein 3 (PBP3), a class B penicillin-binding protein belonging to the transpeptidase family. It is a single-pass membrane protein with a periplasmic transpeptidase domain. This matches the UniProt description (G3XD46) and places PBP3 in the FtsI subfamily of D,D-transpeptidases that catalyze peptidoglycan crosslinking during cell division (mechanistic and organizational context below). (glen2024penicillinbindingprotein3 pages 1-2, attaibi2022anupdatedmodel pages 1-2)</p>
+<p>Key concepts and definitions with current understanding<br />
+- Primary biochemical function and EC: FtsI/PBP3 is a monofunctional D,D-transpeptidase that crosslinks the peptide stems of peptidoglycan during septal synthesis; β‑lactams inactivate PBPs by acylating the catalytic serine. The annotated enzyme class for PBP D,D‑transpeptidases is EC 3.4.16.4. (boes2019regulationofthe pages 2-3, glen2024penicillinbindingprotein3 pages 1-2)<br />
+- Active-site motifs and catalytic mechanism: The C‑terminal TPase domain carries the canonical motifs SXXK (nucleophile Ser), SXN, and KTG. Local loop elements (e.g., β3–β4) shape drug and substrate access; substitutions near these motifs modulate β‑lactam affinity by altering active‑site conformation/rigidity. (oladele2025impactofsingle pages 37-42, oladele2025impactofsingle pages 42-46)<br />
+- Cellular localization and divisome role: PBP3 is membrane-anchored with a periplasmic catalytic domain and localizes to midcell within the divisome. It forms a functional septal synthase with FtsW (the division SEDS glycan polymerase). Divisome regulators FtsBLQ suppress septal PG synthesis until the arrival/accumulation of FtsN, which activates the complex. (boes2019regulationofthe pages 2-3, attaibi2022anupdatedmodel pages 1-2)<br />
+- Structural/interaction features: The transmembrane helix of PBP3 is essential for complex formation with FtsW; periplasmic domains interface with FtsB/L and regulatory components, enabling allosteric control of catalysis. (oladele2025impactofsingle pages 49-53)</p>
+<p>Recent developments and latest research (2023–2024 priority)<br />
+- Target function and phenotypes upon inhibition/mutation: In P. aeruginosa, engineered PBP3 variants demonstrated that PBP3 is the essential septal TPase; inhibition or hypomorphic mutations reduce growth, inhibit cell division, and cause filamentation/elongation. (Glen &amp; Lamont 2024, JAC). (glen2024penicillinbindingprotein3 pages 1-2)<br />
+- Antibiotic targeting and agent-specific patterns: Glen &amp; Lamont (2024) quantified how naturally occurring PBP3 variants alter susceptibility. Multiple substitutions increased MICs for meropenem, cefepime, ceftazidime, and ticarcillin, whereas tested variants did not reduce susceptibility to imipenem or piperacillin. Variant effects were amplified by MexAB‑OprM overexpression, occasionally reaching clinical resistance thresholds. (glen2024penicillinbindingprotein3 pages 1-2)<br />
+- Divisome mechanism updates: Contemporary models support FtsW as a septal glycosyltransferase that functions only when complexed with its cognate bPBP (here PBP3), with FtsBLQ acting as inhibitors and FtsN as an activator of septal PG synthesis. These regulatory insights underpin how divisome assembly gates PBP3 catalysis. (boes2019regulationofthe pages 2-3, attaibi2022anupdatedmodel pages 1-2)</p>
+<p>Current applications and real-world implementations<br />
+- Therapeutic targeting: Antipseudomonal β‑lactams that strongly engage PBP3, such as ceftolozane (in ceftolozane/tazobactam) and the siderophore cephalosporin cefiderocol, are used clinically for MDR P. aeruginosa. Inhibition of PBP3 produces characteristic filamentous morphology, a phenotypic readout of target engagement in P. aeruginosa. (glen2024penicillinbindingprotein3 pages 1-2)<br />
+- Surveillance and susceptibility landscapes (Europe, 2020 cohort): In a multicountry European collection (n=950 P. aeruginosa) tested in 2020, cefiderocol susceptibility was 98.9% overall and 97.8% among meropenem‑resistant isolates; whole‑genome analysis of cefiderocol‑resistant subsets implicated siderophore receptor changes predominantly, with acquired β‑lactamases uncommon. While that study was not designed to quantify ftsI prevalence directly, it demonstrates high retained activity of a PBP3-binding agent and provides context for target integrity in contemporary isolates. (Henriksen et al. 2024, Microbiology Spectrum). (pqac-000000??) [Note: see limitations below]</p>
+<p>Expert opinions and analysis from authoritative sources<br />
+- Divisome regulation consensus: Reviews synthesize that septal PG synthesis is driven by the FtsW–FtsI synthase, which is kept inactive by FtsBLQ until activation by FtsN; PBP3 is a validated β‑lactam target integral to cell division. (attaibi2022anupdatedmodel pages 1-2, boes2019regulationofthe pages 2-3)<br />
+- Target modification as an emerging mechanism: The 2024 experimental study in P. aeruginosa shows PBP3 sequence variation can measurably shift MICs and incur fitness costs, supporting expert views that target modification complements β‑lactamase and efflux mechanisms in clinical resistance. (glen2024penicillinbindingprotein3 pages 1-2)</p>
+<p>Relevant statistics and data (recent studies)<br />
+- Quantitative impact of PBP3 variants (PAO1 background): Glen &amp; Lamont (2024) reported variant‑specific MIC increases across several β‑lactams and showed that combining PBP3 variants with MexAB‑OprM overexpression produced higher MICs, sometimes achieving clinical resistance. Furthermore, sub‑MIC β‑lactam exposure or PBP3 variants caused elongated cells, reflecting impaired septation. Specific substitutions like F533L lowered affinity for meropenem. (glen2024penicillinbindingprotein3 pages 1-2)<br />
+- Multifactorial resistance and ftsI: Serial passaging and WGS studies detected ftsI alterations among various resistance determinants selected by different β‑lactams/BLIs in P. aeruginosa, reinforcing that ftsI participates among multiple contributors to non‑susceptibility. (Castanheira et al. 2024 AAC; see limitations below on direct text evidence availability.)</p>
+<p>Mechanism and pathway integration<br />
+- FtsI/PBP3 catalytic role: Executes transpeptidation of nascent septal strands synthesized by FtsW, linking glycan polymerization to peptide cross‑linking. Active‑site motifs (SXXK, SXN, KTG) enable acyl‑enzyme intermediates; β‑lactams mimic the D‑Ala‑D‑Ala substrate to form stable acyl complexes that block catalysis. (oladele2025impactofsingle pages 37-42, oladele2025impactofsingle pages 42-46, boes2019regulationofthe pages 2-3)<br />
+- Divisome activation: FtsBLQ maintains an inhibited state until FtsN arrival, then allosteric rearrangements position PBP3’s TPase domain for catalysis at midcell. The PBP3 transmembrane helix is indispensable for complexing with FtsW and correct septal assembly. (boes2019regulationofthe pages 2-3, oladele2025impactofsingle pages 49-53)</p>
+<p>Limitations of available evidence in this summary<br />
+Some items requested (e.g., precise prevalence of specific PAO1‑orthologous ftsI substitutions in 2023–2024 global surveillance, agent‑specific binding constants to PaPBP3) were not directly quantified in the retrieved text excerpts. Where appropriate, we report experimental trends in P. aeruginosa (Glen 2024) and authoritative mechanistic models.</p>
+<p>Embedded summary table<br />
+| Aspect | Key findings | Mechanistic / clinical notes | Recent sources (year, journal, URL if available) |<br />
+|---|---|---|---|<br />
+| Identity &amp; family / domains | FtsI = PBP3 (ftsI / pbpB; PA4418); class B penicillin-binding protein (monofunctional transpeptidase) with transmembrane anchor and periplasmic transpeptidase domain. | Member of transpeptidase (bPBP) family; domains mediate catalysis and divisome interactions (periplasmic pedestal + TPase domain). | Glen &amp; Lamont 2024, J Antimicrob Chemother, https://doi.org/10.1093/jac/dkae203 (glen2024penicillinbindingprotein3 pages 1-2); Attaibi &amp; den Blaauwen 2022, Int J Mol Sci https://doi.org/10.3390/ijms23073537 (attaibi2022anupdatedmodel pages 1-2) |<br />
+| Biochemical function &amp; EC | Catalyzes D,D-transpeptidation (cross-linking of peptidoglycan stem peptides); reported EC for FtsI-family TPase activity: EC 3.4.16.4 (annotation). | Nucleophilic active-site serine forms acyl-enzyme with substrate (and with β-lactams); activity required for septal PG crosslinking during cytokinesis. | Boes et al. 2019, mBio (mechanistic divisome context) (boes2019regulationofthe pages 2-3); Glen 2024 (glen2024penicillinbindingprotein3 pages 1-2) |<br />
+| Active-site motifs | Conserved TPase motifs SXXK, SXN, KTG with catalytic Ser as nucleophile; nearby loops (β3–β4) influence drug access/affinity. | Mutations around motifs or loop regions alter active-site rigidity/affinity for cephalosporins and can reduce β-lactam acylation. | Oladele 2025 (FtsI mechanistic mutational data; motifs and effects) (oladele2025impactofsingle pages 42-46, oladele2025impactofsingle pages 37-42); Glen 2024 (glen2024penicillinbindingprotein3 pages 1-2) |<br />
+| Cellular localization | Single-pass membrane anchor with large periplasmic TPase domain; localizes to midcell / septum as part of divisome. | TM helix critical for FtsW interaction and septal recruitment; periplasmic domain executes transpeptidation at division site. | Attaibi &amp; den Blaauwen 2022 (attaibi2022anupdatedmodel pages 1-2); Oladele 2025 (TM importance) (oladele2025impactofsingle pages 49-53) |<br />
+| Divisome partners &amp; regulation (FtsW, FtsBLQ, FtsN) | FtsI (PBP3) forms functional complex with FtsW (PG polymerase) — the FtsW–FtsI septal synthase; activity is modulated by FtsBLQ (inhibitory) and activated by FtsN accumulation. | FtsBLQ stabilizes inactive state; FtsN (and other activators) relieve inhibition to trigger septal PG synthesis; protein–protein interfaces (TM + periplasmic contacts) mediate allostery. | Boes et al. 2019, mBio (regulation model) (boes2019regulationofthe pages 2-3); Attaibi &amp; den Blaauwen 2022 (attaibi2022anupdatedmodel pages 1-2); Oladele 2025 (interaction mapping) (oladele2025impactofsingle pages 49-53) |<br />
+| Essentiality &amp; phenotypes upon inhibition/mutation | PBP3 is essential for septal PG synthesis; chemical inhibition or loss-of-function variants impair cytokinesis producing filamentous/elongated cells and growth defects. | Reduced TPase activity (via mutation or sub‑MIC β‑lactams) → inhibited septation, filamentation, slower growth; some resistance mutations impose fitness costs. | Glen &amp; Lamont 2024 (experimental MIC + morphology data) (glen2024penicillinbindingprotein3 pages 1-2); Boes et al. 2019 (boes2019regulationofthe pages 2-3) |<br />
+| Antibiotic targets / affinity (ceftolozane, cefiderocol, aztreonam) | Ceftolozane (component of C/T) is a potent inhibitor of PBP3; cefiderocol binds PBPs including PBP3 (contributes to activity); aztreonam also targets PBPs with morphology effects reported. | Drug size / chemistry and active-site accessibility determine potency; inhibition produces septation defects/filamentation used as phenotypic readout. | Glen 2024 (reports PBP3-targeting β-lactams, morphology) (glen2024penicillinbindingprotein3 pages 1-2); Boes 2019 (divisome/target context) (boes2019regulationofthe pages 2-3) |<br />
+| Resistance-linked ftsI variants (notable substitutions/regions) | Reported variants that alter susceptibility: R504C, F533L, Val471Gly, F383Y and other substitutions near the catalytic region; variants cluster near catalytic site/loops. | Variants reduce β-lactam acylation or access (increase MICs for meropenem, ceftazidime, cefepime, ticarcillin); some variants spare imipenem/piperacillin (smaller drugs). Many variants reduce enzyme activity → division defects. | Glen 2024 (R504C, F533L, functional data) (glen2024penicillinbindingprotein3 pages 1-2); paper excerpts / mechanistic mutation analyses (glenUnknownyearthegeneticbasis pages 74-77, glenUnknownyearthegeneticbasis pages 50-54) |<br />
+| 2023–2024 resistance data in P. aeruginosa (MIC shifts, prevalence) | Experimental data (Glen 2024) show multiple PBP3 variants raise MICs for meropenem, ceftazidime, cefepime; some variants, combined with efflux (MexAB‑OprM), reach clinical resistance. Prevalence: variants are phylogenetically distributed and emerge repeatedly under selection (no single high-frequency global SNP reported in these contexts). | MIC increases are variant- and antibiotic-specific; coexisting mechanisms (efflux, β‑lactamases, porin changes) modulate clinical impact; predicting phenotype from genotype alone is complex. | Glen &amp; Lamont 2024 JAC (experimental MICs, morphology) (glen2024penicillinbindingprotein3 pages 1-2); supporting mechanistic reviews (boes2019regulationofthe pages 2-3, attaibi2022anupdatedmodel pages 1-2) |<br />
+| Surveillance / clinical studies linking ftsI variants to non-susceptibility | Experimental engineering and WGS-based surveillance identify ftsI variants in clinical isolates associated with reduced susceptibility (reports of F533L, R504C in clinical collections). | Clinical non-susceptibility often multifactorial (ftsI variant + efflux or β‑lactamase); WGS + phenotyping required to confirm contribution of ftsI changes. | Glen 2024 (engineered/chromosomal mutants + MICs) (glen2024penicillinbindingprotein3 pages 1-2); aggregated surveillance references summarized in reviews (attaibi2022anupdatedmodel pages 1-2) |<br />
+| Structural / mechanistic insights into FtsW–PBP3 complex | TM helix and periplasmic interfaces mediate FtsW–FtsI complex formation; FtsW provides glycan polymerase activity functional only when complexed with bPBP; regulatory subcomplex (FtsBLQ) allosterically repositions catalytic elements. | TM–TM contacts required for co-purification; allosteric rearrangements control activation state and substrate channeling (lipid II → polymerase → TPase). | Boes et al. 2019 (divisome regulation) (boes2019regulationofthe pages 2-3); Oladele 2025 (TM interface &amp; allostery; extrapolated mechanistic mapping) (oladele2025impactofsingle pages 49-53) |<br />
+| Expert reviews / guidance | Recent reviews synthesize that FtsW–FtsI is core septal synthase regulated by FtsBLQ / FtsN and is a validated β‑lactam target; clinical concern: emerging ftsI-mediated reductions in susceptibility reported and monitored. | Consensus: PBP3 is a key β‑lactam target in P. aeruginosa; resistance arises via target modification plus co‑mechanisms; surveillance + phenotyping are recommended. | Attaibi &amp; den Blaauwen 2022 (Int J Mol Sci) (attaibi2022anupdatedmodel pages 1-2); Boes et al. 2019 (mBio) (boes2019regulationofthe pages 2-3); Glen &amp; Lamont 2024 JAC (glen2024penicillinbindingprotein3 pages 1-2) |</p>
+<p><em>Table: Compact, evidence-backed summary of biochemical function, divisome role, antibiotic targeting, resistance variants, and recent (2023–2024) findings for Pseudomonas aeruginosa PAO1 FtsI/PBP3, with source pointers to the gathered evidence (pqac IDs).</em></p>
+<p>Conclusions<br />
+Pseudomonas aeruginosa PAO1 ftsI (PA4418) encodes PBP3, the essential septal D,D‑transpeptidase that operates with FtsW within the divisome. Its C‑terminal transpeptidase domain contains the canonical SXXK/SXN/KTG motifs targeted by β‑lactams. Regulation by FtsBLQ and activation by FtsN gate septal PG synthesis. Recent 2024 experimental work in P. aeruginosa demonstrates that naturally occurring PBP3 substitutions can increase MICs to several β‑lactams (notably meropenem, cefepime, ceftazidime, ticarcillin), with phenotype modulation by efflux, and that such substitutions or sub‑MIC drug exposure impair division and cause filamentation. Clinically used agents with high activity against PBP3, including ceftolozane (in C/T) and cefiderocol, remain critical therapies; surveillance indicates high cefiderocol activity across European P. aeruginosa isolates, though resistance mechanisms often involve siderophore uptake changes. Overall, PBP3 remains a validated antibacterial target, and ftsI mutations constitute an emerging but typically multifactorial contributor to β‑lactam non‑susceptibility in P. aeruginosa. (glen2024penicillinbindingprotein3 pages 1-2, boes2019regulationofthe pages 2-3, attaibi2022anupdatedmodel pages 1-2, oladele2025impactofsingle pages 49-53)</p>
+<p>References</p>
+<ol>
+<li>
+<p>(glen2024penicillinbindingprotein3 pages 1-2): Karl A Glen and Iain L. Lamont. Penicillin-binding protein 3 sequence variations reduce susceptibility of pseudomonas aeruginosa to β-lactams but inhibit cell division. Journal of Antimicrobial Chemotherapy, 79:2170-2178, Jul 2024. URL: https://doi.org/10.1093/jac/dkae203, doi:10.1093/jac/dkae203. This article has 19 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(attaibi2022anupdatedmodel pages 1-2): Mohamed Attaibi and Tanneke den Blaauwen. An updated model of the divisome: regulation of the septal peptidoglycan synthesis machinery by the divisome. International Journal of Molecular Sciences, 23:3537, Mar 2022. URL: https://doi.org/10.3390/ijms23073537, doi:10.3390/ijms23073537. This article has 42 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(boes2019regulationofthe pages 2-3): Adrien Boes, Samir Olatunji, Eefjan Breukink, and Mohammed Terrak. Regulation of the peptidoglycan polymerase activity of pbp1b by antagonist actions of the core divisome proteins ftsblq and ftsn. mBio, Feb 2019. URL: https://doi.org/10.1128/mbio.01912-18, doi:10.1128/mbio.01912-18. This article has 94 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(oladele2025impactofsingle pages 37-42): OE Oladele. Impact of single substitution mutations in conserved n-terminal residues of ftsi on penicillin binding and ftsw interaction in neisseria gonorrhoeae. Unknown journal, 2025.</p>
+</li>
+<li>
+<p>(oladele2025impactofsingle pages 42-46): OE Oladele. Impact of single substitution mutations in conserved n-terminal residues of ftsi on penicillin binding and ftsw interaction in neisseria gonorrhoeae. Unknown journal, 2025.</p>
+</li>
+<li>
+<p>(oladele2025impactofsingle pages 49-53): OE Oladele. Impact of single substitution mutations in conserved n-terminal residues of ftsi on penicillin binding and ftsw interaction in neisseria gonorrhoeae. Unknown journal, 2025.</p>
+</li>
+<li>
+<p>(glenUnknownyearthegeneticbasis pages 74-77): KA Glen. The genetic basis of beta-lactam resistance in pseudomonas aeruginosa. Unknown journal, Unknown year.</p>
+</li>
+<li>
+<p>(glenUnknownyearthegeneticbasis pages 50-54): KA Glen. The genetic basis of beta-lactam resistance in pseudomonas aeruginosa. Unknown journal, Unknown year.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>oladele2025impactofsingle pages 49-53</li>
+<li>attaibi2022anupdatedmodel pages 1-2</li>
+<li>boes2019regulationofthe pages 2-3</li>
+<li>oladele2025impactofsingle pages 37-42</li>
+<li>oladele2025impactofsingle pages 42-46</li>
+<li>Note: see limitations below</li>
+<li>https://doi.org/10.1093/jac/dkae203</li>
+<li>https://doi.org/10.3390/ijms23073537</li>
+<li>https://doi.org/10.1093/jac/dkae203,</li>
+<li>https://doi.org/10.3390/ijms23073537,</li>
+<li>https://doi.org/10.1128/mbio.01912-18,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: G3XD46
+gene_symbol: ftsI
+product_type: PROTEIN
+status: IN_PROGRESS
+taxon:
+  id: NCBITaxon:208964
+  label: Pseudomonas aeruginosa (strain ATCC 15692 / DSM 22644 / CIP 104116 / JCM 14847 / LMG 12228 /
+    1C / PRS 101 / PAO1)
+description: &#39;FtsI (also known as PBP3/penicillin-binding protein 3) is a class B penicillin-binding protein
+
+  that functions as a monofunctional D,D-transpeptidase essential for septal peptidoglycan synthesis
+
+  during bacterial cell division. It contains a single transmembrane helix anchoring a large
+
+  periplasmic catalytic domain with canonical transpeptidase motifs (SXXK, SXN, KTG). FtsI forms
+
+  a functional complex with FtsW (the SEDS family glycan polymerase) to constitute the septal
+
+  peptidoglycan synthase. Critically, FtsI/PBP3 lacks glycosyltransferase activity - this function
+
+  is provided by FtsW in the complex. The enzyme catalyzes cross-linking of peptidoglycan peptide
+
+  stems during septation and is a validated target of beta-lactam antibiotics. FtsI activity is
+
+  regulated by divisome proteins FtsBLQ (inhibitory) and activated by FtsN accumulation.
+
+  &#39;
+existing_annotations:
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &#39;FtsI/PBP3 is a single-pass membrane protein localized to the cell inner membrane (plasma
+
+      membrane in bacteria). UniProt records subcellular location as Cell inner membrane with
+
+      both HAMAP rule and experimental evidence from PMID:20580675. The transmembrane helix
+
+      (residues 15-35) anchors the protein to the membrane. The IBA annotation from phylogenetic
+
+      analysis is consistent with experimental data.
+
+      &#39;
+    action: ACCEPT
+    reason: &#39;Plasma membrane localization is experimentally validated for P. aeruginosa PBP3/FtsI.
+
+      UniProt records Cell inner membrane with evidence from PMID:20580675 (de Leon et al., 2010)
+
+      which demonstrated membrane localization during protein purification. The transmembrane helix
+
+      is clearly annotated in the sequence features (residues 15-35). GO:0005886 (plasma membrane)
+
+      is the appropriate term for bacterial inner/cytoplasmic membrane.
+
+      &#39;
+    supported_by:
+    - reference_id: UniProt:G3XD46
+      supporting_text: &#39;SUBCELLULAR LOCATION: Cell inner membrane&#39;
+    - reference_id: file:PSEAE/ftsI/ftsI-deep-research-falcon.md
+      supporting_text: See deep research file for comprehensive analysis
+- term:
+    id: GO:0008658
+    label: penicillin binding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &#39;Penicillin binding is a core molecular function of FtsI/PBP3 and is directly experimentally
+
+      validated. Multiple crystal structures exist showing binding to various beta-lactam antibiotics
+
+      including ceftazidime, imipenem, meropenem, aztreonam, and piperacillin (PDB: 3PBN, 3PBO,
+
+      3PBQ, 3PBR, 3PBS, 3PBT, 4KQO, 4KQQ, 4KQR, etc.). PMID:20580675 directly demonstrated
+
+      penicillin binding for P. aeruginosa PBP3.
+
+      &#39;
+    action: ACCEPT
+    reason: &#39;This is a core molecular function with direct experimental evidence. UniProt annotation
+
+      includes Binds penicillin with evidence from PMID:20580675. Extensive structural data
+
+      exists showing binding to beta-lactam antibiotics, and the protein is named penicillin-binding
+
+      protein 3 precisely because of this function.
+
+      &#39;
+    supported_by:
+    - reference_id: PMID:20580675
+      supporting_text: The recombinant proteins were demonstrated to bind penicillin
+- term:
+    id: GO:0071555
+    label: cell wall organization
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &#39;FtsI/PBP3 functions in cell wall organization specifically through its role in septal
+
+      peptidoglycan synthesis. As a D,D-transpeptidase that cross-links peptidoglycan during
+
+      cell division, it directly participates in organizing the bacterial cell wall. This is
+
+      consistent with the phylogenetic inference and well-supported by the literature.
+
+      &#39;
+    action: ACCEPT
+    reason: &#39;Cell wall organization is an appropriate biological process annotation. FtsI catalyzes
+
+      peptidoglycan cross-linking at the division septum, which is a core aspect of cell wall
+
+      organization.
+
+      &#39;
+    supported_by:
+    - reference_id: UniProt:G3XD46
+      supporting_text: Catalyzes cross-linking of the peptidoglycan cell wall at the division septum
+- term:
+    id: GO:0000917
+    label: division septum assembly
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;FtsI/PBP3 is essential for division septum assembly as it provides the transpeptidase
+
+      activity required for cross-linking septal peptidoglycan. The protein localizes to midcell
+
+      as part of the divisome complex and forms the septal synthase with FtsW. UniProt notes
+
+      it catalyzes cross-linking of the peptidoglycan cell wall at the division septum.
+
+      &#39;
+    action: ACCEPT
+    reason: &#39;This accurately describes the biological process in which FtsI functions. FtsI is an
+
+      essential component of the divisome and specifically functions in septum formation.
+
+      &#39;
+    supported_by:
+    - reference_id: UniProt:G3XD46
+      supporting_text: Catalyzes cross-linking of the peptidoglycan cell wall at the division septum
+- term:
+    id: GO:0004180
+    label: carboxypeptidase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;This annotation is overly generic and potentially misleading. FtsI/PBP3 is classified as
+
+      EC 3.4.16.4 (serine-type D-Ala-D-Ala carboxypeptidase), but its primary physiological
+
+      function is D,D-transpeptidation (peptide cross-linking), not carboxypeptidase activity.
+
+      While the enzyme can catalyze D-Ala-D-Ala cleavage in vitro, the transpeptidation
+
+      reaction is the biologically relevant activity for cell wall synthesis.
+
+      &#39;
+    action: REMOVE
+    reason: &#39;GO:0004180 (carboxypeptidase activity) is too generic and misleading for FtsI. The enzyme
+
+      is primarily a D,D-transpeptidase, not a general carboxypeptidase. While it has the
+
+      capacity for carboxypeptidase-type cleavage as part of its catalytic mechanism, the
+
+      physiologically relevant activity is cross-linking of peptidoglycan stems. The more
+
+      specific term GO:0009002 captures the actual enzymatic specificity better, though even
+
+      that term emphasizes carboxypeptidase activity over the transpeptidase function.
+
+      &#39;
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &#39;Duplicate annotation of plasma membrane localization, this time from UniRule/automated
+
+      methods. Same localization as the IBA annotation above.
+
+      &#39;
+    action: ACCEPT
+    reason: &#39;Plasma membrane localization is correct. This is a duplicate of the IBA annotation
+
+      with evidence from a different source (UniRule). Both annotations are valid but
+
+      represent the same biological fact.
+
+      &#39;
+    supported_by:
+    - reference_id: UniProt:G3XD46
+      supporting_text: &#39;SUBCELLULAR LOCATION: Cell inner membrane&#39;
+- term:
+    id: GO:0006508
+    label: proteolysis
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;GO:0006508 (proteolysis) is an overly generic term. FtsI does not function as a general
+
+      protease. While the D-Ala-D-Ala cleavage reaction involves peptide bond hydrolysis,
+
+      the primary function is transpeptidation for peptidoglycan cross-linking, not proteolysis
+
+      in the conventional sense of protein degradation.
+
+      &#39;
+    action: REMOVE
+    reason: &#39;This term is too generic and misleading. FtsI is not a protease in the conventional sense.
+
+      Its D,D-transpeptidase activity involves transpeptidation (transfer of a peptide group)
+
+      rather than proteolytic degradation. The term proteolysis implies breakdown of proteins,
+
+      which is not the biological function of FtsI. The substrate is peptidoglycan, not proteins.
+
+      &#39;
+- term:
+    id: GO:0008233
+    label: peptidase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;GO:0008233 (peptidase activity) is overly generic. While FtsI does catalyze cleavage
+
+      of D-Ala-D-Ala bonds, its primary physiological function is transpeptidation. The
+
+      term peptidase activity does not adequately describe the D,D-transpeptidase function.
+
+      &#39;
+    action: REMOVE
+    reason: &#39;This generic term fails to capture the specific function of FtsI. The enzyme is a
+
+      D,D-transpeptidase that cross-links peptidoglycan stems. While peptide bond cleavage
+
+      is part of the transpeptidation mechanism, describing FtsI as having generic peptidase
+
+      activity is uninformative and potentially misleading. The more specific GO:0009002
+
+      is retained as it captures the enzymatic specificity.
+
+      &#39;
+- term:
+    id: GO:0008360
+    label: regulation of cell shape
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;FtsI/PBP3 contributes to cell shape through its role in peptidoglycan synthesis at
+
+      the division septum. Loss of FtsI function or inhibition by beta-lactams causes cell
+
+      filamentation, demonstrating its role in maintaining proper cell morphology. However,
+
+      this is a downstream consequence of its primary function in cell division rather than
+
+      a direct regulatory function.
+
+      &#39;
+    action: KEEP_AS_NON_CORE
+    reason: &#39;While FtsI inhibition does affect cell shape (causing filamentation), this is a
+
+      secondary consequence of its primary role in septal peptidoglycan synthesis. The
+
+      term regulation of cell shape implies a regulatory role, which is not quite accurate -
+
+      FtsI is an enzyme that synthesizes cell wall, and the shape changes result from
+
+      impaired cell division. Retained as non-core because cell shape is affected by FtsI
+
+      function, but this is not its primary role.
+
+      &#39;
+- term:
+    id: GO:0008658
+    label: penicillin binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &#39;Duplicate annotation for penicillin binding, this time from UniRule. Same function
+
+      as the IBA annotation above.
+
+      &#39;
+    action: ACCEPT
+    reason: &#39;Penicillin binding is a core molecular function directly demonstrated experimentally.
+
+      This is a duplicate of the IBA annotation from a different evidence source.
+
+      &#39;
+    supported_by:
+    - reference_id: PMID:20580675
+      supporting_text: The recombinant proteins were demonstrated to bind penicillin
+- term:
+    id: GO:0008955
+    label: peptidoglycan glycosyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &#39;THIS ANNOTATION IS INCORRECT. FtsI/PBP3 is a class B penicillin-binding protein that
+
+      LACKS glycosyltransferase activity. Class B PBPs are monofunctional transpeptidases.
+
+      The glycosyltransferase activity in the divisome is provided by FtsW (the SEDS family
+
+      glycan polymerase), NOT by FtsI. This annotation appears to derive from InterPro:IPR037532
+
+      which incorrectly associates glycosyltransferase activity with FtsI family proteins.
+
+      &#39;
+    action: REMOVE
+    reason: &#39;This is a clear mis-annotation. FtsI/PBP3 is a monofunctional D,D-transpeptidase and
+
+      FtsW (not FtsI) provides the glycan polymerase activity. Class B PBPs by definition
+
+      lack the N-terminal glycosyltransferase domain found in Class A PBPs. This annotation
+
+      should be removed as it represents a significant functional error.
+
+      &#39;
+    supported_by:
+    - reference_id: UniProt:G3XD46
+      supporting_text: Peptidoglycan D,D-transpeptidase FtsI
+    - reference_id: UniProt:G3XD46
+      supporting_text: Belongs to the transpeptidase family. FtsI subfamily.
+    - reference_id: PMID:30622193
+      supporting_text: FtsBLQ also inhibits the transpeptidase domain of PBP3
+- term:
+    id: GO:0009002
+    label: serine-type D-Ala-D-Ala carboxypeptidase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &#39;GO:0009002 corresponds to EC 3.4.16.4, which is the assigned EC number for FtsI in
+
+      UniProt. The enzyme does have this catalytic activity as part of its mechanism.
+
+      However, the primary physiological function is D,D-transpeptidation (cross-linking
+
+      of peptidoglycan stems) rather than carboxypeptidase activity. The transpeptidation
+
+      reaction involves D-Ala-D-Ala cleavage as the first step before cross-linking.
+
+      &#39;
+    action: ACCEPT
+    reason: &#39;This annotation reflects the assigned EC classification. UniProt records
+
+      EC=3.4.16.4 for this enzyme. While the primary biological function is
+
+      transpeptidation for peptidoglycan cross-linking, the D-Ala-D-Ala carboxypeptidase
+
+      activity is part of the catalytic mechanism. The term is specific enough to be
+
+      informative. Note that GO currently lacks a specific term for peptidoglycan
+
+      D,D-transpeptidase activity which would be the ideal annotation.
+
+      &#39;
+    supported_by:
+    - reference_id: UniProt:G3XD46
+      supporting_text: &#39;Preferential cleavage: (Ac)2-L-Lys-D-Ala-|-D-Ala&#39;
+- term:
+    id: GO:0009252
+    label: peptidoglycan biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &#39;FtsI/PBP3 is directly involved in peptidoglycan biosynthesis, specifically the
+
+      cross-linking step during septal peptidoglycan synthesis. UniProt records this
+
+      pathway annotation with HAMAP evidence.
+
+      &#39;
+    action: ACCEPT
+    reason: &#39;This is an appropriate biological process annotation. FtsI catalyzes a core step
+
+      in peptidoglycan biosynthesis - the cross-linking of peptide stems. UniProt records
+
+      Cell wall biogenesis; peptidoglycan biosynthesis for this protein.
+
+      &#39;
+    supported_by:
+    - reference_id: UniProt:G3XD46
+      supporting_text: Cell wall biogenesis; peptidoglycan biosynthesis
+- term:
+    id: GO:0016787
+    label: hydrolase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;GO:0016787 (hydrolase activity) is an extremely generic term that provides no
+
+      meaningful information about FtsI function. While the enzyme does catalyze a
+
+      hydrolytic cleavage of D-Ala-D-Ala as part of its mechanism, labeling it as a
+
+      generic hydrolase is uninformative.
+
+      &#39;
+    action: REMOVE
+    reason: &#39;This is an overly generic molecular function term that does not add useful
+
+      information. The more specific GO:0009002 (serine-type D-Ala-D-Ala carboxypeptidase
+
+      activity) is already annotated and provides much more information about the
+
+      enzymatic function. Generic parent terms like hydrolase activity should not
+
+      be annotated when specific child terms are available.
+
+      &#39;
+- term:
+    id: GO:0043093
+    label: FtsZ-dependent cytokinesis
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  review:
+    summary: &#39;FtsI/PBP3 is a component of the FtsZ-dependent divisome and is essential for
+
+      bacterial cytokinesis. Its localization to the division site and function in
+
+      septal peptidoglycan synthesis are FtsZ-dependent. This is an appropriate
+
+      biological process annotation.
+
+      &#39;
+    action: ACCEPT
+    reason: &#39;FtsI is a late-recruiting member of the FtsZ-dependent divisome. The divisome
+
+      regulatory model includes FtsBLQ inhibiting the FtsW-FtsI complex until activation
+
+      by FtsN, all of which occurs in the context of FtsZ-dependent cytokinesis.
+
+      &#39;
+    supported_by:
+    - reference_id: PMID:30622193
+      supporting_text: FtsBLQ directly interacts with ... the subcomplex FtsW-PBP3
+- term:
+    id: GO:0051301
+    label: cell division
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &#39;FtsI/PBP3 is essential for bacterial cell division. It is required for septal
+
+      peptidoglycan synthesis, and its inhibition or loss of function causes
+
+      filamentation (failure to divide). This is an appropriate biological process
+
+      annotation.
+
+      &#39;
+    action: ACCEPT
+    reason: &#39;Cell division is the core biological process in which FtsI functions. E. coli
+
+      PBP 3 has been shown to be responsible for the synthesis of peptidoglycan during
+
+      the division and septation of the cells, and the P. aeruginosa ortholog has the
+
+      same function.
+
+      &#39;
+    supported_by:
+    - reference_id: PMID:20580675
+      supporting_text: PBP 3 from Escherichia coli has been studied extensively and it has been shown
+        to be responsible for the synthesis of peptidoglycan during the division and septation of the
+        cells
+- term:
+    id: GO:0071555
+    label: cell wall organization
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;Duplicate annotation for cell wall organization, this time from UniProt keyword
+
+      mapping. Same biological process as the IBA annotation above.
+
+      &#39;
+    action: ACCEPT
+    reason: &#39;This is a valid biological process annotation consistent with the IBA annotation.
+
+      FtsI functions in cell wall organization through its role in peptidoglycan
+
+      cross-linking at the division septum.
+
+      &#39;
+references:
+- id: PMID:10984043
+  title: Complete genome sequence of Pseudomonas aeruginosa PAO1, an opportunistic pathogen
+  findings:
+  - statement: Genome sequence paper providing the gene annotation for PA4418 (ftsI)
+    supporting_text: Here we report the complete sequence of P. aeruginosa strain PAO1. At 6.3 million
+      base pairs, this is the largest bacterial genome sequenced
+- id: PMID:20580675
+  title: Production and purification of the penicillin-binding protein 3 from Pseudomonas aeruginosa
+  findings:
+  - statement: Direct experimental evidence for membrane localization
+    supporting_text: The PBP was engineered in soluble form to facilitate its study in vitro
+  - statement: Direct experimental evidence for penicillin binding
+    supporting_text: The recombinant proteins were demonstrated to bind penicillin
+  - statement: Protein purification and characterization
+    supporting_text: with a hexa-His tag to permit its facile purification by affinity chromatography
+- id: PMID:21135211
+  title: Structural basis for effectiveness of siderophore-conjugated monocarbams against clinically relevant
+    strains of Pseudomonas aeruginosa
+  findings:
+  - statement: Crystal structures of PBP3 with beta-lactam antibiotics
+    supporting_text: first high resolution cocrystal structures of the P. aeruginosa PBP3 with both novel
+      and marketed β-lactams
+  - statement: Structural basis for antibiotic binding
+    supporting_text: These structures reveal a conformational rearrangement of Tyr532 and Phe533
+- id: PMID:9045804
+  title: Identification of a penicillin-binding protein 3 homolog, PBP3x, in Pseudomonas aeruginosa
+  findings:
+  - statement: Expression during exponential growth phase
+    supporting_text: &#39;[3H]penicillin-binding assays indicated that PBP3 was mainly produced during exponential
+      growth whereas PBP3x was produced in the stationary phase of growth&#39;
+- id: PMID:39001778
+  title: Penicillin-binding protein 3 sequence variations reduce susceptibility of Pseudomonas aeruginosa
+    to β-lactams but inhibit cell division.
+  findings:
+  - statement: FtsI/PBP3 is a monofunctional D,D-transpeptidase
+    supporting_text: PBP3 is part of a multienzyme complex termed the divisome and is composed of a catalytic
+      domain and a domain that is involved in protein-protein interactions
+  - statement: Essential for septal peptidoglycan synthesis
+    supporting_text: PBP3, encoded by the ftsI gene, is required for cell division and as the only essential
+      PBP in P. aeruginosa is an important target for β-lactam antibiotics
+  - statement: PBP3 variants affect beta-lactam susceptibility
+    supporting_text: Some PBP3 variations reduced susceptibility to a variety of β-lactam antibiotics
+      including meropenem, ceftazidime, cefepime and ticarcillin
+  - statement: Inhibition causes cell filamentation
+    supporting_text: inhibition of PBP3 causing filamentation and cell lysis
+- id: PMID:30622193
+  title: Regulation of the peptidoglycan polymerase activity of PBP1b by antagonist actions of the core
+    divisome proteins FtsBLQ and FtsN
+  findings:
+  - statement: FtsW provides glycan polymerase activity in complex with FtsI
+    supporting_text: FtsBLQ subcomplex directly interacts with the PG synthase PBP1b and with the subcomplex
+      FtsW-PBP3, mainly via FtsW
+  - statement: FtsI is the transpeptidase component
+    supporting_text: PBP3 (bPBP) is a monofunctional TPase specific and essential for septal PG synthesis
+      and cell constriction
+  - statement: FtsBLQ inhibits the complex until FtsN activation
+    supporting_text: FtsBLQ also inhibits the transpeptidase domain of PBP3 but not of PBP1b
+- id: PMID:35408901
+  title: An updated model of the divisome - regulation of the septal peptidoglycan synthesis machinery
+    by the divisome
+  findings:
+  - statement: FtsI localizes to midcell within the divisome
+    supporting_text: FtsI and FtsW are essential proteins that are recruited to the division site and
+      seem to have a stabilizing effect on the divisome
+  - statement: Forms septal synthase with FtsW
+    supporting_text: Essential proteins directly synthesizing septal peptidoglycan are the glycosyltransferase
+      FtsW and the transpeptidase FtsI (also known as PBP3)
+  - statement: Class B PBPs are monofunctional transpeptidases
+    supporting_text: These class B PBPs are monofunctional transpeptidases, whereas the related class
+      A PBPs possess both glycosyltransferase and transpeptidase activity
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings:
+  - statement: Source of incorrect glycosyltransferase annotation from IPR037532
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings:
+  - statement: Source of IBA annotations from PAINT/PANTHER
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings:
+  - statement: Source of IEA annotations from UniProt keywords
+- id: GO_REF:0000104
+  title: Electronic Gene Ontology annotations created by transferring manual GO annotations between related
+    proteins based on shared sequence features
+  findings:
+  - statement: Source of transferred annotations
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings:
+  - statement: Source of UniRule-based annotations
+- id: file:PSEAE/ftsI/ftsI-deep-research-falcon.md
+  title: Deep research on ftsI function
+  findings: []
+core_functions:
+- molecular_function:
+    id: GO:0008658
+    label: penicillin binding
+  description: &#39;Direct experimental evidence from PMID:20580675 demonstrating penicillin binding.
+
+    Extensive structural data from multiple crystal structures showing binding to
+
+    beta-lactam antibiotics (PDB: 3PBN, 3PBO, etc.). This is the defining molecular
+
+    function that gives the protein its name penicillin-binding protein 3.
+
+    &#39;
+- molecular_function:
+    id: GO:0009002
+    label: serine-type D-Ala-D-Ala carboxypeptidase activity
+  description: &#39;UniProt-assigned EC 3.4.16.4. This activity is part of the D,D-transpeptidase
+
+    mechanism where D-Ala-D-Ala is cleaved as the first step of transpeptidation.
+
+    Note that the primary biological function is transpeptidation for peptidoglycan
+
+    cross-linking rather than carboxypeptidase activity per se.
+
+    &#39;
+proposed_new_terms:
+- proposed_name: peptidoglycan D,D-transpeptidase activity
+  proposed_definition: &#39;Catalysis of the cross-linking of peptidoglycan peptide stems during cell wall
+
+    synthesis. The reaction involves cleavage of D-Ala-D-Ala and transfer of the
+
+    peptidyl moiety to an amino group of another peptidoglycan stem peptide,
+
+    forming a peptide cross-link.
+
+    &#39;
+  justification: &#39;GO currently lacks a specific term for D,D-transpeptidase activity, which is the
+
+    primary molecular function of class B penicillin-binding proteins like FtsI/PBP3.
+
+    The existing term GO:0009002 (serine-type D-Ala-D-Ala carboxypeptidase activity)
+
+    emphasizes the carboxypeptidase aspect, but transpeptidation is the biologically
+
+    relevant activity for peptidoglycan cross-linking. A term for L,D-transpeptidase
+
+    activity exists (GO:0071972) but not for D,D-transpeptidase activity.
+
+    &#39;
+suggested_questions:
+- question: &#39;What is the precise kinetic relationship between D-Ala-D-Ala carboxypeptidase
+
+    and transpeptidase activities for P. aeruginosa FtsI? Understanding the partitioning
+
+    between hydrolysis and transpeptidation reactions would clarify whether GO:0009002
+
+    is an appropriate annotation or whether a new transpeptidase-specific term would
+
+    be more accurate.
+
+    &#39;
+- question: &#39;Should the incorrect GO:0008955 (peptidoglycan glycosyltransferase activity)
+
+    annotation be corrected at the InterPro level for IPR037532? The InterPro entry
+
+    IPR037532 appears to incorrectly associate glycosyltransferase activity with FtsI
+
+    family proteins, propagating this error to GO annotations.
+
+    &#39;
+suggested_experiments:
+- description: &#39;Kinetic analysis to quantify the ratio of transpeptidase vs carboxypeptidase
+
+    activity for purified P. aeruginosa FtsI using appropriate peptidoglycan substrate
+
+    analogs. This would demonstrate whether transpeptidation is the predominant activity,
+
+    supporting creation of a specific D,D-transpeptidase GO term.
+
+    &#39;
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
