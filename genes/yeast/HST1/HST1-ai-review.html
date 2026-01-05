@@ -1,0 +1,3061 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HST1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>HST1</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P50111" target="_blank" class="term-link">
+                        P50111
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Saccharomyces cerevisiae</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "HST1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P50111" data-a="DESCRIPTION: TODO: Add description for HST1..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>TODO: Add description for HST1</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P50111" data-a="GO:0005737" data-r="GO_REF:0000033" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010971" target="_blank" class="term-link">
+                                    GO:0010971
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of G2/M transition of mitotic cell cycle</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P50111" data-a="GO:0010971" data-r="GO_REF:0000033" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030010" target="_blank" class="term-link">
+                                    GO:0030010
+                                </a>
+                            </span>
+                            <span class="term-label">establishment of cell polarity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P50111" data-a="GO:0030010" data-r="GO_REF:0000033" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P50111" data-a="GO:0005737" data-r="GO_REF:0000044" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051028" target="_blank" class="term-link">
+                                    GO:0051028
+                                </a>
+                            </span>
+                            <span class="term-label">mRNA transport</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P50111" data-a="GO:0051028" data-r="GO_REF:0000043" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071555" target="_blank" class="term-link">
+                                    GO:0071555
+                                </a>
+                            </span>
+                            <span class="term-label">cell wall organization</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P50111" data-a="GO:0071555" data-r="GO_REF:0000043" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15619606" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15619606
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Physical and genetic interactions link the yeast protein Zds...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P50111" data-a="GO:0005515" data-r="PMID:15619606" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16429126" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16429126
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Proteome survey reveals modularity of the yeast cell machine...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P50111" data-a="GO:0005515" data-r="PMID:16429126" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16554755" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16554755
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Global landscape of protein complexes in the yeast Saccharom...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P50111" data-a="GO:0005515" data-r="PMID:16554755" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18762578" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18762578
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Separase cooperates with Zds1 and Zds2 to activate Cdc14 pho...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P50111" data-a="GO:0005515" data-r="PMID:18762578" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19536198" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19536198
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    An atlas of chaperone-protein interactions in Saccharomyces ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P50111" data-a="GO:0005515" data-r="PMID:19536198" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/37968396" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:37968396
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The social and structural architecture of the yeast protein ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P50111" data-a="GO:0005515" data-r="PMID:37968396" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031507" target="_blank" class="term-link">
+                                    GO:0031507
+                                </a>
+                            </span>
+                            <span class="term-label">heterochromatin formation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10662670" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10662670
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Two paralogs involved in transcriptional silencing that anta...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P50111" data-a="GO:0031507" data-r="PMID:10662670" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004864" target="_blank" class="term-link">
+                                    GO:0004864
+                                </a>
+                            </span>
+                            <span class="term-label">protein phosphatase inhibitor activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18762578" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18762578
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Separase cooperates with Zds1 and Zds2 to activate Cdc14 pho...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P50111" data-a="GO:0004864" data-r="PMID:18762578" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004864" target="_blank" class="term-link">
+                                    GO:0004864
+                                </a>
+                            </span>
+                            <span class="term-label">protein phosphatase inhibitor activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IGI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18762578" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18762578
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Separase cooperates with Zds1 and Zds2 to activate Cdc14 pho...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P50111" data-a="GO:0004864" data-r="PMID:18762578" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010971" target="_blank" class="term-link">
+                                    GO:0010971
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of G2/M transition of mitotic cell cycle</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IGI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20980617" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20980617
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Zds2p regulates Swe1p-dependent polarized cell growth in Sac...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P50111" data-a="GO:0010971" data-r="PMID:20980617" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000131" target="_blank" class="term-link">
+                                    GO:0000131
+                                </a>
+                            </span>
+                            <span class="term-label">incipient cellular bud site</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8816439" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8816439
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    ZDS1 and ZDS2, genes whose products may regulate Cdc42p in S...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P50111" data-a="GO:0000131" data-r="PMID:8816439" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21536748" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21536748
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Spatial regulation of Cdc55-PP2A by Zds1/Zds2 controls mitot...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P50111" data-a="GO:0005737" data-r="PMID:21536748" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005934" target="_blank" class="term-link">
+                                    GO:0005934
+                                </a>
+                            </span>
+                            <span class="term-label">cellular bud tip</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8816439" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8816439
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    ZDS1 and ZDS2, genes whose products may regulate Cdc42p in S...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P50111" data-a="GO:0005934" data-r="PMID:8816439" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005935" target="_blank" class="term-link">
+                                    GO:0005935
+                                </a>
+                            </span>
+                            <span class="term-label">cellular bud neck</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21536748" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21536748
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Spatial regulation of Cdc55-PP2A by Zds1/Zds2 controls mitot...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P50111" data-a="GO:0005935" data-r="PMID:21536748" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006406" target="_blank" class="term-link">
+                                    GO:0006406
+                                </a>
+                            </span>
+                            <span class="term-label">mRNA export from nucleus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15619606" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15619606
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Physical and genetic interactions link the yeast protein Zds...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P50111" data-a="GO:0006406" data-r="PMID:15619606" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006406" target="_blank" class="term-link">
+                                    GO:0006406
+                                </a>
+                            </span>
+                            <span class="term-label">mRNA export from nucleus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IGI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15619606" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15619606
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Physical and genetic interactions link the yeast protein Zds...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P50111" data-a="GO:0006406" data-r="PMID:15619606" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006406" target="_blank" class="term-link">
+                                    GO:0006406
+                                </a>
+                            </span>
+                            <span class="term-label">mRNA export from nucleus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15619606" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15619606
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Physical and genetic interactions link the yeast protein Zds...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P50111" data-a="GO:0006406" data-r="PMID:15619606" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010971" target="_blank" class="term-link">
+                                    GO:0010971
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of G2/M transition of mitotic cell cycle</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21536748" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21536748
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Spatial regulation of Cdc55-PP2A by Zds1/Zds2 controls mitot...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P50111" data-a="GO:0010971" data-r="PMID:21536748" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030010" target="_blank" class="term-link">
+                                    GO:0030010
+                                </a>
+                            </span>
+                            <span class="term-label">establishment of cell polarity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8816439" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8816439
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    ZDS1 and ZDS2, genes whose products may regulate Cdc42p in S...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P50111" data-a="GO:0030010" data-r="PMID:8816439" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030010" target="_blank" class="term-link">
+                                    GO:0030010
+                                </a>
+                            </span>
+                            <span class="term-label">establishment of cell polarity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IGI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8816439" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8816439
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    ZDS1 and ZDS2, genes whose products may regulate Cdc42p in S...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P50111" data-a="GO:0030010" data-r="PMID:8816439" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032880" target="_blank" class="term-link">
+                                    GO:0032880
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of protein localization</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18762578" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18762578
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Separase cooperates with Zds1 and Zds2 to activate Cdc14 pho...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P50111" data-a="GO:0032880" data-r="PMID:18762578" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10662670" target="_blank" class="term-link">
+                            PMID:10662670
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Two paralogs involved in transcriptional silencing that antagonistically control yeast life span.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15619606" target="_blank" class="term-link">
+                            PMID:15619606
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Physical and genetic interactions link the yeast protein Zds1p with mRNA nuclear export.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16429126" target="_blank" class="term-link">
+                            PMID:16429126
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Proteome survey reveals modularity of the yeast cell machinery.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16554755" target="_blank" class="term-link">
+                            PMID:16554755
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Global landscape of protein complexes in the yeast Saccharomyces cerevisiae.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18762578" target="_blank" class="term-link">
+                            PMID:18762578
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Separase cooperates with Zds1 and Zds2 to activate Cdc14 phosphatase in early anaphase.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19536198" target="_blank" class="term-link">
+                            PMID:19536198
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">An atlas of chaperone-protein interactions in Saccharomyces cerevisiae: implications to protein folding pathways in the cell.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20980617" target="_blank" class="term-link">
+                            PMID:20980617
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Zds2p regulates Swe1p-dependent polarized cell growth in Saccharomyces cerevisiae via a novel Cdc55p interaction domain.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21536748" target="_blank" class="term-link">
+                            PMID:21536748
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Spatial regulation of Cdc55-PP2A by Zds1/Zds2 controls mitotic entry and mitotic exit in budding yeast.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/37968396" target="_blank" class="term-link">
+                            PMID:37968396
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The social and structural architecture of the yeast protein interactome.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/8816439" target="_blank" class="term-link">
+                            PMID:8816439
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">ZDS1 and ZDS2, genes whose products may regulate Cdc42p in Saccharomyces cerevisiae.</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(HST1-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P50111" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2025-12-30T22:26:02.836304'<br />
+end_time: '2025-12-30T22:33:05.564336'<br />
+duration_seconds: 422.73<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: yeast<br />
+  gene_id: HST1<br />
+  gene_symbol: ZDS1<br />
+  uniprot_accession: P50111<br />
+  protein_description: 'RecName: Full=Protein ZDS1; AltName: Full=Protein NRC1; AltName:<br />
+    Full=RT2GS1;'<br />
+  gene_info: Name=ZDS1; Synonyms=CES1, CKM1, HST1, NRC1, OSS1, STM2; OrderedLocusNames=YMR273C;<br />
+    ORFNames=YM8156.15C;<br />
+  organism_full: Saccharomyces cerevisiae (strain ATCC 204508 / S288c) (Baker's yeast).<br />
+  protein_family: To yeast ZDS2/MCS1. .<br />
+  protein_domains: Zds1/2. (IPR040206); ZDS1_C. (IPR013941); Zds_C (PF08632)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 19</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> P50111</li>
+<li><strong>Protein Description:</strong> RecName: Full=Protein ZDS1; AltName: Full=Protein NRC1; AltName: Full=RT2GS1;</li>
+<li><strong>Gene Information:</strong> Name=ZDS1; Synonyms=CES1, CKM1, HST1, NRC1, OSS1, STM2; OrderedLocusNames=YMR273C; ORFNames=YM8156.15C;</li>
+<li><strong>Organism (full):</strong> Saccharomyces cerevisiae (strain ATCC 204508 / S288c) (Baker's yeast).</li>
+<li><strong>Protein Family:</strong> To yeast ZDS2/MCS1. .</li>
+<li><strong>Key Domains:</strong> Zds1/2. (IPR040206); ZDS1_C. (IPR013941); Zds_C (PF08632)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "ZDS1" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Saccharomyces cerevisiae (strain ATCC 204508 / S288c) (Baker's yeast).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'ZDS1' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>ZDS1</strong> (gene ID: HST1, UniProt: P50111) in yeast.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> P50111</li>
+<li><strong>Protein Description:</strong> RecName: Full=Protein ZDS1; AltName: Full=Protein NRC1; AltName: Full=RT2GS1;</li>
+<li><strong>Gene Information:</strong> Name=ZDS1; Synonyms=CES1, CKM1, HST1, NRC1, OSS1, STM2; OrderedLocusNames=YMR273C; ORFNames=YM8156.15C;</li>
+<li><strong>Organism (full):</strong> Saccharomyces cerevisiae (strain ATCC 204508 / S288c) (Baker's yeast).</li>
+<li><strong>Protein Family:</strong> To yeast ZDS2/MCS1. .</li>
+<li><strong>Key Domains:</strong> Zds1/2. (IPR040206); ZDS1_C. (IPR013941); Zds_C (PF08632)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "ZDS1" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Saccharomyces cerevisiae (strain ATCC 204508 / S288c) (Baker's yeast).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'ZDS1' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>ZDS1</strong> (gene ID: HST1, UniProt: P50111) in yeast.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<p>Plan and verification<br />
+- Verified identity: ZDS1 encodes Protein Zds1 in Saccharomyces cerevisiae S288c (systematic name YMR273C), the paralog of Zds2, and functions in the Zds1/2 family that regulates the PP2A phosphatase containing regulatory subunit Cdc55. Literature cited below consistently treats Zds1/Zds2 as fungal proteins that act on PP2A-Cdc55 in budding yeast; no conflicting gene symbol usage was found for other organisms in the cited works (Rossio &amp; Yoshida 2011; Rossio et al. 2014; Jonasson et al. 2016; Thai et al. 2017) (rossio2011spatialregulationof pages 1-2, rossio2014comparativegeneticanalysis pages 1-3, jonasson2016zds1zds2–pp2acdc55complexspecifies pages 1-2, thai2017proteinkinasec pages 2-4).</p>
+<p>1) Key concepts and definitions with current understanding<br />
+- Molecular nature: Zds1 is a non-enzymatic regulator/adaptor of the PP2A phosphatase complex that uses the B regulatory subunit Cdc55 (PP2A-Cdc55). It binds Cdc55 and helps control the subcellular localization and context-specific activity of PP2A-Cdc55, rather than acting as a catalytic enzyme itself (Rossio &amp; Yoshida 2011; Rossio et al. 2014) (rossio2011spatialregulationof pages 1-2, rossio2014comparativegeneticanalysis pages 1-3). URL/Date: J Cell Biol, May 2011, https://doi.org/10.1083/jcb.201101134; Cell Cycle, July 2014, https://doi.org/10.4161/cc.29064.<br />
+- Functional paradigm: Zds1/Zds2 promote the cytoplasmic/cortical pool of PP2A-Cdc55 and thereby promote mitotic entry while allowing proper mitotic exit by restricting nuclear PP2A-Cdc55 when needed. This spatial control links Zds1/2 to the Cdk1 control axis (Swe1/Mih1) and to mitotic exit (Cdc14 release) (Rossio &amp; Yoshida 2011; Rossio et al. 2014) (rossio2011spatialregulationof pages 1-2, rossio2014comparativegeneticanalysis pages 1-3). URL/Date: J Cell Biol, 2011, https://doi.org/10.1083/jcb.201101134; Cell Cycle, 2014, https://doi.org/10.4161/cc.29064.<br />
+- Cell polarity and Rho1 signaling: Zds1/Zds2 form a complex with PP2A-Cdc55 that acts as a Rho1 effector at the bud cortex to specify signaling outputs toward polarized growth and cell wall synthesis versus stress-responsive CWI signaling (Jonasson et al. 2016) (jonasson2016zds1zds2–pp2acdc55complexspecifies pages 1-2). URL/Date: J Cell Biol, January 2016, https://doi.org/10.1083/jcb.201508119.</p>
+<p>2) Recent developments and latest research (prioritize 2023–2024)<br />
+- Direct 2023–2024 primary studies focused specifically on Zds1/Zds2 in S. cerevisiae are limited in the evidence retrieved here. However, the most recent mechanistic advance closely related to Zds1-regulated PP2A-Cdc55 is the demonstration that the cell wall integrity kinase Pkc1 remodels the PP2A-Cdc55–Zds1/2 complex and regulates binding of Igo/ENSA endosulfines to PP2A-Cdc55; this study quantified changes in complex composition and phosphorylation, including decreased phosphorylation at specific Zds1 sites upon activated PKC1, supporting multi-layered control of PP2A-Cdc55 by the CWI pathway (Thai et al. 2017) (thai2017proteinkinasec pages 2-4). URL/Date: J Biol Chem, March 2017, https://doi.org/10.1074/jbc.M116.753004.<br />
+- Partial note on recency: While high-level 2023–2024 reviews discuss PP2A-Cdc55 logic and cell-cycle phosphatase networks, the present evidence set does not contain citable 2023–2024 primary data that newly redefine Zds1’s mechanism; therefore, recent content is summarized via contextually closest mechanistic work that integrates upstream Pkc1 with PP2A-Cdc55–Zds1/2 (Thai et al. 2017) (thai2017proteinkinasec pages 2-4).</p>
+<p>3) Current applications and real-world implementations<br />
+- Cell-cycle control models: Zds1/2 are used as genetic and biochemical tools to manipulate PP2A-Cdc55’s spatial pools and to study mitotic entry/exit switches and checkpoint pathways (e.g., using Cdc55-NLS/NES alleles to phenocopy or rescue zds1Δ zds2Δ defects) (Rossio &amp; Yoshida 2011) (rossio2011spatialregulationof pages 6-8, rossio2011spatialregulationof pages 1-2). URL/Date: J Cell Biol, 2011, https://doi.org/10.1083/jcb.201101134.<br />
+- Polarity/CWI pathway dissection: The Zds1/Zds2–PP2A-Cdc55 complex is applied to parse decisions in Rho1 signaling between anabolic cell-wall synthesis and stress signaling, by manipulating Zds1/2 or Cdc55 localization and assessing β-1,3-glucan synthesis and CWI output (Jonasson et al. 2016) (jonasson2016zds1zds2–pp2acdc55complexspecifies pages 1-2, jonasson2016zds1zds2–pp2acdc55complexspecifies pages 2-3). URL/Date: J Cell Biol, 2016, https://doi.org/10.1083/jcb.201508119.<br />
+- Phosphatase regulation mapping: Proteomics of PP2A-Cdc55 complexes under Pkc1 activation—including Zds1 phosphorylation state changes and Igo/ENSA dissociation—provide a framework for chemical-genetic and systems approaches to phosphatase regulation in growth checkpoints (Thai et al. 2017) (thai2017proteinkinasec pages 2-4). URL/Date: J Biol Chem, 2017, https://doi.org/10.1074/jbc.M116.753004.</p>
+<p>4) Expert opinions and analysis from authoritative sources<br />
+- Spatial regulation model: Expert analyses place Zds1/Zds2 as the principal determinants of cytoplasmic sequestration and cortical recruitment of PP2A-Cdc55, with ENSA-family Igo1/2 acting more prominently in the nucleus; Zds1/2 thereby enable cytoplasmic PP2A-Cdc55 to promote mitotic entry and restrict nuclear PP2A-Cdc55 to facilitate FEAR/MEN transitions (Rossio &amp; Yoshida 2011; Rossio et al. 2014) (rossio2011spatialregulationof pages 1-2, rossio2014comparativegeneticanalysis pages 1-3, rossio2014comparativegeneticanalysis pages 8-9). URL/Date: J Cell Biol, 2011, https://doi.org/10.1083/jcb.201101134; Cell Cycle, 2014, https://doi.org/10.4161/cc.29064.<br />
+- Rho1 output specification: Zds1/Zds2–PP2A-Cdc55 are viewed as a Rho1 effector module that tunes signaling output by reciprocal regulation of Rho1 GAPs (Lrg1 and Sac7) and by mutually antagonistic dynamics with the Pkc1–Mpk1 CWI pathway; this concept reframes PP2A-Cdc55 not only as a mitotic phosphatase but as a cortical signaling effector that allocates Rho1 activity toward growth versus stress response (Jonasson et al. 2016) (jonasson2016zds1zds2–pp2acdc55complexspecifies pages 1-2, jonasson2016zds1zds2–pp2acdc55complexspecifies pages 2-3). URL/Date: J Cell Biol, 2016, https://doi.org/10.1083/jcb.201508119.<br />
+- Cdk1/Swe1/Mih1 axis: By targeting Mih1/Cdc25 and promoting Swe1 downregulation via cytoplasmic PP2A-Cdc55, Zds1/Zds2 facilitate timely Cdk1 activation and mitotic entry; mislocalization of Cdc55 recapitulates zds1Δ zds2Δ phenotypes, underscoring the primacy of spatial control (Rossio &amp; Yoshida 2011) (rossio2011spatialregulationof pages 6-8, rossio2011spatialregulationof pages 1-2, rossio2011spatialregulationof pages 10-10). URL/Date: J Cell Biol, 2011, https://doi.org/10.1083/jcb.201101134.</p>
+<p>5) Relevant statistics and data from recent studies<br />
+- Localization-function causality: Forcing Cdc55 into the nucleus (Cdc55-NLS) phenocopies zds1Δ zds2Δ (mitotic entry defects and morphology), whereas enforcing cytoplasmic localization (Cdc55-NES) rescues zds1Δ zds2Δ defects, directly quantifying the sufficiency of spatial regulation to explain functional phenotypes (Rossio &amp; Yoshida 2011) (rossio2011spatialregulationof pages 6-8, rossio2011spatialregulationof pages 1-2). URL/Date: J Cell Biol, 2011, https://doi.org/10.1083/jcb.201101134.<br />
+- Rho1 outputs: Loss of Zds1/Zds2 reduces β-1,3-glucan synthesis and increases chitin deposition consistent with CWI activation, providing quantitative cell wall composition readouts that map PP2A-Cdc55–Zds effects on Rho1 output (Jonasson et al. 2016) (jonasson2016zds1zds2–pp2acdc55complexspecifies pages 1-2, jonasson2016zds1zds2–pp2acdc55complexspecifies pages 2-3). URL/Date: J Cell Biol, 2016, https://doi.org/10.1083/jcb.201508119.<br />
+- Proteomics of regulation: Quantitative mass spectrometry under activated Pkc1 shows marked reduction of Igo2 association with PP2A-Cdc55 and site-specific changes in Zds1 phosphorylation (e.g., S444/S445, S691), providing molecular readouts of CWI-dependent remodeling of the PP2A-Cdc55–Zds1/2 complex (Thai et al. 2017) (thai2017proteinkinasec pages 2-4). URL/Date: J Biol Chem, 2017, https://doi.org/10.1074/jbc.M116.753004.</p>
+<p>Primary function of Zds1 and precise mechanistic role<br />
+- Zds1 is a scaffold/adaptor for PP2A-Cdc55. It binds Cdc55 and, with Zds2, organizes the cytoplasmic/cortical pool of PP2A-Cdc55 that promotes mitotic entry (via Mih1 activation and Swe1 inhibition) and prevents inappropriate nuclear PP2A-Cdc55 activity that would oppose mitotic exit (by affecting Net1/Cfi1 and Cdc14 release) (Rossio &amp; Yoshida 2011; Rossio et al. 2014) (rossio2011spatialregulationof pages 1-2, rossio2014comparativegeneticanalysis pages 1-3). URL/Date: J Cell Biol, 2011, https://doi.org/10.1083/jcb.201101134; Cell Cycle, 2014, https://doi.org/10.4161/cc.29064.<br />
+- As a Rho1 effector, the Zds1/Zds2–PP2A-Cdc55 complex biases Rho1 signaling toward polarized growth and β-1,3-glucan synthesis by inhibiting the GAP Lrg1, while antagonizing CWI signaling via stabilization of the GAP Sac7; this establishes pathway-selective dephosphorylation logic at the bud cortex (Jonasson et al. 2016) (jonasson2016zds1zds2–pp2acdc55complexspecifies pages 1-2, jonasson2016zds1zds2–pp2acdc55complexspecifies pages 2-3). URL/Date: J Cell Biol, 2016, https://doi.org/10.1083/jcb.201508119.</p>
+<p>Binding partners/complexes and putative direct targets<br />
+- Core complex: PP2A catalytic and scaffold subunits with regulatory B subunit Cdc55; Zds1 and Zds2 bind Cdc55 and co-exist within the PP2A-Cdc55 holoenzyme (Rossio &amp; Yoshida 2011; Rossio et al. 2014) (rossio2011spatialregulationof pages 1-2, rossio2014comparativegeneticanalysis pages 1-3). URL/Date: J Cell Biol, 2011, https://doi.org/10.1083/jcb.201101134; Cell Cycle, 2014, https://doi.org/10.4161/cc.29064.<br />
+- Rho1 module: Active Rho1 associates with the Zds1/Zds2–PP2A-Cdc55 complex at the bud cortex in a Zds1/2-dependent manner; Zds1’s Rho1-interacting region maps to residues 78–339 (HR2) (Jonasson et al. 2016) (jonasson2016zds1zds2–pp2acdc55complexspecifies pages 2-3). URL/Date: J Cell Biol, 2016, https://doi.org/10.1083/jcb.201508119.<br />
+- Upstream kinase pathway: Pkc1 interacts with the complex and remodels its composition and phosphorylation, including Zds1 sites, and reduces Igo/ENSA binding to PP2A-Cdc55 (Thai et al. 2017) (thai2017proteinkinasec pages 2-4). URL/Date: J Biol Chem, 2017, https://doi.org/10.1074/jbc.M116.753004.<br />
+- Targets in cell cycle: Downstream PP2A-Cdc55 substrates influenced by Zds-mediated localization include Mih1/Cdc25, Swe1, and FEAR/MEN components such as Net1/Cfi1, thereby regulating Cdk1 activation and Cdc14 release (Rossio &amp; Yoshida 2011; Rossio et al. 2014) (rossio2011spatialregulationof pages 1-2, rossio2014comparativegeneticanalysis pages 1-3).</p>
+<p>Subcellular localization and dynamics<br />
+- Zds1/Zds2 localize predominantly to the cortex/cytoplasm at sites of polarized growth, where they recruit/maintain Cdc55 and PP2A activity; in zds1Δ zds2Δ, cortical Cdc55 is lost and Cdc55 accumulates in the nucleus (Rossio &amp; Yoshida 2011; Rossio et al. 2014) (rossio2011spatialregulationof pages 1-2, rossio2014comparativegeneticanalysis pages 8-9). URL/Date: J Cell Biol, 2011, https://doi.org/10.1083/jcb.201101134; Cell Cycle, 2014, https://doi.org/10.4161/cc.29064.<br />
+- Rho1 dependence and pathway antagonism: Cortical Zds1/Cdc55 localization is Rho1-dependent during bud growth; activation of the Rho1→Pkc1→Mpk1 CWI pathway causes Cdc55 and Zds1 to leave the bud cortex, reflecting mutual exclusivity of growth versus stress outputs (Jonasson et al. 2016) (jonasson2016zds1zds2–pp2acdc55complexspecifies pages 1-2). URL/Date: J Cell Biol, 2016, https://doi.org/10.1083/jcb.201508119.</p>
+<p>Pathway placement<br />
+- Cdk1/Swe1/Mih1 (morphogenesis checkpoint): Zds1-mediated cytoplasmic PP2A-Cdc55 promotes inactivation of the CDK1 inhibitor Swe1 and activation of Mih1/Cdc25, enabling mitotic entry; Zds proteins “target PP2A to Cdc25” as part of this axis (Rossio &amp; Yoshida 2011) (rossio2011spatialregulationof pages 10-10, rossio2011spatialregulationof pages 1-2). URL/Date: J Cell Biol, 2011, https://doi.org/10.1083/jcb.201101134.<br />
+- FEAR/MEN (mitotic exit): Downregulation of PP2A-Cdc55 by separase in early anaphase collaborates with Zds1/2 to promote Cdc14 release; nuclear exclusion of Cdc55 by Zds1/2 facilitates FEAR/MEN-driven exit (Rossio &amp; Yoshida 2011; Rossio et al. 2014) (rossio2011spatialregulationof pages 10-10, rossio2014comparativegeneticanalysis pages 1-3). URL/Date: J Cell Biol, 2011, https://doi.org/10.1083/jcb.201101134; Cell Cycle, 2014, https://doi.org/10.4161/cc.29064.<br />
+- Rho1–Pkc1 CWI and glucan synthesis: As a Rho1 effector complex, Zds1/Zds2–PP2A-Cdc55 inhibits Lrg1 to enhance β-1,3-glucan synthase-mediated growth and stabilizes Sac7 to restrain Pkc1–Mpk1 signaling, thereby specifying Rho1 outputs (Jonasson et al. 2016) (jonasson2016zds1zds2–pp2acdc55complexspecifies pages 1-2, jonasson2016zds1zds2–pp2acdc55complexspecifies pages 2-3). URL/Date: J Cell Biol, 2016, https://doi.org/10.1083/jcb.201508119.</p>
+<p>Limitations and open questions<br />
+- Despite substantial mechanistic clarity, high-resolution structural information for the Zds1–Cdc55 interface and comprehensive phosphosite maps controlling Zds1’s cell-cycle dynamics remain incomplete. Direct 2023–2024 primary updates specific to Zds1/2 were not retrieved in this evidence set; thus, the recency emphasis here relies on adjacent regulatory advances (Pkc1-dependent remodeling of PP2A-Cdc55–Zds1/2) (Thai et al. 2017) (thai2017proteinkinasec pages 2-4).</p>
+<p>Embedded evidence table<br />
+| Year | Citation (authors, journal) | Focus (function/complex/pathway/localization) | Key finding (1–2 sentences) | URL / DOI |<br />
+|------|-----------------------------|-----------------------------------------------|------------------------------------------------|-----------|<br />
+| 2011 | Rossio V., Yoshida S., The Journal of Cell Biology (rossio2011spatialregulationof pages 1-2) | Spatial regulation of Cdc55–PP2A by Zds1/Zds2; mitotic entry/exit; Cdk1/Swe1/Mih1; FEAR/MEN | Zds1/Zds2 bind Cdc55–PP2A and sequester Cdc55 in the cytoplasm, promoting mitotic entry via effects on Swe1/Mih1/Cdk1 and controlling mitotic exit/FEAR by regulating nuclear Cdc55 localization. | https://doi.org/10.1083/jcb.201101134 |<br />
+| 2014 | Rossio V., Kazatskaya A., Hirabayashi M., Yoshida S., Cell Cycle (rossio2014comparativegeneticanalysis pages 1-3) | Comparative genetic analysis of PP2A-Cdc55 regulators; Zds1/2 vs Igo1/2 | Zds1/Zds2 act in the cytoplasm to sequester/exclude Cdc55 from the nucleus (distinct from nuclear Igo1/2); zds1Δ zds2Δ causes loss of cortical Cdc55 and pleiotropic mitotic/cell‑polarity defects. | https://doi.org/10.4161/cc.29064 |<br />
+| 2016 | Jonasson E.M., Rossio V., Hatakeyama R., Abe M., Ohya Y., Yoshida S., The Journal of Cell Biology (jonasson2016zds1zds2–pp2acdc55complexspecifies pages 1-2) | Zds1/Zds2–PP2A–Cdc55 as Rho1 effector specifying growth vs CWI output | The Zds1/Zds2–PP2A–Cdc55 complex acts as a Rho1 effector at the bud cortex, biasing Rho1 signaling toward polarized growth (by inhibiting the Rho1 GAP Lrg1 to promote β‑1,3‑glucan synthesis) and antagonizing the Pkc1–Mpk1 CWI pathway via GAP regulation. | https://doi.org/10.1083/jcb.201508119 |<br />
+| 2017 | Thai V., Dephoure N., Weiss A., Ferguson J., Leitao R., Gygi S.P., Kellogg D.R., Journal of Biological Chemistry (thai2017proteinkinasec pages 2-4) | PKC1-dependent remodeling of PP2A–Cdc55–Zds1/2 complex and Igo/ENSA interactions | Activated Pkc1 alters PP2A–Cdc55 complex composition and phosphorylation (including Zds1 sites) and drives dissociation/reduced binding of Igo2 (ENSA homolog), linking Pkc1 signaling to dynamic regulation of PP2A activity and its associated regulators. | https://doi.org/10.1074/jbc.M116.753004 |</p>
+<p><em>Table: Compact summary of key primary studies that define Zds1 (YMR273C, UniProt P50111) function, complexes, pathways, and localization; includes citations and DOIs for rapid reference.</em></p>
+<p>Conclusion<br />
+Zds1 (YMR273C; UniProt P50111) is a cortical adaptor that binds the PP2A regulatory subunit Cdc55 and, with Zds2, dictates the spatial and contextual actions of PP2A-Cdc55 in budding yeast. Through localization-driven control, Zds1/2 promote mitotic entry (via Swe1/Mih1/Cdk1), enable mitotic exit (via FEAR/MEN and Cdc14 release), and act as a Rho1 effector that biases signaling toward polarized growth and β-1,3-glucan synthesis while antagonizing Pkc1–Mpk1 CWI signaling. Emerging systems-level work connects Pkc1 activity to dynamic remodeling of the PP2A-Cdc55–Zds1/2 complex and its binding partners, underscoring that Zds1 integrates growth and stress cues at the bud cortex (Rossio &amp; Yoshida 2011; Rossio et al. 2014; Jonasson et al. 2016; Thai et al. 2017) (rossio2011spatialregulationof pages 1-2, rossio2014comparativegeneticanalysis pages 1-3, jonasson2016zds1zds2–pp2acdc55complexspecifies pages 1-2, thai2017proteinkinasec pages 2-4).</p>
+<p>References</p>
+<ol>
+<li>
+<p>(rossio2011spatialregulationof pages 1-2): Valentina Rossio and Satoshi Yoshida. Spatial regulation of cdc55–pp2a by zds1/zds2 controls mitotic entry and mitotic exit in budding yeast. The Journal of Cell Biology, 193:445-454, May 2011. URL: https://doi.org/10.1083/jcb.201101134, doi:10.1083/jcb.201101134. This article has 76 citations.</p>
+</li>
+<li>
+<p>(rossio2014comparativegeneticanalysis pages 1-3): Valentina Rossio, Anna Kazatskaya, Mayo Hirabayashi, and Satoshi Yoshida. Comparative genetic analysis of pp2a-cdc55 regulators in budding yeast. Cell Cycle, 13:2073-2083, Jul 2014. URL: https://doi.org/10.4161/cc.29064, doi:10.4161/cc.29064. This article has 15 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(jonasson2016zds1zds2–pp2acdc55complexspecifies pages 1-2): Erin M. Jonasson, Valentina Rossio, Riko Hatakeyama, Mitsuhiro Abe, Yoshikazu Ohya, and Satoshi Yoshida. Zds1/zds2–pp2acdc55 complex specifies signaling output from rho1 gtpase. The Journal of Cell Biology, 212:51-61, Jan 2016. URL: https://doi.org/10.1083/jcb.201508119, doi:10.1083/jcb.201508119. This article has 23 citations.</p>
+</li>
+<li>
+<p>(thai2017proteinkinasec pages 2-4): Vu Thai, Noah Dephoure, Amit Weiss, Jacqueline Ferguson, Ricardo Leitao, Steven P. Gygi, and Douglas R. Kellogg. Protein kinase c controls binding of igo/ensa proteins to protein phosphatase 2a in budding yeast. Journal of Biological Chemistry, 292:4925-4941, Mar 2017. URL: https://doi.org/10.1074/jbc.m116.753004, doi:10.1074/jbc.m116.753004. This article has 23 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(rossio2011spatialregulationof pages 6-8): Valentina Rossio and Satoshi Yoshida. Spatial regulation of cdc55–pp2a by zds1/zds2 controls mitotic entry and mitotic exit in budding yeast. The Journal of Cell Biology, 193:445-454, May 2011. URL: https://doi.org/10.1083/jcb.201101134, doi:10.1083/jcb.201101134. This article has 76 citations.</p>
+</li>
+<li>
+<p>(jonasson2016zds1zds2–pp2acdc55complexspecifies pages 2-3): Erin M. Jonasson, Valentina Rossio, Riko Hatakeyama, Mitsuhiro Abe, Yoshikazu Ohya, and Satoshi Yoshida. Zds1/zds2–pp2acdc55 complex specifies signaling output from rho1 gtpase. The Journal of Cell Biology, 212:51-61, Jan 2016. URL: https://doi.org/10.1083/jcb.201508119, doi:10.1083/jcb.201508119. This article has 23 citations.</p>
+</li>
+<li>
+<p>(rossio2014comparativegeneticanalysis pages 8-9): Valentina Rossio, Anna Kazatskaya, Mayo Hirabayashi, and Satoshi Yoshida. Comparative genetic analysis of pp2a-cdc55 regulators in budding yeast. Cell Cycle, 13:2073-2083, Jul 2014. URL: https://doi.org/10.4161/cc.29064, doi:10.4161/cc.29064. This article has 15 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(rossio2011spatialregulationof pages 10-10): Valentina Rossio and Satoshi Yoshida. Spatial regulation of cdc55–pp2a by zds1/zds2 controls mitotic entry and mitotic exit in budding yeast. The Journal of Cell Biology, 193:445-454, May 2011. URL: https://doi.org/10.1083/jcb.201101134, doi:10.1083/jcb.201101134. This article has 76 citations.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>thai2017proteinkinasec pages 2-4</li>
+<li>rossio2011spatialregulationof pages 1-2</li>
+<li>rossio2014comparativegeneticanalysis pages 1-3</li>
+<li>rossio2011spatialregulationof pages 6-8</li>
+<li>rossio2014comparativegeneticanalysis pages 8-9</li>
+<li>rossio2011spatialregulationof pages 10-10</li>
+<li>https://doi.org/10.1083/jcb.201101134;</li>
+<li>https://doi.org/10.4161/cc.29064.</li>
+<li>https://doi.org/10.1083/jcb.201508119.</li>
+<li>https://doi.org/10.1074/jbc.M116.753004.</li>
+<li>https://doi.org/10.1083/jcb.201101134.</li>
+<li>https://doi.org/10.1083/jcb.201101134</li>
+<li>https://doi.org/10.4161/cc.29064</li>
+<li>https://doi.org/10.1083/jcb.201508119</li>
+<li>https://doi.org/10.1074/jbc.M116.753004</li>
+<li>https://doi.org/10.1083/jcb.201101134,</li>
+<li>https://doi.org/10.4161/cc.29064,</li>
+<li>https://doi.org/10.1083/jcb.201508119,</li>
+<li>https://doi.org/10.1074/jbc.m116.753004,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P50111
+gene_symbol: HST1
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:559292
+  label: Saccharomyces cerevisiae
+description: &#39;TODO: Add description for HST1&#39;
+existing_annotations:
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0010971
+    label: positive regulation of G2/M transition of mitotic cell cycle
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0030010
+    label: establishment of cell polarity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0051028
+    label: mRNA transport
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0071555
+    label: cell wall organization
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:15619606
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:16429126
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:16554755
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:18762578
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:19536198
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:37968396
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0031507
+    label: heterochromatin formation
+  evidence_type: IMP
+  original_reference_id: PMID:10662670
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0004864
+    label: protein phosphatase inhibitor activity
+  evidence_type: IMP
+  original_reference_id: PMID:18762578
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0004864
+    label: protein phosphatase inhibitor activity
+  evidence_type: IGI
+  original_reference_id: PMID:18762578
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0010971
+    label: positive regulation of G2/M transition of mitotic cell cycle
+  evidence_type: IGI
+  original_reference_id: PMID:20980617
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0000131
+    label: incipient cellular bud site
+  evidence_type: IDA
+  original_reference_id: PMID:8816439
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IDA
+  original_reference_id: PMID:21536748
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0005934
+    label: cellular bud tip
+  evidence_type: IDA
+  original_reference_id: PMID:8816439
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0005935
+    label: cellular bud neck
+  evidence_type: IDA
+  original_reference_id: PMID:21536748
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0006406
+    label: mRNA export from nucleus
+  evidence_type: IMP
+  original_reference_id: PMID:15619606
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0006406
+    label: mRNA export from nucleus
+  evidence_type: IGI
+  original_reference_id: PMID:15619606
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0006406
+    label: mRNA export from nucleus
+  evidence_type: IPI
+  original_reference_id: PMID:15619606
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0010971
+    label: positive regulation of G2/M transition of mitotic cell cycle
+  evidence_type: IMP
+  original_reference_id: PMID:21536748
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0030010
+    label: establishment of cell polarity
+  evidence_type: IMP
+  original_reference_id: PMID:8816439
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0030010
+    label: establishment of cell polarity
+  evidence_type: IGI
+  original_reference_id: PMID:8816439
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0032880
+    label: regulation of protein localization
+  evidence_type: IMP
+  original_reference_id: PMID:18762578
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+references:
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: PMID:10662670
+  title: Two paralogs involved in transcriptional silencing that antagonistically
+    control yeast life span.
+  findings: []
+- id: PMID:15619606
+  title: Physical and genetic interactions link the yeast protein Zds1p with mRNA
+    nuclear export.
+  findings: []
+- id: PMID:16429126
+  title: Proteome survey reveals modularity of the yeast cell machinery.
+  findings: []
+- id: PMID:16554755
+  title: Global landscape of protein complexes in the yeast Saccharomyces cerevisiae.
+  findings: []
+- id: PMID:18762578
+  title: Separase cooperates with Zds1 and Zds2 to activate Cdc14 phosphatase in early
+    anaphase.
+  findings: []
+- id: PMID:19536198
+  title: &#39;An atlas of chaperone-protein interactions in Saccharomyces cerevisiae:
+    implications to protein folding pathways in the cell.&#39;
+  findings: []
+- id: PMID:20980617
+  title: Zds2p regulates Swe1p-dependent polarized cell growth in Saccharomyces cerevisiae
+    via a novel Cdc55p interaction domain.
+  findings: []
+- id: PMID:21536748
+  title: Spatial regulation of Cdc55-PP2A by Zds1/Zds2 controls mitotic entry and
+    mitotic exit in budding yeast.
+  findings: []
+- id: PMID:37968396
+  title: The social and structural architecture of the yeast protein interactome.
+  findings: []
+- id: PMID:8816439
+  title: ZDS1 and ZDS2, genes whose products may regulate Cdc42p in Saccharomyces
+    cerevisiae.
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
